@@ -303,7 +303,8 @@ export function crearSala(escena) {
   paredes[2].userData.desperfectos.push(desHumedad);
   paredes[2].userData.requisito = desHumedad;
 
-  escena.add(new THREE.HemisphereLight(0xfff4e6, 0x8a7560, 1.5));
+  const hemi = new THREE.HemisphereLight(0xfff4e6, 0x8a7560, 1.5);
+  escena.add(hemi);
 
   const sol = new THREE.DirectionalLight(0xfff0dd, 1.7);
   sol.position.set(6, 10, 4);
@@ -488,5 +489,5 @@ export function crearSala(escena) {
     }
   }
 
-  return { visibles: () => paredes.map(p => p.visible), actualizarParedes, actualizar, buscar, tocar, puedeAplicar, aplicar, resaltar, estado, restaurar, progreso };
+  return { paredes, cara, ventana, matCristal, hemi, sol, visibles: () => paredes.map(p => p.visible), actualizarParedes, actualizar, buscar, tocar, puedeAplicar, aplicar, resaltar, estado, restaurar, progreso };
 }

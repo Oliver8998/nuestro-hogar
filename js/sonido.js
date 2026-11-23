@@ -47,6 +47,13 @@ export const sonido = {
   desbloquear() {
     contexto();
   },
+  tono(freq, inicio = 0, duracion = 0.3, op = {}) {
+    nota(freq, inicio, duracion, op);
+  },
+  ahora() {
+    const c = contexto();
+    return c ? c.currentTime : 0;
+  },
   pop() {
     nota(520, 0, 0.09, { tipo: 'triangle', hasta: 780, volumen: 0.12 });
   },

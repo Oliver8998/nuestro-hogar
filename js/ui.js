@@ -10,7 +10,8 @@ const CATEGORIAS = [
   { id: 'deco', nombre: 'Deco', icono: '🪴' },
   { id: 'mascotas', nombre: 'Mascotas', icono: '🐾' },
   { id: 'limpieza', nombre: 'Limpieza', icono: '🧹' },
-  { id: 'reparar', nombre: 'Reparar', icono: '🧰' }
+  { id: 'reparar', nombre: 'Reparar', icono: '🧰' },
+  { id: 'temporada', nombre: 'Temporada', icono: '🎁' }
 ];
 
 const FRASES_PRODUCTO = [
@@ -82,6 +83,7 @@ export class UI {
       b.dataset.cat = c.id;
       b.title = c.nombre;
       b.innerHTML = `<span>${c.icono}</span>${c.nombre}`;
+      if (c.id === 'temporada') b.classList.add('oculto');
       b.addEventListener('click', () => {
         if (this.categoria === c.id) return;
         this.categoria = c.id;
@@ -123,7 +125,9 @@ export class UI {
     });
     $('btn-ruleta').addEventListener('click', () => this.abrirRuleta());
     $('btn-refugio').addEventListener('click', () => this.abrirRefugio());
-    $('btn-sonido').addEventListener('click', () => this.ev.alAlternarSonido());
+    $('btn-mas').addEventListener('click', () => this.ev.alMas());
+    $('pill-clima').addEventListener('click', () => this.ev.alClima());
+    $('gen-atras').addEventListener('click', () => this.genAtras && this.genAtras());
     $('btn-tirar').addEventListener('click', () => this.tirar());
     this.elFondo.addEventListener('click', () => this.cerrarHojas());
     document.querySelectorAll('.hoja .cerrar, .pantalla .cerrar').forEach(b => b.addEventListener('click', () => this.cerrarHojas()));
@@ -150,6 +154,27 @@ export class UI {
     this.elFondo.classList.remove('abierta');
   }
 
+  ponerTemporada(t, nombre) {
+    this.temporada = t;
+    const b = document.querySelector('#tienda .pestanas-v button[data-cat="temporada"]');
+    if (b) {
+      b.classList.toggle('oculto', !t);
+      if (t) b.innerHTML = `<span>${nombre.split(' ')[0]}</span>${nombre.split(' ').slice(1).join(' ')}`;
+    }
+    if (!t && this.categoria === 'temporada') this.categoria = 'muebles';
+  }
+
+  abrirGen(titulo, html, atras = null) {
+    this.$('gen-titulo').textContent = titulo;
+    const cuerpo = this.$('gen-cuerpo');
+    cuerpo.innerHTML = html;
+    cuerpo.scrollTop = 0;
+    this.genAtras = atras;
+    this.$('gen-atras').classList.toggle('oculto', !atras);
+    if (this.hojaAbierta !== 'hoja-gen') this.abrirHoja('hoja-gen');
+    return cuerpo;
+  }
+
   decirLola(frase) {
     const el = this.$('frase-lola');
     el.textContent = frase;
@@ -174,6 +199,10 @@ export class UI {
       entradas.push({ info: infoItem(oferta.id), precio: oferta.precio, oferta: true });
     }
     for (const d of [...CATALOGO, ...MATERIALES]) {
+      if (this.categoria === 'temporada') {
+        if (d.temporada && d.temporada === this.temporada) entradas.push({ info: infoItem(d.id), precio: d.precio, oferta: false });
+        continue;
+      }
       if (d.enTienda === false || d.categoria !== this.categoria) continue;
       entradas.push({ info: infoItem(d.id), precio: d.precio, oferta: false });
     }
@@ -497,9 +526,7 @@ export class UI {
     this.elCasaIcono.textContent = hechos >= total ? '🏡' : '🏚️';
   }
 
-  iconoSonido(activo) {
-    this.$('btn-sonido').querySelector('span').textContent = activo ? '🔊' : '🔇';
-  }
+  iconoSonido() {}
 
   pintarInventario(inventario) {
     this.inventario = inventario;

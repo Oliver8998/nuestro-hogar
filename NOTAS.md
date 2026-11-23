@@ -82,6 +82,24 @@ Plan:
 ## Interfaz
 - Los botones (Tienda, Inventario, Misiones, Ruleta, Adoptar y sonido) están en una barra abajo, centrada, porque a la derecha tapaban la casa (petición de Oliver, 23-nov). La barra se oculta cuando el inventario está abierto.
 
+## Plan "todas las ideas" (pedido el 23-nov: "me gustan todas, mete todas")
+Fases:
+1. ✅ Día y noche con la hora real, clima en la ventana y temporadas.
+   - `ambiente.js`. Para probar: `?hora=22&clima=lluvia&temporada=navidad`.
+   - Temporadas: Halloween (20 oct – 2 nov), Navidad (10 dic – 6 ene), San Valentín (7–15 feb) y el aniversario. Hay una pestaña "Temporada" en la tienda con objetos exclusivos (`temporada:` en el catálogo, que aún no tienen modelo de Blender).
+2. ✅ Botón "Más" (✨) en la barra, que abre la hoja genérica `hoja-gen` / `ui.abrirGen`, con el módulo `mas.js`:
+   - Ajustes: nombres, nombre de la casa, aniversario, cumpleaños y sonido. Pilar felicita en las fechas especiales y da un regalo; se guarda en `estado.celebrado`.
+   - Cartel de madera con el nombre de la casa y los nombres, en la pared de la ventana.
+   - Fotos subidas (`hogar-fotos` en localStorage, reducidas a 640 px) colgadas en 8 huecos de las paredes (`estado.paredFotos`).
+   - Foto bonita de la casa con marco, que se puede compartir.
+   - Diario con el antes y el después (`hogar-diario`): guarda una foto automática cada 2 días como mínimo.
+3. ⏳ Minijuegos para ganar monedas (cocina, memory, puzzle con foto), racha diaria, teletrabajo (ordenador) y huerto.
+4. ⏳ Objetos que se usan: sofá, tele con dibujos, radio con música y piano con teclas.
+5. ⏳ Mascotas: personalidad, crecer, trastadas y accesorios.
+6. ⏳ Progresión: mudanzas y más habitaciones, puntuación de acogedor, colecciones, logros y diario.
+7. ⏳ Pareja con Supabase: sincronizar, notitas en la nevera, regalos, votaciones y misiones de pareja.
+   - Oliver tiene que pasar la URL y la publishable key (`sb_publishable_`); el botón Connect del panel las muestra.
+
 ## Ideas pendientes (no pedidas aún)
 - Sincronizar los dos móviles (Supabase).
 - Minijuegos para ganar monedas.

@@ -328,7 +328,67 @@ export const CATALOGO = [
     [0.8, 0.6, 0.8, 0, 1.55, 0, 0xf6b8c8, 'esfera'],
     [0.5, 0.4, 0.5, 0.3, 1.4, 0.15, 0xf9cbd6, 'esfera'],
     [0.5, 0.4, 0.5, -0.3, 1.45, -0.1, 0xf3a6ba, 'esfera']
-  ]}
+  ]},
+  { id: 'arbol-navidad', categoria: 'temporada', temporada: 'navidad', enTienda: false, nombre: 'Árbol de Navidad', precio: 220, ancho: 2, fondo: 2, piezas: [
+    [0.3, 0.2, 0.3, 0, 0.1, 0, 0xc0504d, 'cil'],
+    [0.08, 0.3, 0.08, 0, 0.3, 0, 0x6b4f36, 'cil'],
+    [0.8, 0.6, 0.8, 0, 0.6, 0, 0x2f7d4a, 'cono'],
+    [0.62, 0.5, 0.62, 0, 0.95, 0, 0x358a52, 'cono'],
+    [0.42, 0.42, 0.42, 0, 1.25, 0, 0x3c9a5c, 'cono'],
+    [0.12, 0.12, 0.04, 0, 1.5, 0, 0xffd23f, 'esfera', { brillo: true }],
+    [0.06, 0.06, 0.06, 0.2, 0.7, 0.2, 0xe05050, 'esfera']
+  ], encendible: { piezas: [5, 6], luz: 1.2, intensidad: 1.2, colorLuz: 0xffd890, inicial: true }},
+
+  { id: 'muneco-nieve', categoria: 'temporada', temporada: 'navidad', enTienda: false, nombre: 'Muñeco de nieve', precio: 120, ancho: 1, fondo: 1, piezas: [
+    [0.36, 0.34, 0.36, 0, 0.17, 0, 0xf4f8fb, 'esfera'],
+    [0.26, 0.24, 0.26, 0, 0.44, 0, 0xf4f8fb, 'esfera'],
+    [0.18, 0.18, 0.18, 0, 0.63, 0, 0xf4f8fb, 'esfera'],
+    [0.03, 0.08, 0.03, 0, 0.64, 0.1, 0xf28a3c, 'cono', { rx: Math.PI / 2 }],
+    [0.22, 0.04, 0.22, 0, 0.53, 0, 0xc0504d, 'cil'],
+    [0.16, 0.12, 0.16, 0, 0.76, 0, 0x3d3d3d, 'cil']
+  ], colores: { grupos: [[4]], paleta: [[0xc0504d], [0x5a9fd6], [0x6cc08a], [0xf2d06b]] }},
+
+  { id: 'regalos', categoria: 'temporada', temporada: 'navidad', enTienda: false, nombre: 'Montón de regalos', precio: 90, ancho: 1, fondo: 1, soporte: 0.25, piezas: [
+    [0.3, 0.25, 0.3, -0.05, 0.125, -0.03, 0xe05050],
+    [0.2, 0.18, 0.2, 0.13, 0.09, 0.1, 0x5a9fd6],
+    [0.16, 0.14, 0.16, -0.1, 0.32, -0.04, 0x6cc08a, { ry: 0.4 }]
+  ]},
+
+  { id: 'calabaza', categoria: 'temporada', temporada: 'halloween', enTienda: false, nombre: 'Calabaza con cara', precio: 110, ancho: 1, fondo: 1, piezas: [
+    [0.42, 0.32, 0.42, 0, 0.16, 0, 0xf28a2c, 'esfera'],
+    [0.04, 0.08, 0.04, 0, 0.35, 0, 0x5a7a3a, 'cil'],
+    [0.2, 0.08, 0.02, 0, 0.16, 0.2, 0xffd060, { brillo: true }]
+  ], encendible: { piezas: [2], luz: 0.2, intensidad: 1.0, colorLuz: 0xffa040, inicial: true }},
+
+  { id: 'fantasma', categoria: 'temporada', temporada: 'halloween', enTienda: false, nombre: 'Fantasmita', precio: 130, ancho: 1, fondo: 1, piezas: [
+    [0.32, 0.5, 0.32, 0, 0.3, 0, 0xf4f4f8, 'esfera'],
+    [0.05, 0.07, 0.03, -0.06, 0.38, 0.14, 0x222222, 'esfera'],
+    [0.05, 0.07, 0.03, 0.06, 0.38, 0.14, 0x222222, 'esfera']
+  ]},
+
+  { id: 'caldero', categoria: 'temporada', temporada: 'halloween', enTienda: false, nombre: 'Caldero burbujeante', precio: 150, ancho: 1, fondo: 1, piezas: [
+    [0.4, 0.3, 0.4, 0, 0.18, 0, 0x2a2a2a, 'esfera'],
+    [0.3, 0.02, 0.3, 0, 0.3, 0, 0x7ee05a, 'cil', { brillo: true }]
+  ], encendible: { piezas: [1], luz: 0.4, intensidad: 0.9, colorLuz: 0x7ee05a, inicial: true }},
+
+  { id: 'lampara-corazon', categoria: 'temporada', temporada: 'sanvalentin', enTienda: false, nombre: 'Lámpara corazón', precio: 140, ancho: 1, fondo: 1, piezas: [
+    [0.2, 0.04, 0.2, 0, 0.02, 0, 0xf2efe9, 'cil'],
+    [0.18, 0.18, 0.08, -0.06, 0.3, 0, 0xf06080, 'esfera'],
+    [0.18, 0.18, 0.08, 0.06, 0.3, 0, 0xf06080, 'esfera'],
+    [0.18, 0.18, 0.08, 0, 0.21, 0, 0xf06080, { rz: Math.PI / 4 }]
+  ], encendible: { piezas: [1, 2, 3], luz: 0.3, intensidad: 1.0, colorLuz: 0xff7090, inicial: true }},
+
+  { id: 'rosas', categoria: 'temporada', temporada: 'sanvalentin', enTienda: false, nombre: 'Ramo de rosas', precio: 90, ancho: 1, fondo: 1, piezas: [
+    [0.14, 0.24, 0.14, 0, 0.12, 0, 0xe8f4f8, 'cil', { transparente: 0.6 }],
+    [0.02, 0.2, 0.02, 0, 0.32, 0, 0x4a8a3c, 'cil'],
+    [0.2, 0.12, 0.2, 0, 0.44, 0, 0xd02040, 'esfera']
+  ]},
+
+  { id: 'cojin-corazon', categoria: 'temporada', temporada: 'sanvalentin', enTienda: false, nombre: 'Cojín corazón', precio: 70, ancho: 1, fondo: 1, piezas: [
+    [0.22, 0.2, 0.12, -0.08, 0.26, 0, 0xf06080, 'esfera'],
+    [0.22, 0.2, 0.12, 0.08, 0.26, 0, 0xf06080, 'esfera'],
+    [0.24, 0.24, 0.12, 0, 0.14, 0, 0xf06080, { rz: Math.PI / 4 }]
+  ], colores: { grupos: [[0, 1, 2]], paleta: [[0xf06080], [0xe0505f], [0xf4b3be], [0xb39ddb]] }}
 ];
 
 function pintura(id, nombre, color) {

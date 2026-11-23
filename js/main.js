@@ -16,6 +16,8 @@ import { HISTORIA, EVENTOS, puntuacion, nuevasDiarias, infoDiaria, textoPremio }
 import { poolDe } from './ruleta.js';
 import { Minijuegos } from './minijuegos.js';
 import { cargarModelos } from './modelos.js';
+import { Ambiente, temporada, NOMBRE_TEMPORADA } from './ambiente.js';
+import { Mas } from './mas.js';
 
 await cargarModelos();
 
@@ -34,6 +36,7 @@ const escena = new THREE.Scene();
 const camaraIso = new CamaraIso(window.innerWidth / window.innerHeight);
 const sala = crearSala(escena);
 const gestor = new GestorMuebles(escena);
+const ambiente = new Ambiente(sala, renderer);
 const inventario = new Inventario();
 const miniaturas = new Miniaturas(160);
 
@@ -530,7 +533,16 @@ const ui = new UI(miniaturas, {
     sonido.desbloquear();
   },
   alAlternarSonido() {
-    ui.iconoSonido(sonido.alternar());
+    sonido.alternar();
+  },
+  alMas() {
+    mas.abrir();
+  },
+  alClima() {
+    const t = temporadaActual();
+    const climas = { sol: 'Hace sol', nubes: 'Está nublado', lluvia: 'Está lloviendo', nieve: '¡Está nevando!' };
+    const prox = mas.proximaFecha();
+    ui.aviso(`${ambiente.icono()} ${ambiente.textoHora()} · ${climas[ambiente.clima] || ''}${t ? ` · ${NOMBRE_TEMPORADA[t]}` : ''}${prox && prox.dias <= 30 ? ` · Faltan ${prox.dias} días para ${prox.texto}` : ''}`);
   },
   alComprar(info, color, precio, cantidad = 1) {
     return comprarDirecto(info.id, color, precio, cantidad);
@@ -928,6 +940,54 @@ function datosMisiones() {
 
 controles.suciedad = suciedad;
 
+function temporadaActual() {
+  const forzada = new URLSearchParams(location.search).get('temporada');
+  if (forzada) return forzada;
+  return temporada(new Date(), estado.pareja && estado.pareja.aniversario);
+}
+
+const mas = new Mas({
+  estado, ui, sonido, sala, ambiente, renderer, escena, camara: camaraIso.camara,
+  guardar: () => guardar(),
+  temporada: () => temporadaActual(),
+  extrasMenu: () => (window.extrasMenu ? window.extrasMenu() : [])
+});
+
+function aplicarTemporada() {
+  const t = temporadaActual();
+  ui.ponerTemporada(t && t !== 'aniversario' ? t : null, t ? NOMBRE_TEMPORADA[t] : '');
+}
+
+function revisarFechas() {
+  if (dialogoAbierto()) return false;
+  if (!estado.celebrado) estado.celebrado = {};
+  for (const f of mas.fechasEspeciales()) {
+    if (estado.celebrado[f.clave]) continue;
+    estado.celebrado[f.clave] = true;
+    if (f.temporada) estado.tickets += 1;
+    else {
+      estado.monedas += 150;
+      estado.tickets += 2;
+    }
+    refrescarHud();
+    guardar();
+    sonido.premio();
+    ui.dialogo({
+      imagen: miniaturas.personaje('lola'), personaje: true,
+      titulo: f.titulo, texto: f.texto + (f.temporada ? '' : ' (+150 monedas y 2 tickets)'),
+      confeti: true,
+      botones: [{ texto: f.temporada ? '¡A la tienda!' : '¡Gracias, Pilar!', tipo: 'primario', accion: f.temporada ? () => ui.abrirTienda('temporada') : null }]
+    });
+    return true;
+  }
+  return false;
+}
+
+function pintarClima() {
+  const el = document.getElementById('pill-clima');
+  el.textContent = `${ambiente.icono()} ${ambiente.textoHora()}`;
+}
+
 function redimensionar() {
   const w = window.innerWidth;
   const h = window.innerHeight;
@@ -945,7 +1005,8 @@ if (nuevoDia) {
   estado.dia = hoy;
 }
 
-ui.iconoSonido(sonido.activo);
+aplicarTemporada();
+pintarClima();
 ui.pintarInventario(inventario);
 refrescarHud();
 redimensionar();
@@ -963,6 +1024,8 @@ setTimeout(() => {
       texto: 'Soy Pilar, la de la tienda. Este piso está hecho un desastre… Tocad lo que esté roto y os diré qué hace falta. Lo que pidáis os llegará en un paquete a la puerta. ¡Os regalo un ticket para la ruleta!',
       botones: [{ texto: '¡Vamos allá!', tipo: 'primario' }]
     });
+  } else if (revisarFechas()) {
+    return;
   } else if (nuevoDia && habiaPartida) {
     estado.monedas += 50;
     refrescarHud();
@@ -975,6 +1038,8 @@ setTimeout(() => {
     });
   }
 }, 600);
+
+setTimeout(() => mas.revisarDiario(), 4000);
 
 const reloj = new THREE.Clock();
 const puntoMenu = new THREE.Vector3();
@@ -1014,6 +1079,7 @@ renderer.setAnimationLoop(() => {
   camaraIso.actualizar(dt);
   sala.actualizarParedes(camaraIso.direccionHorizontal());
   sala.actualizar(dt);
+  ambiente.actualizar(dt);
   gestor.actualizar(dt);
   mascotas.actualizar(dt);
   entregas.actualizar(dt);
@@ -1023,6 +1089,7 @@ renderer.setAnimationLoop(() => {
   if (tMisiones > 1) {
     tMisiones = 0;
     comprobarEvento();
+    pintarClima();
     ui.limpieza(suciedad.limpieza());
     ui.contadorMisiones(misionesListas());
     ui.chipEvento(textoChipEvento());
