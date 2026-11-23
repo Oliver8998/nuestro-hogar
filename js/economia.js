@@ -93,7 +93,7 @@ export class Economia {
         const lista = n >= t.meta && !reclamada;
         const premio = t.premio.monedas ? `🪙 ${t.premio.monedas}` : `🎟️ ${t.premio.tickets}`;
         return `<div class="pase-tarea ${reclamada ? 'hecha' : ''}"><span>${t.icono}</span><div><b>${t.texto}</b><i><b style="width:${n / t.meta * 100}%"></b></i><small>${n}/${t.meta}</small></div>${lista ? `<button class="primario reclamar" data-id="${t.id}">${premio}</button>` : `<em>${reclamada ? '✅' : premio}</em>`}</div>`;
-      }).join('')}</div>`, () => this.ctx.abrirMas());
+      }).join('')}</div>`, () => (window.abrirObjetivos || this.ctx.abrirMas)());
     cuerpo.querySelectorAll('.reclamar').forEach(b => b.addEventListener('click', () => {
       const t = TAREAS_PASE.find(x => x.id === b.dataset.id);
       p.reclamados.push(t.id);

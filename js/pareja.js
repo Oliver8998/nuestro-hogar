@@ -170,6 +170,7 @@ export class Pareja {
             if (!this.estado.regalos) this.estado.regalos = [];
             this.estado.regalos.push({ rid: `r${Date.now()}`, de: this.sync.yo, para: 1 - this.sync.yo, id: info.id, color, mensaje: caja.querySelector('input').value.trim() });
             this.estado.regalos = this.estado.regalos.filter(r => !r.abierto).slice(-10);
+            if (window.avisarPareja) window.avisarPareja('regalo', '🎁 ¡Te ha mandado un regalo! Ábrelo en casa');
             this.ctx.refrescarHud();
             this.ctx.guardar();
             this.ctx.sonido.comprar();
@@ -201,6 +202,7 @@ export class Pareja {
             this.estado.notas.push({ t, de: this.sync.yo, texto });
             this.estado.notas = this.estado.notas.slice(-12);
             this.marcarVisto(t);
+            if (window.avisarPareja) window.avisarPareja('nota', `📝 Te ha dejado una nota en la nevera: «${texto.slice(0, 90)}»`);
             this.ctx.guardar();
             sonido.pop();
             ui.aviso('📝 ¡Nota pegada!');
@@ -241,7 +243,7 @@ export class Pareja {
     const r = (this.estado.recuerdos || []).slice().reverse();
     this.ctx.ui.abrirGen('Nuestros recuerdos', `
       <p class="gen-intro">Los momentos especiales se apuntan solos. Si ponéis el <b>Árbol de recuerdos</b> (tienda → Deco), le sale una hoja por cada uno.</p>
-      <div class="recuerdos">${r.length ? r.map(x => `<div class="recuerdo"><span>${x.icono}</span><div><b>${escapar(x.texto)}</b><small>${new Date(x.t).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</small></div></div>`).join('') : '<p class="vacio">Todavía no hay recuerdos. ¡A crearlos!</p>'}</div>`, () => (this.sync.activo ? this.abrir() : this.ctx.abrirMas()));
+      <div class="recuerdos">${r.length ? r.map(x => `<div class="recuerdo"><span>${x.icono}</span><div><b>${escapar(x.texto)}</b><small>${new Date(x.t).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</small></div></div>`).join('') : '<p class="vacio">Todavía no hay recuerdos. ¡A crearlos!</p>'}</div>`, () => (this.sync.activo ? this.abrir() : (window.abrirNosotros || this.ctx.abrirMas)()));
   }
 
   alternarDeseo(info, color) {
@@ -397,7 +399,7 @@ export class Pareja {
     if (!this.sync.activo) {
       const cuerpo = ui.abrirGen('Pareja', `
         <p class="gen-intro">Para compartir la casa, entrad con vuestra cuenta desde el menú principal: uno crea la casa y el otro se une con el código.</p>
-        <button id="pj-menu" class="primario">🏠 Ir al menú principal</button>`, () => this.ctx.abrirMas());
+        <button id="pj-menu" class="primario">🏠 Ir al menú principal</button>`, () => (window.abrirNosotros || this.ctx.abrirMas)());
       cuerpo.querySelector('#pj-menu').addEventListener('click', () => this.ctx.abrirInicio());
       return;
     }
@@ -419,7 +421,7 @@ export class Pareja {
       <button id="pj-planes" class="secundario">📅 Nuestros planes (${(this.estado.planes || []).filter(p => p.fecha >= this.hoyISO()).length})</button>
       <button id="pj-recuerdos" class="secundario">🌳 Nuestros recuerdos (${(this.estado.recuerdos || []).length})</button>
       <p class="gen-intro">🎁 Para hacer un regalo o proponer una compra, elegid el objeto en la tienda y usad los botones <b>🎁</b>, <b>🗳️</b> y <b>❤️</b>.</p>
-      `, () => this.ctx.abrirMas());
+      `, () => (window.abrirNosotros || this.ctx.abrirMas)());
     cuerpo.querySelector('#pj-compartir').addEventListener('click', async () => {
       const texto = `Únete a nuestra casa en Our Place 🏠💕 Código: ${this.sync.codigo}\nhttps://oliver8998.github.io/nuestro-hogar/`;
       try {

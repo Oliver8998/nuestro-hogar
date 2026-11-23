@@ -1,12 +1,14 @@
 import { editarFoto } from './fotoeditor.js';
 import { Cuadros } from './cuadros.js';
 import { pintarCuadro } from './pintar.js';
-import { idioma, ponerIdioma } from './i18n.js';
+import { idioma, ponerIdioma, traducirTexto } from './i18n.js';
 import * as THREE from 'three';
 import { NOMBRE_TEMPORADA } from './ambiente.js';
 
 const CLAVE_FOTOS = 'hogar-fotos';
 const CLAVE_DIARIO = 'hogar-diario';
+const CLAVE_POSTALES = 'hogar-postales';
+const CLAVE_POSTAL_DIA = 'hogar-postal-dia';
 
 
 function leer(clave, defecto) {
@@ -73,28 +75,127 @@ export class Mas {
   }
 
   abrir() {
-    const { ui } = this.ctx;
+    const { ui, sonido } = this.ctx;
     const extras = this.ctx.extrasMenu ? this.ctx.extrasMenu() : [];
     const tiles = [
       ...extras,
-      { id: 'foto', icono: '📸', texto: 'Foto de la casa', sub: 'Hazle una foto bonita y compártela' },
-      { id: 'album', icono: '🖼️', texto: 'Fotos y cuadros', sub: 'Colgad fotos de la galería o pintad un cuadro' },
-      { id: 'diario', icono: '📔', texto: 'Diario del hogar', sub: 'El antes y el después de vuestra casa' },
-      { id: 'ajustes', icono: '⚙️', texto: 'Ajustes', sub: 'Nombres, fechas especiales y sonido' }
+      { id: 'fotos', icono: '📸', texto: 'Fotos', sub: 'Foto de la casa, cuadros y el diario' },
+      { id: 'ajustes', icono: '⚙️', texto: 'Ajustes', sub: 'Nombres, fechas, sonido y copia' }
     ];
-    const cuerpo = ui.abrirGen('Más cosas', `<div class="mas-rejilla">${tiles.map(t => `
-      <button class="mas-tile" data-id="${t.id}"><span>${t.icono}</span><b>${t.texto}</b><small>${t.sub}</small>${t.insignia ? `<i class="insignia">${t.insignia}</i>` : ''}</button>`).join('')}</div>`);
+    const tile = t => `<button class="mas-tile${t.bloqueo ? ' bloqueado' : ''}" data-id="${t.id}"><span>${t.bloqueo ? '🔒' : t.icono}</span><b>${t.texto}</b><small>${t.bloqueo || t.sub}</small>${!t.bloqueo && t.insignia ? `<i class="insignia">${t.insignia}</i>` : ''}</button>`;
+    const cuerpo = ui.abrirGen('Más cosas', `<div class="mas-rejilla">${tiles.map(tile).join('')}</div>`);
     cuerpo.querySelectorAll('.mas-tile').forEach(b => b.addEventListener('click', () => {
-      this.ctx.sonido.tocar();
       const id = b.dataset.id;
       const extra = extras.find(t => t.id === id);
+      if (extra && extra.bloqueo) {
+        sonido.error();
+        return ui.aviso(`🔒 ${extra.bloqueo}`, true);
+      }
+      sonido.tocar();
       if (extra) extra.accion();
-      else if (id === 'foto') this.hacerFoto();
-      else if (id === 'album') this.abrirAlbum();
-      else if (id === 'diario') this.abrirDiario();
+      else if (id === 'fotos') this.abrirFotos();
       else if (id === 'ajustes') this.abrirAjustes();
     }));
   }
+
+  postales() {
+    try {
+      return JSON.parse(localStorage.getItem(CLAVE_POSTALES) || '[]');
+    } catch (e) {
+      return [];
+    }
+  }
+
+  textoPostal() {
+    const lista = (this.ctx.mascotas ? this.ctx.mascotas() : []).filter(m => m.nombre);
+    const hora = new Date().getHours();
+    const momento = hora < 12 ? 'esta mañana' : hora < 20 ? 'esta tarde' : 'esta noche';
+    if (lista.length) {
+      const m = lista[Math.floor(Math.random() * lista.length)];
+      if (m.estado === 'dormir') return `${m.nombre} echándose la siesta`;
+      const frases = [`${m.nombre} posando para la foto`, `${m.nombre} vigilando la casa ${momento}`, `${m.nombre} pidiendo mimos`, `${m.nombre} con cara de travesura`, `Un día cualquiera con ${m.nombre}`];
+      return frases[Math.floor(Math.random() * frases.length)];
+    }
+    return [`La casa ${momento}`, 'Nuestro rincón', 'Así está quedando', 'Un día más en casa'][Math.floor(Math.random() * 4)];
+  }
+
+  postalDelDia() {
+    const hoy = new Date().toDateString();
+    try {
+      if (localStorage.getItem(CLAVE_POSTAL_DIA) === hoy) return false;
+      localStorage.setItem(CLAVE_POSTAL_DIA, hoy);
+    } catch (e) {
+      return false;
+    }
+    const foto = this.capturar(420, 0.92);
+    const c = document.createElement('canvas');
+    c.width = 360;
+    c.height = 420;
+    const g = c.getContext('2d');
+    g.fillStyle = '#fffdf8';
+    g.fillRect(0, 0, 360, 420);
+    g.drawImage(foto, 18, 18, 324, 324);
+    const texto = idioma() === 'en' ? traducirTexto(this.textoPostal()) : this.textoPostal();
+    g.fillStyle = '#4b3426';
+    g.font = '700 21px "Nunito", system-ui, sans-serif';
+    g.textAlign = 'center';
+    g.fillText(texto, 180, 378, 330);
+    g.fillStyle = '#b08a6e';
+    g.font = '700 14px "Nunito", system-ui, sans-serif';
+    g.fillText(new Date().toLocaleDateString(idioma() === 'en' ? 'en-GB' : 'es-ES', { day: 'numeric', month: 'long' }), 180, 402);
+    const data = c.toDataURL('image/jpeg', 0.78);
+    const lista = this.postales();
+    lista.unshift({ data, texto, fecha: Date.now() });
+    while (lista.length) {
+      try {
+        localStorage.setItem(CLAVE_POSTALES, JSON.stringify(lista.slice(0, 45)));
+        break;
+      } catch (e) {
+        lista.pop();
+        if (lista.length < 2) break;
+      }
+    }
+    this.ctx.sonido.premio();
+    this.ctx.ui.dialogo({
+      titulo: '📸 La foto del día',
+      html: `<img class="postal-grande" src="${data}" alt="">`,
+      botones: [
+        { texto: '🖼️ Al álbum', tipo: 'secundario', accion: () => this.guardarEnAlbum(c) },
+        { texto: '¡Qué bonita!', tipo: 'primario' }
+      ]
+    });
+    return true;
+  }
+
+  abrirPostales() {
+    const lista = this.postales();
+    const cuerpo = this.ctx.ui.abrirGen('Fotos del día', `<p class="gen-intro">Cada día que entráis, Pilar hace una foto de la casa. Aquí se guardan.</p>
+      <div class="postales">${lista.length ? lista.map((p, k) => `<button class="postal" data-k="${k}" style="--r:${(k % 5) - 2}deg"><img src="${p.data}" alt=""></button>`).join('') : '<p class="vacio">Mañana tendréis la primera.</p>'}</div>`, () => this.abrirFotos());
+    cuerpo.querySelectorAll('.postal').forEach(b => b.addEventListener('click', () => {
+      const p = lista[Number(b.dataset.k)];
+      this.ctx.ui.dialogo({ html: `<img class="postal-grande" src="${p.data}" alt="">`, botones: [{ texto: 'Cerrar', tipo: 'secundario' }] });
+    }));
+  }
+
+  abrirFotos() {
+    const { ui, sonido } = this.ctx;
+    const tiles = [
+      { id: 'foto', icono: '📸', texto: 'Foto de la casa', sub: 'Hazle una foto bonita y compártela' },
+      { id: 'album', icono: '🖼️', texto: 'Fotos y cuadros', sub: 'Colgad fotos de la galería o pintad un cuadro' },
+      { id: 'diario', icono: '📔', texto: 'Diario del hogar', sub: 'El antes y el después de vuestra casa' },
+      { id: 'postales', icono: '🎞️', texto: 'Fotos del día', sub: `${this.postales().length} fotos guardadas` }
+    ];
+    const cuerpo = ui.abrirGen('Fotos', `<div class="mas-rejilla">${tiles.map(t => `<button class="mas-tile" data-id="${t.id}"><span>${t.icono}</span><b>${t.texto}</b><small>${t.sub}</small></button>`).join('')}</div>`, () => this.abrir());
+    cuerpo.querySelectorAll('.mas-tile').forEach(b => b.addEventListener('click', () => {
+      sonido.tocar();
+      const id = b.dataset.id;
+      if (id === 'foto') this.hacerFoto();
+      else if (id === 'album') this.abrirAlbum();
+      else if (id === 'postales') this.abrirPostales();
+      else this.abrirDiario();
+    }));
+  }
+
 
   abrirAjustes() {
     const { ui, sonido } = this.ctx;
@@ -113,10 +214,16 @@ export class Mas {
         <label>Vuestra canción 🎶 (enlace de Spotify o YouTube)</label>
         <input id="aj-cancion" type="url" placeholder="https://open.spotify.com/track/…" value="${escapar(p.cancion || '')}">
         <small class="nota">Sonará al tocar la radio → 💕 Nuestra canción.</small>
+        <button id="aj-avisos" class="secundario">${window.avisos && window.avisos.activos() ? '🔔 Avisos al móvil: sí' : '🔕 Avisos al móvil: no'}</button>
+        <small class="nota">Te llega un aviso cuando tu pareja te deja una nota, un regalo o te manda un 💗.</small>
         <button id="aj-sonido" class="secundario">${sonido.activo ? '🔊 Sonido activado' : '🔇 Sonido desactivado'}</button>
         <button id="aj-idioma" class="secundario" data-no-traducir>${idioma() === 'en' ? '🌐 Language: English' : '🌐 Idioma: Español'}</button>
         <button id="aj-lofi" class="secundario">${this.ctx.lofi && this.ctx.lofi.activo ? '🎧 Música lofi: sí' : '🎧 Música lofi: no'}</button>
         <small class="nota">Música tranquila de fondo que cambia con la hora del día.</small>
+        <label>Copia de seguridad 💾</label>
+        <div class="fila2"><button id="aj-copia" class="secundario">💾 Descargar</button><button id="aj-restaurar" class="secundario">📂 Restaurar</button></div>
+        <small class="nota">Guarda toda la casa, las fotos y el diario en un archivo por si acaso.</small>
+        <input id="aj-archivo" type="file" accept=".json,application/json" hidden>
         <button id="aj-guardar" class="primario">Guardar</button>
         <button id="aj-menu" class="secundario">🏠 Menú principal</button>
       </div>`, () => this.abrir());
@@ -130,6 +237,14 @@ export class Mas {
       const on = this.ctx.lofi.alternar();
       if (on && !sonido.activo) sonido.alternar();
       e.currentTarget.textContent = on ? '🎧 Música lofi: sí' : '🎧 Música lofi: no';
+    });
+    cuerpo.querySelector('#aj-avisos').addEventListener('click', e => this.alternarAvisos(e.currentTarget));
+    cuerpo.querySelector('#aj-copia').addEventListener('click', () => this.descargarCopia());
+    cuerpo.querySelector('#aj-restaurar').addEventListener('click', () => cuerpo.querySelector('#aj-archivo').click());
+    cuerpo.querySelector('#aj-archivo').addEventListener('change', e => {
+      const f = e.target.files && e.target.files[0];
+      if (f) this.restaurarCopia(f);
+      e.target.value = '';
     });
     cuerpo.querySelector('#aj-menu').addEventListener('click', () => this.ctx.abrirInicio && this.ctx.abrirInicio());
     cuerpo.querySelector('#aj-guardar').addEventListener('click', () => {
@@ -146,6 +261,98 @@ export class Mas {
       this.ctx.alCambiarAjustes && this.ctx.alCambiarAjustes();
       this.abrir();
     });
+  }
+
+  async alternarAvisos(boton) {
+    const { ui, sonido } = this.ctx;
+    const av = window.avisos;
+    if (!av) return;
+    if (av.activos()) {
+      await av.desactivar();
+      boton.textContent = '🔕 Avisos al móvil: no';
+      return ui.aviso('🔕 Avisos desactivados');
+    }
+    const p = this.ctx.datosPareja ? this.ctx.datosPareja() : { activo: false };
+    if (!p.activo) return ui.aviso('Primero tenéis que compartir la casa', true);
+    if (av.esIOS() && !av.instalada()) {
+      return ui.dialogo({
+        titulo: '📲 Primero, instala el juego',
+        texto: 'En iPhone los avisos solo funcionan si el juego está en la pantalla de inicio: en Safari toca Compartir (el cuadrado con la flecha) → «Añadir a pantalla de inicio». Después ábrelo desde ese icono y activa los avisos aquí.',
+        botones: [{ texto: 'Entendido', tipo: 'primario' }]
+      });
+    }
+    if (!av.soportado()) return ui.aviso('Este navegador no permite avisos', true);
+    boton.disabled = true;
+    try {
+      await av.activar(p.codigo, p.yo);
+      boton.textContent = '🔔 Avisos al móvil: sí';
+      sonido.premio();
+      ui.aviso('🔔 ¡Avisos activados!');
+    } catch (e) {
+      sonido.error();
+      ui.aviso(e.message === 'denegado' ? 'Has dicho que no a los avisos. Puedes activarlos en los ajustes del móvil' : 'No se pudieron activar los avisos. Prueba otra vez', true);
+    } finally {
+      boton.disabled = false;
+    }
+  }
+
+  descargarCopia() {
+    const leer = k => {
+      try {
+        return JSON.parse(localStorage.getItem(k) || 'null');
+      } catch (e) {
+        return null;
+      }
+    };
+    const copia = { juego: 'our-place', version: 1, fecha: new Date().toISOString(), casa: this.ctx.instantanea(), fotos: leer(CLAVE_FOTOS), diario: leer(CLAVE_DIARIO) };
+    const blob = new Blob([JSON.stringify(copia)], { type: 'application/json' });
+    const a = document.createElement('a');
+    const nombre = (this.pareja().casa || 'casa').normalize('NFD').replace(/[^\w]+/g, '-').toLowerCase();
+    a.href = URL.createObjectURL(blob);
+    a.download = `our-place-${nombre}-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    this.estado.ultimaCopia = Date.now();
+    this.ctx.guardar();
+    this.ctx.sonido.arreglo();
+    this.ctx.ui.aviso('💾 Copia descargada');
+  }
+
+  restaurarCopia(archivo) {
+    const { ui, sonido } = this.ctx;
+    const lector = new FileReader();
+    lector.onload = () => {
+      let copia = null;
+      try {
+        copia = JSON.parse(lector.result);
+      } catch (e) {}
+      if (!copia || copia.juego !== 'our-place' || !copia.casa || !copia.casa.estado) {
+        sonido.error();
+        return ui.aviso('Ese archivo no es una copia de la casa', true);
+      }
+      ui.dialogo({
+        titulo: '¿Restaurar la copia?',
+        texto: `La casa volverá a como estaba el ${new Date(copia.fecha).toLocaleDateString()}. Lo que hayáis hecho después se perderá (también en el móvil de tu pareja).`,
+        botones: [
+          { texto: 'Cancelar', tipo: 'secundario' },
+          {
+            texto: 'Restaurar', tipo: 'rosa', accion: () => {
+              try {
+                if (copia.fotos) localStorage.setItem(CLAVE_FOTOS, JSON.stringify(copia.fotos));
+                if (copia.diario) localStorage.setItem(CLAVE_DIARIO, JSON.stringify(copia.diario));
+              } catch (e) {}
+              this.ctx.aplicarRemoto(copia.casa, false, true);
+              this.ctx.guardar();
+              sonido.premio();
+              ui.aviso('📂 Casa restaurada');
+            }
+          }
+        ]
+      });
+    };
+    lector.readAsText(archivo);
   }
 
   montarCartel() {
@@ -246,7 +453,7 @@ export class Mas {
         <button class="rosa" id="pintar-nuevo">🎨 Pintar un cuadro</button>
       </div>
       <div class="album">${this.fotos.length ? this.fotos.map(f => `
-        <button class="album-foto" data-id="${f.id}"><img src="${f.data}" alt="">${f.pintura ? '<em>🎨</em>' : ''}${colgadas.has(f.id) ? '<i>🖼️ Colgada</i>' : ''}</button>`).join('') : '<p class="vacio">Todavía no hay fotos ni cuadros.</p>'}</div>`, () => this.abrir());
+        <button class="album-foto" data-id="${f.id}"><img src="${f.data}" alt="">${f.pintura ? '<em>🎨</em>' : ''}${colgadas.has(f.id) ? '<i>🖼️ Colgada</i>' : ''}</button>`).join('') : '<p class="vacio">Todavía no hay fotos ni cuadros.</p>'}</div>`, () => this.abrirFotos());
     cuerpo.querySelector('#pintar-nuevo').addEventListener('click', () => this.pintarNuevo());
     cuerpo.querySelector('#subir-foto').addEventListener('change', async e => {
       const archivos = [...e.target.files];
@@ -466,7 +673,7 @@ export class Mas {
       </div>` : '<p class="gen-intro">Cada pocos días guardo una foto de cómo va la casa. ¡Volved en unos días para ver el antes y el después!</p>'}
       <button id="diario-ahora" class="secundario">📸 Guardar cómo está ahora</button>
       <div class="diario-lista">${this.diario.slice().reverse().map(d => `
-        <div class="diario-entrada"><img src="${d.data}" alt=""><div><b>${escapar(d.titulo)}</b><small>${fecha(d.fecha)}</small></div></div>`).join('')}</div>`, () => this.abrir());
+        <div class="diario-entrada"><img src="${d.data}" alt=""><div><b>${escapar(d.titulo)}</b><small>${fecha(d.fecha)}</small></div></div>`).join('')}</div>`, () => this.abrirFotos());
     cuerpo.querySelector('#diario-ahora').addEventListener('click', () => {
       ui.cerrarHojas();
       setTimeout(() => {

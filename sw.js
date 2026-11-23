@@ -1,4 +1,4 @@
-const CACHE = 'hogar-v37';
+const CACHE = 'hogar-v38';
 const ARCHIVOS = [
   './',
   './index.html',
@@ -7,6 +7,8 @@ const ARCHIVOS = [
   './icons/icon-192.png',
   './icons/icon-512.png',
   './js/main.js',
+  './js/guia.js',
+  './js/avisos.js',
   './js/camara.js',
   './js/sala.js',
   './js/muebles.js',
@@ -73,4 +75,29 @@ self.addEventListener('fetch', e => {
       })
       .catch(() => caches.match(e.request))
   );
+});
+
+self.addEventListener('push', e => {
+  let d = {};
+  try {
+    d = e.data ? e.data.json() : {};
+  } catch (err) {
+    d = { texto: e.data ? e.data.text() : '' };
+  }
+  e.waitUntil(self.registration.showNotification(d.titulo || 'Our Place', {
+    body: d.texto || '',
+    icon: './icons/icon-192.png',
+    badge: './icons/icon-192.png',
+    tag: d.tipo || 'aviso',
+    renotify: true,
+    data: { url: './' }
+  }));
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(lista => {
+    for (const c of lista) if ('focus' in c) return c.focus();
+    return self.clients.openWindow('./');
+  }));
 });

@@ -32,7 +32,7 @@ export const EVENTOS = [
     resultados: [
       { min: 80, titulo: '¡Tu madre está encantada!', texto: '"¡Qué casa más bonita y qué limpia! Tomad, para que os deis un capricho." Os deja 300 monedas, 3 tickets y un regalo especial.', premio: { monedas: 300, tickets: 3, item: 'legendario' } },
       { min: 50, titulo: 'Tu madre dice que no está mal…', texto: '"Bueno… se puede vivir. Pero esas esquinas…" Os deja 100 monedas para productos de limpieza.', premio: { monedas: 100 } },
-      { min: 0, titulo: 'Tu madre se ha ido disgustada', texto: '"¡Pero cómo vivís así!" Se ha pasado la tarde limpiando y se ha llevado 50 monedas "para lejía". Para la próxima…', premio: { monedas: -50 } }
+      { min: 0, titulo: 'Tu madre se ha remangado', texto: '"¡Pero cómo vivís así!" Se ha pasado la tarde limpiando con vosotros y al final os ha dejado 30 monedas "para lejía". Para la próxima, ¡a por todas!', premio: { monedas: 30 } }
     ]
   },
   {

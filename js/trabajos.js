@@ -971,7 +971,7 @@ export class Trabajos {
       <div class="trabajos-lista">${TRABAJOS.map(x => {
         const hecho = d.hechos.includes(x.id);
         return `<div class="${hecho ? 'hecho' : ''} ${x.id === t.id ? 'hoy' : ''}"><span>${hecho || x.id === t.id ? x.icono : '❔'}</span><small>${hecho || x.id === t.id ? x.nombre : '???'}</small>${d.mejor[x.id] ? `<i>${Math.round(d.mejor[x.id] * 100)}%</i>` : ''}</div>`;
-      }).join('')}</div>`, () => this.ctx.abrirMas());
+      }).join('')}</div>`, () => (window.abrirGanar || this.ctx.abrirMas)());
     cuerpo.querySelector('#ir-trabajar').addEventListener('click', () => this.trabajar(t));
   }
 

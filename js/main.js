@@ -34,6 +34,10 @@ import { Sorpresas } from './sorpresas.js';
 import { Lofi } from './lofi.js';
 import { Trabajos } from './trabajos.js';
 import { activarTraduccion } from './i18n.js';
+import { Guia } from './guia.js';
+import * as avisos from './avisos.js';
+
+let guia = null;
 import { CASAS, COLECCIONES, LOGROS, EXTERIORES, calcularAcogedor, coleccionesCompletas } from './progreso.js';
 
 activarTraduccion();
@@ -156,9 +160,24 @@ function habitacionViva() {
 function todasHabitaciones() {
   const habs = (estado.habs || []).slice();
   habs[estado.habActual || 0] = habitacionViva();
-  const n = CASAS[nivelCasa()].habitaciones.length;
+  const n = habsCasa().length;
   while (habs.length < n) habs.push({ muebles: [], suciedad: [], paredes: [null, null, null, null] });
   return habs;
+}
+
+const AMPLIACIONES = [
+  { nombre: 'Cine', icono: '🎬', precio: 6000 },
+  { nombre: 'Biblioteca', icono: '📚', precio: 6000 },
+  { nombre: 'Gimnasio', icono: '🏋️', precio: 7000 },
+  { nombre: 'Invernadero', icono: '🪴', precio: 8000 },
+  { nombre: 'Salón de baile', icono: '💃', precio: 10000 },
+  { nombre: 'Torre del observatorio', icono: '🔭', precio: 14000 }
+];
+
+function habsCasa(e = estado) {
+  const n = (e.casa && e.casa.nivel) || 0;
+  const base = CASAS[n].habitaciones;
+  return n === CASAS.length - 1 ? [...base, ...(e.ampliaciones || [])] : base;
 }
 
 function nivelCasa() {
@@ -224,7 +243,14 @@ function aplicarRemoto(datos, conflicto = false, inicial = false) {
     return;
   }
   const nivelAntes = nivelCasa();
+  const otroYo = sync && sync.activo ? 1 - sync.yo : null;
+  const animoAntes = otroYo !== null && estado.animo && estado.animo[otroYo] ? estado.animo[otroYo].t : 0;
   for (const [k, v] of Object.entries(datos.estado)) if (!LOCALES.includes(k)) estado[k] = v;
+  if (otroYo !== null) setTimeout(revisarRachaPareja, 0);
+  if (!inicial && otroYo !== null && estado.animo && estado.animo[otroYo] && estado.animo[otroYo].t > animoAntes) {
+    const a = estado.animo[otroYo];
+    setTimeout(() => ui.aviso(`💭 ${pareja.otro()} está: ${a.e} ${a.txt}`), 1200);
+  }
   const habR = datos.estado.habs && datos.estado.habs[estado.habActual || 0];
   const cambios = sincronizarMuebles(habR ? habR.muebles : (datos.muebles || []));
   if (habR && (estado.habActual || 0) !== 0) sala.pintarParedes(habR.paredes, CASAS[nivelCasa()].pared);
@@ -871,6 +897,7 @@ const ui = new UI(miniaturas, {
         sonido.arreglo();
         ui.particula('✨', x, y, 6);
         ui.aviso(r.objetivo.tipo === 'pared' ? '🖌️ ¡Pared pintada!' : `✨ ${r.objetivo.d.mensaje}`);
+        if (guia) guia.evento('arreglar');
       } else {
         sonido.colocar();
         registrar('colocar');
@@ -1048,7 +1075,7 @@ function acogedor() {
 
 function exteriorActual() {
   const casa = CASAS[nivelCasa()];
-  return EXTERIORES[casa.habitaciones[estado.habActual || 0]] || null;
+  return EXTERIORES[habsCasa()[estado.habActual || 0]] || null;
 }
 
 function aplicarEstiloCasa() {
@@ -1065,8 +1092,8 @@ function aplicarEstiloCasa() {
   }
   if (nivelCasa() > 0 || hab > 0) sala.pintarParedes(sala.estado().paredes, casa.pared);
   const pill = document.getElementById('pill-hab');
-  pill.classList.toggle('oculto', casa.habitaciones.length < 2);
-  pill.textContent = `${casa.icono} ${casa.habitaciones[hab] || 'Salón'} ▾`;
+  pill.classList.toggle('oculto', habsCasa().length < 2);
+  pill.textContent = `${casa.icono} ${habsCasa()[hab] || 'Salón'} ▾`;
   if (casa2) {
     casa2.aplicar();
     mas.cuadros.terminar(false);
@@ -1100,7 +1127,7 @@ function cambiarHabitacion(i) {
     m.estado = 'quieto';
   }
   sonido.pop();
-  ui.aviso(`${CASAS[nivelCasa()].icono} ${CASAS[nivelCasa()].habitaciones[i]}`);
+  ui.aviso(`${CASAS[nivelCasa()].icono} ${habsCasa()[i]}`);
   refrescarHud();
   guardar();
 }
@@ -1111,7 +1138,7 @@ function abrirHabitaciones() {
   ui.dialogo({
     titulo: `${casa.icono} ${casa.nombre}`,
     texto: '¿A qué habitación vamos?',
-    botones: casa.habitaciones.map((h, i) => ({ texto: `${i === actual ? '📍 ' : ''}${h}`, tipo: i === actual ? 'secundario' : 'primario', accion: () => setTimeout(() => cambiarHabitacion(i), 200) })),
+    botones: habsCasa().map((h, i) => ({ texto: `${i === actual ? '📍 ' : ''}${h}`, tipo: i === actual ? 'secundario' : 'primario', accion: () => setTimeout(() => cambiarHabitacion(i), 200) })),
     columna: true
   });
 }
@@ -1141,9 +1168,38 @@ function abrirCasas() {
         if (estado.monedas < c.precio) faltan.push(`🪙 ${c.precio}`);
       }
       return `<div class="casa-fila ${estadoCasa}"><span>${c.icono}</span><div><b>${c.nombre}</b><small>${c.habitaciones.length} ${c.habitaciones.length > 1 ? 'habitaciones' : 'habitación'} · ${c.habitaciones.join(', ')}</small>${estadoCasa === 'siguiente' ? (faltan.length ? `<small class="falta">Falta: ${faltan.join(' · ')}</small>` : `<button class="primario mudarse">🚚 Mudarse · 🪙 ${c.precio}</button>`) : ''}</div><em>${estadoCasa === 'actual' ? '📍 Aquí' : estadoCasa === 'pasada' ? '✅' : estadoCasa === 'bloqueada' ? '🔒' : ''}</em></div>`;
-    }).join('')}</div>`, () => mas.abrir());
+    }).join('')}</div>
+    ${nivel === CASAS.length - 1 ? `<h4 class="gen-sub">🏗️ Ampliar la mansión</h4>
+    <p class="gen-intro">Ya vivís en lo más alto, pero siempre se puede soñar más grande: añadid habitaciones nuevas.</p>
+    <div class="casas-lista">${AMPLIACIONES.map(x => {
+      const hecha = (estado.ampliaciones || []).includes(x.nombre);
+      return `<div class="casa-fila ${hecha ? 'pasada' : 'siguiente'}"><span>${x.icono}</span><div><b>${x.nombre}</b>${hecha ? '<small>Ya es vuestra</small>' : estado.monedas >= x.precio ? `<button class="primario ampliar" data-n="${x.nombre}">🏗️ Construir · 🪙 ${x.precio}</button>` : `<small class="falta">Falta: 🪙 ${x.precio}</small>`}</div><em>${hecha ? '✅' : ''}</em></div>`;
+    }).join('')}</div>` : ''}`, () => mas.abrir());
   const b = cuerpo.querySelector('.mudarse');
   if (b) b.addEventListener('click', () => mudarse(nivel + 1));
+  cuerpo.querySelectorAll('.ampliar').forEach(x => x.addEventListener('click', () => ampliar(x.dataset.n)));
+}
+
+function ampliar(nombre) {
+  const x = AMPLIACIONES.find(a => a.nombre === nombre);
+  if (!x || estado.monedas < x.precio || (estado.ampliaciones || []).includes(nombre)) return;
+  estado.monedas -= x.precio;
+  estado.habs = todasHabitaciones();
+  estado.ampliaciones = [...(estado.ampliaciones || []), nombre];
+  estado.habs = todasHabitaciones();
+  ui.cerrarHojas();
+  refrescarHud();
+  aplicarEstiloCasa();
+  guardar();
+  pareja.recordar(null, x.icono, `Construimos ${nombre.toLowerCase() === 'cine' ? 'un cine' : `la habitación «${nombre}»`} en la mansión`);
+  sonido.premio();
+  ui.dialogo({
+    imagen: miniaturas.personaje('lola'), personaje: true,
+    titulo: `${x.icono} ¡${nombre} terminado!`,
+    texto: 'Los obreros ya han acabado. Id a la nueva habitación con el botón de arriba y decoradla a vuestro gusto.',
+    confeti: true,
+    botones: [{ texto: '¡A estrenarla!', tipo: 'primario' }]
+  });
 }
 
 function mudarse(n) {
@@ -1189,7 +1245,7 @@ function abrirLogros() {
     <p class="gen-intro">${hechos.length} de ${LOGROS.length} conseguidos</p>
     <div class="logros">${normales.map(fila).join('')}</div>
     <h4 class="gen-sub">🤫 Secretos (${secretos.filter(l => hechos.includes(l.id)).length} de ${secretos.length})</h4>
-    <div class="logros">${secretos.map(fila).join('')}</div>`, () => mas.abrir());
+    <div class="logros">${secretos.map(fila).join('')}</div>`, () => abrirObjetivos());
 }
 
 function abrirColecciones() {
@@ -1200,7 +1256,7 @@ function abrirColecciones() {
     ${COLECCIONES.map(c => `<div class="coleccion ${hechas.includes(c.id) ? 'hecha' : ''}">
       <div class="col-cab"><b>${c.icono} ${c.nombre}</b><em>${hechas.includes(c.id) ? '✅ Completa' : `🪙 ${c.premio.monedas} · 🎟️ ${c.premio.tickets}`}</em></div>
       <div class="col-items">${c.items.map(id => `<div class="${ids.includes(id) ? 'tiene' : ''}"><img src="${miniaturas.item(id, 0)}" alt=""><small>${infoItem(id).nombre}</small></div>`).join('')}</div>
-    </div>`).join('')}`, () => mas.abrir());
+    </div>`).join('')}`, () => abrirObjetivos());
 }
 
 function revisarProgreso() {
@@ -1265,6 +1321,7 @@ function asegurarDiarias() {
 
 function registrar(evento, n = 1) {
   if (pareja) pareja.registrar(evento);
+  if (guia) guia.evento(evento);
   if (!estado.stats) estado.stats = {};
   estado.stats[evento] = (estado.stats[evento] || 0) + n;
   asegurarDiarias();
@@ -1327,8 +1384,13 @@ function iniciarEvento(idx, avisar) {
   }
 }
 
+function enMenu() {
+  const i = document.getElementById('inicio');
+  return !!i && i.style.display !== 'none' && !i.classList.contains('fuera');
+}
+
 function dialogoAbierto() {
-  return document.getElementById('dialogo').classList.contains('abierto') || !document.getElementById('juego').classList.contains('oculto') || !!document.getElementById('foto-editor') || visitando;
+  return enMenu() || document.getElementById('dialogo').classList.contains('abierto') || !document.getElementById('juego').classList.contains('oculto') || !!document.getElementById('foto-editor') || visitando;
 }
 
 function comprobarEvento() {
@@ -1434,6 +1496,10 @@ mas = new Mas({
   alFotoBorrada: id => sync && sync.borrarFoto(id),
   guardar: () => guardar(),
   temporada: () => temporadaActual(),
+  instantanea: () => instantanea(),
+  aplicarRemoto: (d, c, i) => aplicarRemoto(d, c, i),
+  mascotas: () => mascotas.lista,
+  datosPareja: () => ({ activo: !!(sync && sync.activo), codigo: sync && sync.codigo, yo: sync ? sync.yo : 0 }),
   extrasMenu: () => (window.extrasMenu ? window.extrasMenu() : [])
 });
 
@@ -1477,7 +1543,7 @@ function abrirJuegos() {
     <div class="lista-juegos">${[...JUEGOS, ...JUEGOS_DOS].map(j => {
       const hechas = n[j.id] || 0;
       return `<button class="juego-fila" data-id="${j.id}"><span>${j.icono}</span><div><b>${j.nombre}</b><small>${j.texto}</small></div><em>🪙 ${hechas < PARTIDAS_PREMIADAS ? `hasta ${j.premio}` : `hasta ${Math.round(j.premio * 0.3)}`}<br><i>${Math.min(hechas, PARTIDAS_PREMIADAS)}/${PARTIDAS_PREMIADAS} hoy</i></em></button>`;
-    }).join('')}</div>`, () => mas.abrir());
+    }).join('')}</div>`, () => abrirGanar());
   cuerpo.querySelectorAll('.juego-fila').forEach(b => b.addEventListener('click', async () => {
     const j = [...JUEGOS, ...JUEGOS_DOS].find(x => x.id === b.dataset.id);
     ui.cerrarHojas();
@@ -1583,8 +1649,39 @@ document.querySelectorAll('#reacciones button').forEach(b => b.addEventListener(
   }
   mostrarReaccion(b.textContent);
   sync.emitir('reaccion', { emoji: b.textContent });
+  if (window.avisarPareja) window.avisarPareja('reaccion', `${b.textContent} Te está pensando`);
 }));
-suciedad.genera = !sync.activo || sync.yo === 0;
+window.avisarPareja = (tipo, texto) => {
+  if (!sync || !sync.activo || !sync.codigo) return;
+  const yo = sync.yo;
+  const nombre = (estado.pareja && estado.pareja.nombres && estado.pareja.nombres[yo]) || 'Tu pareja';
+  avisos.enviar(sync.codigo, yo, tipo, `💗 ${nombre}`, texto);
+};
+window.avisos = avisos;
+setTimeout(() => sync && sync.activo && avisos.renovar(sync.codigo, sync.yo), 8000);
+
+const TURNO_GEN = 120000;
+function soyGenerador() {
+  if (!sync || !sync.activo) return true;
+  const g = estado.generador;
+  return !g || g.hasta < Date.now() || g.yo === sync.yo;
+}
+function turnoGenerador() {
+  if (visitando) return;
+  if (sync && sync.activo && soyGenerador()) {
+    const g = estado.generador;
+    const ahora = Date.now();
+    if (!g || g.yo !== sync.yo || g.hasta - ahora < TURNO_GEN / 2) {
+      estado.generador = { yo: sync.yo, hasta: ahora + TURNO_GEN };
+      guardar();
+    }
+  }
+  const si = soyGenerador();
+  suciedad.genera = si;
+  mascotas.trastadas = si;
+}
+turnoGenerador();
+setInterval(turnoGenerador, 15000);
 
 pareja = new Pareja({
   estado, ui, sonido, sync, miniaturas, inventario, infoItem,
@@ -1643,7 +1740,7 @@ const inicio = new Inicio({
       nivel: n, icono: CASAS[n].icono, nombreNivel: CASAS[n].nombre,
       casa: p.casa || 'Nuestro Hogar', nombres,
       monedas: estado.monedas || 0,
-      racha: (estado.racha && estado.racha.n) || 0,
+      racha: sync && sync.activo ? rachaPareja() : (estado.racha && estado.racha.n) || 0,
       acogedor: estado.puntuacion || acogedor().total,
       novedades: novedades.slice(0, 5)
     };
@@ -1666,8 +1763,7 @@ const inicio = new Inicio({
       await sync.traer();
     }
     ponerMiNombre(nombre, yo);
-    suciedad.genera = yo === 0;
-    mascotas.trastadas = yo === 0;
+    turnoGenerador();
     mas.montarCartel();
     guardar();
     pintarBotonReaccion();
@@ -1694,22 +1790,63 @@ async function sincronizarFotos() {
   }
 }
 
-window.extrasMenu = () => [
-  { id: 'buzon', icono: '📬', texto: 'Buzón', sub: vida.noLeidas() ? `${vida.noLeidas()} carta${vida.noLeidas() > 1 ? 's' : ''} sin leer` : 'Cartas, postales y ofertas', insignia: vida.noLeidas() || null, accion: () => vida.abrirCorreo() },
-  { id: 'pase', icono: '🗓️', texto: 'Pase del mes', sub: `${economia.pase().reclamados.length} de 10 tareas`, insignia: economia.pendientesPase() || null, accion: () => economia.abrirPase() },
-  { id: 'trabajos', icono: '💼', texto: 'Trabajo del día', sub: `${trabajos.delDia().icono} ${trabajos.delDia().nombre} · ${Math.max(0, 3 - trabajos.turnosHoy())} turnos`, insignia: trabajos.turnosHoy() < 3 ? '!' : null, accion: () => trabajos.abrir() },
-  { id: 'reformas', icono: '🪵', texto: 'Reformas', sub: 'Suelos, papel pintado, ventanas y luces LED', accion: () => casa2.abrirReformas() },
-  { id: 'cocina', icono: '🍳', texto: 'Cocina', sub: `${Object.values(estado.despensa || {}).reduce((a, b) => a + b, 0)} ingredientes · ${casa2.totalPlatos()} platos`, accion: () => casa2.abrirCocina(null) },
-  { id: 'amigos', icono: '🏘️', texto: 'Amigos', sub: 'Visitad casas, ranking y fiestas', insignia: null, accion: () => social.abrir() },
-  { id: 'taller', icono: '🔨', texto: 'Taller', sub: 'Reciclar, fabricar y encargos a medida', accion: () => economia.abrirTaller() },
-  { id: 'reto', icono: '🎨', texto: 'Reto de decoración', sub: '10 minutos y tu pareja puntúa', accion: () => (estado.reto && !estado.reto.terminado ? verReto() : empezarReto()) },
-  { id: 'casas', icono: CASAS[nivelCasa()].icono, texto: 'Casas', sub: nivelCasa() < CASAS.length - 1 ? `Siguiente: ${CASAS[nivelCasa() + 1].nombre}` : '¡Vivís en la mansión!', accion: abrirCasas },
-  { id: 'logros', icono: '🏆', texto: 'Logros', sub: `${(estado.logros || []).length} de ${LOGROS.length}`, accion: abrirLogros },
-  { id: 'colecciones', icono: '📚', texto: 'Colecciones', sub: `${(estado.colecciones || []).length} de ${COLECCIONES.length} completas`, accion: abrirColecciones },
-  { id: 'nosotros', icono: '💕', texto: 'Nosotros', sub: 'Preguntas, quiz, viajes, metas y recuerdos', insignia: pareja2.pendientePregunta() ? '!' : null, accion: abrirNosotros },
-  { id: 'pareja', icono: '💑', texto: 'Pareja', sub: sync.activo ? `Casa compartida · ${sync.codigo}` : 'Compartid la casa entre los dos móviles', accion: () => pareja.abrir() },
-  { id: 'juegos', icono: '🎮', texto: 'Minijuegos', sub: 'Jugad para ganar monedas', accion: abrirJuegos }
-];
+function tileHtml(t) {
+  return `<button class="mas-tile${t.bloqueo ? ' bloqueado' : ''}" data-id="${t.id}"><span>${t.bloqueo ? '🔒' : t.icono}</span><b>${t.texto}</b><small>${t.bloqueo || t.sub}</small>${!t.bloqueo && t.insignia ? `<i class="insignia">${t.insignia}</i>` : ''}</button>`;
+}
+
+function abrirHub(titulo, tiles, volver = () => mas.abrir()) {
+  const cuerpo = ui.abrirGen(titulo, `<div class="mas-rejilla">${tiles.map(tileHtml).join('')}</div>`, volver);
+  cuerpo.querySelectorAll('.mas-tile').forEach(b => b.addEventListener('click', () => {
+    const t = tiles.find(x => x.id === b.dataset.id);
+    if (t.bloqueo) {
+      sonido.error();
+      return ui.aviso(`🔒 ${t.bloqueo}`, true);
+    }
+    sonido.tocar();
+    t.accion();
+  }));
+}
+
+function bloqueoSi(cond, texto) {
+  return cond ? null : texto;
+}
+
+function abrirGanar() {
+  abrirHub('Ganar monedas', [
+    { id: 'trabajos', icono: '💼', texto: 'Trabajo del día', sub: `${trabajos.delDia().icono} ${trabajos.delDia().nombre} · ${Math.max(0, 3 - trabajos.turnosHoy())} turnos`, insignia: trabajos.turnosHoy() < 3 ? '!' : null, accion: () => trabajos.abrir() },
+    { id: 'juegos', icono: '🎮', texto: 'Minijuegos', sub: 'Cocina rápida, parejas, puzzle y duelos', accion: abrirJuegos }
+  ]);
+}
+
+function abrirObjetivos() {
+  abrirHub('Objetivos', [
+    { id: 'pase', icono: '🗓️', texto: 'Pase del mes', sub: `${economia.pase().reclamados.length} de 10 tareas`, insignia: economia.pendientesPase() || null, accion: () => economia.abrirPase() },
+    { id: 'logros', icono: '🏆', texto: 'Logros', sub: `${(estado.logros || []).length} de ${LOGROS.length}`, accion: abrirLogros },
+    { id: 'colecciones', icono: '📚', texto: 'Colecciones', sub: `${(estado.colecciones || []).length} de ${COLECCIONES.length} completas`, accion: abrirColecciones }
+  ]);
+}
+
+window.abrirGanar = () => abrirGanar();
+window.abrirObjetivos = () => abrirObjetivos();
+window.abrirNosotros = () => abrirNosotros();
+
+window.extrasMenu = () => {
+  const nivel = nivelCasa();
+  const h = estado.historia || 0;
+  const tieneCocina = gestor.muebles.some(m => m.userData.def.id === 'cocina') || (estado.habs || []).some(x => (x.muebles || []).some(d => d.id === 'cocina'));
+  return [
+    { id: 'buzon', icono: '📬', texto: 'Buzón', sub: vida.noLeidas() ? `${vida.noLeidas()} carta${vida.noLeidas() > 1 ? 's' : ''} sin leer` : 'Cartas, postales y ofertas', insignia: vida.noLeidas() || null, accion: () => vida.abrirCorreo() },
+    { id: 'nosotros', icono: '💕', texto: 'Nosotros', sub: 'Notas, regalos, preguntas, viajes y recuerdos', insignia: pareja2.pendientePregunta() ? '!' : null, accion: abrirNosotros },
+    { id: 'ganar', icono: '💼', texto: 'Ganar monedas', sub: `Hoy: ${trabajos.delDia().icono} ${trabajos.delDia().nombre} · minijuegos`, insignia: trabajos.turnosHoy() < 3 ? '!' : null, accion: abrirGanar },
+    { id: 'objetivos', icono: '🏆', texto: 'Objetivos', sub: 'Pase del mes, logros y colecciones', insignia: economia.pendientesPase() || null, accion: abrirObjetivos },
+    { id: 'casas', icono: CASAS[nivel].icono, texto: 'Casas', sub: nivel < CASAS.length - 1 ? `Siguiente: ${CASAS[nivel + 1].nombre}` : 'Lo más alto', accion: abrirCasas },
+    { id: 'reformas', icono: '🪵', texto: 'Reformas', sub: 'Suelos, papel pintado, ventanas y luces LED', bloqueo: bloqueoSi(nivel >= 1 || h >= 4, 'Arreglad las grietas y la humedad'), accion: () => casa2.abrirReformas() },
+    { id: 'cocina', icono: '🍳', texto: 'Cocina', sub: `${Object.values(estado.despensa || {}).reduce((a, b) => a + b, 0)} ingredientes · ${casa2.totalPlatos()} platos`, bloqueo: bloqueoSi(nivel >= 2 || tieneCocina, 'Comprad una cocina o mudaos al ático'), accion: () => casa2.abrirCocina(null) },
+    { id: 'amigos', icono: '🏘️', texto: 'Amigos', sub: 'Visitad casas, ranking y fiestas', bloqueo: bloqueoSi(nivel >= 1 || h >= 6, 'Avanzad en la historia (6/10)'), accion: () => social.abrir() },
+    { id: 'taller', icono: '🔨', texto: 'Taller', sub: 'Reciclar, fabricar y encargos a medida', bloqueo: bloqueoSi(nivel >= 1 || h >= 8, 'Avanzad en la historia (8/10)'), accion: () => economia.abrirTaller() },
+    { id: 'reto', icono: '🎨', texto: 'Reto de decoración', sub: '10 minutos y tu pareja puntúa', bloqueo: bloqueoSi(nivel >= 1, 'Mudaos al piso reformado'), accion: () => (estado.reto && !estado.reto.terminado ? verReto() : empezarReto()) }
+  ];
+};
 
 const vida = new Vida({
   estado, ui, sonido, gestor, mascotas, miniaturas, escena, ambiente, inventario, juegos,
@@ -1738,10 +1875,10 @@ ui.ponerMercadillo(economia.esFinde());
 casa2 = new Casa2({
   estado, ui, sonido, sala, gestor, juegos, inventario, miniaturas, escena, ambiente, mascotas,
   nivelCasa,
-  nombreHabitacion: () => CASAS[nivelCasa()].habitaciones[estado.habActual || 0] || 'Salón',
+  nombreHabitacion: () => habsCasa()[estado.habActual || 0] || 'Salón',
   aplicarEstilo: () => aplicarEstiloCasa(),
   idsEnCasa: () => idsEnCasa(),
-  genera: () => !sync.activo || sync.yo === 0,
+  genera: () => soyGenerador(),
   guardar: () => guardar(),
   refrescarHud: () => refrescarHud(),
   refrescarMenu: () => refrescarMenu(),
@@ -1768,7 +1905,7 @@ social = new Social({
   estado, ui, sonido, sync, gestor, mascotas, miniaturas, escena, casa2,
   pantalla: v => pantalla(v),
   acogedor: () => acogedor().total,
-  habitacionesDe: datos => CASAS[(datos.estado.casa && datos.estado.casa.nivel) || 0].habitaciones,
+  habitacionesDe: datos => habsCasa(datos.estado),
   entrarVisita: datos => entrarVisita(datos),
   verHabitacionVisita: i => verHabitacionVisita(i),
   salirVisita: () => salirVisita(),
@@ -1794,8 +1931,8 @@ sorpresas = new Sorpresas({
   estado, ui, sonido, gestor, juegos, inventario, miniaturas, escena,
   adoptar: (e, g) => adoptar(e, g),
   visitando: () => visitando,
-  genera: () => !sync.activo || sync.yo === 0,
-  nombreHab: i => CASAS[nivelCasa()].habitaciones[i] || 'Salón',
+  genera: () => soyGenerador(),
+  nombreHab: i => habsCasa()[i] || 'Salón',
   buscarMueble(uid, hab) {
     if (hab === (estado.habActual || 0)) {
       const m = gestor.muebles.find(x => x.userData.uid === uid);
@@ -1846,7 +1983,7 @@ function verHabitacionVisita(i) {
   const h = (e.habs && e.habs[i]) || (i === 0 ? { muebles: datos.muebles || [], suciedad: (datos.suciedad && datos.suciedad.lista) || [], paredes: (datos.sala && datos.sala.paredes) || vacia.paredes } : vacia);
   for (const d of [...(h.muebles || [])].sort((a, b) => a.base - b.base)) if (infoItem(d.id)) gestor.anadir(d.id, d.x0, d.z0, d.rot, d);
   for (const d of h.suciedad || []) suciedad.anadir(d.tipo, d, false);
-  const ext = EXTERIORES[casa.habitaciones[i]] || null;
+  const ext = EXTERIORES[habsCasa()[i]] || null;
   sala.modoExterior(ext ? ext.tipo : null);
   sala.pintarSuelo(ext ? ext.suelo : casa.suelo);
   sala.pintarParedes(h.paredes || vacia.paredes, n > 0 || i > 0 ? casa.pared : null);
@@ -1895,9 +2032,86 @@ const TEMAS_RETO = [
   { id: 'spa', nombre: 'Relax total', icono: '🧖' }
 ];
 
+const ANIMOS = [
+  ['😊', 'Feliz'], ['🥰', 'Con ganas de verte'], ['🤗', 'Necesito un abrazo'], ['😴', 'Con sueño'],
+  ['😔', 'Un poco de bajón'], ['😤', 'Con estrés'], ['🤒', 'Me encuentro mal'], ['🍕', 'Con hambre'],
+  ['📚', 'Estudiando'], ['💼', 'Trabajando'], ['😌', 'Tranquilidad total'], ['🎉', 'De fiesta']
+];
+
+function animoDe(yo) {
+  const a = estado.animo && estado.animo[yo];
+  return a && Date.now() - a.t < 20 * 3600000 ? a : null;
+}
+
+function abrirAnimo() {
+  const yo = sync && sync.activo ? sync.yo : 0;
+  const suyo = sync && sync.activo ? animoDe(1 - yo) : null;
+  const mio = animoDe(yo);
+  const { caja } = ui.dialogo({
+    titulo: '💭 ¿Cómo estás?',
+    html: `${suyo ? `<p class="animo-suyo">${escaparHtml(pareja.otro())} está: <b>${suyo.e} ${suyo.txt}</b></p>` : ''}
+      <div class="animos">${ANIMOS.map(([e, t]) => `<button class="animo ${mio && mio.e === e ? 'activo' : ''}" data-e="${e}"><span>${e}</span><small>${t}</small></button>`).join('')}</div>`,
+    botones: [{ texto: 'Cerrar', tipo: 'secundario' }]
+  });
+  caja.querySelectorAll('.animo').forEach(b => b.addEventListener('click', () => {
+    const [e, t] = ANIMOS.find(a => a[0] === b.dataset.e);
+    if (!estado.animo) estado.animo = {};
+    estado.animo[yo] = { e, txt: t, t: Date.now() };
+    guardar();
+    if (sync && sync.activo && sync.emitir) sync.emitir('reaccion', { emoji: e });
+    if (window.avisarPareja) window.avisarPareja('animo', `${e} ${t}`);
+    sonido.arreglo();
+    caja.querySelector('.dialogo-botones button').click();
+    ui.aviso(`💭 ${e} ${t}`);
+    pintarChipsVida();
+  }));
+}
+
+function rachaPareja() {
+  const r = estado.rachaPareja;
+  if (!r) return 0;
+  const ayer = new Date(Date.now() - 86400000).toDateString();
+  return r.dia === new Date().toDateString() || r.dia === ayer ? r.n : 0;
+}
+
+function revisarRachaPareja() {
+  if (!sync || !sync.activo) return;
+  const hoy = new Date().toDateString();
+  if (!estado.vistos) estado.vistos = {};
+  let cambio = false;
+  if (estado.vistos[sync.yo] !== hoy) {
+    estado.vistos[sync.yo] = hoy;
+    cambio = true;
+  }
+  const r = estado.rachaPareja || { n: 0, dia: null };
+  if (estado.vistos[0] === hoy && estado.vistos[1] === hoy && r.dia !== hoy) {
+    const ayer = new Date(Date.now() - 86400000).toDateString();
+    estado.rachaPareja = { n: r.dia === ayer ? r.n + 1 : 1, dia: hoy };
+    cambio = true;
+    const n = estado.rachaPareja.n;
+    if (n > 1) {
+      estado.monedas += Math.min(10 * n, 100);
+      setTimeout(() => {
+        sonido.premio();
+        ui.aviso(`🔥 ¡Racha de pareja: ${n} días entrando los dos! +${Math.min(10 * n, 100)} monedas`);
+      }, 2500);
+    }
+  }
+  if (cambio) guardar();
+}
+
+function escaparHtml(t) {
+  return String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
 function pintarChipsVida() {
   const caja = document.getElementById('chips-vida');
   const chips = [];
+  if (sync && sync.activo) {
+    const suyo = animoDe(1 - sync.yo);
+    const mio = animoDe(sync.yo);
+    chips.push({ id: 'animo', texto: suyo ? `💭 ${suyo.e}` : mio ? `💭 ${mio.e}` : '💭 ¿Cómo estás?', accion: abrirAnimo });
+  }
   if (estado.visita) chips.push({ id: 'visita', texto: '🚪 ¡Visita!', accion: () => vida.atenderVisita() });
   if (estado.averia) chips.push({ id: 'averia', texto: estado.averia.tipo === 'gotera' ? '💧 Gotera' : '⚡ Sin luz', accion: () => vida.arreglarAveria() });
   const n = vida.noLeidas();
@@ -1988,6 +2202,7 @@ function puntuarReto() {
 
 function abrirNosotros() {
   const tiles = [
+    { id: 'pareja', icono: '💑', texto: 'Notas y regalos', sub: 'Notitas en la nevera, regalos, votos y misiones de pareja', accion: () => pareja.abrir() },
     { id: 'pregunta', icono: '💬', texto: 'Pregunta del día', sub: pareja2.pendientePregunta() ? '¡Hoy toca responder!' : 'Respondida', insignia: pareja2.pendientePregunta() ? '!' : null, accion: () => pareja2.abrirPregunta() },
     { id: 'quiz', icono: '🎯', texto: '¿Cuánto me conoces?', sub: 'Quiz de pareja', accion: () => pareja2.abrirQuiz() },
     { id: 'viajes', icono: '✈️', texto: 'Mapa de viajes', sub: `${(estado.viajes || []).length} sitios`, accion: () => pareja2.abrirViajes() },
@@ -1997,8 +2212,7 @@ function abrirNosotros() {
     { id: 'capsula', icono: '💌', texto: 'Cápsula del tiempo', sub: `${(estado.capsulas || []).length} mensajes`, accion: () => pareja.verCapsulas() },
     { id: 'planes', icono: '📅', texto: 'Planes', sub: 'Cenas, viajes, pelis…', accion: () => pareja.verPlanes() }
   ];
-  const cuerpo = ui.abrirGen('Nosotros', `<div class="mas-rejilla">${tiles.map(t => `<button class="mas-tile" data-id="${t.id}"><span>${t.icono}</span><b>${t.texto}</b><small>${t.sub}</small>${t.insignia ? `<i class="insignia">${t.insignia}</i>` : ''}</button>`).join('')}</div>`, () => mas.abrir());
-  cuerpo.querySelectorAll('.mas-tile').forEach(b => b.addEventListener('click', () => { sonido.tocar(); tiles.find(t => t.id === b.dataset.id).accion(); }));
+  abrirHub('Nosotros', tiles);
 }
 
 function aplicarTemporada() {
@@ -2049,6 +2263,7 @@ document.addEventListener('gesturestart', e => e.preventDefault());
 
 const hoy = new Date().toDateString();
 const nuevoDia = estado.dia !== hoy;
+const diasFuera = estado.dia ? Math.round((new Date(hoy) - new Date(estado.dia)) / 86400000) : 0;
 if (nuevoDia) {
   const ayer = new Date(Date.now() - 86400000).toDateString();
   estado.racha = { n: estado.racha && estado.dia === ayer ? estado.racha.n + 1 : 1 };
@@ -2067,7 +2282,15 @@ refrescarHud();
 redimensionar();
 guardar();
 
-setTimeout(() => {
+guia = new Guia({ ui, sonido, cara: miniaturas.personaje('lola') });
+setInterval(() => guia && guia.ocultarSi(dialogoAbierto() || !!ui.hojaAbierta), 400);
+setInterval(() => {
+  if (!enMenu() && !dialogoAbierto() && !ui.hojaAbierta && !(guia && guia.activa()) && performance.now() > 12000) mas.postalDelDia();
+}, 5000);
+setTimeout(function alEntrar() {
+  if (enMenu()) return setTimeout(alEntrar, 500);
+  revisarRachaPareja();
+  guia.empezar((estado.historia || 0) >= 3 || nivelCasa() >= 1);
   if (!estado.bienvenida) {
     estado.bienvenida = true;
     estado.tickets += 1;
@@ -2081,6 +2304,19 @@ setTimeout(() => {
     });
   } else if (revisarFechas()) {
     return;
+  } else if (nuevoDia && habiaPartida && diasFuera >= 3) {
+    const monedas = Math.min(300, 60 * diasFuera);
+    estado.monedas += monedas;
+    estado.tickets += 2;
+    refrescarHud();
+    guardar();
+    ui.dialogo({
+      imagen: miniaturas.personaje('lola'), personaje: true,
+      titulo: '¡Os echábamos de menos!',
+      texto: `Hacía ${diasFuera} días que no veníais. La casa os ha esperado tranquila y os he guardado un regalo de bienvenida: +${monedas} monedas y 2 tickets para la ruleta.`,
+      botones: [{ texto: '¡Qué bien volver!', tipo: 'primario' }],
+      confeti: true
+    });
   } else if (nuevoDia && habiaPartida) {
     const racha = estado.racha ? estado.racha.n : 1;
     const bonus = 50 + 10 * (Math.min(racha, 7) - 1);

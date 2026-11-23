@@ -105,7 +105,7 @@ export class Pareja2 {
           ? `<p class="gen-intro centrado">Ya has respondido. Cuando ${escapar(this.p.otro())} responda, veréis las dos respuestas 🤫</p>`
           : `<div class="ajustes"><textarea id="pd-resp" rows="3" maxlength="200" placeholder="Tu respuesta (no la verá hasta que responda)"></textarea><button id="pd-ok" class="primario">Responder</button></div>`}
       <div class="seccion-titulo">Días anteriores</div>
-      <div class="recuerdos">${Object.entries(this.estado.preguntas).filter(([f, x]) => f !== hoy && x.r[0] && x.r[1]).slice(-10).reverse().map(([f, x]) => `<div class="recuerdo"><span>💬</span><div><b>${escapar(x.q)}</b><small>${escapar(this.p.nombre(0))}: ${escapar(x.r[0])}<br>${escapar(this.p.nombre(1))}: ${escapar(x.r[1])}</small></div></div>`).join('') || '<p class="vacio">Aquí se irán guardando.</p>'}</div>`, () => this.ctx.abrirMas());
+      <div class="recuerdos">${Object.entries(this.estado.preguntas).filter(([f, x]) => f !== hoy && x.r[0] && x.r[1]).slice(-10).reverse().map(([f, x]) => `<div class="recuerdo"><span>💬</span><div><b>${escapar(x.q)}</b><small>${escapar(this.p.nombre(0))}: ${escapar(x.r[0])}<br>${escapar(this.p.nombre(1))}: ${escapar(x.r[1])}</small></div></div>`).join('') || '<p class="vacio">Aquí se irán guardando.</p>'}</div>`, () => (window.abrirNosotros || this.ctx.abrirMas)());
     const ok = cuerpo.querySelector('#pd-ok');
     if (ok) ok.addEventListener('click', () => {
       const t = cuerpo.querySelector('#pd-resp').value.trim();
@@ -137,7 +137,7 @@ export class Pareja2 {
     else if (q && !q.resultado) html += `<p class="gen-intro centrado">Esperando a que ${escapar(this.p.otro())} responda tu quiz…</p>`;
     if (q && q.resultado) html += `<div class="pj-codigo"><small>Último quiz de ${escapar(this.p.nombre(q.de))}</small><b>${q.resultado.aciertos}/${q.preguntas.length}</b><small>${q.resultado.aciertos === q.preguntas.length ? '¡Te conoce a la perfección! 💯' : q.resultado.aciertos >= 2 ? '¡Muy bien!' : 'Hay que conocerse más 😜'}</small></div>`;
     if (!q || q.resultado) html += `<button id="qz-crear" class="secundario">✍️ Crear un quiz sobre mí</button>`;
-    const cuerpo = ui.abrirGen('¿Cuánto me conoces?', html, () => this.ctx.abrirMas());
+    const cuerpo = ui.abrirGen('¿Cuánto me conoces?', html, () => (window.abrirNosotros || this.ctx.abrirMas)());
     const crear = cuerpo.querySelector('#qz-crear');
     if (crear) crear.addEventListener('click', () => this.crearQuiz());
     const jugar = cuerpo.querySelector('#qz-jugar');
@@ -203,7 +203,7 @@ export class Pareja2 {
       <p class="gen-intro">Poned el <b>Mapa del mundo</b> (tienda → Deco) en casa y saldrán las chinchetas.</p>
       <div class="ajustes"><div class="fila2"><select id="vj-lugar">${Object.keys(CIUDADES).map(c => `<option>${c}</option>`).join('')}</select><input id="vj-fecha" type="month"></div>
       <button id="vj-add" class="primario">📍 Poner chincheta</button></div>
-      <div class="recuerdos">${viajes.slice().reverse().map((v, k) => `<div class="recuerdo"><span>📍</span><div><b>${escapar(v.lugar)}</b><small>${v.fecha ? new Date(v.fecha + '-01T12:00').toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }) : ''}</small></div><button class="borrar plan-borrar" data-k="${viajes.length - 1 - k}">✕</button></div>`).join('')}</div>`, () => this.ctx.abrirMas());
+      <div class="recuerdos">${viajes.slice().reverse().map((v, k) => `<div class="recuerdo"><span>📍</span><div><b>${escapar(v.lugar)}</b><small>${v.fecha ? new Date(v.fecha + '-01T12:00').toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }) : ''}</small></div><button class="borrar plan-borrar" data-k="${viajes.length - 1 - k}">✕</button></div>`).join('')}</div>`, () => (window.abrirNosotros || this.ctx.abrirMas)());
     dibujarMapa(cuerpo.querySelector('#vj-mapa').getContext('2d'), 640, 320, viajes);
     cuerpo.querySelector('#vj-add').addEventListener('click', () => {
       const lugar = cuerpo.querySelector('#vj-lugar').value;
@@ -230,7 +230,7 @@ export class Pareja2 {
     const cuerpo = ui.abrirGen('Cuenta atrás', `
       <p class="gen-intro">¿Cuándo os volvéis a ver? Saldrá arriba cuánto falta, y ese día habrá sorpresa.</p>
       ${f ? `<div class="pj-codigo"><small>Os veis el</small><b style="font-size:26px;letter-spacing:0">${new Date(f).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</b><small>${this.textoFalta()}</small></div>` : ''}
-      <div class="ajustes"><input id="ca-fecha" type="datetime-local"><button id="ca-ok" class="primario">⏳ Poner cuenta atrás</button>${f ? '<button id="ca-quitar" class="secundario">Quitar</button>' : ''}</div>`, () => this.ctx.abrirMas());
+      <div class="ajustes"><input id="ca-fecha" type="datetime-local"><button id="ca-ok" class="primario">⏳ Poner cuenta atrás</button>${f ? '<button id="ca-quitar" class="secundario">Quitar</button>' : ''}</div>`, () => (window.abrirNosotros || this.ctx.abrirMas)());
     cuerpo.querySelector('#ca-ok').addEventListener('click', () => {
       const v = cuerpo.querySelector('#ca-fecha').value;
       if (!v) return;
@@ -285,6 +285,7 @@ export class Pareja2 {
     sync.emitir('buenasnoches', {});
     if (!sync.enDirecto) sync.mandar('buenasnoches', { de: sync.yo });
     this.estado.durmiendo = { quien: sync.yo, t: Date.now() };
+    if (window.avisarPareja) window.avisarPareja('noches', '🌙 Se va a dormir. ¡Dale las buenas noches!');
     this.ctx.guardar();
     sonido.mascota();
     ui.aviso('🌙 ¡Buenas noches! Que descanses');
@@ -301,7 +302,7 @@ export class Pareja2 {
     const cuerpo = ui.abrirGen('Nuestras metas', `
       <p class="gen-intro">El corcho de los sueños: cosas que queréis hacer juntos. Tachadlas cuando se cumplan 🎯</p>
       <div class="ajustes"><input id="mt-texto" maxlength="60" placeholder="Viajar a Japón, tener un perro…"><button id="mt-add" class="primario">📌 Clavar en el corcho</button></div>
-      <div class="corcho">${metas.map((m, k) => `<button class="meta ${m.hecha ? 'hecha' : ''}" data-k="${k}" style="transform:rotate(${(k % 3 - 1) * 2.5}deg)">📌 ${escapar(m.texto)}${m.hecha ? `<small>✅ ${new Date(m.hecha).toLocaleDateString('es-ES')}</small>` : ''}</button>`).join('') || '<p class="vacio">El corcho está vacío.</p>'}</div>`, () => this.ctx.abrirMas());
+      <div class="corcho">${metas.map((m, k) => `<button class="meta ${m.hecha ? 'hecha' : ''}" data-k="${k}" style="transform:rotate(${(k % 3 - 1) * 2.5}deg)">📌 ${escapar(m.texto)}${m.hecha ? `<small>✅ ${new Date(m.hecha).toLocaleDateString('es-ES')}</small>` : ''}</button>`).join('') || '<p class="vacio">El corcho está vacío.</p>'}</div>`, () => (window.abrirNosotros || this.ctx.abrirMas)());
     cuerpo.querySelector('#mt-add').addEventListener('click', () => {
       const t = cuerpo.querySelector('#mt-texto').value.trim();
       if (!t) return;

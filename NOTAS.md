@@ -279,3 +279,22 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - Está en `js/inicio.js` (título animado), `index.html` (title y apple-mobile-web-app-title), `manifest.json` y el texto de invitación de `js/pareja.js`.
 - Antes de publicarlo en tiendas: revisar bien el nombre (existe un juego de itch.io "Our Place" de 2019, la app educativa "OurPlace" y la marca de cocina Our Place, registrada solo para menaje). Valorar un subtítulo o una palabra inventada.
 - "Nuestro Hogar" sigue siendo solo el nombre por defecto de la casa (lo cambia cada pareja en Ajustes).
+
+## Revisión general y mejoras (23-nov 21:00, "adelante" con todo)
+- Arreglado: en el menú faltaban `error()` y `ocupado()` (se perdieron con el escaparate), así que Entrar / Crear cuenta / ¡A jugar! fallaban.
+- Supabase gratis se pausa tras 7 días sin actividad → `.github/workflows/mantener-vivo.yml` hace una consulta cada 3 días (se puede lanzar a mano en Actions). GitHub desactiva los cron tras 60 días sin commits en el repo: si pasa, reactivarlo en la pestaña Actions.
+- Copia de seguridad: Ajustes → 💾 Descargar / 📂 Restaurar (`mas.descargarCopia` / `restaurarCopia`; JSON con `instantanea()`, fotos y diario).
+- Menú Más reordenado (`extrasMenu` en main + `mas.abrir`): Buzón, Nosotros (incluye "Notas y regalos" = `pareja.abrir`), Ganar monedas (`abrirGanar`: trabajo + minijuegos), Objetivos (`abrirObjetivos`: pase, logros, colecciones), Casas, Reformas🔒, Cocina🔒, Amigos🔒, Taller🔒, Reto🔒, Fotos (`mas.abrirFotos`: foto, cuadros, diario, fotos del día) y Ajustes. Bloqueos con `bloqueoSi()` según `estado.historia` y el nivel de casa. `abrirHub(titulo, tiles)` sirve para hubs nuevos.
+- Guía de inicio `js/guia.js` (5 pasos con flecha 👇 sobre los botones; avanza con `registrar()` y clics; `localStorage['hogar-guia']`, cada móvil la suya; se salta sola si `historia >= 3`).
+- Los diálogos de inicio ya no salen con el menú abierto (`enMenu()` dentro de `dialogoAbierto()`).
+- Suciedad, trastadas y ropa: las genera el móvil que tiene el turno (`estado.generador = {yo, hasta}`, se renueva cada 60 s, caduca a los 2 min) → si uno juega solo, la casa también se ensucia.
+- Sin castigos: la madre ya no quita monedas (deja 30). Al volver tras 3+ días: "¡Os echábamos de menos!" con 60 monedas por día (máx. 300) y 2 tickets.
+- Foto del día: `mas.postalDelDia()` una vez al día (`hogar-postal-dia`), polaroid con frase de una mascota; se guardan en `hogar-postales` (máx. 45) → Fotos → Fotos del día.
+- Estado de ánimo: chip 💭 (con casa compartida) → 12 estados en `estado.animo[yo]` (duran 20 h). Al otro le sale un aviso.
+- Racha de pareja: `estado.vistos[yo]` + `estado.rachaPareja` (sube si entráis los dos el mismo día; da 10 monedas × días, máx. 100). La tarjeta del menú muestra esta racha con casa compartida.
+- Tras la mansión: `AMPLIACIONES` (Cine, Biblioteca, Gimnasio, Invernadero, Salón de baile, Torre del observatorio) en Casas → `estado.ampliaciones`; `habsCasa()` da la lista de habitaciones real.
+- Notificaciones push:
+  - Cliente: `js/avisos.js` (Ajustes → 🔔), `sw.js` con `push` y `notificationclick`. `window.avisarPareja(tipo, texto)` se llama al dejar nota, regalo, buenas noches, reacción 💗 y estado de ánimo.
+  - Servidor PENDIENTE de montar en Supabase (el PC estaba desconectado): ejecutar `supabase/avisos.sql` en el SQL editor y crear la Edge Function `avisar` con `supabase/functions/avisar/index.ts`, con **Verify JWT desactivado**. Las claves VAPID se generan solas la primera vez y se guardan en `push_claves`.
+  - En iPhone solo funciona con el juego añadido a la pantalla de inicio (iOS 16.4+).
+- Tests nuevos: `/tmp/prueba/t11.py` (jugador nuevo), `t12.py` (Más, guía, foto del día, copia, ampliar) y `t13.py <es|en>` (ánimo, racha y llamadas push).
