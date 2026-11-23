@@ -178,6 +178,12 @@ export class Controles {
       const hit = this.gestor.intersectar(rayo);
       const distMascota = mascota ? mascota.grupo.position.distanceTo(this.cam.camara.position) : Infinity;
       const distMueble = hit ? hit.punto.distanceTo(this.cam.camara.position) : Infinity;
+      const distCuadro = this.eventos.distCuadro ? this.eventos.distCuadro(rayo) : Infinity;
+      if (this.capturaToque || distCuadro < Math.min(distMueble, distMascota)) {
+        this.modo = 'rotar';
+        this.cam.agarrar();
+        return;
+      }
 
       if (mascota && distMascota <= distMueble + 0.3) {
         this.mascotaTocada = mascota;
@@ -284,6 +290,15 @@ export class Controles {
           this.ultimoToque = { t: 0, x: 0, y: 0 };
         } else {
           this.ultimoToque = { t: ahora, x: e.clientX, y: e.clientY };
+          if (this.capturaToque) {
+            this.capturaToque(this.rayo(e.clientX, e.clientY));
+            this.modo = 'nada';
+            return;
+          }
+          if (this.eventos.tocarCuadro && this.eventos.tocarCuadro(this.rayo(e.clientX, e.clientY))) {
+            this.modo = 'nada';
+            return;
+          }
           const sucio = this.suciedad && this.suciedad.tocar(this.rayo(e.clientX, e.clientY), this.gestor.muebles);
           if (sucio) this.eventos.alTocarSuciedad(sucio);
           else {

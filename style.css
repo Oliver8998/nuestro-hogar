@@ -2525,3 +2525,49 @@ body.de-fiesta { animation: fiesta-fondo 2s linear infinite; }
 .fe-marco-op i.m-washi { box-shadow: inset 0 0 0 6px #fffaf2, inset 0 0 0 40px #9cb8d9; background: linear-gradient(45deg, #f4b3be 0 18%, transparent 18%); }
 .fe-marco-op i.m-peli { background: #1d1b1a; box-shadow: inset 0 0 0 8px #1d1b1a, inset 0 0 0 40px #9cb8d9; }
 .fe-marco-op i.m-ninguno { background: #9cb8d9; box-shadow: none; }
+
+/* ---------- Cuadros en las paredes y pintar ---------- */
+.album-botones { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.gen-cuerpo .album-botones .primario, .gen-cuerpo .album-botones .rosa { margin: 0; font-size: 14.5px; padding: 13px 6px; }
+.album-foto em { position: absolute; right: 4px; top: 4px; font-style: normal; font-size: 16px; background: rgba(255,255,255,.92); border-radius: 8px; padding: 0 4px; }
+body.colgando #lateral, body.colgando #chips-vida, body.colgando #menu-objeto, body.colgando #barra { display: none !important; }
+#colocar-cuadro { position: fixed; left: 10px; right: 10px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 40; background: rgba(255,250,244,.97); border-radius: 22px; box-shadow: var(--sombra); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+#colocar-cuadro.oculto { display: none; }
+#colocar-cuadro > b { text-align: center; font-weight: 900; font-size: 15px; }
+.cc-fila { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 2px; }
+.cc-fila button { flex: 0 0 auto; border: none; background: #fff; border-radius: 12px; padding: 7px 10px; font: inherit; font-weight: 800; font-size: 12.5px; color: var(--texto); box-shadow: 0 2px 0 var(--borde); display: flex; align-items: center; gap: 5px; }
+.cc-fila button i { width: 14px; height: 14px; border-radius: 4px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.15); }
+.cc-fila button.activo { background: var(--rosa); color: #fff; box-shadow: 0 2px 0 var(--rosa-oscuro); }
+.cc-botones { display: grid; grid-template-columns: 1fr 1.4fr; gap: 8px; }
+.cc-botones button { border: none; border-radius: 14px; padding: 11px; font: inherit; font-weight: 900; font-size: 15px; background: #fff; color: var(--texto); box-shadow: 0 2px 0 var(--borde); }
+.cc-botones .primario { background: var(--verde); color: #fff; box-shadow: 0 3px 0 var(--verde-oscuro); }
+
+#pintar { position: fixed; inset: 0; z-index: 85; background: #3b2f26; display: flex; flex-direction: column; opacity: 0; transition: opacity .25s; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); touch-action: none; }
+#pintar.abierto { opacity: 1; }
+.pt-cab { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; color: #fff; }
+.pt-cab b { font-weight: 900; font-size: 17px; }
+.pt-cab span { width: 40px; }
+.pt-cab button { border: none; border-radius: 14px; font: inherit; font-weight: 900; padding: 8px 14px; background: rgba(255,255,255,.12); color: #fff; font-size: 15px; }
+.pt-cab .primario { background: var(--verde); }
+.pt-formatos { flex: 1; display: flex; flex-wrap: wrap; align-content: center; justify-content: center; gap: 14px; padding: 20px; color: #fff; }
+.pt-formatos p { width: 100%; text-align: center; font-weight: 800; margin: 10px 0 0; }
+.pt-formatos > button { border: none; background: rgba(255,255,255,.1); border-radius: 18px; padding: 14px; display: flex; flex-direction: column; align-items: center; gap: 8px; color: #fff; font: inherit; font-weight: 800; width: 96px; }
+.pt-formatos i { display: block; background: #fffaf2; border: 4px solid #8a5a3c; border-radius: 3px; }
+.pt-formatos i.f-cuadrado { width: 54px; height: 54px; }
+.pt-formatos i.f-vertical { width: 44px; height: 60px; }
+.pt-formatos i.f-horizontal { width: 64px; height: 46px; }
+.pt-fondos { display: flex; gap: 10px; justify-content: center; width: 100%; }
+.pt-fondos button { width: 40px; height: 40px; border-radius: 50%; border: 3px solid rgba(255,255,255,.3); }
+.pt-fondos button.activo { border-color: var(--rosa); transform: scale(1.12); }
+.pt-zona { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 8px; }
+.pt-zona canvas { max-width: 100%; max-height: 100%; border: 10px solid #8a5a3c; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,.45); touch-action: none; background: #fff; }
+.pt-herr { display: flex; align-items: center; justify-content: center; gap: 5px; padding: 6px 8px; }
+.pt-herr button { border: none; background: rgba(255,255,255,.1); border-radius: 12px; width: 42px; height: 42px; font-size: 20px; display: flex; align-items: center; justify-content: center; }
+.pt-herr button.activa { background: var(--rosa); }
+.pt-herr button i { display: block; background: #fff; border-radius: 50%; }
+.pt-sep { width: 6px; }
+.pt-colores { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; padding: 4px 10px 14px; }
+.pt-colores button, .pt-libre { width: 32px; height: 32px; border-radius: 50%; border: 3px solid rgba(255,255,255,.25); padding: 0; }
+.pt-colores button.activo { border-color: #fff; transform: scale(1.18); }
+.pt-libre { display: flex; align-items: center; justify-content: center; font-size: 17px; position: relative; overflow: hidden; background: rgba(255,255,255,.1); box-sizing: border-box; }
+.pt-libre input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; }

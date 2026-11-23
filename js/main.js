@@ -70,6 +70,7 @@ const estado = {
 
 let mascotaSel = null;
 let controles = null;
+let mas = null;
 let arrastre = null;
 let tRefrescoMenu = 0;
 
@@ -881,6 +882,8 @@ const ui = new UI(miniaturas, {
 });
 
 controles = new Controles(canvas, camaraIso, gestor, sala, mascotas, entregas, {
+  distCuadro: r => (mas && !visitando ? mas.cuadros.distancia(r) : Infinity),
+  tocarCuadro: r => (mas && !visitando ? mas.cuadros.tocar(r) : false),
   alAbrirPaquete(p) {
     abrirPaquete(p);
   },
@@ -1006,7 +1009,7 @@ function contexto() {
     reformaCompleta: () => nivelCasa() > 0 || (estado.reforma || sala.progreso()).hechos >= (estado.reforma || sala.progreso()).total,
     reformaPct: () => nivelCasa() > 0 ? 1 : (estado.reforma || sala.progreso()).hechos / (estado.reforma || sala.progreso()).total,
     stat: e => (estado.stats && estado.stats[e]) || 0,
-    fotosPared: () => (estado.paredFotos || []).filter(Boolean).length,
+    fotosPared: () => (estado.cuadros || []).length,
     conPareja: () => sync && sync.activo,
     acogedor: () => acogedor().total,
     colecciones: () => (estado.colecciones || []).length,
@@ -1031,7 +1034,7 @@ function acogedor() {
     muebles: gestor.muebles.filter(m => !(m.userData.datos && m.userData.datos.mustia)),
     limpieza: suciedad.limpieza(),
     paredesPintadas: sala.estado().paredes.filter(p => p !== null && p !== undefined).length,
-    fotos: (estado.paredFotos || []).filter(Boolean).length,
+    fotos: mas ? mas.cuadros.enEstaHab().length : 0,
     mascotas: mascotas.lista.length,
     noche: ambiente.esNoche(),
     extras: casa2 ? casa2.extrasAcogedor(gestor.muebles) : []
@@ -1059,7 +1062,11 @@ function aplicarEstiloCasa() {
   const pill = document.getElementById('pill-hab');
   pill.classList.toggle('oculto', casa.habitaciones.length < 2);
   pill.textContent = `${casa.icono} ${casa.habitaciones[hab] || 'Salón'} ▾`;
-  if (casa2) casa2.aplicar();
+  if (casa2) {
+    casa2.aplicar();
+    mas.cuadros.terminar(false);
+    mas.pintarPared();
+  }
 }
 
 function cambiarHabitacion(i) {
@@ -1412,8 +1419,10 @@ function temporadaActual() {
   return temporada(new Date(), estado.pareja && estado.pareja.aniversario);
 }
 
-const mas = new Mas({
+mas = new Mas({
   estado, ui, sonido, sala, ambiente, renderer, escena, camara: camaraIso.camara, lofi,
+  claveHab: () => `${nivelCasa()}-${estado.habActual || 0}`,
+  controles: () => controles,
   registrar: e => registrar(e),
   abrirInicio: () => { ui.cerrarHojas(); inicio.mostrar(); },
   alFotoNueva: f => sync && sync.subirFoto(f),
@@ -1776,7 +1785,8 @@ function entrarVisita() {
   vida.quitarVisitante();
   sorpresas.limpiar();
   sala.modoVisita(true);
-  for (const mf of mas.marcos || []) if (mf) mf.grupo.visible = false;
+  mas.cuadros.terminar(false);
+  mas.cuadros.ocultar();
   if (mas.cartel) mas.cartel.grupo.visible = false;
   document.body.classList.add('visitando');
 }

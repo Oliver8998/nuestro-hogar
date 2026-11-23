@@ -1,20 +1,12 @@
 import { editarFoto } from './fotoeditor.js';
+import { Cuadros } from './cuadros.js';
+import { pintarCuadro } from './pintar.js';
 import * as THREE from 'three';
 import { NOMBRE_TEMPORADA } from './ambiente.js';
 
 const CLAVE_FOTOS = 'hogar-fotos';
 const CLAVE_DIARIO = 'hogar-diario';
 
-const HUECOS_FOTO = [
-  { pared: 3, x: -1.7, y: 1.55, w: 0.62, h: 0.78 },
-  { pared: 3, x: -0.55, y: 1.7, w: 0.78, h: 0.58 },
-  { pared: 3, x: 0.55, y: 1.45, w: 0.5, h: 0.62 },
-  { pared: 3, x: 1.65, y: 1.65, w: 0.7, h: 0.86 },
-  { pared: 2, x: -0.7, y: 1.55, w: 0.7, h: 0.54 },
-  { pared: 2, x: 0.35, y: 1.75, w: 0.5, h: 0.62 },
-  { pared: 0, x: -2.45, y: 1.6, w: 0.52, h: 0.66 },
-  { pared: 0, x: 2.4, y: 1.55, w: 0.6, h: 0.48 }
-];
 
 function leer(clave, defecto) {
   try {
@@ -58,8 +50,8 @@ export class Mas {
     this.ctx = ctx;
     this.fotos = leer(CLAVE_FOTOS, []);
     this.diario = leer(CLAVE_DIARIO, []);
-    this.marcos = [];
     this.cargador = new THREE.TextureLoader();
+    this.cuadros = new Cuadros(this);
     this.montarCartel();
     this.pintarPared();
   }
@@ -85,7 +77,7 @@ export class Mas {
     const tiles = [
       ...extras,
       { id: 'foto', icono: '📸', texto: 'Foto de la casa', sub: 'Hazle una foto bonita y compártela' },
-      { id: 'album', icono: '🖼️', texto: 'Vuestras fotos', sub: 'Subid fotos y colgadlas en la pared' },
+      { id: 'album', icono: '🖼️', texto: 'Fotos y cuadros', sub: 'Colgad fotos de la galería o pintad un cuadro' },
       { id: 'diario', icono: '📔', texto: 'Diario del hogar', sub: 'El antes y el después de vuestra casa' },
       { id: 'ajustes', icono: '⚙️', texto: 'Ajustes', sub: 'Nombres, fechas especiales y sonido' }
     ];
@@ -238,79 +230,49 @@ export class Mas {
   }
 
   pintarPared() {
-    const { sala } = this.ctx;
-    const pared = this.estado.paredFotos || [];
-    HUECOS_FOTO.forEach((h, i) => {
-      const id = pared[i];
-      const foto = id ? this.fotos.find(f => f.id === id) : null;
-      let m = this.marcos[i];
-      if (!foto) {
-        if (m) {
-          m.grupo.visible = false;
-          m.fotoId = null;
-        }
-        return;
-      }
-      if (!m) {
-        const g = new THREE.Group();
-        const borde = 0.05;
-        const marco = new THREE.Mesh(new THREE.BoxGeometry(h.w + borde * 2, h.h + borde * 2, 0.04), new THREE.MeshStandardMaterial({ color: [0x8a5a3c, 0xf2efe9, 0x3d3d3d, 0xd9b98c][i % 4], roughness: 0.6 }));
-        marco.castShadow = true;
-        g.add(marco);
-        const passe = new THREE.Mesh(new THREE.PlaneGeometry(h.w, h.h), new THREE.MeshStandardMaterial({ color: 0xfaf6ef, roughness: 0.9 }));
-        passe.position.z = 0.021;
-        g.add(passe);
-        const img = new THREE.Mesh(new THREE.PlaneGeometry(h.w * 0.86, h.h * 0.86), new THREE.MeshStandardMaterial({ roughness: 0.6 }));
-        img.position.z = 0.022;
-        g.add(img);
-        g.position.set(h.x, h.y, sala.cara + 0.025);
-        g.rotation.z = (i % 2 ? 1 : -1) * 0.02;
-        sala.paredes[h.pared].add(g);
-        m = this.marcos[i] = { grupo: g, img, fotoId: null };
-      }
-      m.grupo.visible = true;
-      if (m.fotoId !== foto.id) {
-        m.fotoId = foto.id;
-        this.cargador.load(foto.data, tex => {
-          tex.colorSpace = THREE.SRGBColorSpace;
-          const kImg = tex.image.width / tex.image.height;
-          const kHueco = h.w / h.h;
-          tex.repeat.set(kImg > kHueco ? kHueco / kImg : 1, kImg > kHueco ? 1 : kImg / kHueco);
-          tex.offset.set((1 - tex.repeat.x) / 2, (1 - tex.repeat.y) / 2);
-          if (m.img.material.map) m.img.material.map.dispose();
-          m.img.material.map = tex;
-          m.img.material.color.set(0xffffff);
-          m.img.material.needsUpdate = true;
-        });
-      }
-    });
+    this.cuadros.pintar();
   }
 
   abrirAlbum() {
     const { ui, sonido } = this.ctx;
-    const pared = this.estado.paredFotos || [];
-    const cuerpo = ui.abrirGen('Vuestras fotos', `
-      <p class="gen-intro">Subid fotos vuestras y colgadlas en las paredes de casa. Se guardan solo en este móvil.</p>
-      <label class="boton-subir primario">📷 Subir foto<input id="subir-foto" type="file" accept="image/*" hidden></label>
+    const colgadas = new Set(this.cuadros.lista().map(c => c.foto));
+    const cuerpo = ui.abrirGen('Fotos y cuadros', `
+      <p class="gen-intro">Elegid fotos de la galería del móvil o pintad un cuadro, y colgadlo donde queráis en cualquier pared.</p>
+      <div class="album-botones">
+        <label class="boton-subir primario">📷 Fotos de la galería<input id="subir-foto" type="file" accept="image/*" multiple hidden></label>
+        <button class="rosa" id="pintar-nuevo">🎨 Pintar un cuadro</button>
+      </div>
       <div class="album">${this.fotos.length ? this.fotos.map(f => `
-        <button class="album-foto" data-id="${f.id}"><img src="${f.data}" alt="">${pared.includes(f.id) ? '<i>🖼️ En la pared</i>' : ''}</button>`).join('') : '<p class="vacio">Todavía no hay fotos.</p>'}</div>`, () => this.abrir());
+        <button class="album-foto" data-id="${f.id}"><img src="${f.data}" alt="">${f.pintura ? '<em>🎨</em>' : ''}${colgadas.has(f.id) ? '<i>🖼️ Colgada</i>' : ''}</button>`).join('') : '<p class="vacio">Todavía no hay fotos ni cuadros.</p>'}</div>`, () => this.abrir());
+    cuerpo.querySelector('#pintar-nuevo').addEventListener('click', () => this.pintarNuevo());
     cuerpo.querySelector('#subir-foto').addEventListener('change', async e => {
-      const archivo = e.target.files[0];
-      if (!archivo) return;
-      try {
-        const data = await reducirImagen(archivo, 640, 0.8);
-        this.fotos.unshift({ id: `f${Date.now()}`, data, fecha: Date.now() });
-        if (!this.guardarFotos()) {
-          this.fotos.shift();
-          return;
+      const archivos = [...e.target.files];
+      if (!archivos.length) return;
+      ui.aviso(archivos.length > 1 ? `📷 Preparando ${archivos.length} fotos…` : '📷 Preparando la foto…');
+      const nuevas = [];
+      for (const [k, archivo] of archivos.entries()) {
+        try {
+          const data = await reducirImagen(archivo, 640, 0.8);
+          const f = { id: `f${Date.now()}${k}`, data, fecha: Date.now() };
+          this.fotos.unshift(f);
+          if (!this.guardarFotos()) {
+            this.fotos.shift();
+            break;
+          }
+          nuevas.push(f);
+          this.ctx.alFotoNueva && this.ctx.alFotoNueva(f);
+        } catch (err) {
+          ui.aviso('No se pudo leer alguna foto', true);
         }
-        this.ctx.alFotoNueva && this.ctx.alFotoNueva(this.fotos[0]);
-        sonido.arreglo();
-        this.abrirAlbum();
-        this.elegirHueco(this.fotos[0]);
-      } catch (err) {
-        ui.aviso('No se pudo leer la foto', true);
       }
+      if (!nuevas.length) return;
+      sonido.arreglo();
+      if (nuevas.length === 1) {
+        this.cuadros.colocar(nuevas[0].id);
+        return;
+      }
+      ui.aviso(`📷 ${nuevas.length} fotos añadidas. Tocad una para colgarla`);
+      this.abrirAlbum();
     });
     cuerpo.querySelectorAll('.album-foto').forEach(b => b.addEventListener('click', () => {
       const f = this.fotos.find(x => x.id === b.dataset.id);
@@ -318,20 +280,54 @@ export class Mas {
     }));
   }
 
+  async pintarNuevo() {
+    const { ui, sonido } = this.ctx;
+    ui.cerrarHojas();
+    const res = await pintarCuadro({ sonido });
+    if (!res) return;
+    const f = { id: `p${Date.now()}`, data: res.data, fecha: Date.now(), pintura: true };
+    this.fotos.unshift(f);
+    if (!this.guardarFotos()) {
+      this.fotos.shift();
+      return;
+    }
+    this.ctx.alFotoNueva && this.ctx.alFotoNueva(f);
+    this.ctx.registrar && this.ctx.registrar('pintar');
+    sonido.premio();
+    this.cuadros.colocar(f.id);
+  }
+
+  async retocar(f) {
+    const { ui, sonido } = this.ctx;
+    ui.cerrarHojas();
+    const img = new Image();
+    img.src = f.data;
+    await img.decode().catch(() => {});
+    const formato = img.width > img.height * 1.1 ? 'horizontal' : img.height > img.width * 1.1 ? 'vertical' : 'cuadrado';
+    const res = await pintarCuadro({ sonido, base: f.data, formato });
+    if (!res) return;
+    const nueva = { id: `p${Date.now()}`, data: res.data, fecha: Date.now(), pintura: true };
+    this.fotos = this.fotos.map(x => (x === f ? nueva : x));
+    for (const c of this.cuadros.lista()) if (c.foto === f.id) c.foto = nueva.id;
+    if (!this.guardarFotos()) return;
+    this.ctx.alFotoBorrada && this.ctx.alFotoBorrada(f.id);
+    this.ctx.alFotoNueva && this.ctx.alFotoNueva(nueva);
+    sonido.arreglo();
+    this.pintarPared();
+    this.ctx.guardar();
+    ui.aviso('🎨 ¡Cuadro retocado!');
+  }
+
   opcionesFoto(f) {
     const { ui } = this.ctx;
-    const pared = this.estado.paredFotos || [];
-    const colgada = pared.includes(f.id);
     ui.dialogo({
       html: `<img class="foto-grande" src="${f.data}" alt="">`,
       botones: [
-        colgada
-          ? { texto: '📤 Quitar de la pared', tipo: 'secundario', accion: () => { pared[pared.indexOf(f.id)] = null; this.trasCambioPared(); } }
-          : { texto: '🖼️ Colgar en la pared', tipo: 'primario', accion: () => setTimeout(() => this.elegirHueco(f), 250) },
+        { texto: '🖼️ Colgar en la pared', tipo: 'primario', accion: () => setTimeout(() => this.cuadros.colocar(f.id), 250) },
+        ...(f.pintura ? [{ texto: '🖌️ Retocar', tipo: 'secundario', accion: () => setTimeout(() => this.retocar(f), 250) }] : []),
         {
           texto: '🗑️ Borrar', tipo: 'rosa', accion: () => {
-            const i = pared.indexOf(f.id);
-            if (i >= 0) pared[i] = null;
+            this.estado.cuadros = this.cuadros.lista().filter(c => c.foto !== f.id);
             this.fotos = this.fotos.filter(x => x !== f);
             this.guardarFotos();
             this.ctx.alFotoBorrada && this.ctx.alFotoBorrada(f.id);
@@ -342,29 +338,6 @@ export class Mas {
       ],
       columna: true
     });
-  }
-
-  elegirHueco(f) {
-    const { ui } = this.ctx;
-    if (!this.estado.paredFotos) this.estado.paredFotos = [];
-    const pared = this.estado.paredFotos;
-    const nombres = { 0: 'Pared de la ventana', 2: 'Pared izquierda', 3: 'Pared derecha' };
-    ui.dialogo({
-      titulo: '¿Dónde la colgamos?',
-      html: `<div class="huecos">${HUECOS_FOTO.map((h, i) => `<button class="hueco" data-i="${i}">${pared[i] ? '🖼️' : '⬜'} ${nombres[h.pared]} · ${i + 1}</button>`).join('')}</div>`,
-      botones: [{ texto: 'Cancelar', tipo: 'secundario' }]
-    });
-    document.querySelectorAll('#dialogo .hueco').forEach(b => b.addEventListener('click', () => {
-      const i = Number(b.dataset.i);
-      const antes = pared.indexOf(f.id);
-      if (antes >= 0) pared[antes] = null;
-      pared[i] = f.id;
-      document.querySelector('#dialogo .dialogo-botones button').click();
-      this.trasCambioPared();
-      this.ctx.sonido.colocar();
-      ui.aviso('🖼️ ¡Foto colgada!');
-      this.ctx.alColgarFoto && this.ctx.alColgarFoto();
-    }));
   }
 
   trasCambioPared() {

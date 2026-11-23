@@ -202,6 +202,18 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - Modelos de Blender en `blender/m_casa3.py`: cocina, lavadora y chimenea (`VERSION_MODELOS = 6`).
 - Depuración: `?debug` expone `window.__h`. Tests en `/tmp/prueba/t3.py`, `t4.py` y `t5.py <nieve|gato|tesoro|fiesta|foto|lofi>`.
 
+## Cuadros y pintar (pedido el 23-nov 19:20) — HECHO
+- `js/cuadros.js`: los cuadros se cuelgan donde se quiera, en cualquier pared y en cada habitación.
+  - Se guardan en `estado.cuadros` = `{id, foto, hab:'nivel-hab', pared, x, y, tam s|m|l|xl, marco madera|blanco|negro|dorado|polaroid|lienzo, k}`.
+  - Sustituye a los 8 huecos fijos; `paredFotos` se migra solo.
+- Para colgar: `cuadros.colocar(fotoId)` activa `controles.capturaToque`. Se toca una pared visible (no deja tapar la ventana ni la puerta), se eligen tamaño y marco abajo y se pulsa Listo.
+- Al tocar un cuadro colgado: mover o cambiar el marco, retocar (si es pintado) o descolgar. En controles van `distCuadro` y `tocarCuadro`.
+- Más → 🖼️ Fotos y cuadros:
+  - "Fotos de la galería" deja elegir varias (`multiple`); con una sola se pasa directo a colgarla;
+  - "Pintar un cuadro" abre `js/pintar.js`: formato y fondo, pincel, borrador, cubo de relleno, 4 grosores, 16 colores + uno libre y deshacer.
+- Los cuadros pintados son fotos con `pintura: true` (se sincronizan por la tabla `fotos`).
+- Acogedor: cuenta los cuadros de la habitación. Logros nuevos: Artistas y Galería de arte (10 cuadros).
+
 ## Ideas pendientes (no pedidas aún)
 - Sincronizar los dos móviles (Supabase).
 - Minijuegos para ganar monedas.
