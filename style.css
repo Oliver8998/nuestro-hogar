@@ -2824,3 +2824,7 @@ body.colgando #lateral, body.colgando #chips-vida, body.colgando #menu-objeto, b
 .inicio-svg .banco { animation: banco 14s ease-in-out infinite; }
 @keyframes banco { 50% { transform: translateX(-14px); } }
 .inicio-svg .pajaros { opacity: .45; }
+
+.ini-idioma { position: absolute; top: calc(env(safe-area-inset-top) + 10px); right: 12px; z-index: 3; display: flex; background: rgba(255,250,244,.85); border-radius: 14px; padding: 3px; box-shadow: 0 3px 10px rgba(30,20,40,.18); }
+.ini-idioma button { border: none; background: none; font: inherit; font-weight: 900; font-size: 13px; padding: 5px 9px; border-radius: 11px; color: var(--suave); }
+.ini-idioma button.activo { background: var(--rosa); color: #fff; }

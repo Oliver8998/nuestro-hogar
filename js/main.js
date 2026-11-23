@@ -33,8 +33,10 @@ import { Social } from './social.js';
 import { Sorpresas } from './sorpresas.js';
 import { Lofi } from './lofi.js';
 import { Trabajos } from './trabajos.js';
+import { activarTraduccion } from './i18n.js';
 import { CASAS, COLECCIONES, LOGROS, EXTERIORES, calcularAcogedor, coleccionesCompletas } from './progreso.js';
 
+activarTraduccion();
 await cargarModelos();
 
 const CLAVE = 'hogar-estado';
@@ -1138,7 +1140,7 @@ function abrirCasas() {
         if (a < c.acogedor) faltan.push(`${c.acogedor} de acogedor (tenéis ${a})`);
         if (estado.monedas < c.precio) faltan.push(`🪙 ${c.precio}`);
       }
-      return `<div class="casa-fila ${estadoCasa}"><span>${c.icono}</span><div><b>${c.nombre}</b><small>${c.habitaciones.length} habitación${c.habitaciones.length > 1 ? 'es' : ''} · ${c.habitaciones.join(', ')}</small>${estadoCasa === 'siguiente' ? (faltan.length ? `<small class="falta">Falta: ${faltan.join(' · ')}</small>` : `<button class="primario mudarse">🚚 Mudarse · 🪙 ${c.precio}</button>`) : ''}</div><em>${estadoCasa === 'actual' ? '📍 Aquí' : estadoCasa === 'pasada' ? '✅' : estadoCasa === 'bloqueada' ? '🔒' : ''}</em></div>`;
+      return `<div class="casa-fila ${estadoCasa}"><span>${c.icono}</span><div><b>${c.nombre}</b><small>${c.habitaciones.length} ${c.habitaciones.length > 1 ? 'habitaciones' : 'habitación'} · ${c.habitaciones.join(', ')}</small>${estadoCasa === 'siguiente' ? (faltan.length ? `<small class="falta">Falta: ${faltan.join(' · ')}</small>` : `<button class="primario mudarse">🚚 Mudarse · 🪙 ${c.precio}</button>`) : ''}</div><em>${estadoCasa === 'actual' ? '📍 Aquí' : estadoCasa === 'pasada' ? '✅' : estadoCasa === 'bloqueada' ? '🔒' : ''}</em></div>`;
     }).join('')}</div>`, () => mas.abrir());
   const b = cuerpo.querySelector('.mudarse');
   if (b) b.addEventListener('click', () => mudarse(nivel + 1));

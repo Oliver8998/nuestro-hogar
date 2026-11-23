@@ -266,3 +266,13 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
   - `modelos.js` carga el GLB (GLTFLoader + DRACOLoader del CDN) y `construirPiezas(piezas, {id})` usa el modelo nuevo si existe.
   - `modeloSuelto('sucio-x')` sirve para la suciedad, el robot que se mueve (`robot-suelo`) y las cucarachas.
 - Al copiar archivos al PC con `device_commit_files`, a veces se copia una versión vieja: hay que comprobarlo y repetir si pasa.
+
+## Idiomas (ES / EN)
+- `js/i18n.js` + `js/i18n_en.js` (~1535 frases). No hay claves en el código: el texto español se traduce al vuelo en el DOM (MutationObserver), igual en textos que en placeholder/title/aria-label/alt.
+- `idioma()` lee `localStorage['hogar-idioma']`; si no hay, español si el móvil está en español, si no inglés. `ponerIdioma(i)` guarda y recarga.
+- Cambiar idioma: píldora ES/EN en el menú principal o botón en Ajustes.
+- Reglas de `traducirTexto`: exacta → patrones con `{n}` (un hueco pegado a una letra puede ir vacío, sufijo 'es' → 's') → minúscula → quitar emojis de los lados → partir por ' · ' / ' | ' → partir listas por ', '.
+- Para textos nuevos: añadir la frase española exacta (o con `{0}`) a `i18n_en.js`. `[data-no-traducir]` excluye un bloque. Prueba: `/tmp/prueba/t10.py` lista lo que queda en español.
+
+## Nombre
+- Pendiente de elegir un título corto en inglés (descartado "Little Nest": suena a bebés). Mientras tanto: "Nuestro Hogar" / "Our Home" según idioma. Cambiarlo en `js/inicio.js` (título animado), `index.html` (title y apple-mobile-web-app-title) y `manifest.json`.

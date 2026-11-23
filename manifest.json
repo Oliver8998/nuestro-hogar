@@ -1,6 +1,6 @@
 {
   "name": "Nuestro Hogar",
-  "short_name": "Hogar",
+  "short_name": "Nuestro Hogar",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

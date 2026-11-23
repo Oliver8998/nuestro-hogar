@@ -1,4 +1,5 @@
 import { Escaparate, periodo } from './escaparate.js';
+import { idioma, ponerIdioma } from './i18n.js';
 
 const CLAVE_CUENTA = 'hogar-cuenta';
 
@@ -105,10 +106,14 @@ export class Inicio {
   mostrar() {
     this.capa.classList.remove('fuera');
     this.capa.style.display = 'flex';
-    this.capa.innerHTML = `<div class="inicio-fondo">${escenaSvg()}</div><div class="inicio-titulo">${'Nuestro Hogar'.split('').map((l, i) => `<span style="animation-delay:${(0.1 + i * 0.06).toFixed(2)}s">${l === ' ' ? '&nbsp;' : l}</span>`).join('')}</div>
-      <div class="escaparate"><div class="esc-lienzo"></div></div><div class="inicio-panel"></div>`;
+    this.capa.innerHTML = `<div class="inicio-fondo">${escenaSvg()}</div><div class="inicio-titulo">${(idioma() === 'en' ? 'Our Home' : 'Nuestro Hogar').split('').map((l, i) => `<span style="animation-delay:${(0.1 + i * 0.06).toFixed(2)}s">${l === ' ' ? '&nbsp;' : l}</span>`).join('')}</div>
+      <div class="escaparate"><div class="esc-lienzo"></div></div>
+      <div class="ini-idioma" data-no-traducir><button data-l="es" class="${idioma() === 'es' ? 'activo' : ''}">ES</button><button data-l="en" class="${idioma() === 'en' ? 'activo' : ''}">EN</button></div><div class="inicio-panel"></div>`;
     this.pintar();
     this.montarEscaparate();
+    this.capa.querySelectorAll('.ini-idioma button').forEach(b => b.addEventListener('click', () => {
+      if (b.dataset.l !== idioma()) ponerIdioma(b.dataset.l);
+    }));
     setTimeout(() => this.pintar(this.vista), 0);
   }
 

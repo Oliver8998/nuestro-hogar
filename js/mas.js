@@ -1,6 +1,7 @@
 import { editarFoto } from './fotoeditor.js';
 import { Cuadros } from './cuadros.js';
 import { pintarCuadro } from './pintar.js';
+import { idioma, ponerIdioma } from './i18n.js';
 import * as THREE from 'three';
 import { NOMBRE_TEMPORADA } from './ambiente.js';
 
@@ -113,6 +114,7 @@ export class Mas {
         <input id="aj-cancion" type="url" placeholder="https://open.spotify.com/track/…" value="${escapar(p.cancion || '')}">
         <small class="nota">Sonará al tocar la radio → 💕 Nuestra canción.</small>
         <button id="aj-sonido" class="secundario">${sonido.activo ? '🔊 Sonido activado' : '🔇 Sonido desactivado'}</button>
+        <button id="aj-idioma" class="secundario" data-no-traducir>${idioma() === 'en' ? '🌐 Language: English' : '🌐 Idioma: Español'}</button>
         <button id="aj-lofi" class="secundario">${this.ctx.lofi && this.ctx.lofi.activo ? '🎧 Música lofi: sí' : '🎧 Música lofi: no'}</button>
         <small class="nota">Música tranquila de fondo que cambia con la hora del día.</small>
         <button id="aj-guardar" class="primario">Guardar</button>
@@ -122,6 +124,7 @@ export class Mas {
       const on = sonido.alternar();
       e.currentTarget.textContent = on ? '🔊 Sonido activado' : '🔇 Sonido desactivado';
     });
+    cuerpo.querySelector('#aj-idioma').addEventListener('click', () => ponerIdioma(idioma() === 'en' ? 'es' : 'en'));
     cuerpo.querySelector('#aj-lofi').addEventListener('click', e => {
       if (!this.ctx.lofi) return;
       const on = this.ctx.lofi.alternar();
