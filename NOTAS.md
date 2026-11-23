@@ -237,6 +237,11 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
   - Cada sala tiene suelo y papel de casa2, muebles reales (con `GestorMuebles` en un grupo), mascotas, ventana con cortinas y LED, y versión de noche.
   - Entra con rebote, los muebles aparecen uno a uno, la cámara se balancea y cambia cada 6,5 s; si se toca, pasa a la siguiente. Se destruye al cerrar el menú.
 - 23-nov 20:13: sin nombre de sala ni puntitos; el fondo es solo cielo (sin colinas, vallas ni árboles). La luz de las salas sigue la hora real (`periodo()` y `LUZ` en escaparate.js): de día luz natural, al atardecer anaranjada y de noche oscuro con lámparas, chimenea y LED encendidos.
+- 23-nov 20:20: cielo más elaborado:
+  - degradado de 4 colores, sol con halo y rayos que giran, luna con cráteres y halo;
+  - nubes esponjosas con sombra y brillo, banco de nubes abajo, globo aerostático (de día y al atardecer), Vía Láctea, estrellas que brillan y estrella fugaz.
+  - Se quitaron las burbujas de avisos del menú.
+  - La habitación tiene altura fija (52vh, o 44vh con sesión) y todo va centrado, para que no quede hueco hasta los botones.
 - El menú tiene ahora menos texto: el título, el nombre de la sala con puntitos, una tarjeta mini (casa, 🪙, 🔥, 🕯️) y avisos en burbujas con icono (`resumen().novedades` = `{i, t}`).
 
 ## Ideas pendientes (no pedidas aún)

@@ -2803,3 +2803,24 @@ body.colgando #lateral, body.colgando #chips-vida, body.colgando #menu-objeto, b
 @keyframes aviso-pop { from { transform: scale(0); } }
 @keyframes aviso-bota { 0%, 70%, 100% { transform: none; } 80% { transform: translateY(-5px); } 90% { transform: translateY(0) scale(1.05, .95); } }
 .inicio-caja { display: flex; flex-direction: column; gap: 10px; }
+
+/* Menú: cielo bonito y composición más compacta */
+#inicio { justify-content: center; gap: 0; padding-top: calc(env(safe-area-inset-top) + 18px); }
+.escaparate { flex: 0 0 auto; height: min(52vh, 480px); }
+#inicio.con-casa .escaparate { height: min(44vh, 420px); }
+.inicio-panel { margin-top: -6px; }
+.inicio-svg .halo { animation: halo 5s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes halo { 50% { opacity: .7; transform: scale(1.06); } }
+.inicio-svg .rayos { animation: rayos 60s linear infinite; }
+@keyframes rayos { to { transform: rotate(360deg); } }
+.inicio-svg .nube { animation-name: nube; animation-timing-function: linear; animation-iteration-count: infinite; }
+.inicio-svg .nube.lejana { opacity: .75; }
+.inicio-svg .estrella.brilla { fill: #fff; animation: brilla 3.5s ease-in-out infinite; }
+@keyframes brilla { 0%, 100% { opacity: .3; transform: scale(.6); } 50% { opacity: 1; transform: scale(1.2) rotate(20deg); } }
+.inicio-svg .fugaz { opacity: 0; animation: fugaz 9s ease-in 2s infinite; }
+@keyframes fugaz { 0% { opacity: 0; transform: translate(380px, 60px); } 3% { opacity: 1; } 10% { opacity: 0; transform: translate(150px, 150px); } 100% { opacity: 0; transform: translate(150px, 150px); } }
+.inicio-svg .globo { animation: globo 70s linear infinite; }
+@keyframes globo { 0% { transform: translate(-40px, 520px); } 50% { transform: translate(200px, 300px) rotate(3deg); } 100% { transform: translate(440px, 120px); } }
+.inicio-svg .banco { animation: banco 14s ease-in-out infinite; }
+@keyframes banco { 50% { transform: translateX(-14px); } }
+.inicio-svg .pajaros { opacity: .45; }

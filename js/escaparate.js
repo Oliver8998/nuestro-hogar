@@ -26,8 +26,8 @@ const SALAS = [
   },
   {
     icono: '🌳', nombre: 'Jardín', exterior: true,
-    muebles: [['piscina-hinchable', 0, -5, 0, 0], ['tumbona', -5, -5, 0, 0], ['tumbona', -4, -5, 0, 1], ['sombrilla', -3, -6, 0, 0], ['mesa-picnic', -5, 0, 0], ['barbacoa', 3, -6, 0], ['cerezo', 4, -1, 0], ['maceta-grande', 4, 2, 0], ['maceta-grande', -6, 4, 0]],
-    mascotas: [['perro', 1.4, 1.6], ['pato', -0.2, 2.2], ['tortuga', 2.2, 1.7]]
+    muebles: [['piscina-hinchable', 0, -5, 0, 0], ['tumbona', -5, -5, 0, 0], ['tumbona', -4, -5, 0, 1], ['sombrilla', -3, -6, 0, 0], ['mesa-picnic', -5, 0, 0], ['barbacoa', 3, -6, 0], ['cerezo', -2, 3, 0], ['maceta-grande', 4, 2, 0], ['maceta-grande', -6, 4, 0]],
+    mascotas: [['perro', 1.4, 1.6], ['pato', -1.5, 0.3], ['tortuga', 2.2, 1.7]]
   },
   {
     icono: '🏰', nombre: 'Salón de la mansión', suelo: 'marmol', papel: 'flores', cortina: 0x8a2b3a,

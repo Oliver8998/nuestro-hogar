@@ -8,49 +8,84 @@ function escapar(t) {
 
 
 const CIELOS = {
-  dia: ['#9fd3f0', '#cfe9f6', '#fbefe0'],
-  tarde: ['#7d86c9', '#f4a28c', '#fbd7b0'],
-  noche: ['#141838', '#2c2d63', '#5b4c86']
+  dia: { cielo: ['#5fb4ea', '#8fcdf2', '#c8e7f7', '#f3f0e4'], nube: ['#ffffff', '#e4eef7', '#c3d6e8'], sol: ['#fff6c8', '#ffd76a'], halo: '#fff3b0' },
+  tarde: { cielo: ['#4b4a9a', '#9a6fb5', '#f08a7c', '#ffc98f'], nube: ['#ffd9c4', '#f2a6a0', '#b77a9e'], sol: ['#ffe3a0', '#ff8a4c'], halo: '#ffb070' },
+  noche: { cielo: ['#070a24', '#141a45', '#2a2a66', '#4a3d78'], nube: ['#3c3f78', '#2c2f63', '#1f2250'], sol: ['#fffbe8', '#e8e0c0'], halo: '#c9d4ff' }
 };
 
-function corazonPath(x, y, s) {
-  return `M${x} ${y + s * 0.9} C${x - s * 1.6} ${y - s * 0.2} ${x - s * 0.6} ${y - s * 1.4} ${x} ${y - s * 0.5} C${x + s * 0.6} ${y - s * 1.4} ${x + s * 1.6} ${y - s * 0.2} ${x} ${y + s * 0.9}Z`;
+function nubeSvg(r, x, y, s, dur, clase = '') {
+  const bolas = [];
+  const n = 6 + Math.floor(r() * 4);
+  for (let k = 0; k < n; k++) {
+    const t = k / (n - 1);
+    const bx = (t - 0.5) * 110 + (r() - 0.5) * 10;
+    const alto = Math.sin(t * Math.PI);
+    const rad = 14 + alto * 22 + r() * 8;
+    bolas.push([bx, -alto * 18 - r() * 6, rad]);
+  }
+  const cuerpo = bolas.map(([bx, by, rad]) => `<circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="${rad.toFixed(1)}"/>`).join('');
+  return `<g class="nube ${clase}" style="animation-duration:${dur}s;animation-delay:-${(r() * dur).toFixed(1)}s"><g transform="translate(${x} ${y}) scale(${s})">
+    <g fill="url(#nubeSombra)" transform="translate(4 7)">${cuerpo}<rect x="-62" y="-4" width="124" height="20" rx="10"/></g>
+    <g fill="url(#nubeCuerpo)">${cuerpo}<rect x="-62" y="-6" width="124" height="20" rx="10"/></g>
+    <g fill="url(#nubeLuz)" opacity=".85">${bolas.filter((_, k) => k % 2).map(([bx, by, rad]) => `<circle cx="${(bx - rad * 0.2).toFixed(1)}" cy="${(by - rad * 0.25).toFixed(1)}" r="${(rad * 0.7).toFixed(1)}"/>`).join('')}</g>
+  </g></g>`;
 }
 
-function escenaSvg(nivel = 0) {
+function escenaSvg() {
   const p = periodo();
   const noche = p === 'noche';
-  const [c1, c2, c3] = CIELOS[p];
-  const r = (() => { let x = 7; return () => ((x = (x * 9301 + 49297) % 233280) / 233280); })();
-  const estrellas = noche ? Array.from({ length: 46 }, (_, i) => `<circle class="estrella" cx="${(r() * 400).toFixed(1)}" cy="${(r() * 380).toFixed(1)}" r="${(0.6 + r() * 1.6).toFixed(1)}" style="animation-delay:${(r() * 4).toFixed(2)}s"/>`).join('') : '';
-  const nube = (x, y, s, d) => `<g class="nube" style="animation-duration:${d}s;animation-delay:-${(r() * d).toFixed(1)}s"><g transform="translate(${x} ${y}) scale(${s})"><ellipse cx="0" cy="0" rx="34" ry="16"/><ellipse cx="-24" cy="6" rx="22" ry="12"/><ellipse cx="26" cy="6" rx="24" ry="12"/><ellipse cx="4" cy="-12" rx="20" ry="14"/></g></g>`;
-  const nubes = `<g class="nubes ${noche ? 'tenue' : ''}">${nube(60, 150, 1, 60)}${nube(260, 90, 0.8, 75)}${nube(160, 230, 0.6, 50)}</g>`;
-  const astro = noche
-    ? '<mask id="creciente"><circle cx="318" cy="120" r="30" fill="#fff"/><circle cx="331" cy="111" r="27" fill="#000"/></mask><circle class="luna" cx="318" cy="120" r="30" fill="#f6f0d8" mask="url(#creciente)"/>'
-    : `<circle class="sol" cx="318" cy="${p === 'tarde' ? 300 : 200}" r="${p === 'tarde' ? 40 : 30}" fill="${p === 'tarde' ? '#ffb070' : '#ffe08a'}"/>`;
-  const pajaros = p === 'dia' ? '<g class="pajaros"><path d="M0 0 q6 -6 12 0 q6 -6 12 0" /><path d="M30 14 q5 -5 10 0 q5 -5 10 0" /></g>' : '';
-  const luciernagas = noche ? Array.from({ length: 10 }, () => `<circle class="luciernaga" cx="${(20 + r() * 360).toFixed(0)}" cy="${(560 + r() * 140).toFixed(0)}" r="2.2" style="animation-delay:${(r() * 5).toFixed(2)}s;animation-duration:${(4 + r() * 4).toFixed(1)}s"/>`).join('') : '';
-  const pared = noche ? '#cdb7a6' : '#f6e3cf';
-  const tejado = noche ? '#a5574e' : '#e07a6a';
-  const luzV = noche ? '#ffd166' : '#fff1c2';
-  const cerca = nivel >= 3 ? `<g class="valla" fill="${noche ? '#bfb2a6' : '#fffaf2'}">${Array.from({ length: 16 }, (_, i) => { const x = 20 + i * 24 - (i > 7 ? -10 : 0); return i === 7 || i === 8 ? '' : `<path d="M${x} 640 v-26 l5 -6 l5 6 v26z"/>`; }).join('')}<rect x="14" y="622" width="160" height="5"/><rect x="226" y="622" width="160" height="5"/></g>` : '';
-  const torres = nivel >= 4 ? `<g><rect x="78" y="440" width="44" height="160" fill="${pared}"/><path d="M72 442 L100 380 L128 442Z" fill="${tejado}"/><rect x="92" y="470" width="16" height="24" rx="8" fill="${luzV}" class="ventana"/><rect x="278" y="440" width="44" height="160" fill="${pared}"/><path d="M272 442 L300 380 L328 442Z" fill="${tejado}"/><rect x="292" y="470" width="16" height="24" rx="8" fill="${luzV}" class="ventana"/><path d="M100 380 v-16" stroke="#8a5a3c" stroke-width="2"/><path d="M100 364 l12 4 l-12 4z" fill="#e58f9e" class="bandera"/></g>` : '';
-  const pisoExtra = nivel >= 2 ? `<rect x="138" y="440" width="34" height="0" />` : '';
-  const flores = Array.from({ length: 14 }, (_, i) => {
-    const x = i < 7 ? 40 + i * 13 : 262 + (i - 7) * 14;
-    const col = ['#e58f9e', '#f2d06b', '#b39ddb', '#ffffff', '#f08c6a'][i % 5];
-    return `<g class="flor" style="animation-delay:${(i * 0.23).toFixed(2)}s"><path d="M${x} 640 v-14" stroke="#5f9a52" stroke-width="2"/><circle cx="${x}" cy="${626}" r="4.5" fill="${col}"/><circle cx="${x}" cy="626" r="1.6" fill="#f2d06b"/></g>`;
-  }).join('');
-  return `<svg class="inicio-svg" viewBox="0 0 400 800" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+  const C = CIELOS[p];
+  const r = (() => { let x = 11; return () => ((x = (x * 9301 + 49297) % 233280) / 233280); })();
+  const sx = noche ? 68 : p === 'tarde' ? 340 : 338;
+  const sy = p === 'tarde' ? 560 : noche ? 64 : 60;
+  let astro;
+  if (noche) {
+    astro = `<circle cx="${sx}" cy="${sy}" r="90" fill="url(#halo)" class="halo"/>
+      <circle cx="${sx}" cy="${sy}" r="34" fill="url(#luna)"/>
+      <circle cx="${sx - 10}" cy="${sy - 8}" r="7" fill="#d8d0b0" opacity=".55"/><circle cx="${sx + 12}" cy="${sy + 6}" r="5" fill="#d8d0b0" opacity=".5"/><circle cx="${sx + 2}" cy="${sy + 16}" r="3.5" fill="#d8d0b0" opacity=".5"/><circle cx="${sx - 14}" cy="${sy + 12}" r="2.5" fill="#d8d0b0" opacity=".45"/>`;
+  } else {
+    const rayos = Array.from({ length: 12 }, (_, k) => {
+      const a = k * Math.PI / 6;
+      return `<path d="M${(sx + Math.cos(a - 0.08) * 46).toFixed(1)} ${(sy + Math.sin(a - 0.08) * 46).toFixed(1)} L${(sx + Math.cos(a) * (k % 2 ? 78 : 96)).toFixed(1)} ${(sy + Math.sin(a) * (k % 2 ? 78 : 96)).toFixed(1)} L${(sx + Math.cos(a + 0.08) * 46).toFixed(1)} ${(sy + Math.sin(a + 0.08) * 46).toFixed(1)}Z"/>`;
+    }).join('');
+    astro = `<circle cx="${sx}" cy="${sy}" r="${p === 'tarde' ? 150 : 120}" fill="url(#halo)" class="halo"/>
+      <g class="rayos" style="transform-origin:${sx}px ${sy}px" fill="${C.halo}" opacity=".35">${rayos}</g>
+      <circle cx="${sx}" cy="${sy}" r="${p === 'tarde' ? 44 : 36}" fill="url(#sol)"/>`;
+  }
+  const estrellas = noche ? Array.from({ length: 70 }, () => {
+    const x = r() * 400;
+    const y = r() * 520;
+    const t = r();
+    if (t > 0.9) return `<path class="estrella brilla" style="animation-delay:${(r() * 4).toFixed(2)}s;transform-origin:${x.toFixed(1)}px ${y.toFixed(1)}px" d="M${x} ${y - 6} Q${x} ${y} ${x + 6} ${y} Q${x} ${y} ${x} ${y + 6} Q${x} ${y} ${x - 6} ${y} Q${x} ${y} ${x} ${y - 6}Z"/>`;
+    return `<circle class="estrella" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(0.5 + t * 1.4).toFixed(1)}" style="animation-delay:${(r() * 4).toFixed(2)}s"/>`;
+  }).join('') : '';
+  const via = noche ? '<ellipse cx="160" cy="240" rx="260" ry="46" fill="url(#via)" transform="rotate(-28 160 240)" opacity=".5"/>' : '';
+  const fugaz = noche ? '<g class="fugaz"><path d="M0 0 L-70 -26" stroke="url(#estela)" stroke-width="2.4" stroke-linecap="round"/><circle r="2.2" fill="#fff"/></g>' : '';
+  const nubesLejos = `<g class="banco" opacity="${noche ? 0.5 : 0.9}">${Array.from({ length: 9 }, (_, k) => `<circle cx="${k * 50 - 10}" cy="${700 + (k % 2) * 16}" r="${60 + (k % 3) * 14}" fill="url(#nubeCuerpo)"/>`).join('')}<rect x="0" y="720" width="400" height="80" fill="url(#nubeCuerpo)"/></g>`;
+  const nubes = `${nubeSvg(r, 70, 250, 0.95, 90)}${nubeSvg(r, 250, 120, 0.7, 120, 'lejana')}${nubeSvg(r, 180, 420, 1.15, 70)}${nubeSvg(r, 40, 560, 0.8, 100, 'lejana')}`;
+  const globo = p !== 'noche' ? `<g class="globo"><g transform="translate(0 0)">
+      <path d="M0 -30 C20 -30 26 -12 20 4 C15 16 6 22 4 26 L-4 26 C-6 22 -15 16 -20 4 C-26 -12 -20 -30 0 -30Z" fill="url(#globo)"/>
+      <path d="M0 -30 C8 -20 8 10 4 26 M0 -30 C-8 -20 -8 10 -4 26" stroke="rgba(255,255,255,.55)" stroke-width="2" fill="none"/>
+      <path d="M-4 26 L-5 33 M4 26 L5 33" stroke="#8a5a3c" stroke-width="1"/><rect x="-6" y="33" width="12" height="8" rx="2" fill="#a0703f"/>
+    </g></g>` : '';
+  const pajaros = p === 'dia' ? '<g class="pajaros"><path d="M0 0 q6 -6 12 0 q6 -6 12 0"/><path d="M30 14 q5 -5 10 0 q5 -5 10 0"/><path d="M14 26 q4 -4 8 0 q4 -4 8 0"/></g>' : '';
+  return `<svg class="inicio-svg" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <linearGradient id="cielo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset=".55" stop-color="${c2}"/><stop offset="1" stop-color="${c3}"/></linearGradient>
-      <radialGradient id="brillo"><stop offset="0" stop-color="${luzV}" stop-opacity=".9"/><stop offset="1" stop-color="${luzV}" stop-opacity="0"/></radialGradient>
+      <linearGradient id="cielo" x1="0" y1="0" x2="0" y2="1">${C.cielo.map((c, k) => `<stop offset="${(k / (C.cielo.length - 1)).toFixed(2)}" stop-color="${c}"/>`).join('')}</linearGradient>
+      <radialGradient id="halo"><stop offset="0" stop-color="${C.halo}" stop-opacity=".75"/><stop offset=".4" stop-color="${C.halo}" stop-opacity=".25"/><stop offset="1" stop-color="${C.halo}" stop-opacity="0"/></radialGradient>
+      <radialGradient id="sol" cx=".4" cy=".35"><stop offset="0" stop-color="${C.sol[0]}"/><stop offset="1" stop-color="${C.sol[1]}"/></radialGradient>
+      <radialGradient id="luna" cx=".35" cy=".35"><stop offset="0" stop-color="#fffdf2"/><stop offset="1" stop-color="#e6dcb8"/></radialGradient>
+      <linearGradient id="nubeCuerpo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${C.nube[0]}"/><stop offset="1" stop-color="${C.nube[1]}"/></linearGradient>
+      <linearGradient id="nubeSombra" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${C.nube[2]}" stop-opacity=".3"/><stop offset="1" stop-color="${C.nube[2]}" stop-opacity=".7"/></linearGradient>
+      <radialGradient id="nubeLuz"><stop offset="0" stop-color="#fff" stop-opacity="${noche ? 0.15 : 0.9}"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+      <linearGradient id="via" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a7fd0" stop-opacity="0"/><stop offset=".5" stop-color="#b0a6ff" stop-opacity=".35"/><stop offset="1" stop-color="#8a7fd0" stop-opacity="0"/></linearGradient>
+      <linearGradient id="estela" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+      <linearGradient id="globo" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e58f9e"/><stop offset=".33" stop-color="#e58f9e"/><stop offset=".33" stop-color="#f2d06b"/><stop offset=".66" stop-color="#f2d06b"/><stop offset=".66" stop-color="#7fc4e0"/><stop offset="1" stop-color="#7fc4e0"/></linearGradient>
     </defs>
     <rect width="400" height="800" fill="url(#cielo)"/>
-    ${estrellas}${astro}${nubes}${pajaros}
+    ${via}${estrellas}${fugaz}${astro}${nubes}${globo}${pajaros}${nubesLejos}
   </svg>`;
 }
-
 
 export class Inicio {
   constructor(ctx) {
@@ -70,8 +105,7 @@ export class Inicio {
   mostrar() {
     this.capa.classList.remove('fuera');
     this.capa.style.display = 'flex';
-    const res = this.ctx.resumen ? this.ctx.resumen() : null;
-    this.capa.innerHTML = `<div class="inicio-fondo">${escenaSvg(res ? res.nivel : 0)}</div><div class="inicio-titulo">${'Nuestro Hogar'.split('').map((l, i) => `<span style="animation-delay:${(0.1 + i * 0.06).toFixed(2)}s">${l === ' ' ? '&nbsp;' : l}</span>`).join('')}</div>
+    this.capa.innerHTML = `<div class="inicio-fondo">${escenaSvg()}</div><div class="inicio-titulo">${'Nuestro Hogar'.split('').map((l, i) => `<span style="animation-delay:${(0.1 + i * 0.06).toFixed(2)}s">${l === ' ' ? '&nbsp;' : l}</span>`).join('')}</div>
       <div class="escaparate"><div class="esc-lienzo"></div></div><div class="inicio-panel"></div>`;
     this.pintar();
     this.montarEscaparate();
@@ -110,7 +144,7 @@ export class Inicio {
       <div class="ini-casa-cab"><span>${r.icono}</span><div><b>${escapar(r.casa)}</b><small>${escapar(r.nombres || r.nombreNivel)}</small></div></div>
       <div class="ini-stats-mini"><span>🪙<b>${r.monedas}</b></span><span>🔥<b>${r.racha}</b></span><span>🕯️<b>${r.acogedor}</b></span></div>
     </div>
-    ${r.novedades.length ? `<div class="ini-avisos">${r.novedades.map((n, k) => `<div class="ini-aviso" style="animation-delay:${0.2 + k * 0.1}s"><i>${n.i}</i><small>${escapar(n.t)}</small></div>`).join('')}</div>` : ''}`;
+`;
   }
 
   pintar(vista = null) {
