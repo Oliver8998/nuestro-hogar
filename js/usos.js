@@ -1,5 +1,13 @@
 import * as THREE from 'three';
 
+const PLANTAS = ['planta', 'cactus', 'jarron', 'cerezo', 'rosas'];
+const BLANDOS = ['sofa', 'silla', 'cama', 'puff', 'puff-corazon', 'sillon-huevo'];
+const DIA = 86400000;
+
+function diaDe(t) {
+  return new Date(t).toDateString();
+}
+
 const FASE_HUERTO = ['Vacío', 'Brotes', 'Creciendo', '¡Listo para cosechar!'];
 const ESPERA_HUERTO = 75 * 60000;
 const TRABAJOS = [
@@ -57,6 +65,93 @@ export class Usos {
     for (const o of m.userData.todas || []) if (o.parent === mallas[4] || o.parent === mallas[3] || o.parent === mallas[2]) o.visible = o.parent.visible;
   }
 
+  planta(m) {
+    if (!m.userData.datos) m.userData.datos = {};
+    const d = m.userData.datos;
+    if (!d.agua) {
+      d.agua = ahora();
+      d.ultimoDia = diaDe(ahora());
+      d.racha = 1;
+    }
+    d.mustia = ahora() - d.agua > 2 * DIA;
+    d.florecida = !d.mustia && (d.racha || 0) >= 3;
+    return d;
+  }
+
+  aplicarPlanta(m) {
+    const d = this.planta(m);
+    const estadoVis = d.mustia ? 'mustia' : d.florecida ? 'flor' : 'normal';
+    if (m.userData.estadoPlanta === estadoVis) return;
+    m.userData.estadoPlanta = estadoVis;
+    const marron = new THREE.Color(0x8a6a3a);
+    m.userData.mallas.forEach((malla, i) => {
+      const base = m.userData.def.piezas[i][6];
+      malla.material.color.setHex(base);
+      if (d.mustia && i > 0) malla.material.color.lerp(marron, 0.55);
+    });
+    m.userData.escalaPlanta = d.mustia ? 0.86 : d.florecida ? 1.12 : 1;
+    if (m.userData.flores) {
+      m.remove(m.userData.flores);
+      m.userData.flores = null;
+    }
+    if (d.florecida) {
+      const g = new THREE.Group();
+      const caja = new THREE.Box3().setFromObject(m);
+      const alto = (caja.max.y - m.userData.base) / (m.scale.y || 1);
+      const colores = [0xf4a3b0, 0xf2d06b, 0xffffff, 0xe58f9e];
+      for (let k = 0; k < 7; k++) {
+        const a = k * 2.4;
+        const f = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 6), new THREE.MeshStandardMaterial({ color: colores[k % 4], roughness: 0.5 }));
+        f.position.set(Math.cos(a) * 0.12, alto * (0.8 + (k % 3) * 0.07), Math.sin(a) * 0.12);
+        g.add(f);
+      }
+      m.add(g);
+      m.userData.flores = g;
+    }
+  }
+
+  desgaste(m) {
+    if (!m.userData.datos) m.userData.datos = {};
+    const d = m.userData.datos;
+    if (!d.nuevo) d.nuevo = ahora();
+    d.desgaste = Math.min(1, Math.round((ahora() - d.nuevo) / (12 * DIA) * 10) / 10);
+    return d;
+  }
+
+  acuario(m) {
+    if (!m.userData.datos) m.userData.datos = {};
+    return m.userData.datos;
+  }
+
+  animarAcuario(m, dt) {
+    const mallas = m.userData.mallas;
+    const d = this.acuario(m);
+    if (!m.userData.peces) {
+      m.userData.peces = [3, 4, 5].map((i, k) => ({ malla: mallas[i], x0: mallas[i].position.x, y0: mallas[i].position.y, fase: k * 2.1, vel: 0.5 + k * 0.15 }));
+    }
+    const crias = d.crias || 0;
+    while ((m.userData.criasMallas || []).length < crias) {
+      if (!m.userData.criasMallas) m.userData.criasMallas = [];
+      const base = mallas[3 + m.userData.criasMallas.length % 3];
+      const c = new THREE.Mesh(base.geometry, base.material);
+      c.scale.setScalar(0.5);
+      c.quaternion.copy(base.quaternion);
+      m.add(c);
+      m.userData.criasMallas.push(c);
+      m.userData.peces.push({ malla: c, x0: 0, y0: 0.7 + m.userData.criasMallas.length * 0.05, fase: m.userData.criasMallas.length * 1.3, vel: 0.9, cria: true });
+    }
+    const t = this.t;
+    for (const p of m.userData.peces) {
+      const s = Math.sin(t * p.vel + p.fase);
+      const dx = s * 0.3 - (p.cria ? 0 : p.x0) * 0;
+      p.malla.position.x = dx + (p.cria ? 0 : 0);
+      p.malla.position.y = p.y0 + Math.sin(t * p.vel * 1.7 + p.fase) * 0.04;
+      p.malla.position.x -= p.cria ? 0 : (p.malla.userData.offX ?? (p.malla.userData.offX = 0));
+      const dir = Math.cos(t * p.vel + p.fase) >= 0 ? 0 : Math.PI;
+      p.malla.rotation.y += ((dir) - p.malla.rotation.y) * Math.min(1, dt * 6);
+    }
+  }
+
   ordenador(m) {
     const t = this.estado.trabajo;
     const trabajando = t && ahora() < t.fin;
@@ -73,6 +168,61 @@ export class Usos {
     const ops = [];
     if (m.userData.datos && m.userData.datos.tirado) {
       ops.push({ icono: '🙌', texto: 'Levantar', accion: () => { m.userData.datos.tirado = false; m.userData.rebote = 0.8; sonido.arreglo(); guardar(); this.ctx.refrescarMenu(); } });
+    }
+    if (PLANTAS.includes(def.id)) {
+      const d = this.planta(m);
+      if (d.ultimoDia !== diaDe(ahora())) {
+        ops.push({ icono: '💧', texto: 'Regar', accion: () => {
+          const ayer = diaDe(ahora() - DIA);
+          d.racha = d.ultimoDia === ayer ? (d.racha || 0) + 1 : 1;
+          d.ultimoDia = diaDe(ahora());
+          d.agua = ahora();
+          sonido.arreglo();
+          this.ctx.particulaEn(m, '💧', 4);
+          ui.aviso(d.racha >= 3 ? '🌸 ¡Está preciosa! Sigue regándola' : `💧 Regada (${d.racha}/3 días seguidos para que florezca)`);
+          this.ctx.registrar('regar');
+          this.aplicarPlanta(m);
+          guardar();
+          this.ctx.refrescarMenu();
+        } });
+      }
+    }
+    if (BLANDOS.includes(def.id)) {
+      const d = this.desgaste(m);
+      if (d.desgaste >= 0.3) ops.push({ icono: '🧵', texto: 'Tapizar · 40', accion: () => {
+        if (this.estado.monedas < 40) { sonido.error(); ui.aviso('Necesitáis 40 monedas', true); return; }
+        this.estado.monedas -= 40;
+        d.nuevo = ahora();
+        d.desgaste = 0;
+        this.ctx.gestor.aplicarApariencia(m);
+        m.userData.rebote = 0.8;
+        sonido.arreglo();
+        ui.aviso('🧵 ¡Como nuevo!');
+        this.ctx.refrescarHud();
+        guardar();
+        this.ctx.refrescarMenu();
+      } });
+    }
+    if (def.id === 'acuario') {
+      const d = this.acuario(m);
+      if (d.ultimaComida !== diaDe(ahora())) ops.push({ icono: '🐟', texto: 'Dar de comer', accion: () => {
+        const ayer = diaDe(ahora() - DIA);
+        d.racha = d.ultimaComida === ayer ? (d.racha || 0) + 1 : 1;
+        d.ultimaComida = diaDe(ahora());
+        let cria = false;
+        if (d.racha >= 5 && (d.crias || 0) < 3) {
+          d.crias = (d.crias || 0) + 1;
+          d.racha = 0;
+          cria = true;
+        }
+        sonido.pop();
+        this.ctx.particulaEn(m, cria ? '🐣' : '🫧', 3);
+        ui.aviso(cria ? '🐟 ¡Ha nacido un pececito!' : `🐟 ¡Ñam! (${d.racha}/5 días seguidos para que tengan crías)`);
+        if (cria && this.ctx.pareja) this.ctx.pareja.recordar(null, '🐟', 'Nació un pececito en el acuario');
+        this.ctx.registrar('peces');
+        guardar();
+        this.ctx.refrescarMenu();
+      } });
     }
     if (def.huerto) {
       const d = this.huerto(m);
@@ -363,6 +513,16 @@ export class Usos {
       if (lento && def.huerto) this.aplicarHuerto(m);
       if (lento && def.ordenador) this.ordenador(m);
       if (lento && def.id === 'arbol-recuerdos') this.hojasRecuerdo(m);
+      if (lento && PLANTAS.includes(def.id)) this.aplicarPlanta(m);
+      if (PLANTAS.includes(def.id) && m.userData.escalaPlanta && Math.abs(m.scale.y - m.userData.escalaPlanta) > 0.001 && !m.userData.rebote) m.scale.setScalar(m.userData.escalaPlanta);
+      if (lento && BLANDOS.includes(def.id)) {
+        const nivel = this.desgaste(m).desgaste;
+        if (m.userData.desgasteVisto !== nivel) {
+          m.userData.desgasteVisto = nivel;
+          this.ctx.gestor.aplicarApariencia(m);
+        }
+      }
+      if (def.id === 'acuario') this.animarAcuario(m, dt);
     }
     if (this.musica && !this.ctx.gestor.muebles.includes(this.musica.m)) this.alternarMusica();
     if (lento) this.propsPlanes();

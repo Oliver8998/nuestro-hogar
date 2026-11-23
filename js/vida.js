@@ -307,7 +307,7 @@ export class Vida {
       const p = POSTALES[azarDia(POSTALES.length)];
       c.lista.push({ id, tipo, de: p.de, titulo: 'Una postal', texto: p.texto, monedas: p.monedas, t: Date.now() });
     } else {
-      const ids = CATALOGO.filter(d => d.enTienda !== false && !d.temporada && d.precio >= 40).map(d => d.id);
+      const ids = CATALOGO.filter(d => d.enTienda !== false && !d.temporada && !d.exterior && d.precio >= 40).map(d => d.id);
       const elegidos = [ids[azarDia(ids.length)], ids[(azarDia(ids.length) + 7) % ids.length], ids[(azarDia(ids.length) + 13) % ids.length]];
       c.lista.push({ id, tipo, de: 'Tienda de Pilar', titulo: 'Catálogo de ofertas (solo hoy)', texto: 'Hoy tenéis un 25% de descuento en estas cosas:', ofertas: [...new Set(elegidos)], dia: hoyClave(), t: Date.now() });
     }

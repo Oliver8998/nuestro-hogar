@@ -145,6 +145,31 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
   - la calle por la ventana;
   - mascotas nuevas: loro, tortuga, cobaya y dragoncito.
 
+### Estado de la segunda tanda: ✅ todo metido (23-nov, por la tarde)
+- `pareja.js`:
+  - `recordar()` guarda en `estado.recuerdos`;
+  - cápsulas (`estado.capsulas`), deseos (`estado.deseos[yo]`) y planes (`estado.planes`; sus objetos salen en `usos.propsPlanes`).
+- `sync.js`: `conectarDirecto()` usa supabase-js (realtime broadcast `hogar-CODIGO`) para las reacciones y los toques 💗. Si falla, las reacciones van por la tabla `mensajes`.
+- `vida.js`: manta y dormir, visitas (`estado.visita`), averías (`estado.averia`; minijuegos `gotera` y `luz` en juegos.js), cumplemeses de mascotas, buzón (`estado.correo`; el catálogo da un 25% en 3 objetos), loro que habla y dragón con fuego.
+- `usos.js`:
+  - plantas: regar con `datos.agua` y `datos.racha`; se ponen mustias a los 2 días sin agua y florecen con 3 días seguidos;
+  - desgaste: `datos.nuevo` y "Tapizar" por 40;
+  - acuario: los peces nadan, "Dar de comer" y crías;
+  - "Nuestra canción" en la radio (`pareja.cancion` en Ajustes).
+- `economia.js`:
+  - mercadillo el sábado y el domingo (para probarlo: `?finde`);
+  - pase del mes (`estado.pase`) con corona al completarlo;
+  - taller: reciclar (`estado.piezas`), fabricar exclusivos y encargo a medida con un color libre `'#hex'`. `tonosDe` está en muebles.js.
+- Más mundo:
+  - exteriores Terraza (ático), Jardín (casa) y Jardín grande (mansión). `EXTERIORES` está en progreso.js y `sala.modoExterior` pone valla o barandilla sin paredes;
+  - objetos `categoria: 'exterior'` con `nivel`: la pestaña 🌳 de la tienda sale desde el ático y solo se pueden colocar fuera;
+  - colecciones nuevas: terraceo, verano y lujo;
+  - la vista de la ventana cambia con la casa (`ambiente.vista`): calle con gente y coches (y la furgoneta si hay un pedido), tejados, jardín o colinas;
+  - mascotas nuevas: cobaya, tortuga, loro y dragón (`vale-dragon` en la ruleta).
+- Minijuegos para dos en el mismo móvil (`JUEGOS_DOS`: duelo y equipo) y retos de decoración (`estado.reto`, que puntúa el otro).
+- Modelos de Blender nuevos en `blender/m_exterior.py`.
+- Comprobación de sintaxis: `/home/claude/check.sh`. `node --check` no detecta errores en catalogo.js: hay que importarlo.
+
 ## Ideas pendientes (no pedidas aún)
 - Sincronizar los dos móviles (Supabase).
 - Minijuegos para ganar monedas.

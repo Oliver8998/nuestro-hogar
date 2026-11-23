@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { construirPiezas, liberar } from './modelos.js';
+import { tonosDe } from './muebles.js';
 import { infoItem } from './catalogo.js';
 import { crearModeloMascota } from './mascotas.js';
 import { crearPersonaje } from './personajes.js';
@@ -77,7 +78,7 @@ export class Miniaturas {
     return this.renderizar(clave, () => {
       const { grupo, mallas } = construirPiezas(info.piezas, { sombras: false, id: info.id });
       if (info.colores && color !== null && color !== undefined) {
-        const tonos = info.colores.paleta[color % info.colores.paleta.length];
+        const tonos = tonosDe(info, color);
         info.colores.grupos.forEach((g, gi) => g.forEach(i => mallas[i].material.color.setHex(tonos[gi])));
       }
       return grupo;

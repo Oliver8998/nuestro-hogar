@@ -350,6 +350,62 @@ export const CATALOGO = [
     [0.08, 0.8, 0.08, 0, 0.7, 0, 0x7a5a3a, 'cil'],
     [0.7, 0.55, 0.7, 0, 1.25, 0, 0x7cbf6a, 'esfera', { transparente: 0.35 }]
   ]},
+  { id: 'barbacoa', categoria: 'exterior', exterior: true, nivel: 2, nombre: 'Barbacoa', precio: 260, ancho: 2, fondo: 1, piezas: [
+    [0.8, 0.12, 0.4, 0, 0.75, 0, 0x3d3d3d, { metal: 0.4, rugosidad: 0.4 }],
+    [0.72, 0.02, 0.34, 0, 0.82, 0, 0x8a8f95, { metal: 0.6, rugosidad: 0.3 }],
+    [0.06, 0.7, 0.06, -0.35, 0.35, 0, 0x3d3d3d],
+    [0.06, 0.7, 0.06, 0.35, 0.35, 0, 0x3d3d3d],
+    [0.7, 0.02, 0.32, 0, 0.3, 0, 0x6a4a33]
+  ]},
+  { id: 'tumbona', categoria: 'exterior', exterior: true, nivel: 2, nombre: 'Tumbona', precio: 180, ancho: 1, fondo: 3, soporte: 0.3, piezas: [
+    [0.45, 0.06, 1.1, 0, 0.27, 0.15, 0xf2efe9],
+    [0.42, 0.06, 0.5, 0, 0.5, -0.5, 0xf2efe9, { rx: -0.9 }],
+    [0.4, 0.3, 0.05, 0, 0.12, 0.65, 0x8a8f95],
+    [0.4, 0.3, 0.05, 0, 0.12, -0.3, 0x8a8f95]
+  ], colores: { grupos: [[0, 1]], paleta: [[0xf2efe9], [0x5a9fd6], [0xf2d06b], [0xe58f9e]] }},
+  { id: 'sombrilla', categoria: 'exterior', exterior: true, nivel: 2, nombre: 'Sombrilla', precio: 120, ancho: 1, fondo: 1, piezas: [
+    [0.3, 0.06, 0.3, 0, 0.03, 0, 0x3d3d3d, 'cil'],
+    [0.04, 1.9, 0.04, 0, 0.95, 0, 0xf2efe9, 'cil'],
+    [1.6, 0.35, 1.6, 0, 1.85, 0, 0xe05050, 'cono']
+  ], colores: { grupos: [[2]], paleta: [[0xe05050], [0x5a9fd6], [0xf2d06b], [0x6cc08a]] }},
+  { id: 'maceta-grande', categoria: 'exterior', exterior: true, nivel: 2, nombre: 'Olivo en maceta', precio: 150, ancho: 1, fondo: 1, piezas: [
+    [0.42, 0.4, 0.42, 0, 0.2, 0, 0xc0704a, 'cil'],
+    [0.06, 0.6, 0.06, 0, 0.7, 0, 0x7a5a3a, 'cil'],
+    [0.6, 0.45, 0.6, 0, 1.15, 0, 0x8aa86a, 'esfera']
+  ]},
+  { id: 'columpio', categoria: 'exterior', exterior: true, nivel: 3, nombre: 'Columpio', precio: 420, ancho: 4, fondo: 2, piezas: [
+    [0.08, 1.8, 0.08, -0.9, 0.9, 0, 0x8a5a3c],
+    [0.08, 1.8, 0.08, 0.9, 0.9, 0, 0x8a5a3c],
+    [1.9, 0.08, 0.08, 0, 1.8, 0, 0x8a5a3c],
+    [0.7, 0.05, 0.3, 0, 0.45, 0, 0xe05050],
+    [0.02, 1.3, 0.02, -0.3, 1.1, 0, 0xd9c29a],
+    [0.02, 1.3, 0.02, 0.3, 1.1, 0, 0xd9c29a]
+  ], colores: { grupos: [[3]], paleta: [[0xe05050], [0x5a9fd6], [0xf2d06b], [0x6cc08a]] }},
+  { id: 'piscina-hinchable', categoria: 'exterior', exterior: true, nivel: 3, nombre: 'Piscina hinchable', precio: 300, ancho: 4, fondo: 4, piezas: [
+    [1.8, 0.3, 1.8, 0, 0.15, 0, 0x5a9fd6, 'cil'],
+    [1.6, 0.02, 1.6, 0, 0.25, 0, 0x8fd3f4, 'cil', { transparente: 0.8, rugosidad: 0.1 }],
+    [0.3, 0.2, 0.3, 0.4, 0.33, 0.3, 0xf2d06b, 'esfera']
+  ], colores: { grupos: [[0]], paleta: [[0x5a9fd6], [0xe58f9e], [0x6cc08a], [0xf2d06b]] }},
+  { id: 'mesa-picnic', categoria: 'exterior', exterior: true, nivel: 3, nombre: 'Mesa de picnic', precio: 240, ancho: 3, fondo: 3, soporte: 0.75, piezas: [
+    [1.3, 0.06, 0.7, 0, 0.72, 0, 0xa4825c],
+    [1.3, 0.05, 0.25, 0, 0.42, 0.55, 0xa4825c],
+    [1.3, 0.05, 0.25, 0, 0.42, -0.55, 0xa4825c],
+    [0.08, 0.75, 1.3, -0.5, 0.37, 0, 0x8a6a48, { rx: 0 }],
+    [0.08, 0.75, 1.3, 0.5, 0.37, 0, 0x8a6a48],
+    [1.3, 0.005, 0.7, 0, 0.755, 0, 0xe05050]
+  ]},
+  { id: 'piscina', categoria: 'exterior', exterior: true, nivel: 4, nombre: 'Piscina', precio: 1200, ancho: 6, fondo: 4, suelo: true, piezas: [
+    [3, 0.12, 2, 0, 0.06, 0, 0xf2efe9],
+    [2.7, 0.02, 1.7, 0, 0.11, 0, 0x4fb3e0, { transparente: 0.85, rugosidad: 0.05 }],
+    [0.06, 0.5, 0.4, 1.3, 0.3, 0, 0xc0c4c8, { metal: 0.6, rugosidad: 0.3 }]
+  ]},
+  { id: 'fuente', categoria: 'exterior', exterior: true, nivel: 4, nombre: 'Fuente', precio: 900, ancho: 2, fondo: 2, piezas: [
+    [0.95, 0.3, 0.95, 0, 0.15, 0, 0xd8d0c4, 'cil'],
+    [0.85, 0.02, 0.85, 0, 0.29, 0, 0x8fd3f4, 'cil', { transparente: 0.8, rugosidad: 0.05 }],
+    [0.15, 0.6, 0.15, 0, 0.5, 0, 0xd8d0c4, 'cil'],
+    [0.45, 0.1, 0.45, 0, 0.82, 0, 0xd8d0c4, 'cil']
+  ]},
+
   { id: 'arbol-navidad', categoria: 'temporada', temporada: 'navidad', enTienda: false, nombre: 'Árbol de Navidad', precio: 220, ancho: 2, fondo: 2, piezas: [
     [0.3, 0.2, 0.3, 0, 0.1, 0, 0xc0504d, 'cil'],
     [0.08, 0.3, 0.08, 0, 0.3, 0, 0x6b4f36, 'cil'],

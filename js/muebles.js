@@ -39,6 +39,15 @@ function crearMueble(def) {
   return grupo;
 }
 
+export function tonosDe(def, color) {
+  if (typeof color === 'string') {
+    const base = def.colores.paleta[0].slice();
+    base[0] = parseInt(color.slice(1), 16);
+    return base;
+  }
+  return def.colores.paleta[(color ?? 0) % def.colores.paleta.length];
+}
+
 export class GestorMuebles {
   constructor(escena) {
     this.escena = escena;
@@ -167,8 +176,9 @@ export class GestorMuebles {
   aplicarApariencia(mueble) {
     const { def, mallas, luz, color, encendido } = mueble.userData;
     if (def.colores) {
-      const tonos = def.colores.paleta[color];
-      def.colores.grupos.forEach((grupo, gi) => grupo.forEach(i => mallas[i].material.color.setHex(tonos[gi])));
+      const tonos = tonosDe(def, color);
+      const k = 1 - 0.3 * ((mueble.userData.datos && mueble.userData.datos.desgaste) || 0);
+      def.colores.grupos.forEach((grupo, gi) => grupo.forEach(i => mallas[i].material.color.setHex(tonos[gi]).multiplyScalar(k)));
     }
     if (def.encendible) {
       for (const i of def.encendible.piezas) {
@@ -189,7 +199,7 @@ export class GestorMuebles {
   siguienteColor(mueble) {
     const datos = mueble.userData;
     if (!datos.def.colores) return;
-    datos.color = (datos.color + 1) % datos.def.colores.paleta.length;
+    datos.color = typeof datos.color === 'string' ? 0 : (datos.color + 1) % datos.def.colores.paleta.length;
     this.aplicarApariencia(mueble);
   }
 

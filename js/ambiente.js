@@ -188,6 +188,7 @@ export class Ambiente {
       c.fillStyle = '#ffe58a';
       c.beginPath(); c.arc(40, y, 16, 0, Math.PI * 2); c.fill();
     }
+    this.dibujarVista(c, noche);
     if (this.clima !== 'sol') {
       const oscuro = this.clima === 'nubes' ? 1 : 0.75;
       for (const n of this.nubes) {
@@ -220,6 +221,98 @@ export class Ambiente {
       c.fillRect(0, 238, 128, 18);
     }
     this.textura.needsUpdate = true;
+  }
+
+  dibujarVista(c, noche) {
+    const v = this.vista || 'calle';
+    if (!this.paseantes) {
+      this.paseantes = Array.from({ length: 3 }, (_, i) => ({ x: Math.random() * 128, v: (Math.random() < 0.5 ? -1 : 1) * (0.25 + Math.random() * 0.25), color: ['#e05050', '#5a9fd6', '#f2d06b', '#b39ddb'][i % 4], fase: Math.random() * 6 }));
+      this.coches = [{ x: -40, v: 1.4, color: '#5a9fd6' }];
+      this.edificios = Array.from({ length: 6 }, (_, i) => ({ x: i * 24 - 6, w: 20 + (i % 3) * 3, h: 80 + ((i * 37) % 60), color: ['#c9a98a', '#b8c4cc', '#d8b4a0', '#a9b8a0'][i % 4] }));
+    }
+    const suelo = 226;
+    if (v === 'calle' || v === 'tejados') {
+      for (const e of this.edificios) {
+        const h = v === 'tejados' ? e.h * 0.55 + 30 : e.h;
+        const y = (v === 'tejados' ? 200 : suelo) - h;
+        c.fillStyle = noche ? '#2e2c44' : e.color;
+        c.fillRect(e.x, y, e.w, h);
+        for (let fy = y + 6; fy < y + h - 8; fy += 12) {
+          for (let fx = e.x + 3; fx < e.x + e.w - 4; fx += 7) {
+            const encendida = noche && ((fx * 7 + fy * 3) % 5 < 2);
+            c.fillStyle = encendida ? '#ffd98a' : noche ? '#3a3858' : 'rgba(255,255,255,.55)';
+            c.fillRect(fx, fy, 4, 6);
+          }
+        }
+        if (v === 'tejados') {
+          c.fillStyle = noche ? '#3a2e3a' : '#b0624a';
+          c.beginPath(); c.moveTo(e.x - 2, y); c.lineTo(e.x + e.w / 2, y - 10); c.lineTo(e.x + e.w + 2, y); c.fill();
+        }
+      }
+      if (v === 'calle') {
+        c.fillStyle = noche ? '#3a3a48' : '#9a9a9a';
+        c.fillRect(0, suelo, 128, 30);
+        c.fillStyle = noche ? '#5a5a68' : '#c8c2b8';
+        c.fillRect(0, suelo, 128, 6);
+        for (const p of this.paseantes) {
+          p.x += p.v;
+          if (p.x > 140) p.x = -12;
+          if (p.x < -12) p.x = 140;
+          const paso = Math.sin(this.t * 6 + p.fase) * 1.5;
+          c.fillStyle = p.color;
+          c.fillRect(p.x - 3, suelo - 16, 6, 10);
+          c.fillStyle = '#f2cdb4';
+          c.beginPath(); c.arc(p.x, suelo - 19, 3, 0, 7); c.fill();
+          c.fillStyle = '#3b2f26';
+          c.fillRect(p.x - 3 + paso, suelo - 6, 2, 6);
+          c.fillRect(p.x + 1 - paso, suelo - 6, 2, 6);
+        }
+        for (const k of this.coches) {
+          k.x += k.v;
+          if (k.x > 180) {
+            k.x = -60 - Math.random() * 120;
+            k.color = this.furgoneta ? '#f7f3e8' : ['#5a9fd6', '#e05050', '#6cc08a', '#f2d06b'][Math.floor(Math.random() * 4)];
+          }
+          c.fillStyle = k.color;
+          c.fillRect(k.x, suelo + 10, 34, 10);
+          c.fillRect(k.x + 6, suelo + 3, 20, 8);
+          c.fillStyle = noche ? '#ffe7a0' : '#cfe8f2';
+          c.fillRect(k.x + 8, suelo + 5, 7, 5);
+          c.fillRect(k.x + 17, suelo + 5, 7, 5);
+          c.fillStyle = '#222';
+          c.beginPath(); c.arc(k.x + 8, suelo + 21, 3.5, 0, 7); c.arc(k.x + 26, suelo + 21, 3.5, 0, 7); c.fill();
+        }
+      }
+    } else {
+      const verde = noche ? '#24402e' : v === 'colinas' ? '#8cc27a' : '#7cb35a';
+      if (v === 'colinas') {
+        c.fillStyle = noche ? '#2c3a4a' : '#a8c8b0';
+        c.beginPath(); c.moveTo(0, 190); c.quadraticCurveTo(40, 140, 80, 180); c.quadraticCurveTo(110, 150, 128, 175); c.lineTo(128, 256); c.lineTo(0, 256); c.fill();
+        c.fillStyle = noche ? '#3a5a7a' : '#9fd3f0';
+        c.fillRect(0, 205, 128, 10);
+      }
+      c.fillStyle = verde;
+      c.fillRect(0, suelo - 6, 128, 40);
+      for (let k = 0; k < 4; k++) {
+        const x = 12 + k * 32;
+        c.fillStyle = noche ? '#3a2e24' : '#7a5a3a';
+        c.fillRect(x - 2, suelo - 30, 4, 26);
+        c.fillStyle = noche ? '#1e3a28' : ['#5a9e4b', '#6db35a', '#4a8a3c'][k % 3];
+        c.beginPath(); c.arc(x, suelo - 36, 12, 0, 7); c.fill();
+      }
+      if (v === 'jardin') {
+        c.fillStyle = noche ? '#8a8478' : '#f2efe9';
+        for (let x = 0; x < 128; x += 6) c.fillRect(x, suelo - 4, 3, 12);
+        c.fillRect(0, suelo, 128, 2);
+      }
+      if (!noche && this.clima === 'sol') {
+        const x = (this.t * 12) % 160 - 16;
+        c.fillStyle = '#3b2f26';
+        c.beginPath(); c.moveTo(x, 70); c.lineTo(x + 5, 74); c.lineTo(x + 10, 70); c.stroke();
+        c.strokeStyle = '#3b2f26';
+        c.beginPath(); c.moveTo(x, 70); c.quadraticCurveTo(x + 2.5, 66, x + 5, 70); c.quadraticCurveTo(x + 7.5, 66, x + 10, 70); c.stroke();
+      }
+    }
   }
 
   actualizar(dt) {

@@ -322,7 +322,70 @@ export function crearSala(escena) {
   sol.shadow.normalBias = 0.02;
   escena.add(sol);
 
+  let exterior = null;
+  let valla = null;
+  function modoExterior(tipo) {
+    exterior = tipo;
+    if (valla) {
+      sala.remove(valla);
+      valla = null;
+    }
+    if (!tipo) return;
+    valla = new THREE.Group();
+    const terraza = tipo === 'terraza';
+    const madera = new THREE.MeshStandardMaterial({ color: terraza ? 0x6a6f75 : 0xf2efe9, roughness: terraza ? 0.4 : 0.8, metalness: terraza ? 0.5 : 0 });
+    const cristal = new THREE.MeshStandardMaterial({ color: 0xcfe8f2, transparent: true, opacity: 0.35, roughness: 0.1 });
+    const lado = TAM / 2;
+    for (const [x, z, ry] of [[0, -lado, 0], [-lado, 0, Math.PI / 2], [lado, 0, Math.PI / 2], [0, lado, 0]]) {
+      const tramo = new THREE.Group();
+      tramo.position.set(x, 0, z);
+      tramo.rotation.y = ry;
+      if (terraza) {
+        const panel = new THREE.Mesh(new THREE.BoxGeometry(TAM, 0.55, 0.02), cristal);
+        panel.position.y = 0.4;
+        const barandilla = new THREE.Mesh(new THREE.BoxGeometry(TAM, 0.04, 0.06), madera);
+        barandilla.position.y = 0.7;
+        tramo.add(panel, barandilla);
+        for (let k = 0; k <= 6; k++) {
+          const poste = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.7, 0.04), madera);
+          poste.position.set(-lado + k * TAM / 6, 0.35, 0);
+          tramo.add(poste);
+        }
+      } else {
+        for (let k = 0; k < 24; k++) {
+          const tabla = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.5, 0.03), madera);
+          tabla.position.set(-lado + 0.125 + k * 0.25, 0.25, 0);
+          const punta = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.08, 4), madera);
+          punta.position.set(-lado + 0.125 + k * 0.25, 0.54, 0);
+          punta.rotation.y = Math.PI / 4;
+          tramo.add(tabla, punta);
+        }
+        for (const y of [0.15, 0.38]) {
+          const travesano = new THREE.Mesh(new THREE.BoxGeometry(TAM, 0.05, 0.03), madera);
+          travesano.position.set(0, y, -0.025);
+          tramo.add(travesano);
+        }
+      }
+      tramo.traverse(o => { if (o.isMesh) o.castShadow = true; });
+      valla.add(tramo);
+    }
+    sala.add(valla);
+    for (const p of paredes) {
+      p.visible = false;
+      p.userData.bajo.visible = false;
+    }
+  }
+
   function actualizarParedes(direccion) {
+    if (exterior) {
+      if (valla) {
+        valla.children.forEach((t, i) => {
+          const normales = [[0, 0, 1], [1, 0, 0], [-1, 0, 0], [0, 0, -1]][i];
+          t.visible = normales[0] * direccion.x + normales[2] * direccion.z < 0.3;
+        });
+      }
+      return;
+    }
     for (const p of paredes) {
       p.visible = p.userData.normal.dot(direccion) < -0.15;
       p.userData.bajo.visible = !p.visible;
@@ -523,5 +586,5 @@ export function crearSala(escena) {
     });
   }
 
-  return { paredes, cara, pintarSuelo, mostrarDesperfectos, completarTodo, pintarParedes, conDesperfectos: () => conDesperfectos, ventana, matCristal, hemi, sol, visibles: () => paredes.map(p => p.visible), actualizarParedes, actualizar, buscar, tocar, puedeAplicar, aplicar, resaltar, estado, restaurar, progreso };
+  return { paredes, cara, modoExterior, esExterior: () => exterior, pintarSuelo, mostrarDesperfectos, completarTodo, pintarParedes, conDesperfectos: () => conDesperfectos, ventana, matCristal, hemi, sol, visibles: () => paredes.map(p => p.visible), actualizarParedes, actualizar, buscar, tocar, puedeAplicar, aplicar, resaltar, estado, restaurar, progreso };
 }

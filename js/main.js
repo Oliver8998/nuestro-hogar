@@ -21,10 +21,11 @@ import { Mas } from './mas.js';
 import { Juegos, JUEGOS, PARTIDAS_PREMIADAS } from './juegos.js';
 import { Usos } from './usos.js';
 import { Vida } from './vida.js';
+import { Economia } from './economia.js';
 import { JUEGOS_DOS } from './juegos.js';
 import { Sync } from './sync.js';
 import { Pareja } from './pareja.js';
-import { CASAS, COLECCIONES, LOGROS, calcularAcogedor, coleccionesCompletas } from './progreso.js';
+import { CASAS, COLECCIONES, LOGROS, EXTERIORES, calcularAcogedor, coleccionesCompletas } from './progreso.js';
 
 await cargarModelos();
 
@@ -711,7 +712,10 @@ const ui = new UI(miniaturas, {
     abrirAcogedor();
   },
   alOfertasExtra() {
-    return [...vida.ofertasHoy(), ...(typeof mercadillo === 'function' ? [] : [])];
+    return vida.ofertasHoy();
+  },
+  alMercadillo() {
+    return economia.mercadillo();
   },
   alHayPareja() {
     return sync && sync.activo;
@@ -812,6 +816,10 @@ const ui = new UI(miniaturas, {
   alSoltarArrastre(x, y, cancelar) {
     const a = arrastre;
     arrastre = null;
+    if (a && a.info && a.info.exterior && !exteriorActual() && !cancelar) {
+      cancelar = true;
+      ui.aviso('🌳 Esto va fuera: id a la terraza o al jardín', true);
+    }
     const r = controles.soltarColocacion(x, y, cancelar);
     if (r.minijuego) {
       ui.pintarInventario(inventario);
@@ -989,7 +997,7 @@ function idsEnCasa() {
 
 function acogedor() {
   return calcularAcogedor({
-    muebles: gestor.muebles,
+    muebles: gestor.muebles.filter(m => !(m.userData.datos && m.userData.datos.mustia)),
     limpieza: suciedad.limpieza(),
     paredesPintadas: sala.estado().paredes.filter(p => p !== null && p !== undefined).length,
     fotos: (estado.paredFotos || []).filter(Boolean).length,
@@ -998,10 +1006,19 @@ function acogedor() {
   });
 }
 
+function exteriorActual() {
+  const casa = CASAS[nivelCasa()];
+  return EXTERIORES[casa.habitaciones[estado.habActual || 0]] || null;
+}
+
 function aplicarEstiloCasa() {
   const casa = CASAS[nivelCasa()];
   const hab = estado.habActual || 0;
-  sala.pintarSuelo(casa.suelo);
+  const ext = exteriorActual();
+  sala.modoExterior(ext ? ext.tipo : null);
+  sala.pintarSuelo(ext ? ext.suelo : casa.suelo);
+  ui.ponerNivelCasa(nivelCasa());
+  ambiente.vista = ['calle', 'calle', 'tejados', 'jardin', 'colinas'][nivelCasa()];
   if (nivelCasa() > 0) {
     sala.completarTodo();
     estado.reforma = { hechos: 10, total: 10 };
@@ -1532,6 +1549,8 @@ async function sincronizarFotos() {
 
 window.extrasMenu = () => [
   { id: 'buzon', icono: '📬', texto: 'Buzón', sub: vida.noLeidas() ? `${vida.noLeidas()} carta${vida.noLeidas() > 1 ? 's' : ''} sin leer` : 'Cartas, postales y ofertas', insignia: vida.noLeidas() || null, accion: () => vida.abrirCorreo() },
+  { id: 'pase', icono: '🗓️', texto: 'Pase del mes', sub: `${economia.pase().reclamados.length} de 10 tareas`, insignia: economia.pendientesPase() || null, accion: () => economia.abrirPase() },
+  { id: 'taller', icono: '🔨', texto: 'Taller', sub: 'Reciclar, fabricar y encargos a medida', accion: () => economia.abrirTaller() },
   { id: 'reto', icono: '🎨', texto: 'Reto de decoración', sub: '10 minutos y tu pareja puntúa', accion: () => (estado.reto && !estado.reto.terminado ? verReto() : empezarReto()) },
   { id: 'casas', icono: CASAS[nivelCasa()].icono, texto: 'Casas', sub: nivelCasa() < CASAS.length - 1 ? `Siguiente: ${CASAS[nivelCasa() + 1].nombre}` : '¡Vivís en la mansión!', accion: abrirCasas },
   { id: 'logros', icono: '🏆', texto: 'Logros', sub: `${(estado.logros || []).length} de ${LOGROS.length}`, accion: abrirLogros },
@@ -1554,6 +1573,16 @@ const vida = new Vida({
   abrirMas: () => mas.abrir(),
   chip: () => pintarChipsVida()
 });
+
+const economia = new Economia({
+  estado, ui, sonido, miniaturas, inventario, entregas,
+  guardar: () => guardar(),
+  refrescarHud: () => refrescarHud(),
+  registrar: e => registrar(e),
+  recordar: (...a) => pareja.recordar(...a),
+  abrirMas: () => mas.abrir()
+});
+ui.ponerMercadillo(economia.esFinde());
 
 const TEMAS_RETO = [
   { id: 'playa', nombre: 'Casa de playa', icono: '🏖️' },
@@ -1814,6 +1843,7 @@ renderer.setAnimationLoop(() => {
     pintarClima();
     pareja.revisar();
     pareja.revisarPlanes();
+    ambiente.furgoneta = entregas.pedidos.some(p => p.estado === 'camino');
     if (estado.reto && !estado.reto.terminado && Date.now() > estado.reto.fin) terminarReto();
     if (estado.reto && estado.reto.terminado && !estado.reto.estrellas && sync.activo && !dialogoAbierto()) puntuarReto();
     if (tProgreso === 0) pintarChipsVida();

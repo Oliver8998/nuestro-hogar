@@ -1,10 +1,16 @@
 export const CASAS = [
   { nombre: 'Piso cutre', icono: '🏚️', precio: 0, acogedor: 0, habitaciones: ['Salón'], suelo: null, pared: 0xb3a78d },
   { nombre: 'Piso reformado', icono: '🏠', precio: 1500, acogedor: 45, habitaciones: ['Salón', 'Dormitorio'], suelo: [0x9c7a55, 0x8f6f4c, 0xa4825c, 0x8a6a48], pared: 0xf3eadb, requisitoReforma: true },
-  { nombre: 'Ático con terraza', icono: '🌇', precio: 4000, acogedor: 60, habitaciones: ['Salón', 'Dormitorio', 'Cocina'], suelo: [0xc9a57a, 0xbf9b70, 0xd2ae84, 0xb8946a], pared: 0xf6efe4 },
-  { nombre: 'Casa con jardín', icono: '🏡', precio: 9000, acogedor: 72, habitaciones: ['Salón', 'Dormitorio', 'Cocina', 'Estudio'], suelo: [0xd9b98c, 0xcfae80, 0xe0c296, 0xc8a678], pared: 0xf8f1e7 },
-  { nombre: 'Mansión', icono: '🏰', precio: 20000, acogedor: 85, habitaciones: ['Salón', 'Dormitorio', 'Cocina', 'Estudio', 'Baño', 'Sala de juegos'], suelo: [0x6b4a33, 0x5e4130, 0x75523a, 0x664633], pared: 0xf4ece0 }
+  { nombre: 'Ático con terraza', icono: '🌇', precio: 4000, acogedor: 60, habitaciones: ['Salón', 'Dormitorio', 'Cocina', 'Terraza'], suelo: [0xc9a57a, 0xbf9b70, 0xd2ae84, 0xb8946a], pared: 0xf6efe4 },
+  { nombre: 'Casa con jardín', icono: '🏡', precio: 9000, acogedor: 72, habitaciones: ['Salón', 'Dormitorio', 'Cocina', 'Estudio', 'Jardín'], suelo: [0xd9b98c, 0xcfae80, 0xe0c296, 0xc8a678], pared: 0xf8f1e7 },
+  { nombre: 'Mansión', icono: '🏰', precio: 20000, acogedor: 85, habitaciones: ['Salón', 'Dormitorio', 'Cocina', 'Estudio', 'Baño', 'Sala de juegos', 'Jardín grande'], suelo: [0x6b4a33, 0x5e4130, 0x75523a, 0x664633], pared: 0xf4ece0 }
 ];
+
+export const EXTERIORES = {
+  Terraza: { tipo: 'terraza', suelo: [0xc9b8a2, 0xbfae98, 0xd2c1ab, 0xb8a790] },
+  'Jardín': { tipo: 'jardin', suelo: [0x7cb35a, 0x74ab52, 0x84bb62, 0x6ea34c] },
+  'Jardín grande': { tipo: 'jardin', suelo: [0x7cb35a, 0x74ab52, 0x84bb62, 0x6ea34c] }
+};
 
 export const COLECCIONES = [
   { id: 'verde', nombre: 'Rincón verde', icono: '🌿', items: ['planta', 'cactus', 'jarron', 'huerto'], premio: { monedas: 150, tickets: 1 } },
@@ -15,6 +21,9 @@ export const COLECCIONES = [
   { id: 'retro', nombre: 'Retro', icono: '📻', items: ['radio', 'lampara-lava', 'globo', 'piano'], premio: { monedas: 400, tickets: 2 } },
   { id: 'navidad', nombre: 'Navidad', icono: '🎄', items: ['arbol-navidad', 'muneco-nieve', 'regalos'], premio: { monedas: 250, tickets: 2 } },
   { id: 'halloween', nombre: 'Halloween', icono: '🎃', items: ['calabaza', 'fantasma', 'caldero'], premio: { monedas: 250, tickets: 2 } },
+  { id: 'terraceo', nombre: 'Tardes de terraza', icono: '🌇', items: ['barbacoa', 'tumbona', 'sombrilla', 'maceta-grande'], premio: { monedas: 400, tickets: 2 } },
+  { id: 'verano', nombre: 'Verano en el jardín', icono: '🏖️', items: ['columpio', 'piscina-hinchable', 'mesa-picnic'], premio: { monedas: 500, tickets: 2 } },
+  { id: 'lujo', nombre: 'Vida de lujo', icono: '💎', items: ['piscina', 'fuente'], premio: { monedas: 800, tickets: 3 } },
   { id: 'amor', nombre: 'San Valentín', icono: '💘', items: ['lampara-corazon', 'rosas', 'cojin-corazon'], premio: { monedas: 250, tickets: 2 } }
 ];
 

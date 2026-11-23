@@ -11,7 +11,9 @@ const CATEGORIAS = [
   { id: 'mascotas', nombre: 'Mascotas', icono: '🐾' },
   { id: 'limpieza', nombre: 'Limpieza', icono: '🧹' },
   { id: 'reparar', nombre: 'Reparar', icono: '🧰' },
-  { id: 'temporada', nombre: 'Temporada', icono: '🎁' }
+  { id: 'temporada', nombre: 'Temporada', icono: '🎁' },
+  { id: 'mercadillo', nombre: 'Mercadillo', icono: '🧺' },
+  { id: 'exterior', nombre: 'Exterior', icono: '🌳' }
 ];
 
 const FRASES_PRODUCTO = [
@@ -40,7 +42,7 @@ function semillaHoy() {
 }
 
 export function ofertaDelDia() {
-  const candidatos = CATALOGO.filter(d => d.enTienda !== false && d.precio >= 20);
+  const candidatos = CATALOGO.filter(d => d.enTienda !== false && !d.exterior && !d.temporada && d.precio >= 20);
   const d = candidatos[semillaHoy() % candidatos.length];
   return { id: d.id, precio: Math.round(d.precio * 0.7) };
 }
@@ -83,7 +85,7 @@ export class UI {
       b.dataset.cat = c.id;
       b.title = c.nombre;
       b.innerHTML = `<span>${c.icono}</span>${c.nombre}`;
-      if (c.id === 'temporada') b.classList.add('oculto');
+      if (c.id === 'temporada' || c.id === 'mercadillo' || c.id === 'exterior') b.classList.add('oculto');
       b.addEventListener('click', () => {
         if (this.categoria === c.id) return;
         this.categoria = c.id;
@@ -163,6 +165,18 @@ export class UI {
     this.elFondo.classList.remove('abierta');
   }
 
+  ponerNivelCasa(n) {
+    this.nivelCasa = n;
+    const b = document.querySelector('#tienda .pestanas-v button[data-cat="exterior"]');
+    if (b) b.classList.toggle('oculto', n < 2);
+  }
+
+  ponerMercadillo(si) {
+    const b = document.querySelector('#tienda .pestanas-v button[data-cat="mercadillo"]');
+    if (b) b.classList.toggle('oculto', !si);
+    if (!si && this.categoria === 'mercadillo') this.categoria = 'muebles';
+  }
+
   ponerTemporada(t, nombre) {
     this.temporada = t;
     const b = document.querySelector('#tienda .pestanas-v button[data-cat="temporada"]');
@@ -211,12 +225,17 @@ export class UI {
         entradas.push({ info: infoItem(id), precio: Math.round(infoItem(id).precio * 0.75), oferta: true });
       }
     }
+    if (this.categoria === 'mercadillo') {
+      for (const x of (this.ev.alMercadillo ? this.ev.alMercadillo() : [])) entradas.push({ info: infoItem(x.id), precio: x.precio, oferta: false, mercadillo: true });
+      return entradas;
+    }
     for (const d of [...CATALOGO, ...MATERIALES]) {
       if (this.categoria === 'temporada') {
         if (d.temporada && d.temporada === this.temporada) entradas.push({ info: infoItem(d.id), precio: d.precio, oferta: false });
         continue;
       }
       if (d.enTienda === false || d.categoria !== this.categoria) continue;
+      if (d.nivel && d.nivel > (this.nivelCasa || 0)) continue;
       entradas.push({ info: infoItem(d.id), precio: d.precio, oferta: false });
     }
     return entradas;
@@ -270,7 +289,8 @@ export class UI {
     const { info, oferta } = this.sel;
     this.$('det-nombre').textContent = info.nombre;
     const chips = [];
-    if (oferta) chips.push(`<span class="chip oferta">Oferta del día · antes ${info.precio}</span>`);
+    if (oferta) chips.push(`<span class="chip oferta">Oferta · antes ${info.precio}</span>`);
+    if (this.sel.mercadillo) chips.push(`<span class="chip oferta">🧺 Mercadillo del finde</span>`);
     if (info.tipo === 'mueble') {
       chips.push(`<span class="chip">📐 ${info.ancho * 0.5} × ${info.fondo * 0.5} m</span>`);
       if (info.soporte) chips.push('<span class="chip">📚 Se puede apilar encima</span>');
