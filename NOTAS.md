@@ -327,3 +327,6 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - `crearExclamacion(tam)` (sprite "!" naranja, depthTest off) se reutiliza en los paquetes de la puerta (`entregas.crearPaquete`). Se quitó la píldora "📦 ¡Paquete en la puerta!"; la cuenta atrás 🚚 sigue.
 - main.js: `pintarChipsVida()` deja en el HUD solo los URGENTES; el resto va a `mensajesTelefono`. Cada mensaje tiene firma (`firmaMensaje`: id + texto con números como #; correo y ánimo con texto exacto). Las firmas vistas se guardan en localStorage `hogar-tel-vistos`; si hay alguna sin ver, el teléfono suena (vibra) y sale el "!".
 - Tocar el teléfono (vía `distCuadro`/`tocarCuadro` de controles) descuelga el auricular y abre el diálogo "☎️ Teléfono" con filas (título claro + detalle, `TITULOS_TELEFONO`); las nuevas llevan "!". Tocar una fila ejecuta su acción.
+
+## Guía: paso "cerrar inventario" — v45
+- Nuevo paso 8/10 en `js/guia.js` (`cerrarInv`, apunta a `#cerrar-inv`) entre "Reforma" y "Misiones"; se salta solo si el inventario ya está cerrado. Clave nueva `hogar-guia3` (migra `hogar-guia2`: valores >=7 se suman 1). `guia` expuesta en `?debug` (`__h.guia`).
