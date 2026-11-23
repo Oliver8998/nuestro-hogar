@@ -121,7 +121,6 @@ export class Inicio {
     } catch (e) {
       return;
     }
-    cont.addEventListener('click', () => this.escaparate && this.escaparate.siguiente());
   }
 
   ocultar() {

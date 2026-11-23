@@ -2782,7 +2782,7 @@ body.colgando #lateral, body.colgando #chips-vida, body.colgando #menu-objeto, b
 #inicio { justify-content: flex-start; }
 .inicio-titulo span { font-size: clamp(36px, 10.5vw, 52px); }
 .escaparate { position: relative; z-index: 1; flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column; }
-.esc-lienzo { flex: 1; min-height: 0; position: relative; cursor: pointer; }
+.esc-lienzo { flex: 1; min-height: 0; position: relative; pointer-events: none; }
 .esc-lienzo canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; filter: drop-shadow(0 18px 22px rgba(30, 20, 40, .25)); }
 .esc-info { display: flex; flex-direction: column; align-items: center; gap: 6px; padding-bottom: 10px; }
 .esc-nombre { background: rgba(255,250,244,.92); border-radius: 20px; padding: 6px 14px; font-weight: 900; font-size: 15px; box-shadow: 0 4px 12px rgba(30,20,40,.18); }
