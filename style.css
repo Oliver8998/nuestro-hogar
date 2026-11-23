@@ -110,23 +110,43 @@ html, body {
   transition: width .1s;
 }
 
-#acciones {
+#menu-objeto {
   position: fixed;
-  right: 12px;
-  bottom: calc(env(safe-area-inset-bottom) + 140px);
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  gap: 6px;
+  padding: 6px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .22);
+  transform: translate(-50%, -100%);
+  z-index: 3;
 }
 
-#acciones button {
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
+#menu-objeto button {
+  width: 60px;
+  padding: 6px 2px;
   border: none;
-  background: #fff;
-  font-size: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
+  border-radius: 12px;
+  background: #f4e9dc;
+  color: #3b2f26;
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+#menu-objeto button .icono {
+  font-size: 20px;
+}
+
+#menu-objeto button:active {
+  transform: scale(.94);
+}
+
+#menu-objeto button:disabled {
+  opacity: .4;
 }
 
 .barra-inferior {

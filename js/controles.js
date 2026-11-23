@@ -25,6 +25,8 @@ export class Controles {
     this.ultimo = { x: 0, y: 0 };
     this.offset = new THREE.Vector2();
     this.gesto = null;
+    this.tMovimiento = 0;
+    this.ultimoToque = { t: 0, x: 0, y: 0 };
 
     canvas.addEventListener('pointerdown', e => this.abajo(e));
     canvas.addEventListener('pointermove', e => this.mover(e));
@@ -114,7 +116,17 @@ export class Controles {
 
   medirGesto() {
     const [a, b] = [...this.punteros.values()];
-    return { dist: Math.hypot(b.x - a.x, b.y - a.y), ang: Math.atan2(b.y - a.y, b.x - a.x) };
+    return {
+      dist: Math.hypot(b.x - a.x, b.y - a.y),
+      ang: Math.atan2(b.y - a.y, b.x - a.x),
+      cx: (a.x + b.x) / 2,
+      cy: (a.y + b.y) / 2
+    };
+  }
+
+  empezarRotar() {
+    this.modo = 'rotar';
+    this.cam.agarrar();
   }
 
   abajo(e) {
@@ -126,7 +138,7 @@ export class Controles {
       if (this.modoJuego === 'reparar') {
         const hit = this.buscarReparacion(e.clientX, e.clientY);
         if (hit) this.empezarReparacion(hit, e.clientX, e.clientY);
-        else this.modo = 'rotar';
+        else this.empezarRotar();
         return;
       }
       const mueble = this.gestor.intersectar(this.rayo(e.clientX, e.clientY));
@@ -136,11 +148,12 @@ export class Controles {
         this.offset.set(mueble.position.x - (p ? p.x : 0), mueble.position.z - (p ? p.z : 0));
         this.modo = 'arrastrar';
       } else {
-        this.modo = 'rotar';
+        this.empezarRotar();
       }
     } else if (this.punteros.size === 2) {
       if (this.modo === 'arrastrar') this.gestor.cancelar(this.seleccionado);
       this.terminarReparacion();
+      this.cam.agarrar();
       this.modo = 'gesto';
       this.gesto = this.medirGesto();
     }
@@ -170,8 +183,10 @@ export class Controles {
       const hit = this.buscarReparacion(e.clientX, e.clientY);
       if (hit && hit.rep.tipo === 'aplastar' && this.sala.aplastar(hit.objeto.userData.cucaracha)) this.eventos.alReparar(hit.rep);
     } else if (this.modo === 'rotar') {
-      this.cam.rotar(-dx * 0.008);
-      this.eventos.alMoverCamara();
+      if (dx !== 0) {
+        this.cam.rotar(-dx * 0.008);
+        this.tMovimiento = performance.now();
+      }
     } else if (this.modo === 'gesto' && this.punteros.size === 2) {
       const g = this.medirGesto();
       if (this.gesto.dist > 0) this.cam.zoom(g.dist / this.gesto.dist);
@@ -179,8 +194,8 @@ export class Controles {
       if (da > Math.PI) da -= Math.PI * 2;
       else if (da < -Math.PI) da += Math.PI * 2;
       this.cam.rotar(da);
+      this.cam.desplazar(g.cx - this.gesto.cx, g.cy - this.gesto.cy, this.canvas.getBoundingClientRect().width);
       this.gesto = g;
-      this.eventos.alMoverCamara();
     }
   }
 
@@ -195,9 +210,22 @@ export class Controles {
     } else if (this.modo === 'reparar' || this.modo === 'aplastar') {
       this.terminarReparacion();
     } else if (this.modo === 'rotar') {
-      if (this.modoJuego === 'decorar' && Math.hypot(e.clientX - p.xIni, e.clientY - p.yIni) < 8) this.seleccionar(null);
+      const ahora = performance.now();
+      const esToque = Math.hypot(e.clientX - p.xIni, e.clientY - p.yIni) < 8;
+      this.cam.soltar(!esToque && ahora - this.tMovimiento < 80);
+      if (esToque) {
+        if (this.modoJuego === 'decorar') this.seleccionar(null);
+        const u = this.ultimoToque;
+        if (ahora - u.t < 320 && Math.hypot(e.clientX - u.x, e.clientY - u.y) < 30) {
+          this.cam.reiniciar();
+          this.ultimoToque = { t: 0, x: 0, y: 0 };
+        } else {
+          this.ultimoToque = { t: ahora, x: e.clientX, y: e.clientY };
+        }
+      }
       this.modo = 'nada';
     } else if (this.modo === 'gesto' && this.punteros.size === 0) {
+      this.cam.soltar(false);
       this.modo = 'nada';
     }
   }

@@ -2,7 +2,7 @@ export class UI {
   constructor(catalogo, reparaciones, eventos) {
     this.elMonedas = document.getElementById('monedas-valor');
     this.elContador = document.getElementById('contador');
-    this.elAcciones = document.getElementById('acciones');
+    this.elMenu = document.getElementById('menu-objeto');
     this.elCatalogo = document.getElementById('catalogo');
     this.elLista = document.getElementById('lista-reparar');
     this.elAviso = document.getElementById('aviso');
@@ -32,8 +32,6 @@ export class UI {
     });
 
     this.btnModo.addEventListener('click', () => eventos.alCambiarModo(this.modoActual === 'decorar' ? 'reparar' : 'decorar'));
-    document.getElementById('btn-rotar').addEventListener('click', () => eventos.alRotar());
-    document.getElementById('btn-vender').addEventListener('click', () => eventos.alVender());
 
     this.actualizarReparaciones();
   }
@@ -48,7 +46,7 @@ export class UI {
     this.btnModo.textContent = m === 'decorar' ? '🔨 Reparar' : '🛋️ Decorar';
     this.elCatalogo.classList.toggle('oculto', m !== 'decorar');
     this.elLista.classList.toggle('oculto', m !== 'reparar');
-    if (m === 'reparar') this.acciones(false);
+    if (m === 'reparar') this.cerrarMenu();
   }
 
   actualizarReparaciones() {
@@ -78,8 +76,36 @@ export class UI {
     this.tProgreso = setTimeout(() => this.elProgreso.classList.add('oculto'), 500);
   }
 
-  acciones(visible) {
-    this.elAcciones.classList.toggle('oculto', !visible);
+  abrirMenu(opciones) {
+    this.elMenu.innerHTML = '';
+    for (const op of opciones) {
+      const b = document.createElement('button');
+      b.innerHTML = `<span class="icono">${op.icono}</span>${op.texto}`;
+      b.disabled = !!op.desactivado;
+      b.addEventListener('click', op.accion);
+      this.elMenu.appendChild(b);
+    }
+    this.menuAbierto = true;
+  }
+
+  cerrarMenu() {
+    this.menuAbierto = false;
+    this.elMenu.classList.add('oculto');
+  }
+
+  posicionarMenu(x, y) {
+    if (!this.menuAbierto) return;
+    if (x === null) {
+      this.elMenu.classList.add('oculto');
+      return;
+    }
+    this.elMenu.classList.remove('oculto');
+    const w = this.elMenu.offsetWidth;
+    const h = this.elMenu.offsetHeight;
+    const izq = Math.min(Math.max(x, w / 2 + 8), window.innerWidth - w / 2 - 8);
+    const abajo = Math.min(Math.max(y - 14, h + 64), window.innerHeight - 140);
+    this.elMenu.style.left = `${izq}px`;
+    this.elMenu.style.top = `${abajo}px`;
   }
 
   aviso(texto) {

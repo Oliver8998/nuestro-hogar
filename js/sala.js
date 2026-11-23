@@ -269,28 +269,27 @@ export function crearSala(escena) {
 
   const bombilla = new THREE.Mesh(
     new THREE.SphereGeometry(0.08, 12, 10),
-    new THREE.MeshStandardMaterial({ color: 0xfff1c9, emissive: 0xffd27a, emissiveIntensity: 1 })
+    new THREE.MeshStandardMaterial({ color: 0xd9d2bd, emissive: 0xffd27a, emissiveIntensity: 0.25 })
   );
   bombilla.position.set(0, ALTO - 0.65, 0);
   sala.add(bombilla);
 
-  const luz = new THREE.PointLight(0xffd08a, 8, 0, 2);
+  const luz = new THREE.PointLight(0xffd08a, 2.5, 0, 2);
   luz.position.copy(bombilla.position);
   sala.add(luz);
 
-  let bombillaArreglada = false;
   const zonaBombilla = zona(new THREE.SphereGeometry(0.35, 8, 6));
   zonaBombilla.position.copy(bombilla.position);
   sala.add(zonaBombilla);
   nuevaReparacion(
-    { id: 'bombilla', nombre: 'Cambiar la bombilla', icono: '💡', coste: 5, tipo: 'mantener', cantidad: 1.2, pista: 'Mantén pulsado para enroscarla' },
+    { id: 'bombilla', nombre: 'Cambiar la bombilla', icono: '💡', coste: 5, tipo: 'mantener', cantidad: 1.2, pista: 'Mantén pulsado para cambiarla' },
     [zonaBombilla],
     p => bombilla.scale.setScalar(1 + p * 0.5),
     () => {
-      bombillaArreglada = true;
       bombilla.scale.setScalar(1);
-      luz.intensity = 10;
+      bombilla.material.color.setHex(0xfff1c9);
       bombilla.material.emissiveIntensity = 1.2;
+      luz.intensity = 10;
       sala.remove(zonaBombilla);
     }
   );
@@ -336,12 +335,6 @@ export function crearSala(escena) {
   }
 
   function animar(dt) {
-    if (!bombillaArreglada) {
-      if (Math.random() < 0.01) luz.intensity = 1.5;
-      else luz.intensity += (8 - luz.intensity) * 0.2;
-      bombilla.material.emissiveIntensity = luz.intensity / 8;
-    }
-
     for (const c of cucarachas) {
       if (c.muerta) {
         c.tiempoMuerta += dt;
