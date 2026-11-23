@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#f4e9dc">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Nuestro Hogar">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css">
+<title>Nuestro Hogar</title>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }
+</script>
+</head>
+<body>
+<canvas id="escena"></canvas>
+<div id="hud">
+  <div id="monedas">🪙 <span id="monedas-valor">0</span></div>
+</div>
+<div id="aviso"></div>
+<div id="acciones" class="oculto">
+  <button id="btn-rotar">⟳</button>
+  <button id="btn-vender">💰</button>
+</div>
+<div id="catalogo"></div>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
