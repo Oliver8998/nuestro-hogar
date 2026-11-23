@@ -295,6 +295,6 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - Tras la mansión: `AMPLIACIONES` (Cine, Biblioteca, Gimnasio, Invernadero, Salón de baile, Torre del observatorio) en Casas → `estado.ampliaciones`; `habsCasa()` da la lista de habitaciones real.
 - Notificaciones push:
   - Cliente: `js/avisos.js` (Ajustes → 🔔), `sw.js` con `push` y `notificationclick`. `window.avisarPareja(tipo, texto)` se llama al dejar nota, regalo, buenas noches, reacción 💗 y estado de ánimo.
-  - Servidor PENDIENTE de montar en Supabase (el PC estaba desconectado): ejecutar `supabase/avisos.sql` en el SQL editor y crear la Edge Function `avisar` con `supabase/functions/avisar/index.ts`, con **Verify JWT desactivado**. Las claves VAPID se generan solas la primera vez y se guardan en `push_claves`.
+  - Servidor MONTADO (23-nov 22:05): tablas de `supabase/avisos.sql` creadas y Edge Function `avisar` (código en `supabase/functions/avisar/index.ts`) desplegada desde el panel, con **Verify JWT desactivado**. Las claves VAPID se generaron solas y están en `push_claves`. Probado: clave, suscribir, enviar y quitar responden 200.
   - En iPhone solo funciona con el juego añadido a la pantalla de inicio (iOS 16.4+).
 - Tests nuevos: `/tmp/prueba/t11.py` (jugador nuevo), `t12.py` (Más, guía, foto del día, copia, ampliar) y `t13.py <es|en>` (ánimo, racha y llamadas push).
