@@ -421,7 +421,7 @@ export class Pareja {
       <p class="gen-intro">🎁 Para hacer un regalo o proponer una compra, elegid el objeto en la tienda y usad los botones <b>🎁</b>, <b>🗳️</b> y <b>❤️</b>.</p>
       `, () => this.ctx.abrirMas());
     cuerpo.querySelector('#pj-compartir').addEventListener('click', async () => {
-      const texto = `Únete a nuestra casa en Nuestro Hogar 🏠💕 Código: ${this.sync.codigo}\nhttps://oliver8998.github.io/nuestro-hogar/`;
+      const texto = `Únete a nuestra casa en Our Place 🏠💕 Código: ${this.sync.codigo}\nhttps://oliver8998.github.io/nuestro-hogar/`;
       try {
         if (navigator.share) await navigator.share({ text: texto });
         else {

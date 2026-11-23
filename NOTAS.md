@@ -275,4 +275,6 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - Para textos nuevos: añadir la frase española exacta (o con `{0}`) a `i18n_en.js`. `[data-no-traducir]` excluye un bloque. Prueba: `/tmp/prueba/t10.py` lista lo que queda en español.
 
 ## Nombre
-- Pendiente de elegir un título corto en inglés (descartado "Little Nest": suena a bebés). Mientras tanto: "Nuestro Hogar" / "Our Home" según idioma. Cambiarlo en `js/inicio.js` (título animado), `index.html` (title y apple-mobile-web-app-title) y `manifest.json`.
+- El juego se llama **Our Place** (igual en los dos idiomas). Descartados: Little Nest (suena a bebés), Hearthly, Snug, Homely, Two Keys, Housewarming.
+- Está en `js/inicio.js` (título animado), `index.html` (title y apple-mobile-web-app-title), `manifest.json` y el texto de invitación de `js/pareja.js`.
+- "Nuestro Hogar" sigue siendo solo el nombre por defecto de la casa (lo cambia cada pareja en Ajustes).

@@ -1,6 +1,6 @@
 {
-  "name": "Nuestro Hogar",
-  "short_name": "Nuestro Hogar",
+  "name": "Our Place",
+  "short_name": "Our Place",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

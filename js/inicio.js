@@ -106,7 +106,7 @@ export class Inicio {
   mostrar() {
     this.capa.classList.remove('fuera');
     this.capa.style.display = 'flex';
-    this.capa.innerHTML = `<div class="inicio-fondo">${escenaSvg()}</div><div class="inicio-titulo">${(idioma() === 'en' ? 'Our Home' : 'Nuestro Hogar').split('').map((l, i) => `<span style="animation-delay:${(0.1 + i * 0.06).toFixed(2)}s">${l === ' ' ? '&nbsp;' : l}</span>`).join('')}</div>
+    this.capa.innerHTML = `<div class="inicio-fondo">${escenaSvg()}</div><div class="inicio-titulo">${'Our Place'.split('').map((l, i) => `<span style="animation-delay:${(0.1 + i * 0.06).toFixed(2)}s">${l === ' ' ? '&nbsp;' : l}</span>`).join('')}</div>
       <div class="escaparate"><div class="esc-lienzo"></div></div>
       <div class="ini-idioma" data-no-traducir><button data-l="es" class="${idioma() === 'es' ? 'activo' : ''}">ES</button><button data-l="en" class="${idioma() === 'en' ? 'activo' : ''}">EN</button></div><div class="inicio-panel"></div>`;
     this.pintar();
