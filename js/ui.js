@@ -81,7 +81,7 @@ export class UI {
       const b = document.createElement('button');
       b.dataset.cat = c.id;
       b.title = c.nombre;
-      b.textContent = c.icono;
+      b.innerHTML = `<span>${c.icono}</span>${c.nombre}`;
       b.addEventListener('click', () => {
         if (this.categoria === c.id) return;
         this.categoria = c.id;
@@ -189,7 +189,7 @@ export class UI {
     this.entradas.forEach((entrada, i) => {
       const b = document.createElement('button');
       b.className = 'item-lista';
-      b.innerHTML = `${entrada.oferta ? '<span class="etq-oferta">-30%</span>' : ''}${this.img(this.mini.item(entrada.info.id, entrada.info.colores ? 0 : null))}<span>🪙 ${entrada.precio}</span>`;
+      b.innerHTML = `${entrada.oferta ? '<span class="etq-oferta">-30%</span>' : ''}${this.img(this.mini.item(entrada.info.id, entrada.info.colores ? 0 : null))}<span class="nombre-item">${entrada.info.nombre}</span><span>🪙 ${entrada.precio}</span>`;
       b.addEventListener('click', () => {
         this.ev.alSonido('tocar');
         this.seleccionarProducto(i);
@@ -269,7 +269,7 @@ export class UI {
       });
       opciones.appendChild(fila);
     }
-    if (info.tipo === 'material') {
+    if (info.tipo === 'material' && !info.servicio && !info.mascota) {
       const fila = document.createElement('div');
       fila.className = 'opcion';
       fila.innerHTML = '<span>Cantidad</span><div class="cantidad"><button data-d="-1">−</button><b></b><button data-d="1">+</button></div>';
@@ -284,6 +284,14 @@ export class UI {
       opciones.appendChild(fila);
     }
     this.refrescarTienda();
+    this.ajustarListaTienda();
+  }
+
+  ajustarListaTienda() {
+    requestAnimationFrame(() => {
+      const alto = document.querySelector('.tienda-detalle').offsetHeight;
+      document.documentElement.style.setProperty('--alto-detalle', `${alto}px`);
+    });
   }
 
   refrescarTienda() {

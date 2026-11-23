@@ -172,7 +172,7 @@ export class GestorMuebles {
         const base = mallas[i].userData.base;
         if (encendido) {
           base.color.setHex(def.encendible.brillo ?? mallas[i].material.color.getHex());
-          base.intensidad = 0.8;
+          base.intensidad = 0.5;
         } else {
           base.color.setHex(0x000000);
           base.intensidad = 0;

@@ -19,7 +19,58 @@ export const PERSONAJES = {
   amigos: { piel: 0xd9a27e, pelo: 0x3b2f26, ropa: 0x6cc08a, delantal: 0xf2d06b, peinado: 'corto' }
 };
 
+function crearRobi() {
+  const g = new THREE.Group();
+  const metal = m(0xdfe8ee, { metalness: 0.3, roughness: 0.35 });
+  const turquesa = m(0x5ac8b8, { roughness: 0.5 });
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.3, 0.14, 24), turquesa);
+  base.position.y = 0.07;
+  g.add(base);
+  const cuerpo = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.26, 0.42, 24), metal);
+  cuerpo.position.y = 0.35;
+  g.add(cuerpo);
+  const panel = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.14, 0.02), m(0xf4b3be));
+  panel.position.set(0, 0.36, 0.24);
+  g.add(panel);
+  for (const s of [-1, 1]) {
+    const brazo = esfera(0.09, 0.26, 0.09, 0xdfe8ee, s * 0.28, 0.38, 0.02);
+    brazo.rotation.z = s * 0.5;
+    g.add(brazo);
+    g.add(esfera(0.1, 0.1, 0.1, 0x5ac8b8, s * 0.36, 0.25, 0.06));
+  }
+  const cabeza = new THREE.Group();
+  cabeza.position.y = 0.76;
+  g.add(cabeza);
+  const casco = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.38, 0.4), metal);
+  cabeza.add(casco);
+  const pantalla = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.26, 0.02), m(0x223a40, { roughness: 0.2 }));
+  pantalla.position.z = 0.205;
+  cabeza.add(pantalla);
+  for (const s of [-1, 1]) {
+    const ojo = new THREE.Mesh(new THREE.SphereGeometry(0.045, 16, 12), new THREE.MeshBasicMaterial({ color: 0x7ff0d8 }));
+    ojo.scale.set(1, 1.3, 0.3);
+    ojo.position.set(s * 0.09, 0.02, 0.22);
+    cabeza.add(ojo);
+    const oreja = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.06, 16), turquesa);
+    oreja.rotation.z = Math.PI / 2;
+    oreja.position.set(s * 0.27, 0, 0);
+    cabeza.add(oreja);
+  }
+  const sonrisa = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.012, 8, 20, Math.PI), new THREE.MeshBasicMaterial({ color: 0x7ff0d8 }));
+  sonrisa.rotation.z = Math.PI;
+  sonrisa.position.set(0, -0.06, 0.215);
+  cabeza.add(sonrisa);
+  const antena = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.14, 8), metal);
+  antena.position.y = 0.26;
+  cabeza.add(antena);
+  const bola = esfera(0.07, 0.07, 0.07, 0xf4b3be, 0, 0.35, 0);
+  cabeza.add(bola);
+  g.userData.cabeza = cabeza;
+  return g;
+}
+
 export function crearPersonaje(id) {
+  if (id === 'robi') return crearRobi();
   const p = PERSONAJES[id];
   const g = new THREE.Group();
 

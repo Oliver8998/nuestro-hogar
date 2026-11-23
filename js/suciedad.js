@@ -524,7 +524,7 @@ export class Suciedad {
     this.tVisita -= dt;
     if (this.tVisita > 0 || !this.lista.length) return;
     this.tVisita = 75;
-    const malla = crearPersonaje('sol');
+    const malla = crearPersonaje('robi');
     malla.position.set(1.0, 0, 2.3);
     malla.scale.setScalar(0.01);
     malla.traverse(o => { if (o.isMesh) o.castShadow = true; });

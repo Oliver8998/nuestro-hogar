@@ -134,8 +134,7 @@ export class Controles {
       if (d) {
         const r = this.suciedad.puedeLimpiar(c.info, d);
         if (!r.ok) return { ok: false, motivo: r.motivo };
-        this.suciedad.limpiar(d, 'yo');
-        return { ok: true, suciedad: d };
+        return { ok: false, minijuego: d };
       }
     }
     const obj = this.sala.buscar(this.rayo(x, y), c.info, this.gestor.muebles);

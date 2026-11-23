@@ -143,34 +143,6 @@ export function crearSala(escena) {
     paredes.push(grupo);
   });
 
-  const acera = new THREE.Group();
-  const losa = new THREE.Mesh(new THREE.BoxGeometry(7.6, 0.36, 2.1), new THREE.MeshStandardMaterial({ color: 0xd8d0c4, roughness: 1 }));
-  losa.position.set(0, -0.3, 4.3);
-  losa.receiveShadow = true;
-  acera.add(losa);
-  for (let k = -3; k <= 3; k++) {
-    const junta = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.005, 2.1), new THREE.MeshStandardMaterial({ color: 0xc4bbad }));
-    junta.position.set(k * 1.1, -0.118, 4.3);
-    acera.add(junta);
-  }
-  const bordillo = new THREE.Mesh(new THREE.BoxGeometry(7.6, 0.1, 0.12), new THREE.MeshStandardMaterial({ color: 0xbfb6a8, roughness: 1 }));
-  bordillo.position.set(0, -0.08, 5.3);
-  acera.add(bordillo);
-  const felpudo = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.02, 0.42), new THREE.MeshStandardMaterial({ color: 0xc0504d, roughness: 1 }));
-  felpudo.position.set(1.0, -0.11, 3.5);
-  felpudo.receiveShadow = true;
-  acera.add(felpudo);
-  for (const x of [-3.2, 3.2]) {
-    const maceta = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.16, 0.3, 16), new THREE.MeshStandardMaterial({ color: 0xc96f4a }));
-    maceta.position.set(x, 0.03, 3.55);
-    maceta.castShadow = true;
-    acera.add(maceta);
-    const arbusto = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 12), new THREE.MeshStandardMaterial({ color: 0x6db35a }));
-    arbusto.position.set(x, 0.35, 3.55);
-    arbusto.castShadow = true;
-    acera.add(arbusto);
-  }
-  sala.add(acera);
 
   const cara = GROSOR / 2 + 0.006;
 
@@ -328,9 +300,9 @@ export function crearSala(escena) {
   paredes[2].userData.desperfectos.push(desHumedad);
   paredes[2].userData.requisito = desHumedad;
 
-  escena.add(new THREE.HemisphereLight(0xfff4e6, 0x8a7560, 1.8));
+  escena.add(new THREE.HemisphereLight(0xfff4e6, 0x8a7560, 1.5));
 
-  const sol = new THREE.DirectionalLight(0xfff0dd, 2);
+  const sol = new THREE.DirectionalLight(0xfff0dd, 1.7);
   sol.position.set(6, 10, 4);
   sol.castShadow = true;
   sol.shadow.mapSize.set(1024, 1024);

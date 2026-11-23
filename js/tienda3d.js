@@ -51,6 +51,8 @@ export class EscenaTienda {
     r.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     r.shadowMap.enabled = true;
     r.shadowMap.type = THREE.PCFSoftShadowMap;
+    r.toneMapping = THREE.NeutralToneMapping;
+    r.toneMappingExposure = 0.9;
     this.renderer = r;
 
     const escena = new THREE.Scene();
@@ -110,7 +112,7 @@ export class EscenaTienda {
     mostrador.add(tarro);
     escena.add(mostrador);
 
-    const plato = new THREE.Mesh(new THREE.CylinderGeometry(0.72, 0.76, 0.07, 40), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 }));
+    const plato = new THREE.Mesh(new THREE.CylinderGeometry(0.72, 0.76, 0.07, 40), new THREE.MeshStandardMaterial({ color: 0xeee7dd, roughness: 0.6 }));
     plato.position.set(-0.2, 1.115, 0.5);
     plato.receiveShadow = true;
     escena.add(plato);
@@ -119,15 +121,15 @@ export class EscenaTienda {
     escena.add(soporte);
     this.soporte = soporte;
 
-    escena.add(new THREE.HemisphereLight(0xffffff, 0xd9b9a0, 1.7));
-    const sol = new THREE.DirectionalLight(0xfff3e6, 2.2);
+    escena.add(new THREE.HemisphereLight(0xfff6ec, 0xd9b9a0, 1.4));
+    const sol = new THREE.DirectionalLight(0xfff3e6, 1.8);
     sol.position.set(2.5, 6, 5);
     sol.castShadow = true;
     sol.shadow.mapSize.set(1024, 1024);
     Object.assign(sol.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4, near: 1, far: 20 });
     sol.shadow.bias = -0.0005;
     escena.add(sol);
-    const foco = new THREE.SpotLight(0xffffff, 18, 6, 0.45, 0.6);
+    const foco = new THREE.SpotLight(0xfff6ec, 9, 6, 0.45, 0.6);
     foco.position.set(-0.4, 4.2, 3.2);
     foco.target = soporte;
     escena.add(foco);
@@ -142,11 +144,11 @@ export class EscenaTienda {
     const aspecto = w / h;
     this.camara.aspect = aspecto;
     const vertical = aspecto < 1;
-    const ancho = vertical ? 3.4 : 5.2;
+    const ancho = vertical ? 4.4 : 6;
     const tan = Math.tan(THREE.MathUtils.degToRad(this.camara.fov / 2));
     const distancia = Math.max(ancho / 2 / (tan * aspecto), 1.6 / tan);
     const alto = 2 * distancia * tan;
-    const x = vertical ? 0.3 - 0.15 * ancho : 0.3 - 0.1 * ancho;
+    const x = vertical ? 0.3 - 0.24 * ancho : 0.3 - 0.12 * ancho;
     const y = 1.6 - (vertical ? 0.1 : 0.02) * alto;
     this.camara.position.set(x, y + 1.4, distancia);
     this.camara.lookAt(x, y, 0);
@@ -171,7 +173,7 @@ export class EscenaTienda {
     const caja = new THREE.Box3().setFromObject(grupo);
     const tam = caja.getSize(new THREE.Vector3());
     const centro = caja.getCenter(new THREE.Vector3());
-    const s = Math.min(1.3 / Math.max(tam.x, tam.z, 0.01), 1.35 / Math.max(tam.y, 0.01), 3);
+    const s = Math.min(0.8 / Math.max(tam.x, tam.z, 0.01), 0.85 / Math.max(tam.y, 0.01), 2);
     grupo.scale.setScalar(s);
     grupo.position.set(-centro.x * s, -caja.min.y * s, -centro.z * s);
     this.soporte.add(envoltorio);
@@ -195,7 +197,7 @@ export class EscenaTienda {
       const mat = this.mallas[i].material;
       if (encendido) {
         mat.emissive.setHex(info.encendible.brillo ?? mat.color.getHex());
-        mat.emissiveIntensity = 0.9;
+        mat.emissiveIntensity = 0.55;
       } else {
         mat.emissive.setHex(0x000000);
         mat.emissiveIntensity = 0;
@@ -227,7 +229,7 @@ export class EscenaTienda {
 
   paso(dt) {
     this.t += dt;
-    this.soporte.rotation.y += dt * 0.9;
+    this.soporte.rotation.y += dt * 0.4;
     if (this.objeto && this.entrada < 1) {
       this.entrada = Math.min(1, this.entrada + dt * 3.2);
       const e = this.entrada;

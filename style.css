@@ -1368,7 +1368,7 @@ input {
   position: absolute;
   top: calc(env(safe-area-inset-top) + 62px);
   right: 14px;
-  left: 118px;
+  left: 206px;
   margin: 0;
   z-index: 2;
 }
@@ -1383,8 +1383,8 @@ input {
   position: absolute;
   left: 10px;
   top: calc(env(safe-area-inset-top) + 10px);
-  bottom: calc(env(safe-area-inset-bottom) + 10px);
-  width: 96px;
+  bottom: calc(env(safe-area-inset-bottom) + var(--alto-detalle, 200px) + 20px);
+  width: 184px;
   background: rgba(255, 250, 244, .94);
   border-radius: 24px;
   box-shadow: var(--sombra);
@@ -1402,25 +1402,36 @@ input {
 }
 
 .pestanas-v button {
-  height: 38px;
+  height: 34px;
   border: none;
   border-radius: 12px;
   background: #f1e6d8;
-  font-size: 18px;
+  font-size: 11px;
+  font-weight: 900;
+  color: #7a6552;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
   transition: background .15s, transform .1s;
+}
+
+.pestanas-v button span {
+  font-size: 15px;
 }
 
 .pestanas-v button.activa {
   background: var(--texto);
-  transform: scale(1.04);
+  color: #fff;
 }
 
 .lista-items {
   flex: 1;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  align-content: start;
   padding: 4px 2px 6px;
   touch-action: pan-y;
   scrollbar-width: none;
@@ -1447,8 +1458,22 @@ input {
 }
 
 .item-lista img {
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
+}
+
+.item-lista .nombre-item {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #7a6552;
+  line-height: 1.1;
+  text-align: center;
+  padding: 0 2px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.2em;
 }
 
 .item-lista.activa {
@@ -1473,7 +1498,7 @@ input {
 
 .tienda-detalle {
   position: absolute;
-  left: 116px;
+  left: 10px;
   right: 10px;
   bottom: calc(env(safe-area-inset-bottom) + 10px);
   background: rgba(255, 250, 244, .96);
@@ -1749,4 +1774,97 @@ input {
   border-radius: 14px;
   padding: 8px 10px;
   text-align: left;
+}
+
+#minijuego {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  background: #8a6a4a;
+  opacity: 0;
+  transform: scale(.96);
+  transition: opacity .25s, transform .25s;
+}
+
+#minijuego.abierto {
+  opacity: 1;
+  transform: none;
+}
+
+#minijuego canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.mj-cabecera {
+  position: absolute;
+  top: calc(env(safe-area-inset-top) + 12px);
+  left: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: rgba(255, 250, 244, .95);
+  border-radius: 20px;
+  padding: 10px 12px 10px 16px;
+  box-shadow: var(--sombra);
+  pointer-events: none;
+}
+
+.mj-cabecera b {
+  display: block;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.mj-cabecera small {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--suave);
+}
+
+.mj-cabecera .cerrar {
+  pointer-events: auto;
+  flex-shrink: 0;
+}
+
+.mj-barra {
+  position: absolute;
+  top: calc(env(safe-area-inset-top) + 86px);
+  left: 24px;
+  right: 24px;
+  height: 12px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, .5);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.mj-barra i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #86d3a1, var(--verde));
+  border-radius: 6px;
+  transition: width .15s;
+}
+
+.mj-exito {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  color: var(--texto);
+  font-size: 30px;
+  font-weight: 900;
+  padding: 16px 28px;
+  border-radius: 24px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .25);
+  animation: pop .5s ease;
+  pointer-events: none;
 }

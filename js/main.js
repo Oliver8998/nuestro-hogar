@@ -14,6 +14,7 @@ import { Entregas } from './entregas.js';
 import { Suciedad, TIPOS as TIPOS_SUCIEDAD, construirJardin } from './suciedad.js';
 import { HISTORIA, EVENTOS, puntuacion, nuevasDiarias, infoDiaria, textoPremio } from './misiones.js';
 import { poolDe } from './ruleta.js';
+import { Minijuegos } from './minijuegos.js';
 
 const CLAVE = 'hogar-estado';
 const NOMBRES = ['Michi', 'Coco', 'Luna', 'Toby', 'Nube', 'Canela', 'Pipo', 'Kiwi', 'Lola', 'Bimba', 'Churro', 'Galleta', 'Mochi', 'Rufo', 'Trufa', 'Pelusa'];
@@ -23,6 +24,8 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true 
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.NeutralToneMapping;
+renderer.toneMappingExposure = 1.05;
 
 const escena = new THREE.Scene();
 const camaraIso = new CamaraIso(window.innerWidth / window.innerHeight);
@@ -90,14 +93,33 @@ const suciedad = new Suciedad(escena, {
     },
     alLlegaLimpiadora() {
       sonido.pop();
-      ui.aviso('🧹 Ha llegado Sol a limpiar');
+      ui.aviso('🤖 Ha llegado Robi a limpiar');
     },
     alVisitaLimpiadora() {
-      ui.aviso('✨ Sol ha dejado la casa reluciente');
+      ui.aviso('✨ Robi ha dejado la casa reluciente');
       guardar();
     }
   }
 });
+
+const minijuegos = new Minijuegos(sonido);
+
+async function jugarMinijuego(d) {
+  const producto = TIPOS_SUCIEDAD[d.tipo].producto;
+  if (!inventario.cantidad(producto)) return;
+  ui.cerrarInventario();
+  const ok = await minijuegos.jugar(d.tipo);
+  if (!ok) {
+    ui.aviso('Lo dejáis para luego');
+    return;
+  }
+  if (d.limpia) return;
+  inventario.quitar(producto);
+  ui.pintarInventario(inventario);
+  suciedad.eventos.particula('✨', d.grupo.position, 5);
+  suciedad.limpiar(d, 'yo');
+  ui.aviso('✨ ¡Limpio!');
+}
 
 let jardinMalla = null;
 function ponerJardin() {
@@ -241,7 +263,7 @@ function comprarDirecto(id, color = null, precio = null, cantidad = 1) {
       estado.limpiadoraHasta = Math.max(Date.now(), estado.limpiadoraHasta) + 3 * 86400000;
       suciedad.limpiadoraHasta = estado.limpiadoraHasta;
       suciedad.tVisita = 2;
-      ui.aviso('🧹 Sol vendrá a limpiar durante 3 días');
+      ui.aviso('🤖 Robi vendrá a limpiar durante 3 días');
     } else if (info.servicio === 'jardin') {
       estado.jardin = true;
       ponerJardin();
@@ -586,6 +608,11 @@ const ui = new UI(miniaturas, {
     const a = arrastre;
     arrastre = null;
     const r = controles.soltarColocacion(x, y, cancelar);
+    if (r.minijuego) {
+      ui.pintarInventario(inventario);
+      jugarMinijuego(r.minijuego);
+      return;
+    }
     if (r.ok) {
       inventario.quitar(a.item.id, a.item.color);
       if (r.suciedad) {
@@ -689,28 +716,22 @@ function tocarSuciedad(d) {
   const pedido = entregas.cantidadPedida(info.producto);
   const expres = Math.max(5, prod.precio * 3);
   const soluciones = {
-    polvo: 'Un robot friegasuelos lo limpia solo. Sol, la limpiadora, también.',
-    barro: 'Un robot friegasuelos lo limpia solo. Sol, la limpiadora, también.',
+    polvo: 'Un robot friegasuelos lo limpia solo. Robi, el robot de limpieza, también.',
+    barro: 'Un robot friegasuelos lo limpia solo. Robi, el robot de limpieza, también.',
     caca: 'Con un arenero (gatos, conejos y hámsters) o un jardín (perros, patos, pingüinos y zorros) no volverá a pasar.',
     bichos: 'Una trampa para bichos los mantiene lejos para siempre.',
-    telarana: 'Sol, la limpiadora, también las quita.'
+    telarana: 'Robi, el robot de limpieza, también las quita.'
   };
   const botones = [];
   if (tiene) {
     botones.push({
-      texto: `Usar ${prod.nombre.toLowerCase()} (tenéis ${tiene})`, tipo: 'primario', accion: () => {
-        inventario.quitar(info.producto);
-        ui.pintarInventario(inventario);
-        sonido.arreglo();
-        suciedad.eventos.particula('✨', d.grupo.position, 4);
-        suciedad.limpiar(d, 'yo');
-      }
+      texto: `🧽 Limpiar a mano (usa 1 de ${tiene})`, tipo: 'primario', accion: () => setTimeout(() => jugarMinijuego(d), 250)
     });
   } else if (!pedido) {
     botones.push({ texto: `Pedir ${prod.nombre.toLowerCase()} · 🪙 ${prod.precio}`, tipo: 'primario', desactivado: estado.monedas < prod.precio, accion: () => comprarDirecto(info.producto) });
   }
   botones.push({
-    texto: `⚡ Limpiar ya · 🪙 ${expres}`, tipo: 'rosa', desactivado: estado.monedas < expres, accion: () => {
+    texto: `⚡ Que lo limpie Robi ya · 🪙 ${expres}`, tipo: 'rosa', desactivado: estado.monedas < expres, accion: () => {
       estado.monedas -= expres;
       sonido.arreglo();
       suciedad.eventos.particula('✨', d.grupo.position, 4);
@@ -723,7 +744,7 @@ function tocarSuciedad(d) {
     titulo: info.nombre,
     texto: d.tipo === 'caca' ? info.descripcion + ' 💩' : info.descripcion,
     html: `<div class="necesita${tiene || pedido ? ' tienes-ya' : ''}"><div><b>${tiene ? '✅' : pedido ? '🚚' : '🧽'} A mano: ${prod.nombre}</b>
-      <small>${tiene ? 'Arrastradlo encima o usadlo desde aquí.' : pedido ? 'Ya está pedido, llegará a la puerta.' : `Cuesta 🪙 ${prod.precio}.`}</small></div></div>
+      <small>${tiene ? 'Limpiad a mano con un minijuego, o arrastradlo encima.' : pedido ? 'Ya está pedido, llegará a la puerta.' : `Cuesta 🪙 ${prod.precio}.`}</small></div></div>
       <div class="solucion">💡 ${soluciones[d.tipo]}</div>`,
     botones,
     columna: true

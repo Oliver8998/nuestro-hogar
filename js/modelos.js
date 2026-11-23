@@ -29,7 +29,7 @@ export function construirPiezas(piezas, { sombras = true } = {}) {
     }
     if (op.brillo) {
       mat.emissive.setHex(color);
-      mat.emissiveIntensity = 0.6;
+      mat.emissiveIntensity = 0.4;
     }
 
     const malla = new THREE.Mesh(geo, mat);

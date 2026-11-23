@@ -110,8 +110,8 @@ export const CATALOGO = [
     [1.4, 0.3, 1.95, 0, 0.15, 0, 0x8b5a3c],
     [1.3, 0.2, 1.8, 0, 0.4, 0.05, 0xf3efe6],
     [1.4, 0.9, 0.08, 0, 0.45, -0.95, 0x8b5a3c],
-    [0.5, 0.1, 0.3, -0.3, 0.55, -0.7, 0xffffff],
-    [0.5, 0.1, 0.3, 0.3, 0.55, -0.7, 0xffffff],
+    [0.5, 0.1, 0.3, -0.3, 0.55, -0.7, 0xf0eae1],
+    [0.5, 0.1, 0.3, 0.3, 0.55, -0.7, 0xf0eae1],
     [1.32, 0.04, 1.1, 0, 0.51, 0.4, 0xe58f9e]
   ], colores: { grupos: [[5]], paleta: [[0xe58f9e], [0x7fa3c6], [0x93b884], [0xf2d06b], [0xb39ddb], [0xf3efe6]] }},
 
@@ -192,7 +192,7 @@ export const CATALOGO = [
 
   { id: 'pelota', categoria: 'mascotas', nombre: 'Pelota', precio: 10, ancho: 1, fondo: 1, paraMascota: true, juguete: true, piezas: [
     [0.16, 0.16, 0.16, 0, 0.08, 0, 0xe8c547, 'esfera'],
-    [0.165, 0.03, 0.165, 0, 0.08, 0, 0xffffff, 'cil', { rx: 0.4 }]
+    [0.165, 0.03, 0.165, 0, 0.08, 0, 0xf0eae1, 'cil', { rx: 0.4 }]
   ], colores: { grupos: [[0]], paleta: [[0xe8c547], [0xe05050], [0x5a9fd6], [0x6cc08a]] }},
 
   { id: 'comedero', categoria: 'mascotas', nombre: 'Comedero', precio: 25, ancho: 1, fondo: 1, paraMascota: true, comedero: true, piezas: [
@@ -211,7 +211,7 @@ export const CATALOGO = [
     [0.44, 0.05, 0.44, 0, 0.025, 0, 0xd9c29a],
     [0.12, 0.8, 0.12, 0, 0.45, 0, 0xc9a66b, 'cil'],
     [0.38, 0.05, 0.38, 0, 0.875, 0, 0xd9c29a],
-    [0.008, 0.3, 0.008, 0.14, 0.71, 0, 0xffffff, 'cil'],
+    [0.008, 0.3, 0.008, 0.14, 0.71, 0, 0xf0eae1, 'cil'],
     [0.07, 0.07, 0.07, 0.14, 0.55, 0, 0xe58f9e, 'esfera']
   ]},
 
@@ -314,7 +314,7 @@ export const CATALOGO = [
   { id: 'piano', categoria: 'muebles', nombre: 'Piano de cola', enTienda: false, rareza: 'legendario', ancho: 3, fondo: 2, soporte: 1.08, piezas: [
     [1.3, 0.35, 0.8, 0, 0.75, -0.05, 0x1a1a1a, { rugosidad: 0.25 }],
     [1.25, 0.03, 0.7, 0, 1.06, -0.12, 0x1a1a1a, { rx: -0.45, rugosidad: 0.25 }],
-    [1.1, 0.04, 0.15, 0, 0.78, 0.42, 0xffffff],
+    [1.1, 0.04, 0.15, 0, 0.78, 0.42, 0xf0eae1],
     [1.0, 0.03, 0.06, 0, 0.81, 0.39, 0x222222],
     [0.08, 0.58, 0.08, -0.5, 0.29, 0.25, 0x1a1a1a, 'cil'],
     [0.08, 0.58, 0.08, 0.5, 0.29, 0.25, 0x1a1a1a, 'cil'],
@@ -347,8 +347,8 @@ function pintura(id, nombre, color) {
 export const MATERIALES = [
   { id: 'insecticida', categoria: 'limpieza', nombre: 'Insecticida', precio: 15, limpia: 'bichos', pista: 'Arrástralo hasta los bichos (o a la habitación si hay cucarachas)', piezas: [
     [0.12, 0.3, 0.12, 0, 0.15, 0, 0x5ac8a8, 'cil'],
-    [0.125, 0.1, 0.125, 0, 0.14, 0, 0xffffff, 'cil'],
-    [0.08, 0.06, 0.08, 0, 0.33, 0, 0xffffff, 'cil'],
+    [0.125, 0.1, 0.125, 0, 0.14, 0, 0xf0eae1, 'cil'],
+    [0.08, 0.06, 0.08, 0, 0.33, 0, 0xf0eae1, 'cil'],
     [0.07, 0.03, 0.03, 0.04, 0.35, 0, 0xe05050]
   ]},
   { id: 'limpiador', categoria: 'limpieza', nombre: 'Fregona y cubo', precio: 5, limpia: 'barro', pista: 'Arrástralo hasta las manchas del suelo', piezas: [
@@ -365,8 +365,8 @@ export const MATERIALES = [
   ]},
   { id: 'cristal', categoria: 'reparar', nombre: 'Cristal', precio: 40, pista: 'Arrástralo hasta la ventana rota', piezas: [
     [0.5, 0.6, 0.03, 0, 0.3, 0, 0xa9d4e8, { transparente: 0.75 }],
-    [0.06, 0.4, 0.01, -0.1, 0.33, 0.02, 0xffffff, { rz: 0.5 }],
-    [0.03, 0.2, 0.01, 0.05, 0.38, 0.02, 0xffffff, { rz: 0.5 }]
+    [0.06, 0.4, 0.01, -0.1, 0.33, 0.02, 0xf0eae1, { rz: 0.5 }],
+    [0.03, 0.2, 0.01, 0.05, 0.38, 0.02, 0xf0eae1, { rz: 0.5 }]
   ]},
   { id: 'masilla', categoria: 'reparar', nombre: 'Masilla', precio: 10, pista: 'Arrástrala hasta las grietas de la pared', piezas: [
     [0.28, 0.24, 0.28, 0, 0.12, 0, 0xf2efe9, 'cil'],
@@ -375,8 +375,8 @@ export const MATERIALES = [
   ]},
   { id: 'antihumedad', categoria: 'reparar', nombre: 'Antihumedad', precio: 15, pista: 'Arrástralo hasta las manchas de humedad', piezas: [
     [0.12, 0.32, 0.12, 0, 0.16, 0, 0x5a9fd6, 'cil'],
-    [0.1, 0.08, 0.1, 0, 0.36, 0, 0xffffff, 'cil'],
-    [0.06, 0.08, 0.02, 0, 0.17, 0.06, 0xffffff, 'esfera']
+    [0.1, 0.08, 0.1, 0, 0.36, 0, 0xf0eae1, 'cil'],
+    [0.06, 0.08, 0.02, 0, 0.17, 0.06, 0xf0eae1, 'esfera']
   ]},
   pintura('pintura-crema', 'Pintura crema', 0xf3eadb),
   pintura('pintura-rosa', 'Pintura rosa', 0xf6d5da),
@@ -387,7 +387,7 @@ export const MATERIALES = [
   { id: 'atrapapolvo', categoria: 'limpieza', nombre: 'Bayeta atrapapolvo', precio: 3, pista: 'Arrástrala hasta el polvo', limpia: 'polvo', piezas: [
     [0.34, 0.04, 0.26, 0, 0.02, 0, 0xf2d06b, { ry: 0.3 }],
     [0.34, 0.04, 0.26, 0.02, 0.06, 0.01, 0x7fa3c6, { ry: -0.2 }],
-    [0.2, 0.06, 0.2, 0.05, 0.1, 0.03, 0xffffff, 'esfera']
+    [0.2, 0.06, 0.2, 0.05, 0.1, 0.03, 0xf0eae1, 'esfera']
   ]},
   { id: 'plumero', categoria: 'limpieza', nombre: 'Plumero', precio: 4, pista: 'Arrástralo hasta las telarañas', limpia: 'telarana', piezas: [
     [0.03, 0.45, 0.03, 0, 0.22, 0, 0xb07a4f, 'cil'],
@@ -399,25 +399,28 @@ export const MATERIALES = [
     [0.15, 0.04, 0.15, 0, 0.25, 0, 0x4e9d6b, 'cil'],
     [0.12, 0.14, 0.02, 0.1, 0.1, 0.06, 0xa8e0b8, { rz: 0.3 }]
   ]},
-  { id: 'servicio-limpieza', categoria: 'limpieza', nombre: 'Limpiadora (3 días)', precio: 120, servicio: 'limpiadora', pista: 'Sol vendrá a limpiar toda la casa cada poco rato durante 3 días', piezas: [
-    [0.3, 0.25, 0.3, 0, 0.125, 0, 0xf2d06b, 'cil'],
-    [0.03, 0.75, 0.03, 0.06, 0.5, 0, 0xd9b98c, 'cil', { rz: 0.15 }],
-    [0.18, 0.08, 0.18, 0, 0.27, 0, 0xf2efe9, 'esfera'],
-    [0.1, 0.24, 0.1, -0.22, 0.12, 0.08, 0xb39ddb, 'cil'],
-    [0.06, 0.05, 0.03, -0.22, 0.27, 0.08, 0xffffff]
+  { id: 'servicio-limpieza', categoria: 'limpieza', nombre: 'Robot de limpieza (3 días)', precio: 120, servicio: 'limpiadora', pista: 'Robi, un robot de limpieza, vendrá a dejar la casa reluciente cada poco rato durante 3 días', piezas: [
+    [0.5, 0.12, 0.5, 0, 0.06, 0, 0x5ac8b8, 'cil'],
+    [0.42, 0.4, 0.42, 0, 0.32, 0, 0xdfe8ee, 'cil', { metal: 0.3, rugosidad: 0.35 }],
+    [0.48, 0.34, 0.38, 0, 0.7, 0, 0xdfe8ee, { metal: 0.3, rugosidad: 0.35 }],
+    [0.38, 0.22, 0.02, 0, 0.7, 0.195, 0x223a40],
+    [0.07, 0.09, 0.02, -0.08, 0.72, 0.21, 0x7ff0d8, 'esfera', { brillo: true }],
+    [0.07, 0.09, 0.02, 0.08, 0.72, 0.21, 0x7ff0d8, 'esfera', { brillo: true }],
+    [0.02, 0.14, 0.02, 0, 0.94, 0, 0xdfe8ee, 'cil'],
+    [0.08, 0.08, 0.08, 0, 1.03, 0, 0xf4b3be, 'esfera']
   ]},
   { id: 'jardin', categoria: 'limpieza', nombre: 'Jardín para el perro', precio: 250, servicio: 'jardin', pista: 'Un trocito de césped junto a la casa: los perros harán ahí sus cosas', piezas: [
     [0.9, 0.1, 0.9, 0, 0.05, 0, 0x8a6a4a],
     [0.88, 0.04, 0.88, 0, 0.12, 0, 0x7cc46a],
-    [0.04, 0.22, 0.9, -0.43, 0.24, 0, 0xffffff],
-    [0.9, 0.22, 0.04, 0, 0.24, -0.43, 0xffffff],
+    [0.04, 0.22, 0.9, -0.43, 0.24, 0, 0xf0eae1],
+    [0.9, 0.22, 0.04, 0, 0.24, -0.43, 0xf0eae1],
     [0.08, 0.08, 0.08, 0.2, 0.18, 0.2, 0xf28aa0, 'esfera'],
     [0.07, 0.07, 0.07, 0.28, 0.17, 0.1, 0xf7e07a, 'esfera'],
     [0.3, 0.3, 0.3, -0.15, 0.3, -0.15, 0x5a9e4b, 'esfera']
   ]},
   { id: 'pienso', categoria: 'mascotas', nombre: 'Comida para mascotas', precio: 8, pista: 'Toca a tu mascota y dale de comer', piezas: [
     [0.3, 0.4, 0.15, 0, 0.2, 0, 0xd9a05a],
-    [0.2, 0.15, 0.01, 0, 0.22, 0.08, 0xffffff],
+    [0.2, 0.15, 0.01, 0, 0.22, 0.08, 0xf0eae1],
     [0.08, 0.05, 0.02, 0, 0.22, 0.09, 0xc0504d, 'esfera']
   ]},
   { id: 'chuches', categoria: 'mascotas', nombre: 'Chuches', precio: 6, pista: 'Toca a tu mascota y dale un premio', piezas: [

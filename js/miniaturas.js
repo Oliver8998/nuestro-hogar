@@ -18,9 +18,11 @@ export class Miniaturas {
     if (this.renderer) return;
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
     this.renderer.setPixelRatio(1);
+    this.renderer.toneMapping = THREE.NeutralToneMapping;
+    this.renderer.toneMappingExposure = 0.9;
     this.escena = new THREE.Scene();
-    this.escena.add(new THREE.HemisphereLight(0xffffff, 0x9a8470, 2.4));
-    const luz = new THREE.DirectionalLight(0xffffff, 2.2);
+    this.escena.add(new THREE.HemisphereLight(0xfff6ec, 0x9a8470, 2.0));
+    const luz = new THREE.DirectionalLight(0xfff3e6, 1.8);
     luz.position.set(3, 6, 4);
     this.escena.add(luz);
     this.camara = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 50);

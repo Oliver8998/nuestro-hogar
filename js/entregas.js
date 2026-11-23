@@ -5,7 +5,8 @@ const PI = Math.PI;
 const CARRIL_Z = 4.6;
 const PARADA_X = 1.75;
 const Y_ACERA = -0.12;
-const HUECOS = [[1.0, 3.62], [0.5, 3.66], [1.5, 3.66], [0.75, 4.0], [1.25, 4.0]];
+const HUECOS = [[1.0, 3.6], [0.45, 3.65], [1.55, 3.65]];
+const ALTURA_FLOTAR = 0.55;
 
 const PIEZAS_FURGONETA = [
   [1.5, 1.0, 0.95, -0.25, 0.68, 0, 0xfffaf4],
@@ -35,7 +36,7 @@ export const PIEZAS_PAQUETE = [
   [0.09, 0.33, 0.43, 0, 0.16, 0, 0xe58f9e],
   [0.1, 0.08, 0.05, -0.05, 0.35, 0, 0xe58f9e, 'esfera', { rz: 0.5 }],
   [0.1, 0.08, 0.05, 0.05, 0.35, 0, 0xe58f9e, 'esfera', { rz: -0.5 }],
-  [0.16, 0.1, 0.005, 0.1, 0.18, 0.212, 0xffffff]
+  [0.16, 0.1, 0.005, 0.1, 0.18, 0.212, 0xf0eae1]
 ];
 
 function suavizar(t) {
@@ -92,7 +93,7 @@ export class Entregas {
   posicionHueco(p) {
     const k = this.enPuerta().filter(x => x !== p && x.paquete).length;
     const [x, z] = HUECOS[k % HUECOS.length];
-    return new THREE.Vector3(x, Y_ACERA + Math.floor(k / HUECOS.length) * 0.33, z);
+    return new THREE.Vector3(x, ALTURA_FLOTAR + Math.floor(k / HUECOS.length) * 0.45, z);
   }
 
   crearPaquete(p, animado) {
@@ -135,7 +136,7 @@ export class Entregas {
     this.enPuerta().forEach((p, k) => {
       if (!p.paquete) return;
       const [x, z] = HUECOS[k % HUECOS.length];
-      p.paquete.userData.reposo = new THREE.Vector3(x, Y_ACERA + Math.floor(k / HUECOS.length) * 0.33, z);
+      p.paquete.userData.reposo = new THREE.Vector3(x, ALTURA_FLOTAR + Math.floor(k / HUECOS.length) * 0.45, z);
     });
   }
 
@@ -176,10 +177,12 @@ export class Entregas {
     for (const p of this.enPuerta()) {
       const g = p.paquete;
       if (!g || g.userData.volando) continue;
-      g.position.lerp(g.userData.reposo, Math.min(1, dt * 8));
+      const r = g.userData.reposo;
+      g.position.x += (r.x - g.position.x) * Math.min(1, dt * 6);
+      g.position.z += (r.z - g.position.z) * Math.min(1, dt * 6);
+      g.position.y = r.y + Math.sin(this.t * 2 + g.userData.fase) * 0.07;
+      g.rotation.y += dt * 1.3;
       if (g.scale.x < 1) g.scale.setScalar(Math.min(1, g.scale.x + dt * 4));
-      const brinco = Math.max(0, Math.sin(this.t * 3 + g.userData.fase)) ;
-      g.position.y = g.userData.reposo.y + (brinco > 0.97 ? (brinco - 0.97) * 1.5 : 0);
     }
   }
 
