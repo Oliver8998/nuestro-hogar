@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { construirPiezas, liberar } from './modelos.js';
+import { crearExclamacion } from './telefono.js';
 
 const PI = Math.PI;
 const CARRIL_Z = 4.6;
@@ -104,6 +105,10 @@ export class Entregas {
     grupo.position.copy(pos);
     grupo.userData.reposo = pos.clone();
     grupo.userData.fase = Math.random() * 6;
+    const excl = crearExclamacion(0.36);
+    excl.position.y = 0.6;
+    grupo.add(excl);
+    grupo.userData.excl = excl;
     this.escena.add(grupo);
     p.paquete = grupo;
     if (animado) grupo.scale.setScalar(0.01);
@@ -127,6 +132,7 @@ export class Entregas {
     if (paquete) {
       paquete.userData.abriendo = 0;
       paquete.userData.pedido = null;
+      if (paquete.userData.excl) paquete.userData.excl.visible = false;
     }
     this.recolocar();
     return p.items;

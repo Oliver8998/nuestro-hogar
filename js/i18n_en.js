@@ -1685,5 +1685,14 @@ export default {
 "¡Muy bien! Cada arreglo sube la {0}. Arreglad las 10 cosas para dejar el piso como nuevo":"Great! Every fix raises the {0}. Fix all 10 things to make the flat like new",
 "Si no sabéis qué hacer, mirad las {0}: os guían y dan monedas":"If you don't know what to do, check the {0}: they guide you and give coins",
 "Y en {0} está el trabajo del día para ganar monedas. ¡Ya sabéis lo básico!":"And in {0} you'll find the job of the day to earn coins. You know the basics!",
-"Saltar guía":"Skip guide"
+"Saltar guía":"Skip guide",
+"☎️ Teléfono":"☎️ Phone",
+"Nadie ha llamado… de momento 😌":"Nobody has called… yet 😌",
+"Colgar":"Hang up",
+"Cartas nuevas":"New letters",
+"Cómo estáis hoy":"How you're feeling today",
+"Cuenta atrás para veros":"Countdown to seeing each other",
+"Reto de decoración":"Decorating challenge",
+"Ropa para lavar":"Laundry to wash",
+"Vuestra cría":"Your baby pet"
 };

@@ -36,6 +36,7 @@ import { Trabajos } from './trabajos.js';
 import { activarTraduccion } from './i18n.js';
 import { Guia } from './guia.js';
 import * as avisos from './avisos.js';
+import { Telefono } from './telefono.js';
 
 let guia = null;
 import { CASAS, COLECCIONES, LOGROS, EXTERIORES, calcularAcogedor, coleccionesCompletas } from './progreso.js';
@@ -57,6 +58,7 @@ renderer.toneMappingExposure = 1.05;
 const escena = new THREE.Scene();
 const camaraIso = new CamaraIso(window.innerWidth / window.innerHeight);
 const sala = crearSala(escena);
+const telefono = new Telefono(escena, sala);
 const gestor = new GestorMuebles(escena);
 const ambiente = new Ambiente(sala, renderer);
 const inventario = new Inventario();
@@ -918,8 +920,14 @@ const ui = new UI(miniaturas, {
 });
 
 controles = new Controles(canvas, camaraIso, gestor, sala, mascotas, entregas, {
-  distCuadro: r => (mas && !visitando ? mas.cuadros.distancia(r) : Infinity),
-  tocarCuadro: r => (mas && !visitando ? mas.cuadros.tocar(r) : false),
+  distCuadro: r => Math.min(telefono.distancia(r), mas && !visitando ? mas.cuadros.distancia(r) : Infinity),
+  tocarCuadro: r => {
+    if (!visitando && telefono.tocar(r)) {
+      abrirTelefono();
+      return true;
+    }
+    return mas && !visitando ? mas.cuadros.tocar(r) : false;
+  },
   alAbrirPaquete(p) {
     abrirPaquete(p);
   },
@@ -2144,25 +2152,69 @@ function pintarChipsVida() {
   if (sorpresas) chips.push(...sorpresas.chips());
   const URGENTES = ['visita', 'averia', 'nieve', 'gato', 'tesoro'];
   const urgentes = chips.filter(c => URGENTES.includes(c.id));
-  const resto = chips.filter(c => !URGENTES.includes(c.id));
-  if (!resto.length) avisosAbierto = false;
-  caja.innerHTML = urgentes.map(c => `<button class="pastilla reparto" data-id="${c.id}">${c.texto}</button>`).join('')
-    + (resto.length ? `<button class="pastilla reparto avisos-btn ${avisosAbierto ? 'abierto' : ''}" data-id="__avisos">🔔 <b>${resto.length}</b></button>
-      <div class="avisos-panel ${avisosAbierto ? '' : 'oculto'}">${resto.map(c => `<button class="aviso-fila" data-id="${c.id}">${c.texto}</button>`).join('')}</div>` : '');
+  mensajesTelefono = chips.filter(c => !URGENTES.includes(c.id));
+  const vistos = vistosTelefono();
+  telefono.marcar(mensajesTelefono.some(c => !vistos.includes(firmaMensaje(c))));
+  if (telefonoAbierto) pintarTelefono();
+  caja.innerHTML = urgentes.map(c => `<button class="pastilla reparto" data-id="${c.id}">${c.texto}</button>`).join('');
   caja.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
-    if (b.dataset.id === '__avisos') {
-      avisosAbierto = !avisosAbierto;
-      sonido.tocar();
-      pintarChipsVida();
-      return;
-    }
-    avisosAbierto = false;
     chips.find(c => c.id === b.dataset.id).accion();
     pintarChipsVida();
   }));
 }
 
-let avisosAbierto = false;
+let mensajesTelefono = [];
+let telefonoAbierto = null;
+
+function firmaMensaje(c) {
+  return c.id === 'correo' || c.id === 'animo' ? `${c.id}:${c.texto}` : `${c.id}:${c.texto.replace(/\d+/g, '#')}`;
+}
+
+function vistosTelefono() {
+  try { return JSON.parse(localStorage.getItem('hogar-tel-vistos') || '[]'); } catch { return []; }
+}
+
+const TITULOS_TELEFONO = { correo: 'Cartas nuevas', animo: 'Cómo estáis hoy', cuenta: 'Cuenta atrás para veros', reto: 'Reto de decoración', trabajo: 'Trabajo del día', ropa: 'Ropa para lavar' };
+let vistosAlAbrir = [];
+
+function tituloMensaje(c) {
+  if (TITULOS_TELEFONO[c.id]) return TITULOS_TELEFONO[c.id];
+  if (c.id.startsWith('cria-')) return 'Vuestra cría';
+  return '';
+}
+
+function pintarTelefono() {
+  const vistos = vistosAlAbrir;
+  const lista = telefonoAbierto.caja.querySelector('.tel-lista');
+  if (!lista) { telefonoAbierto = null; return; }
+  lista.innerHTML = mensajesTelefono.length
+    ? mensajesTelefono.map(c => {
+      const t = tituloMensaje(c);
+      return `<button class="tel-fila${vistos.includes(firmaMensaje(c)) ? '' : ' nuevo'}" data-id="${c.id}">${t ? `<b>${t}</b><small>${c.texto}</small>` : c.texto}</button>`;
+    }).join('')
+    : '<p class="tel-vacio">Nadie ha llamado… de momento 😌</p>';
+  lista.querySelectorAll('.tel-fila').forEach(b => b.addEventListener('click', () => {
+    const c = mensajesTelefono.find(x => x.id === b.dataset.id);
+    sonido.tocar();
+    telefonoAbierto.cerrar();
+    telefonoAbierto = null;
+    if (c) setTimeout(() => { c.accion(); pintarChipsVida(); }, 230);
+  }));
+}
+
+function abrirTelefono() {
+  sonido.tocar();
+  const d = ui.dialogo({
+    titulo: '☎️ Teléfono',
+    html: '<div class="tel-lista"></div>',
+    botones: [{ texto: 'Colgar', tipo: 'secundario', accion: () => { telefonoAbierto = null; } }]
+  });
+  telefonoAbierto = d;
+  vistosAlAbrir = vistosTelefono();
+  pintarTelefono();
+  try { localStorage.setItem('hogar-tel-vistos', JSON.stringify(mensajesTelefono.map(firmaMensaje))); } catch {}
+  telefono.marcar(false);
+}
 
 function ordenarHud() {
   const prog = estado.reforma || sala.progreso();
@@ -2416,13 +2468,15 @@ function colocarMenu(dt) {
   ui.posicionarMenu(s.x, s.y);
 }
 
-if (new URLSearchParams(location.search).has('debug')) window.__h = { trabajos, estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida };
+if (new URLSearchParams(location.search).has('debug')) window.__h = { telefono, entregas, trabajos, estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida };
 
 renderer.setAnimationLoop(() => {
   const dt = Math.min(reloj.getDelta(), 0.1);
   camaraIso.actualizar(dt);
   sala.actualizarParedes(camaraIso.direccionHorizontal());
   sala.actualizar(dt);
+  telefono.activo = !visitando;
+  telefono.actualizar(dt);
   ambiente.actualizar(dt);
   usos.actualizar(dt);
   sync.actualizar(dt);
@@ -2471,8 +2525,7 @@ renderer.setAnimationLoop(() => {
     tChip = 0;
     const n = entregas.enPuerta().length;
     const s = entregas.segundosProximo();
-    if (n) ui.chipReparto(n > 1 ? `📦 ${n} paquetes en la puerta` : '📦 ¡Paquete en la puerta!', true);
-    else if (s !== null) ui.chipReparto(`🚚 ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`, false);
+    if (s !== null) ui.chipReparto(`🚚 ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`, false);
     else ui.chipReparto(null);
   }
   renderer.render(escena, camaraIso.camara);
