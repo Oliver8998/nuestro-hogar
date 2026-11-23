@@ -232,6 +232,12 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - Con la sesión iniciada se ve una tarjeta de la casa (`ctx.resumen()` en main): monedas, racha, acogedor y hasta 3 novedades (regalo diario, trabajo de hoy, mascotas, cartas, pregunta del día y fechas especiales), más el botón "▶ ¡A jugar!" que late.
 - El suelo de la escena sube con `.suelo-escena` para que la casa se vea por encima de la tarjeta.
 
+### Escaparate 3D en el menú (pedido el 23-nov 20:03: "menos textos y más visual")
+- `js/escaparate.js`: un segundo renderer de three dentro de `#inicio` que va pasando 7 casas decoradas (`SALAS`): salón, dormitorio romántico, cocina, rincón gamer, jardín, mansión y Navidad.
+  - Cada sala tiene suelo y papel de casa2, muebles reales (con `GestorMuebles` en un grupo), mascotas, ventana con cortinas y LED, y versión de noche.
+  - Entra con rebote, los muebles aparecen uno a uno, la cámara se balancea y cambia cada 6,5 s; si se toca, pasa a la siguiente. Se destruye al cerrar el menú.
+- El menú tiene ahora menos texto: el título, el nombre de la sala con puntitos, una tarjeta mini (casa, 🪙, 🔥, 🕯️) y avisos en burbujas con icono (`resumen().novedades` = `{i, t}`).
+
 ## Ideas pendientes (no pedidas aún)
 - Sincronizar los dos móviles (Supabase).
 - Minijuegos para ganar monedas.

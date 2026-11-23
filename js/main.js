@@ -1623,20 +1623,19 @@ const inicio = new Inicio({
     const p = estado.pareja || {};
     const nombres = (p.nombres || []).filter(Boolean).join(' & ');
     const novedades = [];
-    if (trabajos) {
-      const t = trabajos.delDia();
-      if (trabajos.turnosHoy() < 3) novedades.push(`${t.icono} Trabajo de hoy: <b>${t.nombre}</b>`);
-    }
+    try {
+      if (nuevoDia) novedades.push({ i: '🎁', t: 'Regalo' });
+    } catch (e) {}
+    if (trabajos && trabajos.turnosHoy() < 3) novedades.push({ i: trabajos.delDia().icono, t: 'Trabajo' });
     if (mascotas.lista.length) {
-      const triste = mascotas.lista.find(m => m.hambre < 40 || m.felicidad < 40);
-      novedades.push(triste ? `🐾 <b>${triste.nombre}</b> os echa de menos` : `🐾 ${mascotas.lista.map(m => m.nombre).slice(0, 3).join(', ')} os esperan`);
+      const triste = mascotas.lista.some(m => m.hambre < 40 || m.felicidad < 40);
+      novedades.push({ i: triste ? '🥺' : '🐾', t: triste ? '¡Hambre!' : `${mascotas.lista.length}` });
     }
     try {
-      if (vida && vida.noLeidas()) novedades.push(`✉️ <b>${vida.noLeidas()}</b> carta${vida.noLeidas() > 1 ? 's' : ''} sin leer`);
-      if (pareja2 && pareja2.pendientePregunta()) novedades.push('💕 Tenéis la <b>pregunta del día</b>');
+      if (vida && vida.noLeidas()) novedades.push({ i: '✉️', t: `${vida.noLeidas()}` });
+      if (pareja2 && pareja2.pendientePregunta()) novedades.push({ i: '💕', t: 'Pregunta' });
       const f = mas.proximaFecha();
-      if (f && f.dias <= 14) novedades.push(f.dias === 0 ? `🎉 ¡Hoy es ${f.texto}!` : `📅 ${f.dias} día${f.dias > 1 ? 's' : ''} para ${f.texto}`);
-      if (nuevoDia) novedades.unshift('🎁 Regalo diario esperándoos');
+      if (f && f.dias <= 14) novedades.push({ i: f.dias === 0 ? '🎉' : '📅', t: f.dias === 0 ? '¡Hoy!' : `${f.dias} d` });
     } catch (e) {}
     return {
       nivel: n, icono: CASAS[n].icono, nombreNivel: CASAS[n].nombre,
@@ -1644,7 +1643,7 @@ const inicio = new Inicio({
       monedas: estado.monedas || 0,
       racha: (estado.racha && estado.racha.n) || 0,
       acogedor: estado.puntuacion || acogedor().total,
-      novedades: novedades.slice(0, 3)
+      novedades: novedades.slice(0, 5)
     };
   },
   codigoLocal: () => sync.codigo || null,

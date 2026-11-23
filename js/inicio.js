@@ -1,3 +1,5 @@
+import { Escaparate, NUM_SALAS } from './escaparate.js';
+
 const CLAVE_CUENTA = 'hogar-cuenta';
 
 function escapar(t) {
@@ -58,39 +60,12 @@ function escenaSvg(nivel = 0) {
     <path d="M-20 600 Q90 500 210 560 T420 540 V1100 H-20Z" fill="${noche ? '#3d5a52' : '#a8d08d'}"/>
     <path d="M-20 650 Q120 590 240 630 T420 610 V1100 H-20Z" fill="${noche ? '#2f4a40' : '#8fc46a'}"/>
     <g class="arbol"><rect x="28" y="545" width="12" height="70" rx="5" fill="#8a5a3c"/><circle cx="34" cy="535" r="34" fill="${noche ? '#35614a' : '#6fae5e'}"/><circle cx="16" cy="552" r="20" fill="${noche ? '#2f5642' : '#62a052'}"/><circle cx="52" cy="550" r="22" fill="${noche ? '#2f5642' : '#62a052'}"/><circle cx="24" cy="528" r="4" fill="#e05050"/><circle cx="46" cy="540" r="4" fill="#e05050"/></g>
-    ${torres}
-    <g class="casa">
-      <ellipse cx="200" cy="606" rx="120" ry="10" fill="rgba(0,0,0,.12)"/>
-      <rect x="124" y="468" width="152" height="136" rx="6" fill="${pared}"/>
-      <rect x="124" y="590" width="152" height="14" fill="${noche ? '#a89382' : '#e6cdb3'}"/>
-      <rect x="246" y="398" width="22" height="50" fill="#b5654a"/><rect x="242" y="394" width="30" height="8" rx="2" fill="#9c5640"/>
-      <g class="humo"><circle cx="257" cy="384" r="7"/><circle cx="257" cy="384" r="9"/><circle cx="257" cy="384" r="6"/></g>
-      <path d="M106 478 L200 398 L294 478 Z" fill="${tejado}"/>
-      <path d="M106 478 L200 398 L294 478" fill="none" stroke="${noche ? '#8a463f' : '#c9645a'}" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
-      <circle cx="200" cy="446" r="22" fill="url(#brillo)" class="brillo"/>
-      <circle cx="200" cy="446" r="12" fill="${luzV}" stroke="#fffaf2" stroke-width="3" class="ventana"/>
-      ${[143, 225].map(x => `<circle cx="${x + 16}" cy="${516}" r="34" fill="url(#brillo)" class="brillo"/><rect x="${x}" y="498" width="32" height="36" rx="4" fill="${luzV}" stroke="#fffaf2" stroke-width="4" class="ventana"/><path d="M${x + 16} 498 v36 M${x} 516 h32" stroke="#fffaf2" stroke-width="2.5"/><rect x="${x - 3}" y="534" width="38" height="8" rx="3" fill="#9c6b45"/><circle cx="${x + 6}" cy="532" r="3.5" fill="#e58f9e"/><circle cx="${x + 15}" cy="530" r="3.5" fill="#f2d06b"/><circle cx="${x + 25}" cy="532" r="3.5" fill="#e58f9e"/>`).join('')}
-      <path d="M182 604 V556 a18 18 0 0 1 36 0 V604Z" fill="#9c6b45"/>
-      <path d="M187 604 V558 a13 13 0 0 1 26 0 V604Z" fill="#b07a4f"/>
-      <circle cx="210" cy="582" r="2.6" fill="#f2d06b"/>
-      <path d="${corazonPath(200, 566, 5)}" fill="#e58f9e"/>
-      <path d="M172 604 h56 l14 40 h-84z" fill="${noche ? '#a89a88' : '#e8d6b8'}"/>
-      ${pisoExtra}
-      <g class="gato"><ellipse cx="152" cy="452" rx="11" ry="9" fill="${noche ? '#2b2420' : '#f0a860'}"/><circle cx="146" cy="441" r="7" fill="${noche ? '#2b2420' : '#f0a860'}"/><path d="M140 437 l2 -8 l4 6z M147 435 l4 -7 l2 8z" fill="${noche ? '#2b2420' : '#f0a860'}"/><circle cx="143.5" cy="441" r="1.2" fill="${noche ? '#f2d06b' : '#3b2f26'}"/><circle cx="148" cy="441" r="1.2" fill="${noche ? '#f2d06b' : '#3b2f26'}"/><path class="cola" d="M162 456 q14 -2 10 -18" fill="none" stroke="${noche ? '#2b2420' : '#f0a860'}" stroke-width="4" stroke-linecap="round"/></g>
-    </g>
     <g class="arbusto"><circle cx="350" cy="606" r="22" fill="${noche ? '#2f5642' : '#62a052'}"/><circle cx="372" cy="612" r="18" fill="${noche ? '#35614a' : '#6fae5e'}"/><circle cx="352" cy="598" r="3.5" fill="#f4b3be"/><circle cx="366" cy="606" r="3.5" fill="#f4b3be"/></g>
     ${cerca}${flores}${luciernagas}
-    <g class="corazones">${[0, 1, 2].map(i => `<path class="corazon-sube" style="animation-delay:${i * 2.3}s" d="${corazonPath(200 + (i - 1) * 30, 440, 6)}" fill="#f4b3be"/>`).join('')}</g>
     </g>
   </svg>`;
 }
 
-function saludo() {
-  const h = new Date().getHours();
-  return h < 6 ? 'Buenas noches' : h < 14 ? 'Buenos días' : h < 21 ? 'Buenas tardes' : 'Buenas noches';
-}
-
-const LEMAS = ['🛋️ Decorad vuestra casa juntos', '🐶 Cuidad de vuestras mascotas', '💼 Un trabajo nuevo cada día', '🏰 Del piso cutre a la mansión', '🎨 Pintad cuadros y colgad fotos', '💕 Preguntas, retos y recuerdos'];
 
 export class Inicio {
   constructor(ctx) {
@@ -111,14 +86,43 @@ export class Inicio {
     this.capa.classList.remove('fuera');
     this.capa.style.display = 'flex';
     const res = this.ctx.resumen ? this.ctx.resumen() : null;
-    this.capa.innerHTML = `<div class="inicio-fondo">${escenaSvg(res ? res.nivel : 0)}</div><div class="inicio-titulo">${'Nuestro Hogar'.split('').map((l, i) => `<span style="animation-delay:${(0.1 + i * 0.06).toFixed(2)}s">${l === ' ' ? '&nbsp;' : l}</span>`).join('')}<small>Vuestra casita, a medias 💕</small></div><div class="inicio-panel"></div>`;
+    this.capa.innerHTML = `<div class="inicio-fondo">${escenaSvg(res ? res.nivel : 0)}</div><div class="inicio-titulo">${'Nuestro Hogar'.split('').map((l, i) => `<span style="animation-delay:${(0.1 + i * 0.06).toFixed(2)}s">${l === ' ' ? '&nbsp;' : l}</span>`).join('')}</div>
+      <div class="escaparate"><div class="esc-lienzo"></div><div class="esc-info"><span class="esc-nombre"></span><div class="esc-puntos"></div></div></div><div class="inicio-panel"></div>`;
     this.pintar();
+    this.montarEscaparate();
     setTimeout(() => this.pintar(this.vista), 0);
+  }
+
+  montarEscaparate() {
+    if (this.escaparate) this.escaparate.destruir();
+    this.escaparate = null;
+    const cont = this.capa.querySelector('.esc-lienzo');
+    try {
+      this.escaparate = new Escaparate(cont);
+    } catch (e) {
+      return;
+    }
+    const nombre = this.capa.querySelector('.esc-nombre');
+    const puntos = this.capa.querySelector('.esc-puntos');
+    const pintar = (s, i, n) => {
+      nombre.textContent = `${s.icono} ${s.nombre}`;
+      nombre.classList.remove('cambia');
+      void nombre.offsetWidth;
+      nombre.classList.add('cambia');
+      puntos.innerHTML = Array.from({ length: n }, (_, k) => `<i class="${k === i ? 'activo' : ''}"></i>`).join('');
+    };
+    this.escaparate.alCambiar = pintar;
+    pintar(this.escaparate.sala, this.escaparate.indice, NUM_SALAS);
+    cont.addEventListener('click', () => this.escaparate && this.escaparate.siguiente());
   }
 
   ocultar() {
     this.capa.classList.add('fuera');
-    setTimeout(() => { this.capa.style.display = 'none'; }, 450);
+    setTimeout(() => {
+      this.capa.style.display = 'none';
+      if (this.escaparate) this.escaparate.destruir();
+      this.escaparate = null;
+    }, 450);
   }
 
   cabecera(sub = '') {
@@ -128,27 +132,11 @@ export class Inicio {
   tarjetaCasa() {
     const r = this.ctx.resumen ? this.ctx.resumen() : null;
     if (!r) return '';
-    const hoy = r.novedades.map(n => `<div class="ini-chip">${n}</div>`).join('');
     return `<div class="ini-casa">
       <div class="ini-casa-cab"><span>${r.icono}</span><div><b>${escapar(r.casa)}</b><small>${escapar(r.nombres || r.nombreNivel)}</small></div></div>
-      <div class="ini-stats"><div><i>🪙</i><b>${r.monedas}</b><small>monedas</small></div><div><i>🔥</i><b>${r.racha}</b><small>${r.racha === 1 ? 'día seguido' : 'días seguidos'}</small></div><div><i>🕯️</i><b>${r.acogedor}</b><small>acogedor</small></div></div>
-      ${hoy ? `<div class="ini-hoy">${hoy}</div>` : ''}
-    </div>`;
-  }
-
-  error(texto) {
-    const el = this.capa.querySelector('.inicio-error');
-    if (el) {
-      el.textContent = texto;
-      el.classList.remove('oculto');
-    }
-    this.ctx.sonido.error();
-  }
-
-  ocupado(b, si) {
-    if (!b) return;
-    b.disabled = si;
-    b.classList.toggle('cargando', si);
+      <div class="ini-stats-mini"><span>🪙<b>${r.monedas}</b></span><span>🔥<b>${r.racha}</b></span><span>🕯️<b>${r.acogedor}</b></span></div>
+    </div>
+    ${r.novedades.length ? `<div class="ini-avisos">${r.novedades.map((n, k) => `<div class="ini-aviso" style="animation-delay:${0.2 + k * 0.1}s"><i>${n.i}</i><small>${escapar(n.t)}</small></div>`).join('')}</div>` : ''}`;
   }
 
   pintar(vista = null) {
@@ -160,7 +148,6 @@ export class Inicio {
     const panel = {
       bienvenida: `
         <div class="inicio-caja">
-          <div class="ini-lemas">${LEMAS.map((l, i) => `<span style="animation-delay:${i * 3}s">${l}</span>`).join('')}</div>
           <button class="primario grande latido" data-ir="crear">✨ ¡Empezar!</button>
           <button class="secundario" data-ir="entrar">Ya tengo cuenta</button>
         </div>`,
@@ -195,7 +182,6 @@ export class Inicio {
         </div>`,
       'con-casa': `
         <div class="inicio-caja">
-          <div class="inicio-saludo">${saludo()}, <b>${escapar(c && c.nombre)}</b> 👋</div>
           ${this.tarjetaCasa()}
           <button class="primario grande latido" id="in-casa">▶ ¡A jugar!</button>
           <p class="inicio-error oculto"></p>
