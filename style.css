@@ -14,6 +14,7 @@ html, body {
   overscroll-behavior: none;
   background: #f4e9dc;
   font-family: system-ui, -apple-system, sans-serif;
+  color: #3b2f26;
 }
 
 #escena {
@@ -31,16 +32,30 @@ html, body {
   left: 12px;
   right: 12px;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
   pointer-events: none;
 }
 
-#monedas {
+#hud .derecha {
+  display: flex;
+  gap: 8px;
+}
+
+.pastilla, #btn-modo {
   background: #fff;
   padding: 8px 14px;
   border-radius: 20px;
   font-weight: 700;
+  font-size: 14px;
+  color: #3b2f26;
   box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
+}
+
+#btn-modo {
+  border: none;
+  pointer-events: auto;
 }
 
 #aviso {
@@ -53,14 +68,46 @@ html, body {
   padding: 10px 16px;
   border-radius: 14px;
   font-size: 14px;
+  white-space: nowrap;
   opacity: 0;
   transition: opacity .2s, transform .2s;
   pointer-events: none;
+  z-index: 5;
 }
 
 #aviso.visible {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+#progreso {
+  position: fixed;
+  transform: translateX(-50%);
+  background: #fff;
+  padding: 6px 10px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
+  min-width: 160px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  pointer-events: none;
+  z-index: 4;
+}
+
+#progreso .barra {
+  height: 8px;
+  margin-top: 5px;
+  background: #eadfce;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+#progreso .relleno {
+  height: 100%;
+  width: 0;
+  background: #7bc47f;
+  transition: width .1s;
 }
 
 #acciones {
@@ -70,10 +117,6 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-
-#acciones.oculto {
-  display: none;
 }
 
 #acciones button {
@@ -86,7 +129,7 @@ html, body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
 }
 
-#catalogo {
+.barra-inferior {
   position: fixed;
   left: 0;
   right: 0;
@@ -99,6 +142,10 @@ html, body {
   touch-action: pan-x;
   border-radius: 18px 18px 0 0;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, .1);
+}
+
+.oculto {
+  display: none !important;
 }
 
 .item {
@@ -124,6 +171,6 @@ html, body {
   color: #a0662a;
 }
 
-.item:disabled {
+.item:disabled, .item.hecha {
   opacity: .4;
 }

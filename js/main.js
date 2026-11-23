@@ -24,7 +24,11 @@ let monedas = 300;
 
 function guardar() {
   try {
-    localStorage.setItem(CLAVE, JSON.stringify({ monedas, muebles: gestor.serializar() }));
+    localStorage.setItem(CLAVE, JSON.stringify({
+      monedas,
+      muebles: gestor.serializar(),
+      reparaciones: sala.reparaciones.filter(r => r.hecha).map(r => r.id)
+    }));
   } catch (e) {}
 }
 
@@ -36,6 +40,7 @@ function cargar() {
   if (datos) {
     monedas = datos.monedas;
     for (const m of datos.muebles) gestor.anadir(m.id, m.x0, m.z0, m.rot);
+    sala.completarGuardadas(datos.reparaciones || []);
   } else {
     gestor.anadir('colchon', -5, -5, 0);
     gestor.anadir('caja', 3, -4, 0);
@@ -44,7 +49,9 @@ function cargar() {
   }
 }
 
-const ui = new UI(CATALOGO, {
+cargar();
+
+const ui = new UI(CATALOGO, sala.reparaciones, {
   alComprar(def) {
     if (monedas < def.precio) return ui.aviso('No te llega el dinero');
     const hueco = gestor.buscarHueco(def.id);
@@ -69,10 +76,15 @@ const ui = new UI(CATALOGO, {
     gestor.quitar(m);
     ui.monedas(monedas);
     guardar();
+  },
+  alCambiarModo(m) {
+    controles.cambiarModo(m);
+    ui.modo(m);
+    if (m === 'reparar') ui.aviso('Toca lo que esté roto para arreglarlo');
   }
 });
 
-const controles = new Controles(canvas, camaraIso, gestor, {
+const controles = new Controles(canvas, camaraIso, gestor, sala, {
   alSeleccionar(m) {
     ui.acciones(!!m);
   },
@@ -81,6 +93,27 @@ const controles = new Controles(canvas, camaraIso, gestor, {
   },
   alCambiar() {
     guardar();
+  },
+  puedeReparar(rep) {
+    if (monedas >= rep.coste) return true;
+    ui.aviso(`Necesitas 🪙 ${rep.coste} para esto`);
+    return false;
+  },
+  alProgresoReparar(rep, x, y) {
+    ui.progreso(rep, x, y);
+  },
+  alFinReparar() {
+    ui.finProgreso();
+  },
+  alReparar(rep) {
+    monedas -= rep.coste;
+    ui.monedas(monedas);
+    ui.actualizarReparaciones();
+    ui.aviso(`✨ ${rep.nombre}: ¡hecho!`);
+    guardar();
+    if (sala.reparaciones.every(r => r.hecha)) {
+      setTimeout(() => ui.aviso('🏠 ¡Habitación reformada entera!'), 2000);
+    }
   }
 });
 
@@ -94,13 +127,15 @@ function redimensionar() {
 window.addEventListener('resize', redimensionar);
 document.addEventListener('gesturestart', e => e.preventDefault());
 
-cargar();
 ui.monedas(monedas);
 redimensionar();
 sala.actualizarParedes(camaraIso.direccionHorizontal());
 
+const reloj = new THREE.Clock();
 renderer.setAnimationLoop(() => {
-  sala.animar();
+  const dt = Math.min(reloj.getDelta(), 0.1);
+  sala.animar(dt);
+  controles.actualizar(dt);
   renderer.render(escena, camaraIso.camara);
 });
 

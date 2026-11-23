@@ -42,6 +42,7 @@ export class CamaraIso {
       this.objetivo.z + horizontal * Math.cos(this.angulo)
     );
     this.camara.lookAt(this.objetivo);
+    this.camara.updateMatrixWorld();
   }
 
   direccionHorizontal() {
