@@ -113,6 +113,38 @@ Fases:
    - Desde el contenedor no se llega a supabase.co: se prueba con un Supabase falso en playwright (`/tmp/prueba/pareja.py`).
    - Juegos y usos: `juegos.js` (cocina, parejas, puzzle; 3 partidas premiadas al día) y `usos.js` (huerto, ordenador/teletrabajo, tele con dibujos, radio con música, piano, sofá con mascotas y notas de la nevera).
 
+## Segunda tanda de ideas (pedida el 23-nov a las 17:32: "mete todo")
+Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes al piso y se va ampliando según se avanza.
+- P1, pareja:
+  - reacciones y presencia en directo (realtime broadcast);
+  - cápsula del tiempo;
+  - lista de deseos;
+  - calendario de planes, con objetos que aparecen en casa;
+  - canción vuestra en la radio;
+  - "nuestro primer…" (recuerdos) y árbol de recuerdos.
+- P2, vida:
+  - hora de dormir (manta en el sofá, mascotas a dormir, luces);
+  - visitas;
+  - averías (gotera y se va la luz) con minijuego;
+  - cumpleaños de las mascotas;
+  - buzón con cartas.
+- P3, cosas que crecen:
+  - plantas que hay que regar (mustias o florecen);
+  - desgaste y tapizar;
+  - acuario vivo (comer y crías).
+- P4, economía:
+  - mercadillo de fin de semana;
+  - pedidos a medida (color libre);
+  - reciclar y taller;
+  - pase mensual.
+- P5, juntos en el mismo móvil:
+  - duelo de limpieza y cocina en equipo a pantalla partida;
+  - retos de decoración puntuados por el otro.
+- P6, más mundo:
+  - exteriores: terraza en el ático, jardín en la casa y jardín grande en la mansión, con objetos que se desbloquean;
+  - la calle por la ventana;
+  - mascotas nuevas: loro, tortuga, cobaya y dragoncito.
+
 ## Ideas pendientes (no pedidas aún)
 - Sincronizar los dos móviles (Supabase).
 - Minijuegos para ganar monedas.
