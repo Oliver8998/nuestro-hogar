@@ -31,11 +31,21 @@
       <div class="mini-barra"><div id="casa-relleno"></div></div>
     </div>
   </div>
-  <div class="pastilla moneda">🪙 <span id="monedas-valor">0</span></div>
+  <div class="hud-derecha">
+    <div class="pastilla moneda">🪙 <span id="monedas-valor">0</span></div>
+    <div class="pastilla ticket">🎟️ <span id="tickets-valor">0</span></div>
+  </div>
+</div>
+
+<div id="lateral">
+  <button id="btn-ruleta" class="lateral-btn"><span>🎡</span><small>Ruleta</small><b class="insignia oculto">¡Gratis!</b></button>
+  <button id="btn-refugio" class="lateral-btn"><span>🐾</span><small>Adoptar</small></button>
+  <button id="btn-sonido" class="lateral-btn mini"><span>🔊</span></button>
 </div>
 
 <div id="aviso"></div>
 <div id="menu-objeto" class="oculto"></div>
+<div id="capa-particulas"></div>
 
 <div id="barra">
   <button id="btn-tienda"><span>🛒</span><small>Tienda</small></button>
@@ -43,17 +53,60 @@
 </div>
 
 <div id="fondo"></div>
-<div id="tienda">
+
+<div id="tienda" class="hoja">
   <div class="asa"></div>
-  <div class="cabecera">
-    <h2>Tienda</h2>
-    <div class="pastilla moneda">🪙 <span id="monedas-tienda">0</span></div>
-    <button class="cerrar">✕</button>
+  <div class="cabecera-personaje">
+    <img id="img-lola" class="personaje" alt="">
+    <div class="bocadillo"><b>Lola</b><span id="frase-lola"></span></div>
+    <div class="cabecera-acciones">
+      <div class="pastilla moneda">🪙 <span class="monedas-hoja">0</span></div>
+      <button class="cerrar">✕</button>
+    </div>
   </div>
   <div class="pestanas"></div>
   <div class="rejilla"></div>
 </div>
 
+<div id="refugio" class="hoja">
+  <div class="asa"></div>
+  <div class="cabecera-personaje">
+    <img id="img-mateo" class="personaje" alt="">
+    <div class="bocadillo"><b>Mateo, del refugio</b><span>¿Buscáis un amigo peludo? Todos están deseando tener casa.</span></div>
+    <div class="cabecera-acciones">
+      <div class="pastilla moneda">🪙 <span class="monedas-hoja">0</span></div>
+      <button class="cerrar">✕</button>
+    </div>
+  </div>
+  <div class="seccion-titulo">Vuestras mascotas</div>
+  <div id="lista-mascotas"></div>
+  <div class="seccion-titulo">Esperando un hogar</div>
+  <div class="rejilla"></div>
+</div>
+
+<div id="ruleta" class="hoja">
+  <div class="asa"></div>
+  <div class="cabecera-simple">
+    <h2>Ruleta de la suerte</h2>
+    <div class="cabecera-acciones">
+      <div class="pastilla ticket">🎟️ <span id="tickets-hoja">0</span></div>
+      <button class="cerrar">✕</button>
+    </div>
+  </div>
+  <div class="ruleta-cuerpo">
+    <div class="rueda-marco">
+      <div id="puntero"></div>
+      <canvas id="rueda"></canvas>
+      <div class="rueda-centro">🎡</div>
+    </div>
+    <button id="btn-tirar" class="boton-grande">Tirar</button>
+    <p class="ruleta-nota">Una tirada gratis cada día · también podéis ganar tickets</p>
+    <div class="seccion-titulo">Solo se consiguen aquí</div>
+    <div id="exclusivos"></div>
+  </div>
+</div>
+
+<div id="dialogo" class="oculto"><div class="dialogo-caja"></div></div>
 <div id="fantasma" class="oculto"></div>
 
 <script type="module" src="js/main.js"></script>

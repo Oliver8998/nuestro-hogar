@@ -94,7 +94,7 @@ export function crearSala(escena) {
 
   const cucarachas = [];
   const cucas = nuevoDesperfecto(
-    { id: 'cucarachas', mensaje: '¡Adiós, cucarachas!', nombre: 'Cucarachas', material: 'insecticida' },
+    { id: 'cucarachas', descripcion: 'Hay cucarachas correteando por el suelo. ¡Qué asco!', mensaje: '¡Adiós, cucarachas!', nombre: 'Cucarachas', material: 'insecticida' },
     [],
     p => cucarachas.forEach(c => {
       c.grupo.scale.setScalar(Math.max(0.001, 1 - p));
@@ -128,7 +128,7 @@ export function crearSala(escena) {
   manchaSuelo.position.set(-1, 0.003, 1.4);
   sala.add(manchaSuelo);
   nuevoDesperfecto(
-    { id: 'mancha', mensaje: '¡Suelo limpio!', nombre: 'Mancha del suelo', material: 'limpiador' },
+    { id: 'mancha', descripcion: 'Una mancha reseca en el suelo que no sale ni frotando.', mensaje: '¡Suelo limpio!', nombre: 'Mancha del suelo', material: 'limpiador' },
     [manchaSuelo],
     p => { manchaSuelo.material.opacity = manchaSuelo.userData.opacidad * (1 - p); },
     () => sala.remove(manchaSuelo)
@@ -139,7 +139,7 @@ export function crearSala(escena) {
   tablaRota.rotation.x = -0.12;
   sala.add(tablaRota);
   nuevoDesperfecto(
-    { id: 'tabla', mensaje: '¡Tabla clavada!', nombre: 'Tabla levantada', material: 'clavos' },
+    { id: 'tabla', descripcion: 'Una tabla del suelo se ha levantado. ¡Cuidado, que alguien tropieza!', mensaje: '¡Tabla clavada!', nombre: 'Tabla levantada', material: 'clavos' },
     [tablaRota],
     p => {
       tablaRota.rotation.x = -0.12 * (1 - p);
@@ -192,7 +192,7 @@ export function crearSala(escena) {
 
   paredes[0].add(ventana);
   paredes[0].userData.desperfectos.push(nuevoDesperfecto(
-    { id: 'ventana', mensaje: '¡Cristal nuevo!', nombre: 'Ventana rota', material: 'cristal', pared: 0 },
+    { id: 'ventana', descripcion: 'El cristal está roto y alguien lo tapó con un cartón.', mensaje: '¡Cristal nuevo!', nombre: 'Ventana rota', material: 'cristal', pared: 0 },
     [ventana],
     p => {
       carton.position.z = 0.01 + p * 0.25;
@@ -222,7 +222,7 @@ export function crearSala(escena) {
   zonaGrietas.position.set(-1.45, 1.55, cara + 0.003);
   paredes[0].add(zonaGrietas);
   const desGrietas = nuevoDesperfecto(
-    { id: 'grietas', mensaje: '¡Grietas tapadas!', nombre: 'Grietas', material: 'masilla', pared: 0 },
+    { id: 'grietas', descripcion: 'La pared está llena de grietas. Hay que taparlas antes de pintarla.', mensaje: '¡Grietas tapadas!', nombre: 'Grietas', material: 'masilla', pared: 0 },
     [zonaGrietas, ...grietas],
     p => grietas.forEach(g => { g.material.opacity = 1 - p; }),
     () => [zonaGrietas, ...grietas].forEach(o => paredes[0].remove(o))
@@ -238,7 +238,7 @@ export function crearSala(escena) {
     humedades.push(m);
   });
   const desHumedad = nuevoDesperfecto(
-    { id: 'humedad', mensaje: '¡Adiós, humedad!', nombre: 'Humedad', material: 'antihumedad', pared: 2 },
+    { id: 'humedad', descripcion: 'Manchas de humedad en la pared. Hay que tratarlas antes de pintar.', mensaje: '¡Adiós, humedad!', nombre: 'Humedad', material: 'antihumedad', pared: 2 },
     humedades,
     p => humedades.forEach(m => { m.material.opacity = m.userData.opacidad * (1 - p); }),
     () => humedades.forEach(m => paredes[2].remove(m))
@@ -297,6 +297,22 @@ export function crearSala(escena) {
       if (raycaster.ray.intersectPlane(suelo, p) && Math.abs(p.x) < mitad && Math.abs(p.z) < mitad) {
         return { tipo: 'desperfecto', d: cucas };
       }
+    }
+    return null;
+  }
+
+  function tocar(raycaster, ocluyentes) {
+    const hits = raycaster.intersectObjects([...objetivos(), ...ocluyentes], true);
+    for (const h of hits) {
+      if (!visibleArriba(h.object)) continue;
+      let o = h.object;
+      while (o && !o.userData.desperfecto && o.userData.pared === undefined && !o.userData.def) o = o.parent;
+      if (!o || o.userData.def) return null;
+      if (o.userData.desperfecto) return { tipo: 'desperfecto', d: o.userData.desperfecto };
+      const i = o.userData.pared;
+      const req = paredes[i].userData.requisito;
+      if (req && !req.hecho) return { tipo: 'desperfecto', d: req };
+      return { tipo: 'pared', i, pintura: paredes[i].userData.pintura };
     }
     return null;
   }
@@ -411,5 +427,5 @@ export function crearSala(escena) {
     }
   }
 
-  return { actualizarParedes, actualizar, buscar, puedeAplicar, aplicar, resaltar, estado, restaurar, progreso };
+  return { actualizarParedes, actualizar, buscar, tocar, puedeAplicar, aplicar, resaltar, estado, restaurar, progreso };
 }

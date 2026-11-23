@@ -1,4 +1,4 @@
-const CACHE = 'hogar-v4';
+const CACHE = 'hogar-v5';
 const ARCHIVOS = [
   './',
   './index.html',
@@ -13,7 +13,13 @@ const ARCHIVOS = [
   './js/controles.js',
   './js/ui.js',
   './js/inventario.js',
-  './js/materiales.js'
+  './js/catalogo.js',
+  './js/modelos.js',
+  './js/miniaturas.js',
+  './js/mascotas.js',
+  './js/personajes.js',
+  './js/ruleta.js',
+  './js/sonido.js'
 ];
 
 self.addEventListener('install', e => {
