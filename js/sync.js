@@ -60,6 +60,17 @@ export class Sync {
     localStorage.setItem('hogar-sync', JSON.stringify(this.conf));
   }
 
+  async rpc(nombre, args) {
+    return pedir(`rpc/${nombre}`, { method: 'POST', body: JSON.stringify(args) });
+  }
+
+  usar(codigo, yo, version = 0) {
+    this.conf = { codigo, yo };
+    this.version = version;
+    this.ultimoMensaje = new Date(Date.now() - 3 * 86400000).toISOString();
+    this.guardarConf();
+  }
+
   async crear(datos, yo) {
     let codigo = '';
     for (let i = 0; i < 6; i++) codigo += LETRAS[Math.floor(Math.random() * LETRAS.length)];

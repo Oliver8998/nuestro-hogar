@@ -121,11 +121,13 @@ export class Mas {
         <small class="nota">Sonará al tocar la radio → 💕 Nuestra canción.</small>
         <button id="aj-sonido" class="secundario">${sonido.activo ? '🔊 Sonido activado' : '🔇 Sonido desactivado'}</button>
         <button id="aj-guardar" class="primario">Guardar</button>
+        <button id="aj-menu" class="secundario">🏠 Menú principal</button>
       </div>`, () => this.abrir());
     cuerpo.querySelector('#aj-sonido').addEventListener('click', e => {
       const on = sonido.alternar();
       e.currentTarget.textContent = on ? '🔊 Sonido activado' : '🔇 Sonido desactivado';
     });
+    cuerpo.querySelector('#aj-menu').addEventListener('click', () => this.ctx.abrirInicio && this.ctx.abrirInicio());
     cuerpo.querySelector('#aj-guardar').addEventListener('click', () => {
       const v = id => cuerpo.querySelector(id).value.trim();
       p.nombres = [v('#aj-n1'), v('#aj-n2')];

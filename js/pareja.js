@@ -395,78 +395,10 @@ export class Pareja {
   abrir() {
     const { ui } = this.ctx;
     if (!this.sync.activo) {
-      const p = this.estado.pareja || { nombres: ['', ''] };
       const cuerpo = ui.abrirGen('Pareja', `
-        <p class="gen-intro">Conectad vuestros móviles para que la casa sea la misma en los dos: lo que uno mueve, el otro lo ve.</p>
-        <label class="etq">¿Quién eres tú?</label>
-        <div class="fila2 quien">
-          <button class="secundario sel-quien" data-i="0">${escapar(p.nombres[0] || 'Persona 1')}</button>
-          <button class="secundario sel-quien" data-i="1">${escapar(p.nombres[1] || 'Persona 2')}</button>
-        </div>
-        <small class="nota">Los nombres se cambian en Ajustes.</small>
-        <button id="pj-crear" class="primario">🏠 Crear casa compartida</button>
-        <p class="gen-intro centrado">¿Tu pareja ya la ha creado?</p>
-        <div class="campo"><input id="pj-codigo" maxlength="6" placeholder="CÓDIGO" style="text-transform:uppercase;letter-spacing:4px;text-align:center"></div>
-        <button id="pj-unirse" class="rosa">💑 Unirme con el código</button>`, () => this.ctx.abrirMas());
-      let yo = null;
-      cuerpo.querySelectorAll('.sel-quien').forEach(b => b.addEventListener('click', () => {
-        yo = Number(b.dataset.i);
-        cuerpo.querySelectorAll('.sel-quien').forEach(x => x.classList.toggle('elegido', x === b));
-      }));
-      const pedirQuien = () => {
-        if (yo === null) {
-          ui.aviso('Primero elige quién eres', true);
-          return false;
-        }
-        return true;
-      };
-      cuerpo.querySelector('#pj-crear').addEventListener('click', async e => {
-        if (!pedirQuien()) return;
-        e.currentTarget.disabled = true;
-        try {
-          const codigo = await this.sync.crear(this.ctx.instantanea(), yo);
-          this.ctx.alConectar();
-          this.ctx.sonido.premio();
-          this.abrir();
-          ui.aviso(`🏠 Casa creada. Código: ${codigo}`);
-        } catch (err) {
-          ui.aviso('No se pudo conectar. ¿Tienes internet?', true);
-          e.currentTarget.disabled = false;
-        }
-      });
-      cuerpo.querySelector('#pj-unirse').addEventListener('click', async e => {
-        if (!pedirQuien()) return;
-        const codigo = cuerpo.querySelector('#pj-codigo').value.trim();
-        if (codigo.length < 6) {
-          ui.aviso('El código tiene 6 letras', true);
-          return;
-        }
-        ui.dialogo({
-          titulo: '¿Unirte a la casa de tu pareja?',
-          texto: 'La casa de este móvil se cambiará por la compartida (vuestras fotos se quedan).',
-          botones: [
-            { texto: 'Cancelar', tipo: 'secundario' },
-            {
-              texto: 'Unirme', tipo: 'primario', accion: async () => {
-                try {
-                  const datos = await this.sync.unirse(codigo, yo);
-                  if (!datos) {
-                    ui.aviso('No existe ninguna casa con ese código', true);
-                    return;
-                  }
-                  this.ctx.aplicarRemoto(datos, false, true);
-                  this.ctx.alConectar();
-                  this.ctx.sonido.premio();
-                  ui.aviso('💑 ¡Conectados! Ya estáis en la misma casa');
-                  this.abrir();
-                } catch (err) {
-                  ui.aviso('No se pudo conectar. ¿Tienes internet?', true);
-                }
-              }
-            }
-          ]
-        });
-      });
+        <p class="gen-intro">Para compartir la casa, entrad con vuestra cuenta desde el menú principal: uno crea la casa y el otro se une con el código.</p>
+        <button id="pj-menu" class="primario">🏠 Ir al menú principal</button>`, () => this.ctx.abrirMas());
+      cuerpo.querySelector('#pj-menu').addEventListener('click', () => this.ctx.abrirInicio());
       return;
     }
     const d = this.dia();
@@ -487,7 +419,7 @@ export class Pareja {
       <button id="pj-planes" class="secundario">📅 Nuestros planes (${(this.estado.planes || []).filter(p => p.fecha >= this.hoyISO()).length})</button>
       <button id="pj-recuerdos" class="secundario">🌳 Nuestros recuerdos (${(this.estado.recuerdos || []).length})</button>
       <p class="gen-intro">🎁 Para hacer un regalo o proponer una compra, elegid el objeto en la tienda y usad los botones <b>🎁</b>, <b>🗳️</b> y <b>❤️</b>.</p>
-      <button id="pj-salir" class="secundario">Desconectar este móvil</button>`, () => this.ctx.abrirMas());
+      `, () => this.ctx.abrirMas());
     cuerpo.querySelector('#pj-compartir').addEventListener('click', async () => {
       const texto = `Únete a nuestra casa en Nuestro Hogar 🏠💕 Código: ${this.sync.codigo}\nhttps://oliver8998.github.io/nuestro-hogar/`;
       try {
@@ -504,12 +436,5 @@ export class Pareja {
     cuerpo.querySelector('#pj-capsula').addEventListener('click', () => this.verCapsulas());
     cuerpo.querySelector('#pj-planes').addEventListener('click', () => this.verPlanes());
     cuerpo.querySelector('#pj-recuerdos').addEventListener('click', () => this.verRecuerdos());
-    cuerpo.querySelector('#pj-salir').addEventListener('click', () => {
-      ui.dialogo({
-        titulo: '¿Desconectar?',
-        texto: 'Este móvil dejará de compartir la casa. La casa seguirá guardada aquí tal cual.',
-        botones: [{ texto: 'Cancelar', tipo: 'secundario' }, { texto: 'Desconectar', tipo: 'rosa', accion: () => { this.sync.salir(); this.ctx.alDesconectar(); this.abrir(); } }]
-      });
-    });
   }
 }

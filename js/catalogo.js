@@ -406,6 +406,13 @@ export const CATALOGO = [
     [0.45, 0.1, 0.45, 0, 0.82, 0, 0xd8d0c4, 'cil']
   ]},
 
+  { id: 'mapa-mundi', categoria: 'deco', nombre: 'Mapa del mundo', precio: 120, ancho: 2, fondo: 1, piezas: [
+    [0.04, 1.3, 0.04, -0.35, 0.62, 0.08, 0x8a5a3c, { rx: -0.12 }],
+    [1.0, 0.55, 0.03, 0, 1.0, 0.02, 0xbfe0ee, { rx: -0.12 }],
+    [0.04, 1.3, 0.04, 0.35, 0.62, 0.08, 0x8a5a3c, { rx: -0.12 }],
+    [0.04, 1.2, 0.04, 0, 0.6, -0.2, 0x8a5a3c, { rx: 0.25 }],
+    [1.06, 0.04, 0.06, 0, 0.7, 0.07, 0x8a5a3c]
+  ]},
   { id: 'arbol-navidad', categoria: 'temporada', temporada: 'navidad', enTienda: false, nombre: 'Árbol de Navidad', precio: 220, ancho: 2, fondo: 2, piezas: [
     [0.3, 0.2, 0.3, 0, 0.1, 0, 0xc0504d, 'cil'],
     [0.08, 0.3, 0.08, 0, 0.3, 0, 0x6b4f36, 'cil'],

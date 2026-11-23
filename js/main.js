@@ -22,6 +22,8 @@ import { Juegos, JUEGOS, PARTIDAS_PREMIADAS } from './juegos.js';
 import { Usos } from './usos.js';
 import { Vida } from './vida.js';
 import { Economia } from './economia.js';
+import { Inicio } from './inicio.js';
+import { Pareja2 } from './pareja2.js';
 import { JUEGOS_DOS } from './juegos.js';
 import { Sync } from './sync.js';
 import { Pareja } from './pareja.js';
@@ -1371,6 +1373,7 @@ function temporadaActual() {
 
 const mas = new Mas({
   estado, ui, sonido, sala, ambiente, renderer, escena, camara: camaraIso.camara,
+  abrirInicio: () => { ui.cerrarHojas(); inicio.mostrar(); },
   alFotoNueva: f => sync && sync.subirFoto(f),
   alFotoBorrada: id => sync && sync.borrarFoto(id),
   guardar: () => guardar(),
@@ -1487,10 +1490,12 @@ sync = new Sync({
   aplicar: (datos, conflicto) => aplicarRemoto(datos, conflicto),
   mensaje: m => {
     if (m.tipo === 'reaccion' && m.datos && Date.now() - Date.parse(m.creado) < 60000) mostrarReaccion(m.datos.emoji, m.datos.de);
+    if (m.tipo === 'buenasnoches' && m.datos && Date.now() - Date.parse(m.creado) < 600000) pareja2.recibirBuenasNoches(m.datos.de);
   },
   directo: (evento, datos) => {
     if (evento === 'reaccion') mostrarReaccion(datos.emoji, datos.de);
     if (evento === 'toque') marcaToque(datos.x, datos.z, datos.de);
+    if (evento === 'buenasnoches') pareja2.recibirBuenasNoches(datos.de);
   }
 });
 
@@ -1514,6 +1519,10 @@ document.getElementById('btn-reaccion').addEventListener('click', () => {
 });
 document.querySelectorAll('#reacciones button').forEach(b => b.addEventListener('click', () => {
   document.getElementById('reacciones').classList.add('oculto');
+  if (b.classList.contains('dormir')) {
+    pareja2.buenasNoches();
+    return;
+  }
   mostrarReaccion(b.textContent);
   sync.emitir('reaccion', { emoji: b.textContent });
 }));
@@ -1529,12 +1538,64 @@ pareja = new Pareja({
   instantanea,
   aplicarRemoto,
   abrirMas: () => mas.abrir(),
+  abrirInicio: () => { ui.cerrarHojas(); inicio.mostrar(); },
   alDesconectar: () => { suciedad.genera = true; pintarBotonReaccion(); },
   alConectar: () => { pintarBotonReaccion(); sync.conectarDirecto(); pareja.recordar('pareja', '💑', 'Conectamos nuestras casas'); }
 });
 usos.ctx.pareja = pareja;
+const pareja2 = new Pareja2({
+  estado, ui, sonido, sync, pareja,
+  guardar: () => guardar(),
+  refrescarHud: () => refrescarHud(),
+  dialogoAbierto: () => dialogoAbierto(),
+  abrirMas: () => abrirNosotros()
+});
+usos.ctx.pareja2 = pareja2;
 pintarBotonReaccion();
 sync.conectarDirecto();
+
+function ponerMiNombre(nombre, yo) {
+  if (!nombre) return;
+  if (!estado.pareja) estado.pareja = { nombres: ['', ''], aniversario: '', cumples: ['', ''], casa: 'Nuestro Hogar' };
+  if (!estado.pareja.nombres[yo]) estado.pareja.nombres[yo] = nombre;
+}
+
+const inicio = new Inicio({
+  sync, ui, sonido,
+  codigoLocal: () => sync.codigo || null,
+  instantanea: (nombre, yo) => {
+    ponerMiNombre(nombre, yo);
+    return instantanea();
+  },
+  async conectar(codigo, yo, nombre, recienCreada) {
+    if (recienCreada) {
+      sync.usar(codigo, yo, 1);
+    } else if (sync.codigo !== codigo || !sync.activo) {
+      const datos = await sync.unirse(codigo, yo);
+      if (!datos) throw new Error('sin casa');
+      aplicarRemoto(datos, false, true);
+    } else {
+      sync.conf.yo = yo;
+      sync.guardarConf();
+      await sync.traer();
+    }
+    ponerMiNombre(nombre, yo);
+    suciedad.genera = yo === 0;
+    mascotas.trastadas = yo === 0;
+    mas.montarCartel();
+    guardar();
+    pintarBotonReaccion();
+    sync.conectarDirecto();
+    pareja.recordar('pareja', '💑', 'Estrenamos nuestra casa compartida');
+    sincronizarFotos();
+  },
+  cerrarSesion() {
+    sync.salir();
+    for (const k of ['hogar-estado', 'hogar-fotos', 'hogar-diario', 'hogar-vistos', 'hogar-sync']) localStorage.removeItem(k);
+    location.reload();
+  }
+});
+inicio.mostrar();
 
 async function sincronizarFotos() {
   if (!sync.activo) return;
@@ -1555,7 +1616,7 @@ window.extrasMenu = () => [
   { id: 'casas', icono: CASAS[nivelCasa()].icono, texto: 'Casas', sub: nivelCasa() < CASAS.length - 1 ? `Siguiente: ${CASAS[nivelCasa() + 1].nombre}` : '¡Vivís en la mansión!', accion: abrirCasas },
   { id: 'logros', icono: '🏆', texto: 'Logros', sub: `${(estado.logros || []).length} de ${LOGROS.length}`, accion: abrirLogros },
   { id: 'colecciones', icono: '📚', texto: 'Colecciones', sub: `${(estado.colecciones || []).length} de ${COLECCIONES.length} completas`, accion: abrirColecciones },
-  { id: 'recuerdos', icono: '🌳', texto: 'Recuerdos', sub: 'Cápsula del tiempo, planes y momentos', accion: abrirRecuerdos },
+  { id: 'nosotros', icono: '💕', texto: 'Nosotros', sub: 'Preguntas, quiz, viajes, metas y recuerdos', insignia: pareja2.pendientePregunta() ? '!' : null, accion: abrirNosotros },
   { id: 'pareja', icono: '💑', texto: 'Pareja', sub: sync.activo ? `Casa compartida · ${sync.codigo}` : 'Compartid la casa entre los dos móviles', accion: () => pareja.abrir() },
   { id: 'juegos', icono: '🎮', texto: 'Minijuegos', sub: 'Jugad para ganar monedas', accion: abrirJuegos }
 ];
@@ -1602,6 +1663,8 @@ function pintarChipsVida() {
   if (estado.averia) chips.push({ id: 'averia', texto: estado.averia.tipo === 'gotera' ? '💧 Gotera' : '⚡ Sin luz', accion: () => vida.arreglarAveria() });
   const n = vida.noLeidas();
   if (n) chips.push({ id: 'correo', texto: `✉️ ${n}`, accion: () => vida.abrirCorreo() });
+  const ca = pareja2.chipCuentaAtras();
+  if (ca) chips.push({ id: 'cuenta', texto: ca, accion: () => pareja2.abrirCuentaAtras() });
   if (estado.reto && !estado.reto.terminado) {
     const min = Math.max(0, Math.ceil((estado.reto.fin - Date.now()) / 60000));
     chips.push({ id: 'reto', texto: `🎨 ${min} min`, accion: () => verReto() });
@@ -1677,15 +1740,19 @@ function puntuarReto() {
   return true;
 }
 
-function abrirRecuerdos() {
-  const cuerpo = ui.abrirGen('Recuerdos', `
-    <p class="gen-intro">Vuestro rincón de momentos especiales.</p>
-    <button id="rc-recuerdos" class="secundario">🌳 Nuestros recuerdos (${(estado.recuerdos || []).length})</button>
-    <button id="rc-capsula" class="secundario">⏳ Cápsula del tiempo (${(estado.capsulas || []).length})</button>
-    <button id="rc-planes" class="secundario">📅 Nuestros planes</button>`, () => mas.abrir());
-  cuerpo.querySelector('#rc-recuerdos').addEventListener('click', () => pareja.verRecuerdos());
-  cuerpo.querySelector('#rc-capsula').addEventListener('click', () => pareja.verCapsulas());
-  cuerpo.querySelector('#rc-planes').addEventListener('click', () => pareja.verPlanes());
+function abrirNosotros() {
+  const tiles = [
+    { id: 'pregunta', icono: '💬', texto: 'Pregunta del día', sub: pareja2.pendientePregunta() ? '¡Hoy toca responder!' : 'Respondida', insignia: pareja2.pendientePregunta() ? '!' : null, accion: () => pareja2.abrirPregunta() },
+    { id: 'quiz', icono: '🎯', texto: '¿Cuánto me conoces?', sub: 'Quiz de pareja', accion: () => pareja2.abrirQuiz() },
+    { id: 'viajes', icono: '✈️', texto: 'Mapa de viajes', sub: `${(estado.viajes || []).length} sitios`, accion: () => pareja2.abrirViajes() },
+    { id: 'cuenta', icono: '⏳', texto: 'Cuenta atrás', sub: pareja2.textoFalta() || 'Para la próxima vez que os veis', accion: () => pareja2.abrirCuentaAtras() },
+    { id: 'metas', icono: '📌', texto: 'Nuestras metas', sub: `${(estado.metas || []).filter(m => m.hecha).length}/${(estado.metas || []).length} cumplidas`, accion: () => pareja2.abrirMetas() },
+    { id: 'recuerdos', icono: '🌳', texto: 'Recuerdos', sub: `${(estado.recuerdos || []).length} momentos`, accion: () => pareja.verRecuerdos() },
+    { id: 'capsula', icono: '💌', texto: 'Cápsula del tiempo', sub: `${(estado.capsulas || []).length} mensajes`, accion: () => pareja.verCapsulas() },
+    { id: 'planes', icono: '📅', texto: 'Planes', sub: 'Cenas, viajes, pelis…', accion: () => pareja.verPlanes() }
+  ];
+  const cuerpo = ui.abrirGen('Nosotros', `<div class="mas-rejilla">${tiles.map(t => `<button class="mas-tile" data-id="${t.id}"><span>${t.icono}</span><b>${t.texto}</b><small>${t.sub}</small>${t.insignia ? `<i class="insignia">${t.insignia}</i>` : ''}</button>`).join('')}</div>`, () => mas.abrir());
+  cuerpo.querySelectorAll('.mas-tile').forEach(b => b.addEventListener('click', () => { sonido.tocar(); tiles.find(t => t.id === b.dataset.id).accion(); }));
 }
 
 function aplicarTemporada() {
@@ -1843,6 +1910,7 @@ renderer.setAnimationLoop(() => {
     pintarClima();
     pareja.revisar();
     pareja.revisarPlanes();
+    pareja2.revisarCuentaAtras();
     ambiente.furgoneta = entregas.pedidos.some(p => p.estado === 'camino');
     if (estado.reto && !estado.reto.terminado && Date.now() > estado.reto.fin) terminarReto();
     if (estado.reto && estado.reto.terminado && !estado.reto.estrellas && sync.activo && !dialogoAbierto()) puntuarReto();

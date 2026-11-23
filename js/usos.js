@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { dibujarMapa } from './pareja2.js';
 
 const PLANTAS = ['planta', 'cactus', 'jarron', 'cerezo', 'rosas'];
 const BLANDOS = ['sofa', 'silla', 'cama', 'puff', 'puff-corazon', 'sillon-huevo'];
@@ -244,6 +245,9 @@ export class Usos {
     if (def.id === 'tele') {
       ops.push({ icono: '📺', texto: m.userData.encendido ? 'Apagar' : 'Dibujos', accion: () => { this.ctx.gestor.alternarEncendido(m); this.ctx.mascotasMirar && m.userData.encendido && this.ctx.mascotasMirar(m); sonido.pop(); guardar(); this.ctx.refrescarMenu(); } });
     }
+    if (def.id === 'mapa-mundi' && this.ctx.pareja2) {
+      ops.push({ icono: '✈️', texto: 'Viajes', accion: () => this.ctx.pareja2.abrirViajes() });
+    }
     if (def.id === 'arbol-recuerdos' && this.ctx.pareja) {
       ops.push({ icono: '📜', texto: 'Recuerdos', accion: () => this.ctx.pareja.verRecuerdos() });
     }
@@ -474,6 +478,23 @@ export class Usos {
     }
   }
 
+  pintarMapa(m) {
+    const n = JSON.stringify(this.estado.viajes || []);
+    if (m.userData.mapaVisto === n) return;
+    m.userData.mapaVisto = n;
+    const lienzo = document.createElement('canvas');
+    lienzo.width = 512;
+    lienzo.height = 256;
+    dibujarMapa(lienzo.getContext('2d'), 512, 256, this.estado.viajes || []);
+    const tex = new THREE.CanvasTexture(lienzo);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    const malla = m.userData.mallas[1];
+    if (malla.material.map) malla.material.map.dispose();
+    malla.material.map = tex;
+    malla.material.color.set(0xffffff);
+    malla.material.needsUpdate = true;
+  }
+
   hojasRecuerdo(m) {
     const n = Math.min(60, (this.estado.recuerdos || []).length);
     if (m.userData.nHojas === n) return;
@@ -513,6 +534,7 @@ export class Usos {
       if (lento && def.huerto) this.aplicarHuerto(m);
       if (lento && def.ordenador) this.ordenador(m);
       if (lento && def.id === 'arbol-recuerdos') this.hojasRecuerdo(m);
+      if (lento && def.id === 'mapa-mundi') this.pintarMapa(m);
       if (lento && PLANTAS.includes(def.id)) this.aplicarPlanta(m);
       if (PLANTAS.includes(def.id) && m.userData.escalaPlanta && Math.abs(m.scale.y - m.userData.escalaPlanta) > 0.001 && !m.userData.rebote) m.scale.setScalar(m.userData.escalaPlanta);
       if (lento && BLANDOS.includes(def.id)) {
