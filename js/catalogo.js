@@ -94,6 +94,41 @@ export const CATALOGO = [
     [0.04, 0.4, 0.04, 0.33, 1.45, 0.39, 0x999999]
   ], colores: { grupos: [[0]], paleta: [[0xf2f2f2], [0xa8d8c8], [0xf2b8c6], [0x3d3d3d], [0xf2d06b]] }},
 
+  { id: 'cocina', categoria: 'muebles', nombre: 'Cocina con horno', precio: 320, ancho: 2, fondo: 1, soporte: 0.91, cocina: true, piezas: [
+    [0.96, 0.86, 0.48, 0, 0.43, 0, 0xf2efe9],
+    [1.0, 0.05, 0.5, 0, 0.885, 0, 0x4a4a4a, { rugosidad: 0.4 }],
+    [0.46, 0.34, 0.02, -0.22, 0.4, 0.245, 0x2b2b2b, { rugosidad: 0.2 }],
+    [0.4, 0.025, 0.025, -0.22, 0.62, 0.265, 0xbfc5ca, 'cil', { rz: PI / 2, metal: 0.6, rugosidad: 0.3 }],
+    [0.15, 0.02, 0.15, -0.34, 0.915, -0.08, 0x1e1e1e, 'cil'],
+    [0.15, 0.02, 0.15, -0.1, 0.915, -0.08, 0x1e1e1e, 'cil'],
+    [0.34, 0.03, 0.3, 0.26, 0.905, 0.02, 0xc8ced3, { metal: 0.6, rugosidad: 0.3 }],
+    [0.03, 0.22, 0.03, 0.26, 1.0, -0.17, 0xbfc5ca, 'cil', { metal: 0.6, rugosidad: 0.3 }],
+    [0.42, 0.06, 0.02, -0.22, 0.74, 0.245, 0x3d3d3d],
+    [0.4, 0.62, 0.02, 0.26, 0.42, 0.245, 0xe6dfd2]
+  ], colores: { grupos: [[0, 9]], paleta: [[0xf2efe9, 0xe6dfd2], [0xa8d8c8, 0x92c4b3], [0xf4b3be, 0xe39daa], [0xb98a5e, 0xa07450], [0x3d3d3d, 0x4f4f4f]] }},
+
+  { id: 'lavadora', categoria: 'muebles', nombre: 'Lavadora', precio: 280, ancho: 1, fondo: 1, soporte: 0.85, lavadora: true, piezas: [
+    [0.46, 0.84, 0.46, 0, 0.42, 0, 0xf4f4f4],
+    [0.44, 0.1, 0.02, 0, 0.76, 0.235, 0xdfe4e8],
+    [0.3, 0.04, 0.3, 0, 0.42, 0.24, 0xbfc5ca, 'cil', { rx: PI / 2, metal: 0.5, rugosidad: 0.3 }],
+    [0.22, 0.03, 0.22, 0, 0.42, 0.252, 0x7fa3bf, 'cil', { rx: PI / 2, rugosidad: 0.1 }],
+    [0.05, 0.03, 0.05, 0.14, 0.76, 0.25, 0x8a8f95, 'cil', { rx: PI / 2 }]
+  ], colores: { grupos: [[0]], paleta: [[0xf4f4f4], [0xb8c6d1], [0xf4c6cf], [0x3d3d3d]] }},
+
+  { id: 'chimenea', categoria: 'muebles', nombre: 'Chimenea', precio: 900, nivel: 3, ancho: 3, fondo: 1, soporte: 1.38, chimenea: true, piezas: [
+    [1.4, 0.12, 0.48, 0, 0.06, 0, 0xa59c90],
+    [0.3, 1.02, 0.4, -0.55, 0.63, -0.04, 0xd8cfc2],
+    [0.3, 1.02, 0.4, 0.55, 0.63, -0.04, 0xd8cfc2],
+    [1.4, 0.24, 0.42, 0, 1.22, -0.03, 0xd8cfc2],
+    [1.55, 0.06, 0.48, 0, 1.36, 0, 0x8a6a4a],
+    [0.8, 0.98, 0.04, 0, 0.6, -0.22, 0x2b2420],
+    [0.5, 0.1, 0.1, 0, 0.17, -0.06, 0x6b4a30, 'cil', { rz: PI / 2 }],
+    [0.44, 0.09, 0.09, 0, 0.25, -0.03, 0x7a5535, 'cil', { rz: PI / 2, ry: 0.35 }],
+    [0.22, 0.42, 0.2, 0, 0.42, -0.05, 0xffa030, 'esfera'],
+    [0.14, 0.28, 0.14, -0.11, 0.36, -0.01, 0xffd060, 'esfera']
+  ], encendible: { piezas: [8, 9], luz: 0.5, colorLuz: 0xff8a3a, intensidad: 4, inicial: false },
+  colores: { grupos: [[1, 2, 3]], paleta: [[0xd8cfc2], [0xb5654a], [0xf2efe9], [0x8a8f95]] }},
+
   { id: 'sofa', categoria: 'muebles', nombre: 'Sofá', precio: 280, ancho: 4, fondo: 2, piezas: [
     [1.9, 0.4, 0.85, 0, 0.2, 0.05, 0x6b8fb3],
     [1.9, 0.55, 0.2, 0, 0.55, -0.38, 0x5d7fa1],

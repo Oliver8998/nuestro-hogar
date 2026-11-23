@@ -160,6 +160,11 @@ export class Controles {
     this.eventos.alPrimerToque();
     this.canvas.setPointerCapture(e.pointerId);
     this.punteros.set(e.pointerId, { x: e.clientX, y: e.clientY, xIni: e.clientX, yIni: e.clientY });
+    if (this.soloMirar && this.punteros.size === 1) {
+      this.modo = 'rotar';
+      this.cam.agarrar();
+      return;
+    }
 
     if (this.punteros.size === 1) {
       const rayo = this.rayo(e.clientX, e.clientY);

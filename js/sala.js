@@ -27,6 +27,17 @@ function mancha(radio, color, opacidad) {
   return m;
 }
 
+function uvPlano(m, eje) {
+  const pos = m.geometry.attributes.position;
+  const uv = m.geometry.attributes.uv;
+  for (let k = 0; k < pos.count; k++) {
+    const x = pos.getX(k) + m.position.x;
+    if (eje === 'xz') uv.setXY(k, x, -(pos.getZ(k) + m.position.z));
+    else uv.setXY(k, x, pos.getY(k) + m.position.y);
+  }
+  uv.needsUpdate = true;
+}
+
 function zona(geo) {
   return new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }));
 }
@@ -68,6 +79,7 @@ export function crearSala(escena) {
     const tabla = caja(0.48, 0.1, TAM, tonos[i % tonos.length]);
     tabla.castShadow = false;
     tabla.position.set(-mitad + 0.25 + i * 0.5, -0.05, 0);
+    uvPlano(tabla, 'xz');
     sala.add(tabla);
     tablas.push(tabla);
   }
@@ -101,6 +113,7 @@ export function crearSala(escena) {
       m.castShadow = true;
       m.receiveShadow = true;
       m.userData.pared = i;
+      uvPlano(m, 'xy');
       destino.add(m);
       if (lista) lista.push(m);
       return m;
@@ -452,6 +465,7 @@ export function crearSala(escena) {
     }
     const pared = paredes[obj.i].userData;
     if (!material.pinta) return { ok: false, motivo: 'Eso no sirve para la pared' };
+    if (paredes[obj.i] && paredes[obj.i].userData.papel) return { ok: false, motivo: 'Tiene papel pintado. Quitadlo en Más → Reformas para pintar' };
     const req = pared.requisito;
     if (req && !req.hecho && conDesperfectos) {
       return { ok: false, motivo: req.id === 'grietas' ? 'Primero tapa las grietas con masilla' : 'Primero quita la humedad' };
@@ -578,13 +592,52 @@ export function crearSala(escena) {
     conDesperfectos = false;
   }
 
+  let guardadoVisita = null;
+  function modoVisita(si) {
+    if (si) {
+      if (guardadoVisita) return;
+      guardadoVisita = [];
+      const todos = new Set([carton, ...grietasVentana]);
+      for (const d of desperfectos) for (const o of d.objetos) todos.add(o);
+      for (const c of cucarachas) todos.add(c.grupo);
+      for (const o of todos) {
+        guardadoVisita.push([o, o.visible]);
+        o.visible = false;
+      }
+      ventana.visible = true;
+    } else if (guardadoVisita) {
+      for (const [o, v] of guardadoVisita) o.visible = v;
+      guardadoVisita = null;
+    }
+  }
+
+  let ultimoDefecto = null;
   function pintarParedes(lista, defecto) {
+    ultimoDefecto = defecto;
     paredes.forEach((p, i) => {
       const hex = lista ? lista[i] : null;
       p.userData.pintura = hex ?? null;
-      p.userData.muro.material.color.setHex(hex ?? defecto ?? PARED_SUCIA.getHex());
+      p.userData.muro.material.color.setHex(p.userData.papel ? 0xffffff : hex ?? defecto ?? PARED_SUCIA.getHex());
     });
   }
 
-  return { paredes, cara, modoExterior, esExterior: () => exterior, pintarSuelo, mostrarDesperfectos, completarTodo, pintarParedes, conDesperfectos: () => conDesperfectos, ventana, matCristal, hemi, sol, visibles: () => paredes.map(p => p.visible), actualizarParedes, actualizar, buscar, tocar, puedeAplicar, aplicar, resaltar, estado, restaurar, progreso };
+  function ponerPapel(tex) {
+    paredes.forEach(p => {
+      const mat = p.userData.muro.material;
+      p.userData.papel = tex || null;
+      mat.map = tex || null;
+      mat.color.setHex(tex ? 0xffffff : p.userData.pintura ?? ultimoDefecto ?? PARED_SUCIA.getHex());
+      mat.needsUpdate = true;
+    });
+  }
+
+  function decorSuelo(colores, tex) {
+    tablas.forEach((t, i) => {
+      if (colores) t.material.color.setHex(colores[i % colores.length]);
+      t.material.map = tex || null;
+      t.material.needsUpdate = true;
+    });
+  }
+
+  return { paredes, cara, modoVisita, ponerPapel, decorSuelo, tablas, modoExterior, esExterior: () => exterior, pintarSuelo, mostrarDesperfectos, completarTodo, pintarParedes, conDesperfectos: () => conDesperfectos, ventana, matCristal, hemi, sol, visibles: () => paredes.map(p => p.visible), actualizarParedes, actualizar, buscar, tocar, puedeAplicar, aplicar, resaltar, estado, restaurar, progreso };
 }

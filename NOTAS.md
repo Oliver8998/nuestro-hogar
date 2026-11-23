@@ -170,6 +170,38 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - Modelos de Blender nuevos en `blender/m_exterior.py`.
 - Comprobación de sintaxis: `/home/claude/check.sh`. `node --check` no detecta errores en catalogo.js: hay que importarlo.
 
+## Menú principal y cuentas (hecho, commit eee6016)
+- `js/inicio.js`: pantalla `#inicio` al abrir. Crear cuenta o iniciar sesión (usuario + contraseña). Con la sesión iniciada: crear casa, unirse con código o "Seguir en vuestra casa".
+- Una sola casa por cuenta y máximo 2 personas por casa. Quien se une se queda en esa casa.
+- Supabase: tabla `cuentas` (con RLS y sin políticas) y RPCs `registrar_cuenta`, `entrar` y `asignar_hogar` (bcrypt con pgcrypto). Se guarda en `hogar-cuenta`; la contraseña solo está en memoria.
+- `js/pareja2.js` (hub 💕 Nosotros): pregunta del día, quiz, mapa de viajes, cuenta atrás, buenas noches 🌙 y metas.
+
+## Tercera tanda (pedida el 23-nov 18:10: "todo menos lo de vosotros dentro del juego") — HECHA
+- Más casa (`js/casa2.js`):
+  - Reformas (Más → 🪵): suelos (texturas canvas con UV planares en `sala.decorSuelo`), papel pintado (`sala.ponerPapel`, no deja pintar encima), cortinas, marcos y ventanal grande, tiras LED (arcoíris animado) y bombillas de color.
+  - Se compra una vez (`estado.decor.compras`) y se pone por habitación en `estado.decor.salas['nivel-hab']`. Suma "Reformas a vuestro gusto" al acogedor (`extras` en `calcularAcogedor`).
+  - Cocina (objeto `cocina` o Más → 🍳): `estado.despensa` (el huerto da ingredientes; huevos, harina, queso y leche se compran; setas y moras salen en los paseos), 8 `RECETAS` con un minijuego de punto de cocción → `estado.platos`. Los platos sirven para comer juntos (monedas), para dar a una mascota o para las fiestas.
+  - Lavadora: `estado.ropa` sube cada 3 h si hay lavadora (solo yo=0) → Lavar (15 min, vibra) → Tender (minijuego de pinzas).
+  - Chimenea (`nivel: 3`): fuego animado, luz que parpadea y chasquidos (`sonido.chasquido`). En invierno da +10 de acogedor si está encendida.
+- Mascotas (`js/mascotas2.js`, botón ⭐ Más en el menú de la mascota):
+  - trucos (`m.trucos`, 3 entrenos con el minijuego del aro; estado 'truco' en mascotas.js);
+  - concursos semanales de belleza y carrera (`estado.concursos`, `estado.trofeos`);
+  - paseo (perro y zorro) en canvas;
+  - crías (`estado.crias`, nacen en 24 h; los dos padres adultos y contentos, máximo una vez cada 7 días).
+- Social (`js/social.js`, Más → 🏘️ Amigos):
+  - visitar casas por código en modo solo mirar (`visitando` en main: `guardar` y `aplicarRemoto` se aplazan; `controles.soloMirar`; `sala.modoVisita`);
+  - me gusta y notas mediante la tabla `mensajes`, tipo 'visita', a la casa del otro;
+  - ranking de amigos con `estado.puntuacion` y `estado.likes`;
+  - fiesta: invitados que bailan; puntúan la comida, la música, las luces, lo acogedor y la gente.
+- Rejugabilidad:
+  - `js/sorpresas.js`: nevada dentro con el minijuego de copos, gatito en la puerta para adoptar y mapa del tesoro escondido en un mueble con pistas. Para probar: `?sorpresa=nieve|gato|tesoro`.
+  - Logros nuevos y 14 secretos (`secreto: true`, salen como ??? y dan 80).
+  - `js/fotoeditor.js`: filtros (aplicados por píxel para que funcione en iOS), pegatinas que se arrastran y marcos. También se puede guardar en el álbum.
+  - `js/lofi.js`: música lofi generativa (mañana, tarde y noche) que se activa en Ajustes; se calla con la radio o en las fiestas.
+- `juegos.custom(icono, nombre, montar)` sirve para montar minijuegos desde otros módulos (`j.alTerminar` para limpiar).
+- Modelos de Blender en `blender/m_casa3.py`: cocina, lavadora y chimenea (`VERSION_MODELOS = 6`).
+- Depuración: `?debug` expone `window.__h`. Tests en `/tmp/prueba/t3.py`, `t4.py` y `t5.py <nieve|gato|tesoro|fiesta|foto|lofi>`.
+
 ## Ideas pendientes (no pedidas aún)
 - Sincronizar los dos móviles (Supabase).
 - Minijuegos para ganar monedas.

@@ -1,3 +1,4 @@
+import { editarFoto } from './fotoeditor.js';
 import * as THREE from 'three';
 import { NOMBRE_TEMPORADA } from './ambiente.js';
 
@@ -120,12 +121,20 @@ export class Mas {
         <input id="aj-cancion" type="url" placeholder="https://open.spotify.com/track/…" value="${escapar(p.cancion || '')}">
         <small class="nota">Sonará al tocar la radio → 💕 Nuestra canción.</small>
         <button id="aj-sonido" class="secundario">${sonido.activo ? '🔊 Sonido activado' : '🔇 Sonido desactivado'}</button>
+        <button id="aj-lofi" class="secundario">${this.ctx.lofi && this.ctx.lofi.activo ? '🎧 Música lofi: sí' : '🎧 Música lofi: no'}</button>
+        <small class="nota">Música tranquila de fondo que cambia con la hora del día.</small>
         <button id="aj-guardar" class="primario">Guardar</button>
         <button id="aj-menu" class="secundario">🏠 Menú principal</button>
       </div>`, () => this.abrir());
     cuerpo.querySelector('#aj-sonido').addEventListener('click', e => {
       const on = sonido.alternar();
       e.currentTarget.textContent = on ? '🔊 Sonido activado' : '🔇 Sonido desactivado';
+    });
+    cuerpo.querySelector('#aj-lofi').addEventListener('click', e => {
+      if (!this.ctx.lofi) return;
+      const on = this.ctx.lofi.alternar();
+      if (on && !sonido.activo) sonido.alternar();
+      e.currentTarget.textContent = on ? '🎧 Música lofi: sí' : '🎧 Música lofi: no';
     });
     cuerpo.querySelector('#aj-menu').addEventListener('click', () => this.ctx.abrirInicio && this.ctx.abrirInicio());
     cuerpo.querySelector('#aj-guardar').addEventListener('click', () => {
@@ -386,41 +395,48 @@ export class Mas {
   hacerFoto() {
     const { ui, sonido, ambiente } = this.ctx;
     ui.cerrarHojas();
-    setTimeout(() => {
+    setTimeout(async () => {
       const foto = this.capturar(900);
-      const marco = document.createElement('canvas');
-      marco.width = 1000;
-      marco.height = 1180;
-      const c = marco.getContext('2d');
-      c.fillStyle = '#fffaf2';
-      c.fillRect(0, 0, 1000, 1180);
-      const fondo = getComputedStyle(document.body).backgroundImage;
-      c.fillStyle = document.body.classList.contains('noche') ? '#2b2b45' : '#f6ead9';
-      c.fillRect(50, 50, 900, 900);
-      c.drawImage(foto, 50, 50);
-      c.fillStyle = '#3b2f26';
-      c.textAlign = 'center';
-      c.font = '900 56px Nunito, system-ui, sans-serif';
-      c.fillText(this.pareja().casa || 'Nuestro Hogar', 500, 1040, 880);
-      c.font = '700 32px Nunito, system-ui, sans-serif';
-      c.fillStyle = '#8a7360';
+      sonido.premio();
       const fecha = new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
       const nombres = this.nombresTexto();
-      c.fillText(`${nombres ? nombres + ' · ' : ''}${fecha} ${ambiente ? ambiente.icono() : ''}`, 500, 1100, 880);
-      void fondo;
-      const url = marco.toDataURL('image/jpeg', 0.9);
-      sonido.premio();
+      const res = await editarFoto(foto, {
+        titulo: this.pareja().casa || 'Nuestro Hogar',
+        subtitulo: `${nombres ? nombres + ' · ' : ''}${fecha} ${ambiente ? ambiente.icono() : ''}`,
+        sonido
+      });
+      if (!res) return;
+      const url = res.url;
+      if (res.pegatinas >= 3 || res.filtro !== 'normal') this.ctx.registrar && this.ctx.registrar('foto-editada');
       ui.dialogo({
         html: `<img class="foto-grande" src="${url}" alt="">`,
         botones: [
           { texto: '📤 Compartir', tipo: 'primario', mantener: true, accion: () => this.compartir(url) },
-          { texto: '📔 Guardar en el diario', tipo: 'secundario', accion: () => { this.anadirDiario('Foto de la casa', true); ui.aviso('📔 Guardada en el diario'); } },
+          { texto: '🖼️ Guardar en el álbum', tipo: 'secundario', accion: () => this.guardarEnAlbum(res.lienzo) },
+          { texto: '📔 Guardar en el diario', tipo: 'secundario', accion: () => { this.anadirDiario('Foto de la casa', true, res.lienzo); ui.aviso('📔 Guardada en el diario'); } },
           { texto: 'Cerrar', tipo: 'secundario' }
         ],
         columna: true
       });
       this.ctx.alFoto && this.ctx.alFoto();
     }, 380);
+  }
+
+  guardarEnAlbum(lienzo) {
+    const max = 640;
+    const k = Math.min(1, max / Math.max(lienzo.width, lienzo.height));
+    const c = document.createElement('canvas');
+    c.width = Math.round(lienzo.width * k);
+    c.height = Math.round(lienzo.height * k);
+    c.getContext('2d').drawImage(lienzo, 0, 0, c.width, c.height);
+    this.fotos.unshift({ id: `f${Date.now()}`, data: c.toDataURL('image/jpeg', 0.8), fecha: Date.now() });
+    if (!this.guardarFotos()) {
+      this.fotos.shift();
+      return;
+    }
+    this.ctx.alFotoNueva && this.ctx.alFotoNueva(this.fotos[0]);
+    this.ctx.sonido.arreglo();
+    this.ctx.ui.aviso('🖼️ Guardada en el álbum. Podéis colgarla en la pared');
   }
 
   async compartir(url) {
@@ -440,10 +456,17 @@ export class Mas {
     a.click();
   }
 
-  anadirDiario(titulo, forzar = false) {
+  anadirDiario(titulo, forzar = false, lienzo = null) {
     const ultimo = this.diario[this.diario.length - 1];
     if (!forzar && ultimo && Date.now() - ultimo.fecha < 2 * 86400000) return;
-    const data = this.capturar(420).toDataURL('image/jpeg', 0.72);
+    let fuente = this.capturar(420);
+    if (lienzo) {
+      fuente = document.createElement('canvas');
+      fuente.width = 420;
+      fuente.height = Math.round(420 * lienzo.height / lienzo.width);
+      fuente.getContext('2d').drawImage(lienzo, 0, 0, fuente.width, fuente.height);
+    }
+    const data = fuente.toDataURL('image/jpeg', 0.72);
     this.diario.push({ fecha: Date.now(), titulo, data });
     while (this.diario.length > 24) this.diario.splice(1, 1);
     while (!escribir(CLAVE_DIARIO, this.diario) && this.diario.length > 2) this.diario.splice(1, 1);

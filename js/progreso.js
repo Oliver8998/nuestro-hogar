@@ -48,15 +48,34 @@ export const LOGROS = [
   { id: 'mudanza', icono: '🚚', nombre: '¡Nos mudamos!', texto: 'Mudaos a una casa mejor', check: c => c.nivelCasa() >= 1 },
   { id: 'mansion', icono: '🏰', nombre: 'Vida de lujo', texto: 'Vivid en la mansión', check: c => c.nivelCasa() >= 4 },
   { id: 'racha7', icono: '🔥', nombre: 'Constantes', texto: 'Entrad 7 días seguidos', check: c => c.racha() >= 7 },
-  { id: 'ruleta', icono: '🎡', nombre: 'Con suerte', texto: 'Conseguid un objeto legendario', check: c => c.tieneLegendario() }
+  { id: 'ruleta', icono: '🎡', nombre: 'Con suerte', texto: 'Conseguid un objeto legendario', check: c => c.tieneLegendario() },
+  { id: 'cocinitas', icono: '🍳', nombre: 'Cocinitas', texto: 'Cocinad vuestro primer plato', check: c => c.stat('cocinar') >= 1 },
+  { id: 'colada', icono: '🧺', nombre: 'Día de colada', texto: 'Tended la ropa 5 veces', check: c => c.stat('tender') >= 5 },
+  { id: 'reformas', icono: '🪵', nombre: 'Interioristas', texto: 'Cambiad suelo, papel, ventana o luces 5 veces', check: c => c.stat('reformar') >= 5 },
+  { id: 'truco', icono: '🎓', nombre: 'Adiestradores', texto: 'Enseñad un truco a una mascota', check: c => c.stat('aprender-truco') >= 1 },
+  { id: 'fiesta', icono: '🎉', nombre: 'Anfitriones', texto: 'Montad una fiesta en casa', check: c => c.stat('fiesta') + c.stat('fiesta-perfecta') >= 1 },
+  { id: 'visitas', icono: '🏘️', nombre: 'Buenos vecinos', texto: 'Recibid un me gusta de unos amigos', check: c => c.stat('like-recibido') >= 1 },
+  { id: 'buho', secreto: true, icono: '🦉', nombre: 'Búhos', texto: 'Jugad entre las 3 y las 5 de la madrugada', check: c => c.hora() >= 3 && c.hora() < 5 },
+  { id: 'tesoro', secreto: true, icono: '🗺️', nombre: 'Cazatesoros', texto: 'Encontrad un tesoro escondido', check: c => c.stat('tesoro') >= 1 },
+  { id: 'gatito', secreto: true, icono: '🐈', nombre: 'Corazón blandito', texto: 'Adoptad al gatito de la puerta', check: c => c.stat('gato-callejero') >= 1 },
+  { id: 'nieve', secreto: true, icono: '❄️', nombre: 'Nieva en casa', texto: 'Atrapad los copos de una nevada interior', check: c => c.stat('nieve') >= 1 },
+  { id: 'fiesta5', secreto: true, icono: '🪩', nombre: 'Fiestón', texto: 'Una fiesta de 5 estrellas', check: c => c.stat('fiesta-perfecta') >= 1 },
+  { id: 'chef10', secreto: true, icono: '👨‍🍳', nombre: 'Estrella Michelin', texto: 'Cocinad 15 platos', check: c => c.stat('cocinar') >= 15 },
+  { id: 'campeones', secreto: true, icono: '🏅', nombre: 'Campeones', texto: 'Ganad 3 concursos de mascotas', check: c => c.stat('concurso-ganado') >= 3 },
+  { id: 'circo', secreto: true, icono: '🎪', nombre: 'El gran circo', texto: 'Una mascota que sepa todos los trucos', check: c => c.trucosMax() >= 6 },
+  { id: 'achuchones', secreto: true, icono: '🫶', nombre: 'Achuchones', texto: 'Dad 300 mimos', check: c => c.stat('mimos') >= 300 },
+  { id: 'famosos', secreto: true, icono: '🌟', nombre: 'Famosos', texto: 'Recibid 10 me gusta', check: c => c.stat('like-recibido') >= 10 },
+  { id: 'familia', secreto: true, icono: '🐣', nombre: 'Familia numerosa', texto: 'Que nazca una cría', check: c => c.stat('cria') >= 1 },
+  { id: 'fotografos', secreto: true, icono: '📸', nombre: 'Fotógrafos', texto: 'Editad 5 fotos con filtros o pegatinas', check: c => c.stat('foto-editada') >= 5 },
+  { id: 'reyes', secreto: true, icono: '👑', nombre: 'Reyes del barrio', texto: 'Quedad primeros en el ranking de amigos', check: c => c.stat('ranking-primero') >= 1 }
 ];
 
-const LUCES = ['lampara', 'lampara-mesa', 'lampara-lava', 'arbol-navidad', 'calabaza', 'lampara-corazon', 'acuario'];
+const LUCES = ['lampara', 'lampara-mesa', 'lampara-lava', 'arbol-navidad', 'calabaza', 'lampara-corazon', 'acuario', 'chimenea'];
 const PLANTAS = ['planta', 'cactus', 'jarron', 'cerezo', 'huerto', 'rosas'];
 const ASIENTOS = ['sofa', 'silla', 'puff', 'puff-corazon', 'sillon-huevo', 'cama'];
 const TEXTILES = ['alfombra', 'cojin-corazon', 'peluche', 'cama'];
 
-export function calcularAcogedor({ muebles, limpieza, paredesPintadas, fotos, mascotas, noche }) {
+export function calcularAcogedor({ muebles, limpieza, paredesPintadas, fotos, mascotas, noche, extras = [] }) {
   const ids = muebles.map(m => m.userData.def.id);
   const tiene = lista => ids.filter(id => lista.includes(id)).length;
   const lucesEncendidas = muebles.filter(m => LUCES.includes(m.userData.def.id) && m.userData.encendido).length;
@@ -69,7 +88,8 @@ export function calcularAcogedor({ muebles, limpieza, paredesPintadas, fotos, ma
     { texto: 'Paredes pintadas', valor: paredesPintadas * 3, max: 12, consejo: 'Pintad las paredes' },
     { texto: 'Fotos vuestras', valor: Math.min(8, fotos * 4), max: 8, consejo: 'Colgad fotos en la pared' },
     { texto: 'Mascotas', valor: Math.min(6, mascotas * 3), max: 6, consejo: 'Adoptad una mascota' },
-    { texto: 'Limpieza', valor: Math.round(limpieza / 100 * 12), max: 12, consejo: 'Limpiad la suciedad' }
+    { texto: 'Limpieza', valor: Math.round(limpieza / 100 * 12), max: 12, consejo: 'Limpiad la suciedad' },
+    ...extras
   ];
   const total = Math.min(100, partes.reduce((a, p) => a + p.valor, 0));
   return { total, partes };

@@ -32,7 +32,44 @@ function nota(freq, inicio, duracion, { tipo = 'sine', volumen = 0.15, hasta = n
   osc.stop(t + duracion + 0.02);
 }
 
+let bufRuido = null;
+function ruido(duracion, { volumen = 0.08, freq = 1800, q = 1, inicio = 0 } = {}) {
+  const c = contexto();
+  if (!c || !activo) return;
+  if (!bufRuido) {
+    bufRuido = c.createBuffer(1, c.sampleRate, c.sampleRate);
+    const d = bufRuido.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  const t = c.currentTime + inicio;
+  const src = c.createBufferSource();
+  src.buffer = bufRuido;
+  const f = c.createBiquadFilter();
+  f.type = 'bandpass';
+  f.frequency.value = freq;
+  f.Q.value = q;
+  const g = c.createGain();
+  g.gain.setValueAtTime(volumen, t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + duracion);
+  src.connect(f).connect(g).connect(c.destination);
+  src.start(t, Math.random() * 0.5);
+  src.stop(t + duracion + 0.02);
+}
+
+export function audio() {
+  return contexto();
+}
+
 export const sonido = {
+  ruido(duracion, op) {
+    ruido(duracion, op);
+  },
+  chasquido() {
+    ruido(0.04 + Math.random() * 0.05, { volumen: 0.05 + Math.random() * 0.06, freq: 1500 + Math.random() * 2500, q: 0.8 });
+  },
+  agua() {
+    for (let k = 0; k < 4; k++) ruido(0.25, { volumen: 0.04, freq: 600 + k * 300, q: 2, inicio: k * 0.08 });
+  },
   get activo() {
     return activo;
   },

@@ -91,7 +91,24 @@ export class Juegos {
     });
   }
 
+  custom(icono, nombre, montar) {
+    return new Promise(resolve => {
+      this.resolver = resolve;
+      this.capa.querySelector('.jg-titulo').textContent = `${icono} ${nombre}`;
+      this.info('');
+      this.capa.classList.remove('oculto');
+      requestAnimationFrame(() => this.capa.classList.add('abierto'));
+      this.tiempo(null);
+      this.cuerpo.innerHTML = '';
+      montar(this);
+    });
+  }
+
   terminar(resultado) {
+    if (this.alTerminar) {
+      this.alTerminar();
+      this.alTerminar = null;
+    }
     clearInterval(this.reloj);
     this.reloj = null;
     this.capa.classList.remove('abierto');

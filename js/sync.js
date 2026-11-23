@@ -217,6 +217,30 @@ export class Sync {
     }
   }
 
+  async verCasa(codigo) {
+    const filas = await pedir(`hogares?id=eq.${encodeURIComponent(codigo)}&select=datos`);
+    return filas && filas[0] ? filas[0].datos : null;
+  }
+
+  async mandarA(codigo, tipo, datos) {
+    try {
+      await pedir('mensajes', {
+        method: 'POST',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify({ hogar: codigo, tipo, de: this.dispositivo, datos })
+      });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async ranking(codigos) {
+    const lista = codigos.filter(c => /^[A-Z0-9]{4,8}$/.test(c));
+    if (!lista.length) return [];
+    return (await pedir(`hogares?id=in.(${lista.join(',')})&select=id,p:datos->estado->puntuacion,n:datos->estado->pareja->>casa,l:datos->estado->likes,c:datos->estado->casa->nivel`)) || [];
+  }
+
   async subirFoto(foto) {
     if (!this.activo) return;
     try {

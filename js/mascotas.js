@@ -325,6 +325,8 @@ class Mascota {
     this.personalidad = datos.personalidad || claves[Math.floor(Math.random() * claves.length)];
     this.nacida = datos.nacida ?? Date.now() - 5 * 86400000;
     this.accesorio = datos.accesorio || null;
+    this.trucos = datos.trucos || {};
+    this.ultimaCria = datos.ultimaCria || 0;
     this.e = ESPECIES[this.especie];
     this.partes = crearModeloMascota(this.especie);
     this.grupo = this.partes.raiz;
@@ -346,7 +348,8 @@ class Mascota {
       id: this.id, especie: this.especie, nombre: this.nombre,
       hambre: Math.round(this.hambre), felicidad: Math.round(this.felicidad), energia: Math.round(this.energia),
       x: +p.x.toFixed(2), z: +p.z.toFixed(2),
-      personalidad: this.personalidad, nacida: this.nacida, accesorio: this.accesorio
+      personalidad: this.personalidad, nacida: this.nacida, accesorio: this.accesorio,
+      trucos: this.trucos, ultimaCria: this.ultimaCria
     };
   }
 
@@ -580,6 +583,15 @@ export class GestorMascotas {
     m.alturaCama = cama && cama.userData.def.camaMascota ? 0.14 : 0;
   }
 
+  truco(m, id) {
+    m.ruta = [];
+    m.alLlegar = null;
+    m.estado = 'truco';
+    m.truco = id;
+    m.tEstado = 2;
+    this.eventos.particula('✨', m, 2);
+  }
+
   jugarCon(m, pelota) {
     m.estado = 'jugar';
     m.tEstado = 2;
@@ -767,6 +779,27 @@ export class GestorMascotas {
           if (c) pos.copy(centroCelda(c[0], c[1]));
           m.estado = 'quieto';
           m.tEstado = 0.5;
+        }
+      } else if (m.estado === 'truco') {
+        const k = 1 - Math.max(0, m.tEstado) / 2;
+        const sn = Math.sin(k * Math.PI);
+        if (m.truco === 'sentarse') p.cuerpoGrupo.rotation.x = -0.5 * sn;
+        else if (m.truco === 'pata') {
+          p.cuerpoGrupo.rotation.x = -0.3 * sn;
+          if (p.patas[0]) p.patas[0].rotation.x = -1.5 * sn;
+        } else if (m.truco === 'rodar') {
+          p.cuerpoGrupo.rotation.z = k * Math.PI * 2;
+          alturaSalto = sn * 0.06;
+        } else if (m.truco === 'saltar') {
+          alturaSalto = sn * 0.5;
+          p.cuerpoGrupo.rotation.x = Math.sin(k * Math.PI * 2) * 0.3;
+        } else if (m.truco === 'muerto') {
+          p.cuerpoGrupo.rotation.z = Math.min(1, k * 5, (1 - k) * 6) * 1.45;
+          for (const o of p.ojos) o.scale.y = o.userData.sy * 0.1;
+        } else {
+          m.angulo += dt * 10;
+          m.objetivoAngulo = m.angulo;
+          alturaSalto = sn * 0.12;
         }
       } else if (m.estado === 'comer') {
         if (p.cabeza) p.cabeza.rotation.x = 0.4 + Math.sin(m.t * 12) * 0.15;

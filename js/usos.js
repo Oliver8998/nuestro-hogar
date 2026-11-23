@@ -230,7 +230,7 @@ export class Usos {
       if (d.fase === 0) ops.push({ icono: '🌱', texto: 'Plantar', accion: () => { d.fase = 1; d.listoEn = null; sonido.pop(); ui.aviso('🌱 ¡Plantado! Ahora regadlo'); this.aplicarHuerto(m); guardar(); this.ctx.refrescarMenu(); } });
       else if (d.fase < 3 && !d.listoEn) ops.push({ icono: '💧', texto: 'Regar', accion: () => { d.listoEn = ahora() + ESPERA_HUERTO; sonido.arreglo(); this.ctx.particulaEn(m, '💧', 4); ui.aviso(`💧 Regado. Crecerá en ${this.textoTiempo(ESPERA_HUERTO)}`); guardar(); this.ctx.refrescarMenu(); } });
       else if (d.fase < 3) ops.push({ icono: '⏳', texto: this.textoTiempo(d.listoEn - ahora()), accion: () => ui.aviso(`🌿 ${FASE_HUERTO[d.fase]}. Crecerá en ${this.textoTiempo(d.listoEn - ahora())}`) });
-      else ops.push({ icono: '🍅', texto: 'Cosechar', accion: () => { d.fase = 0; d.listoEn = null; this.ctx.ganar(70, m, '🍅'); this.ctx.registrar('cosechar'); this.aplicarHuerto(m); guardar(); this.ctx.refrescarMenu(); } });
+      else ops.push({ icono: '🍅', texto: 'Cosechar', accion: () => { d.fase = 0; d.listoEn = null; const cos = this.ctx.cosecha ? this.ctx.cosecha() : []; this.ctx.ganar(45, m, '🍅'); if (cos.length) setTimeout(() => this.ctx.ui.aviso(`🧺 A la despensa: ${cos.join(' ')}`), 900); this.ctx.registrar('cosechar'); this.aplicarHuerto(m); guardar(); this.ctx.refrescarMenu(); } });
     }
     if (def.ordenador) {
       const { t, trabajando } = this.ordenador(m);

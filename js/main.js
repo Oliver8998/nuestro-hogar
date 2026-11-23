@@ -27,6 +27,11 @@ import { Pareja2 } from './pareja2.js';
 import { JUEGOS_DOS } from './juegos.js';
 import { Sync } from './sync.js';
 import { Pareja } from './pareja.js';
+import { Casa2 } from './casa2.js';
+import { Mascotas2, TRUCOS } from './mascotas2.js';
+import { Social } from './social.js';
+import { Sorpresas } from './sorpresas.js';
+import { Lofi } from './lofi.js';
 import { CASAS, COLECCIONES, LOGROS, EXTERIORES, calcularAcogedor, coleccionesCompletas } from './progreso.js';
 
 await cargarModelos();
@@ -129,6 +134,15 @@ const minijuegos = new Minijuegos(sonido);
 const LOCALES = ['dia', 'bienvenida', 'juegosHoy', 'gratis', 'habActual', 'reforma'];
 let sync = null;
 let pareja = null;
+let casa2 = null;
+let mascotas2 = null;
+let social = null;
+let sorpresas = null;
+let visitando = false;
+let guardarPendiente = false;
+let remotoPendiente = null;
+let visitaPrevia = null;
+const lofi = new Lofi(sonido);
 
 function habitacionViva() {
   return { muebles: gestor.serializar(), suciedad: suciedad.serializar().lista, paredes: sala.estado().paredes };
@@ -200,6 +214,10 @@ function sincronizarMuebles(lista) {
 
 function aplicarRemoto(datos, conflicto = false, inicial = false) {
   if (!datos || !datos.estado) return;
+  if (visitando) {
+    remotoPendiente = [datos, conflicto, inicial];
+    return;
+  }
   const nivelAntes = nivelCasa();
   for (const [k, v] of Object.entries(datos.estado)) if (!LOCALES.includes(k)) estado[k] = v;
   const habR = datos.estado.habs && datos.estado.habs[estado.habActual || 0];
@@ -281,6 +299,10 @@ function pantalla(v) {
 }
 
 function guardar() {
+  if (visitando) {
+    guardarPendiente = true;
+    return;
+  }
   if (sync) sync.marcarCambio();
   try {
     localStorage.setItem(CLAVE, JSON.stringify({
@@ -444,6 +466,8 @@ function opcionesMueble(m) {
   }];
 
   opciones.push(...usos.opciones(m));
+  if (casa2) opciones.push(...casa2.opciones(m));
+  if (sorpresas) opciones.push(...sorpresas.opcionesMueble(m));
   if (def.colores) {
     opciones.push({ icono: '🎨', texto: 'Color', accion: () => { gestor.siguienteColor(m); sonido.pop(); guardar(); } });
   }
@@ -571,6 +595,9 @@ function opcionesMascota(m) {
     },
     {
       icono: '🎀', texto: 'Ropa', accion: () => elegirAccesorio(m)
+    },
+    {
+      icono: '⭐', texto: 'Más', accion: () => mascotas2.abrir(m)
     },
     {
       icono: '✏️', texto: 'Nombre', accion: async () => {
@@ -985,6 +1012,8 @@ function contexto() {
     colecciones: () => (estado.colecciones || []).length,
     nivelCasa,
     racha: () => (estado.racha && estado.racha.n) || 0,
+    hora: () => new Date().getHours(),
+    trucosMax: () => Math.max(0, ...mascotas.lista.map(m => TRUCOS.filter(t => (m.trucos[t.id] || 0) >= 3).length)),
     tieneLegendario: () => idsEnCasa().concat(inventario.items.map(i => i.id)).some(id => infoItem(id) && infoItem(id).rareza === 'legendario')
   };
 }
@@ -1004,7 +1033,8 @@ function acogedor() {
     paredesPintadas: sala.estado().paredes.filter(p => p !== null && p !== undefined).length,
     fotos: (estado.paredFotos || []).filter(Boolean).length,
     mascotas: mascotas.lista.length,
-    noche: ambiente.esNoche()
+    noche: ambiente.esNoche(),
+    extras: casa2 ? casa2.extrasAcogedor(gestor.muebles) : []
   });
 }
 
@@ -1029,6 +1059,7 @@ function aplicarEstiloCasa() {
   const pill = document.getElementById('pill-hab');
   pill.classList.toggle('oculto', casa.habitaciones.length < 2);
   pill.textContent = `${casa.icono} ${casa.habitaciones[hab] || 'Salón'} ▾`;
+  if (casa2) casa2.aplicar();
 }
 
 function cambiarHabitacion(i) {
@@ -1135,9 +1166,18 @@ function mudarse(n) {
 
 function abrirLogros() {
   const hechos = estado.logros || [];
+  const normales = LOGROS.filter(l => !l.secreto);
+  const secretos = LOGROS.filter(l => l.secreto);
+  const fila = l => {
+    const ok = hechos.includes(l.id);
+    if (l.secreto && !ok) return '<div class="logro secreto"><span>❔</span><div><b>???</b><small>Logro secreto. ¡Seguid jugando!</small></div></div>';
+    return `<div class="logro ${ok ? 'hecho' : ''}"><span>${ok ? l.icono : '🔒'}</span><div><b>${l.nombre}</b><small>${l.texto}</small></div></div>`;
+  };
   ui.abrirGen('Logros', `
     <p class="gen-intro">${hechos.length} de ${LOGROS.length} conseguidos</p>
-    <div class="logros">${LOGROS.map(l => `<div class="logro ${hechos.includes(l.id) ? 'hecho' : ''}"><span>${hechos.includes(l.id) ? l.icono : '🔒'}</span><div><b>${l.nombre}</b><small>${l.texto}</small></div></div>`).join('')}</div>`, () => mas.abrir());
+    <div class="logros">${normales.map(fila).join('')}</div>
+    <h4 class="gen-sub">🤫 Secretos (${secretos.filter(l => hechos.includes(l.id)).length} de ${secretos.length})</h4>
+    <div class="logros">${secretos.map(fila).join('')}</div>`, () => mas.abrir());
 }
 
 function abrirColecciones() {
@@ -1152,7 +1192,8 @@ function abrirColecciones() {
 }
 
 function revisarProgreso() {
-  if (dialogoAbierto()) return;
+  if (dialogoAbierto() || visitando) return;
+  estado.puntuacion = acogedor().total;
   const c = contexto();
   if (!estado.logros) estado.logros = [];
   for (const l of LOGROS) {
@@ -1163,9 +1204,9 @@ function revisarProgreso() {
     } catch (e) {}
     if (!ok) continue;
     estado.logros.push(l.id);
-    estado.monedas += 30;
+    estado.monedas += l.secreto ? 80 : 30;
     sonido.premio();
-    ui.aviso(`🏆 Logro: ${l.nombre} (+30 🪙)`);
+    ui.aviso(l.secreto ? `🤫 ¡Logro secreto! ${l.icono} ${l.nombre} (+80 🪙)` : `🏆 Logro: ${l.nombre} (+30 🪙)`);
     refrescarHud();
     guardar();
     return;
@@ -1275,7 +1316,7 @@ function iniciarEvento(idx, avisar) {
 }
 
 function dialogoAbierto() {
-  return document.getElementById('dialogo').classList.contains('abierto');
+  return document.getElementById('dialogo').classList.contains('abierto') || !document.getElementById('juego').classList.contains('oculto') || !!document.getElementById('foto-editor') || visitando;
 }
 
 function comprobarEvento() {
@@ -1372,7 +1413,8 @@ function temporadaActual() {
 }
 
 const mas = new Mas({
-  estado, ui, sonido, sala, ambiente, renderer, escena, camara: camaraIso.camara,
+  estado, ui, sonido, sala, ambiente, renderer, escena, camara: camaraIso.camara, lofi,
+  registrar: e => registrar(e),
   abrirInicio: () => { ui.cerrarHojas(); inicio.mostrar(); },
   alFotoNueva: f => sync && sync.subirFoto(f),
   alFotoBorrada: id => sync && sync.borrarFoto(id),
@@ -1397,6 +1439,7 @@ function ganar(n, m = null, emoji = '🪙') {
 
 const usos = new Usos({
   estado, ui, sonido, gestor, mascotas, miniaturas, escena,
+  cosecha: () => (casa2 ? casa2.cosecha() : []),
   guardar: () => guardar(),
   refrescarMenu: () => refrescarMenu(),
   registrar: e => registrar(e),
@@ -1491,6 +1534,7 @@ sync = new Sync({
   mensaje: m => {
     if (m.tipo === 'reaccion' && m.datos && Date.now() - Date.parse(m.creado) < 60000) mostrarReaccion(m.datos.emoji, m.datos.de);
     if (m.tipo === 'buenasnoches' && m.datos && Date.now() - Date.parse(m.creado) < 600000) pareja2.recibirBuenasNoches(m.datos.de);
+    if (m.tipo === 'visita' && social) social.recibir(m);
   },
   directo: (evento, datos) => {
     if (evento === 'reaccion') mostrarReaccion(datos.emoji, datos.de);
@@ -1611,6 +1655,9 @@ async function sincronizarFotos() {
 window.extrasMenu = () => [
   { id: 'buzon', icono: '📬', texto: 'Buzón', sub: vida.noLeidas() ? `${vida.noLeidas()} carta${vida.noLeidas() > 1 ? 's' : ''} sin leer` : 'Cartas, postales y ofertas', insignia: vida.noLeidas() || null, accion: () => vida.abrirCorreo() },
   { id: 'pase', icono: '🗓️', texto: 'Pase del mes', sub: `${economia.pase().reclamados.length} de 10 tareas`, insignia: economia.pendientesPase() || null, accion: () => economia.abrirPase() },
+  { id: 'reformas', icono: '🪵', texto: 'Reformas', sub: 'Suelos, papel pintado, ventanas y luces LED', accion: () => casa2.abrirReformas() },
+  { id: 'cocina', icono: '🍳', texto: 'Cocina', sub: `${Object.values(estado.despensa || {}).reduce((a, b) => a + b, 0)} ingredientes · ${casa2.totalPlatos()} platos`, accion: () => casa2.abrirCocina(null) },
+  { id: 'amigos', icono: '🏘️', texto: 'Amigos', sub: 'Visitad casas, ranking y fiestas', insignia: null, accion: () => social.abrir() },
   { id: 'taller', icono: '🔨', texto: 'Taller', sub: 'Reciclar, fabricar y encargos a medida', accion: () => economia.abrirTaller() },
   { id: 'reto', icono: '🎨', texto: 'Reto de decoración', sub: '10 minutos y tu pareja puntúa', accion: () => (estado.reto && !estado.reto.terminado ? verReto() : empezarReto()) },
   { id: 'casas', icono: CASAS[nivelCasa()].icono, texto: 'Casas', sub: nivelCasa() < CASAS.length - 1 ? `Siguiente: ${CASAS[nivelCasa() + 1].nombre}` : '¡Vivís en la mansión!', accion: abrirCasas },
@@ -1645,6 +1692,144 @@ const economia = new Economia({
 });
 ui.ponerMercadillo(economia.esFinde());
 
+casa2 = new Casa2({
+  estado, ui, sonido, sala, gestor, juegos, inventario, miniaturas, escena, ambiente, mascotas,
+  nivelCasa,
+  nombreHabitacion: () => CASAS[nivelCasa()].habitaciones[estado.habActual || 0] || 'Salón',
+  aplicarEstilo: () => aplicarEstiloCasa(),
+  idsEnCasa: () => idsEnCasa(),
+  genera: () => !sync.activo || sync.yo === 0,
+  guardar: () => guardar(),
+  refrescarHud: () => refrescarHud(),
+  refrescarMenu: () => refrescarMenu(),
+  registrar: e => registrar(e),
+  recordar: (...a) => pareja.recordar(...a),
+  ganar,
+  chip: () => pintarChipsVida(),
+  abrirMas: () => mas.abrir()
+});
+
+mascotas2 = new Mascotas2({
+  estado, ui, sonido, mascotas, juegos, inventario, miniaturas,
+  adoptar: (e, g) => adoptar(e, g),
+  guardar: () => guardar(),
+  refrescarHud: () => refrescarHud(),
+  registrar: e => registrar(e),
+  recordar: (...a) => pareja.recordar(...a),
+  ganar,
+  chip: () => pintarChipsVida(),
+  cerrar: () => { ui.cerrarHojas(); refrescarMenu(); }
+});
+
+social = new Social({
+  estado, ui, sonido, sync, gestor, mascotas, miniaturas, escena, casa2,
+  pantalla: v => pantalla(v),
+  acogedor: () => acogedor().total,
+  habitacionesDe: datos => CASAS[(datos.estado.casa && datos.estado.casa.nivel) || 0].habitaciones,
+  entrarVisita: datos => entrarVisita(datos),
+  verHabitacionVisita: i => verHabitacionVisita(i),
+  salirVisita: () => salirVisita(),
+  guardar: () => guardar(),
+  guardarSiempre: () => guardar(),
+  refrescarHud: () => refrescarHud(),
+  registrar: e => registrar(e),
+  recordar: (...a) => pareja.recordar(...a),
+  abrirMas: () => mas.abrir()
+});
+
+sorpresas = new Sorpresas({
+  estado, ui, sonido, gestor, juegos, inventario, miniaturas, escena,
+  adoptar: (e, g) => adoptar(e, g),
+  visitando: () => visitando,
+  genera: () => !sync.activo || sync.yo === 0,
+  nombreHab: i => CASAS[nivelCasa()].habitaciones[i] || 'Salón',
+  buscarMueble(uid, hab) {
+    if (hab === (estado.habActual || 0)) {
+      const m = gestor.muebles.find(x => x.userData.uid === uid);
+      return m ? { nombre: m.userData.def.nombre } : null;
+    }
+    const h = estado.habs && estado.habs[hab];
+    const d = h && (h.muebles || []).find(x => x.uid === uid);
+    return d && infoItem(d.id) ? { nombre: infoItem(d.id).nombre } : null;
+  },
+  guardar: () => guardar(),
+  refrescarHud: () => refrescarHud(),
+  registrar: e => registrar(e),
+  recordar: (...a) => pareja.recordar(...a),
+  ganar,
+  chip: () => pintarChipsVida()
+});
+
+function entrarVisita() {
+  if (visitando) return;
+  if (controles.seleccionado) controles.seleccionar(null);
+  mascotaSel = null;
+  ui.cerrarMenu();
+  estado.habs = todasHabitaciones();
+  guardar();
+  visitaPrevia = { genera: suciedad.genera, trastadas: mascotas.trastadas };
+  visitando = true;
+  controles.soloMirar = true;
+  suciedad.genera = false;
+  mascotas.trastadas = false;
+  for (const m of mascotas.lista) m.grupo.visible = false;
+  vida.quitarVisitante();
+  sorpresas.limpiar();
+  sala.modoVisita(true);
+  for (const mf of mas.marcos || []) if (mf) mf.grupo.visible = false;
+  if (mas.cartel) mas.cartel.grupo.visible = false;
+  document.body.classList.add('visitando');
+}
+
+function verHabitacionVisita(i) {
+  const datos = social.visita.datos;
+  const e = datos.estado;
+  const n = (e.casa && e.casa.nivel) || 0;
+  const casa = CASAS[n];
+  for (const m of [...gestor.muebles]) gestor.quitar(m);
+  suciedad.sincronizar([]);
+  const vacia = { muebles: [], suciedad: [], paredes: [null, null, null, null] };
+  const h = (e.habs && e.habs[i]) || (i === 0 ? { muebles: datos.muebles || [], suciedad: (datos.suciedad && datos.suciedad.lista) || [], paredes: (datos.sala && datos.sala.paredes) || vacia.paredes } : vacia);
+  for (const d of [...(h.muebles || [])].sort((a, b) => a.base - b.base)) if (infoItem(d.id)) gestor.anadir(d.id, d.x0, d.z0, d.rot, d);
+  for (const d of h.suciedad || []) suciedad.anadir(d.tipo, d, false);
+  const ext = EXTERIORES[casa.habitaciones[i]] || null;
+  sala.modoExterior(ext ? ext.tipo : null);
+  sala.pintarSuelo(ext ? ext.suelo : casa.suelo);
+  sala.pintarParedes(h.paredes || vacia.paredes, n > 0 || i > 0 ? casa.pared : null);
+  ambiente.vista = ['calle', 'calle', 'tejados', 'jardin', 'colinas'][n];
+  casa2.aplicar(((e.decor && e.decor.salas) || {})[`${n}-${i}`] || {});
+}
+
+function salirVisita() {
+  if (!visitando) return;
+  for (const m of [...gestor.muebles]) gestor.quitar(m);
+  suciedad.sincronizar([]);
+  visitando = false;
+  controles.soloMirar = false;
+  sala.modoVisita(false);
+  const h = estado.habs[estado.habActual || 0] || { muebles: [], suciedad: [], paredes: [null, null, null, null] };
+  for (const d of [...h.muebles].sort((a, b) => a.base - b.base)) gestor.anadir(d.id, d.x0, d.z0, d.rot, d);
+  for (const d of h.suciedad || []) suciedad.anadir(d.tipo, d, false);
+  sala.pintarParedes(h.paredes, (estado.habActual || 0) === 0 && nivelCasa() === 0 ? null : CASAS[nivelCasa()].pared);
+  aplicarEstiloCasa();
+  suciedad.genera = visitaPrevia ? visitaPrevia.genera : true;
+  mascotas.trastadas = visitaPrevia ? visitaPrevia.trastadas : true;
+  for (const m of mascotas.lista) m.grupo.visible = true;
+  mas.pintarPared();
+  if (mas.cartel) mas.cartel.grupo.visible = true;
+  document.body.classList.remove('visitando');
+  if (remotoPendiente) {
+    const r = remotoPendiente;
+    remotoPendiente = null;
+    aplicarRemoto(...r);
+  }
+  if (guardarPendiente) {
+    guardarPendiente = false;
+    guardar();
+  }
+  pintarChipsVida();
+}
+
 const TEMAS_RETO = [
   { id: 'playa', nombre: 'Casa de playa', icono: '🏖️' },
   { id: 'romantico', nombre: 'Rincón romántico', icono: '💕' },
@@ -1669,6 +1854,9 @@ function pintarChipsVida() {
     const min = Math.max(0, Math.ceil((estado.reto.fin - Date.now()) / 60000));
     chips.push({ id: 'reto', texto: `🎨 ${min} min`, accion: () => verReto() });
   }
+  if (casa2) chips.push(...casa2.chips());
+  if (mascotas2) chips.push(...mascotas2.chips());
+  if (sorpresas) chips.push(...sorpresas.chips());
   caja.innerHTML = chips.map(c => `<button class="pastilla reparto" data-id="${c.id}">${c.texto}</button>`).join('');
   caja.querySelectorAll('button').forEach(b => b.addEventListener('click', () => chips.find(c => c.id === b.dataset.id).accion()));
 }
@@ -1888,6 +2076,8 @@ function colocarMenu(dt) {
   ui.posicionarMenu(s.x, s.y);
 }
 
+if (new URLSearchParams(location.search).has('debug')) window.__h = { estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida };
+
 renderer.setAnimationLoop(() => {
   const dt = Math.min(reloj.getDelta(), 0.1);
   camaraIso.actualizar(dt);
@@ -1897,7 +2087,11 @@ renderer.setAnimationLoop(() => {
   usos.actualizar(dt);
   sync.actualizar(dt);
   animarToques(dt);
-  vida.actualizar(dt);
+  if (!visitando) vida.actualizar(dt);
+  casa2.actualizar(dt);
+  social.actualizar(dt);
+  sorpresas.actualizar(dt);
+  lofi.actualizar(ambiente.hora, !!usos.musica || !!social.fiesta);
   gestor.actualizar(dt);
   mascotas.actualizar(dt);
   entregas.actualizar(dt);
