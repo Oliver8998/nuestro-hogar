@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 const MODELOS = new Map();
-const VERSION_MODELOS = 2;
+const VERSION_MODELOS = 3;
 
 export async function cargarModelos(ruta = `./assets/modelos.glb?v=${VERSION_MODELOS}`) {
   try {

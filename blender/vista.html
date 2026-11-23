@@ -3,7 +3,7 @@
 <style>body{margin:0;background:#f3ead8;font:12px sans-serif}#g{display:flex;flex-wrap:wrap}.c{width:240px;text-align:center}.c img{width:240px;height:240px}</style></head>
 <body><div id="g"></div><script type="module">
 import * as THREE from 'three';
-import { cargarModelos, construirPiezas, tieneModelo } from '../js/modelos.js';
+import { cargarModelos, construirPiezas, tieneModelo, modeloSuelto } from '../js/modelos.js';
 import { CATALOGO, MATERIALES } from '../js/catalogo.js';
 await cargarModelos('../assets/modelos.glb?' + Date.now());
 const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
@@ -16,11 +16,14 @@ const escena = new THREE.Scene(); escena.background = new THREE.Color(0xf3ead8);
 escena.add(new THREE.HemisphereLight(0xfff4e6, 0x8a7a6a, 1.5));
 const sol = new THREE.DirectionalLight(0xffffff, 1.7); sol.position.set(4, 8, 5); sol.castShadow = true; sol.shadow.bias = -0.0005; sol.shadow.normalBias = 0.02; escena.add(sol);
 const suelo = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), new THREE.MeshStandardMaterial({ color: 0xe8dcc6 })); suelo.rotation.x = -Math.PI / 2; suelo.receiveShadow = true; escena.add(suelo);
-for (const d of [...CATALOGO, ...MATERIALES]) {
+const SUELTOS = ['sucio-polvo', 'sucio-barro', 'sucio-caca', 'sucio-hormiga', 'sucio-arana', 'sucio-cucaracha', 'robot-suelo'].map(id => ({ id, suelto: true, piezas: [] }));
+for (const d of [...CATALOGO, ...MATERIALES, ...SUELTOS]) {
   if (!d.piezas) continue;
+  if (d.suelto && viejo) continue;
   if (filtro && !filtro.split(',').includes(d.id)) continue;
   if (!filtro && !viejo && !tieneModelo(d.id)) continue;
-  const { grupo } = construirPiezas(d.piezas, { id: viejo ? null : d.id });
+  const grupo = d.suelto ? modeloSuelto(d.id) : construirPiezas(d.piezas, { id: viejo ? null : d.id }).grupo;
+  if (!grupo) continue;
   const caja = new THREE.Box3().setFromObject(grupo); const tam = caja.getSize(new THREE.Vector3()); const cen = caja.getCenter(new THREE.Vector3());
   const m = Math.max(tam.x, tam.y, tam.z) * 0.62;
   const cam = new THREE.OrthographicCamera(-m, m, m, -m, 0.01, 50);
