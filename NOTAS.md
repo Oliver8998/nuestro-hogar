@@ -79,6 +79,9 @@ Plan:
    - Usarlo en muebles, miniaturas, tienda3d, el robot de suciedad y los modelos de suciedad.
 5. Probar con playwright, hacer push y copiarlo a Documents.
 
+## Interfaz
+- Los botones (Tienda, Inventario, Misiones, Ruleta, Adoptar y sonido) están en una barra abajo, centrada, porque a la derecha tapaban la casa (petición de Oliver, 23-nov). La barra se oculta cuando el inventario está abierto.
+
 ## Ideas pendientes (no pedidas aún)
 - Sincronizar los dos móviles (Supabase).
 - Minijuegos para ganar monedas.
