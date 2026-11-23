@@ -1,0 +1,17 @@
+name: Mantener Supabase despierto
+
+on:
+  schedule:
+    - cron: "17 9 */3 * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Consulta pequena a la base de datos
+        run: |
+          curl -sf "https://lekqmspkizhxsceyswzu.supabase.co/rest/v1/hogares?select=codigo&limit=1" \
+            -H "apikey: sb_publishable_voSDxyUttxgPjrF0l0MG7w_7XCPV2Dr" \
+            -H "Authorization: Bearer sb_publishable_voSDxyUttxgPjrF0l0MG7w_7XCPV2Dr" > /dev/null
+          echo "ok"
