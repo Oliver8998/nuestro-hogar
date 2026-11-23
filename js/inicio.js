@@ -151,6 +151,21 @@ export class Inicio {
 `;
   }
 
+  error(texto) {
+    const el = this.capa.querySelector('.inicio-error');
+    if (el) {
+      el.textContent = texto;
+      el.classList.remove('oculto');
+    }
+    this.ctx.sonido.error();
+  }
+
+  ocupado(b, si) {
+    if (!b) return;
+    b.disabled = si;
+    b.classList.toggle('cargando', si);
+  }
+
   pintar(vista = null) {
     this.vista = vista;
     const c = this.cuenta;
