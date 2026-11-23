@@ -75,7 +75,7 @@ export class Miniaturas {
     if (info.mascota) return this.mascota(info.mascota);
     const clave = `item:${id}:${color ?? ''}`;
     return this.renderizar(clave, () => {
-      const { grupo, mallas } = construirPiezas(info.piezas, { sombras: false });
+      const { grupo, mallas } = construirPiezas(info.piezas, { sombras: false, id: info.id });
       if (info.colores && color !== null && color !== undefined) {
         const tonos = info.colores.paleta[color % info.colores.paleta.length];
         info.colores.grupos.forEach((g, gi) => g.forEach(i => mallas[i].material.color.setHex(tonos[gi])));

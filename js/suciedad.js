@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { crearPersonaje } from './personajes.js';
-import { liberar } from './modelos.js';
+import { liberar, modeloSuelto } from './modelos.js';
 
 export const TIPOS = {
   polvo: { nombre: 'Polvo', producto: 'atrapapolvo', descripcion: 'Bolas de polvo rodando por el suelo. ¡Achís!', cada: 180, max: 6, peso: 6, robot: true },
@@ -40,7 +40,13 @@ function esfera(sx, sy, sz, material, x, y, z) {
 
 function modelo(tipo) {
   const g = new THREE.Group();
-  if (tipo === 'polvo') {
+  const nuevo = modeloSuelto(`sucio-${tipo === 'bichos' ? 'hormiga' : tipo}`);
+  if (nuevo && tipo !== 'bichos' && tipo !== 'telarana') {
+    g.add(nuevo);
+    const alto = { polvo: 0.2, barro: 0.12, caca: 0.3 }[tipo] ?? 0.2;
+    const r = { polvo: 0.28, barro: 0.32, caca: 0.25 }[tipo] ?? 0.3;
+    g.add(zona(new THREE.CylinderGeometry(r, r, alto, 10)));
+  } else if (tipo === 'polvo') {
     const m = mat(0xb9b1a6, { transparent: true, opacity: 0.85 });
     g.add(esfera(0.16, 0.08, 0.14, m, 0, 0.04, 0));
     g.add(esfera(0.11, 0.06, 0.1, m, 0.11, 0.03, 0.06));
@@ -67,8 +73,14 @@ function modelo(tipo) {
     const hormigas = new THREE.Group();
     for (let i = 0; i < 7; i++) {
       const h = new THREE.Group();
-      h.add(esfera(0.03, 0.025, 0.06, m, 0, 0.015, 0));
-      h.add(esfera(0.025, 0.022, 0.025, m, 0, 0.015, 0.04));
+      const hormiga = modeloSuelto('sucio-hormiga');
+      if (hormiga) {
+        hormiga.scale.setScalar(1.2);
+        h.add(hormiga);
+      } else {
+        h.add(esfera(0.03, 0.025, 0.06, m, 0, 0.015, 0));
+        h.add(esfera(0.025, 0.022, 0.025, m, 0, 0.015, 0.04));
+      }
       h.userData.fase = i / 7;
       hormigas.add(h);
     }
@@ -87,7 +99,10 @@ function modelo(tipo) {
       anillo.rotation.z = Math.PI / 6;
       g.add(anillo);
     }
-    const arana = esfera(0.05, 0.05, 0.04, mat(0x2b2320), 0.06, -0.1, 0.02);
+    const arana = modeloSuelto('sucio-arana') ?? esfera(0.05, 0.05, 0.04, mat(0x2b2320), 0, 0, 0);
+    arana.position.set(0.06, -0.1, 0.02);
+    arana.rotation.set(Math.PI / 2, 0, 0.3);
+    if (arana.isGroup) arana.scale.setScalar(1.3);
     g.add(arana);
     g.add(zona(new THREE.CircleGeometry(0.32, 10)));
   }
@@ -409,16 +424,18 @@ export class Suciedad {
         liberar(this.robot.malla);
       }
       const malla = new THREE.Group();
+      const nuevoRobot = modeloSuelto('robot-suelo');
+      if (nuevoRobot) malla.add(nuevoRobot);
       const cuerpo = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.07, 24), mat(0xf7f4ef, { roughness: 0.4 }));
       cuerpo.position.y = 0.04;
       cuerpo.castShadow = true;
-      malla.add(cuerpo);
+      if (!nuevoRobot) malla.add(cuerpo);
       const tapa = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.02, 16), mat(0x3b2f26));
       tapa.position.y = 0.085;
-      malla.add(tapa);
+      if (!nuevoRobot) malla.add(tapa);
       const luz = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.02, 8), new THREE.MeshBasicMaterial({ color: 0x6cc08a }));
       luz.position.set(0.1, 0.085, 0);
-      malla.add(luz);
+      if (!nuevoRobot) malla.add(luz);
       malla.visible = false;
       this.escena.add(malla);
       this.robot = { base, malla, estado: 'casa', t: 8, objetivo: null };

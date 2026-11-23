@@ -7,7 +7,7 @@ const LIMITE = 6;
 const ALTURA_MAXIMA = 2.45;
 
 function crearMueble(def) {
-  const { grupo, mallas } = construirPiezas(def.piezas, { sombras: !def.suelo });
+  const { grupo, mallas, todas } = construirPiezas(def.piezas, { sombras: !def.suelo, id: def.id });
 
   const marcador = new THREE.Mesh(
     new THREE.PlaneGeometry(def.ancho * CELDA - 0.04, def.fondo * CELDA - 0.04),
@@ -28,7 +28,7 @@ function crearMueble(def) {
 
   const alto = def.soporte ?? new THREE.Box3().setFromObject(grupo).max.y;
   grupo.userData = {
-    def, mallas, marcador, luz, alto,
+    def, mallas, todas, marcador, luz, alto,
     x0: 0, z0: 0, rot: 0, base: 0, tmp: null,
     color: 0,
     encendido: def.encendible ? def.encendible.inicial : false,
@@ -271,11 +271,11 @@ export class GestorMuebles {
   }
 
   resaltar(mueble, modo) {
-    const { marcador, mallas } = mueble.userData;
+    const { marcador, todas } = mueble.userData;
     mueble.userData.resalte = modo;
     marcador.visible = modo === 'sel' || modo === 'mal';
     marcador.material.color.setHex(modo === 'mal' ? 0xff5050 : 0xffd27a);
-    for (const o of mallas) {
+    for (const o of todas) {
       if (modo === 'mal') {
         o.material.emissive.setHex(0xff3030);
         o.material.emissiveIntensity = 0.5;

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { modeloSuelto } from './modelos.js';
 
 const TAM = 6;
 const ALTO = 2.6;
@@ -169,9 +170,11 @@ export function crearSala(escena) {
     cuerpo.castShadow = true;
     const toque = zona(new THREE.BoxGeometry(0.45, 0.25, 0.45));
     toque.position.y = 0.12;
-    grupo.add(cuerpo, toque);
+    const modelo = modeloSuelto('sucio-cucaracha');
+    grupo.add(modelo ?? cuerpo, toque);
     grupo.position.set((Math.random() * 2 - 1) * 2.6, 0, (Math.random() * 2 - 1) * 2.6);
     [cuerpo, toque].forEach(m => { m.userData.desperfecto = cucas; });
+    if (modelo) modelo.traverse(m => { m.userData.desperfecto = cucas; });
     sala.add(grupo);
     cucarachas.push({ grupo, angulo: Math.random() * Math.PI * 2, velocidad: 0.5, pausa: 0 });
   }
@@ -313,6 +316,7 @@ export function crearSala(escena) {
   sol.shadow.camera.near = 1;
   sol.shadow.camera.far = 25;
   sol.shadow.bias = -0.0005;
+  sol.shadow.normalBias = 0.02;
   escena.add(sol);
 
   function actualizarParedes(direccion) {

@@ -59,7 +59,7 @@ Documento vivo: aquí se apunta todo lo decidido y lo pendiente para no perder n
   - cámara a 32° y centrada (Oliver: "está bien así");
   - economía más lenta y precios más altos.
 
-## En curso: modelos mejorados con Blender
+## Modelos mejorados con Blender (hecho en gran parte, 23-nov-2026)
 Petición de Oliver: "mejora todos los items, muebles, manchas, todo, con Blender, que siga siendo este estilo pero mejor".
 
 Plan:
@@ -83,3 +83,15 @@ Plan:
 - Sincronizar los dos móviles (Supabase).
 - Minijuegos para ganar monedas.
 - Mudarse a casas mejores, hasta una mansión.
+
+### Cómo regenerar los modelos
+- Los scripts están en `blender/`:
+  - `hogar_lib.py`: helpers B (caja biselada), K (cojín), Y (cilindro), S (esfera), L (torno), T (toro), U (tubo) y P (prisma);
+  - `m_muebles.py`, `m_resto.py`, `m_materiales.py` y `m_suciedad.py`: un `@modelo('id')` por objeto;
+  - `catalogo.json`: los colores de las piezas, generados desde `js/catalogo.js` con node.
+- En Blender (MCP): `import construir; construir.construir_todo(); construir.exportar()` escribe `assets/modelos.glb` con compresión Draco.
+- Para ver todos los modelos con la luz del juego: `blender/vista.html` (`?viejo` muestra los antiguos y `?ids=a,b` filtra).
+- En el juego:
+  - `modelos.js` carga el GLB (GLTFLoader + DRACOLoader del CDN) y `construirPiezas(piezas, {id})` usa el modelo nuevo si existe.
+  - `modeloSuelto('sucio-x')` sirve para la suciedad, el robot que se mueve (`robot-suelo`) y las cucarachas.
+- Al copiar archivos al PC con `device_commit_files`, a veces se copia una versión vieja: hay que comprobarlo y repetir si pasa.

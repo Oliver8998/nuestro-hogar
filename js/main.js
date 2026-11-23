@@ -15,6 +15,9 @@ import { Suciedad, TIPOS as TIPOS_SUCIEDAD, construirJardin } from './suciedad.j
 import { HISTORIA, EVENTOS, puntuacion, nuevasDiarias, infoDiaria, textoPremio } from './misiones.js';
 import { poolDe } from './ruleta.js';
 import { Minijuegos } from './minijuegos.js';
+import { cargarModelos } from './modelos.js';
+
+await cargarModelos();
 
 const CLAVE = 'hogar-estado';
 const NOMBRES = ['Michi', 'Coco', 'Luna', 'Toby', 'Nube', 'Canela', 'Pipo', 'Kiwi', 'Lola', 'Bimba', 'Churro', 'Galleta', 'Mochi', 'Rufo', 'Trufa', 'Pelusa'];

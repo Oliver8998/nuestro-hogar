@@ -128,6 +128,7 @@ export class EscenaTienda {
     sol.shadow.mapSize.set(1024, 1024);
     Object.assign(sol.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4, near: 1, far: 20 });
     sol.shadow.bias = -0.0005;
+    sol.shadow.normalBias = 0.02;
     escena.add(sol);
     const foco = new THREE.SpotLight(0xfff6ec, 9, 6, 0.45, 0.6);
     foco.position.set(-0.4, 4.2, 3.2);
@@ -161,7 +162,7 @@ export class EscenaTienda {
       this.soporte.remove(this.objeto);
       liberar(this.objeto);
     }
-    const { grupo, mallas } = construirPiezas(info.piezas);
+    const { grupo, mallas } = construirPiezas(info.piezas, { id: info.id });
     this.mallas = mallas;
     this.info = info;
     const envoltorio = new THREE.Group();
