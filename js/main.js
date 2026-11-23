@@ -1618,6 +1618,35 @@ function ponerMiNombre(nombre, yo) {
 
 const inicio = new Inicio({
   sync, ui, sonido,
+  resumen() {
+    const n = nivelCasa();
+    const p = estado.pareja || {};
+    const nombres = (p.nombres || []).filter(Boolean).join(' & ');
+    const novedades = [];
+    if (trabajos) {
+      const t = trabajos.delDia();
+      if (trabajos.turnosHoy() < 3) novedades.push(`${t.icono} Trabajo de hoy: <b>${t.nombre}</b>`);
+    }
+    if (mascotas.lista.length) {
+      const triste = mascotas.lista.find(m => m.hambre < 40 || m.felicidad < 40);
+      novedades.push(triste ? `🐾 <b>${triste.nombre}</b> os echa de menos` : `🐾 ${mascotas.lista.map(m => m.nombre).slice(0, 3).join(', ')} os esperan`);
+    }
+    try {
+      if (vida && vida.noLeidas()) novedades.push(`✉️ <b>${vida.noLeidas()}</b> carta${vida.noLeidas() > 1 ? 's' : ''} sin leer`);
+      if (pareja2 && pareja2.pendientePregunta()) novedades.push('💕 Tenéis la <b>pregunta del día</b>');
+      const f = mas.proximaFecha();
+      if (f && f.dias <= 14) novedades.push(f.dias === 0 ? `🎉 ¡Hoy es ${f.texto}!` : `📅 ${f.dias} día${f.dias > 1 ? 's' : ''} para ${f.texto}`);
+      if (nuevoDia) novedades.unshift('🎁 Regalo diario esperándoos');
+    } catch (e) {}
+    return {
+      nivel: n, icono: CASAS[n].icono, nombreNivel: CASAS[n].nombre,
+      casa: p.casa || 'Nuestro Hogar', nombres,
+      monedas: estado.monedas || 0,
+      racha: (estado.racha && estado.racha.n) || 0,
+      acogedor: estado.puntuacion || acogedor().total,
+      novedades: novedades.slice(0, 3)
+    };
+  },
   codigoLocal: () => sync.codigo || null,
   instantanea: (nombre, yo) => {
     ponerMiNombre(nombre, yo);

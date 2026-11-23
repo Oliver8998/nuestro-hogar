@@ -223,6 +223,15 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - Logros: Currantes (5 trabajos distintos); secretos Pluriempleo (los 14) y Empleados del mes (5 turnos perfectos).
 - Test: `/tmp/prueba/t7.py hoja,pizza,...`.
 
+## Menú principal bonito (pedido el 23-nov 19:56) — HECHO
+- `inicio.js` dibuja con `escenaSvg(nivel)` una escena SVG animada que depende de la hora:
+  - de día: sol, nubes y pájaros; al atardecer, el sol se pone; de noche: luna, estrellas que titilan y luciérnagas;
+  - casa con humo en la chimenea, ventanas que brillan, gato moviendo la cola, flores, corazones subiendo, valla desde el nivel 3 y torres en la mansión.
+- Título con letras que entran y botan.
+- En bienvenida, frases que van rotando y el botón grande "¡Empezar!".
+- Con la sesión iniciada se ve una tarjeta de la casa (`ctx.resumen()` en main): monedas, racha, acogedor y hasta 3 novedades (regalo diario, trabajo de hoy, mascotas, cartas, pregunta del día y fechas especiales), más el botón "▶ ¡A jugar!" que late.
+- El suelo de la escena sube con `.suelo-escena` para que la casa se vea por encima de la tarjeta.
+
 ## Ideas pendientes (no pedidas aún)
 - Sincronizar los dos móviles (Supabase).
 - Minijuegos para ganar monedas.
