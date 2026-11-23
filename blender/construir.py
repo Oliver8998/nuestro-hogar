@@ -4,7 +4,7 @@ if R not in sys.path:
     sys.path.append(R)
 import hogar_lib
 importlib.reload(hogar_lib)
-MODULOS = ['m_muebles', 'm_resto', 'm_materiales', 'm_suciedad']
+MODULOS = ['m_muebles', 'm_resto', 'm_materiales', 'm_suciedad', 'm_nuevos']
 
 
 def construir_todo(solo=None):
