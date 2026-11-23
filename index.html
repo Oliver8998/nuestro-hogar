@@ -11,6 +11,9 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <title>Nuestro Hogar</title>
 <script type="importmap">
@@ -19,21 +22,40 @@
 </head>
 <body>
 <canvas id="escena"></canvas>
+
 <div id="hud">
-  <button id="btn-modo">🔨 Reparar</button>
-  <div class="derecha">
-    <div class="pastilla">🏚️ <span id="contador">0/0</span></div>
-    <div class="pastilla">🪙 <span id="monedas-valor">0</span></div>
+  <div class="pastilla casa">
+    <span id="casa-icono">🏚️</span>
+    <div class="casa-datos">
+      <div class="casa-texto">Reforma <b id="contador">0/10</b></div>
+      <div class="mini-barra"><div id="casa-relleno"></div></div>
+    </div>
   </div>
+  <div class="pastilla moneda">🪙 <span id="monedas-valor">0</span></div>
 </div>
+
 <div id="aviso"></div>
-<div id="progreso" class="oculto">
-  <div class="texto"></div>
-  <div class="barra"><div class="relleno"></div></div>
-</div>
 <div id="menu-objeto" class="oculto"></div>
-<div id="catalogo" class="barra-inferior"></div>
-<div id="lista-reparar" class="barra-inferior oculto"></div>
+
+<div id="barra">
+  <button id="btn-tienda"><span>🛒</span><small>Tienda</small></button>
+  <div id="inventario"></div>
+</div>
+
+<div id="fondo"></div>
+<div id="tienda">
+  <div class="asa"></div>
+  <div class="cabecera">
+    <h2>Tienda</h2>
+    <div class="pastilla moneda">🪙 <span id="monedas-tienda">0</span></div>
+    <button class="cerrar">✕</button>
+  </div>
+  <div class="pestanas"></div>
+  <div class="rejilla"></div>
+</div>
+
+<div id="fantasma" class="oculto"></div>
+
 <script type="module" src="js/main.js"></script>
 </body>
 </html>

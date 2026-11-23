@@ -4,7 +4,8 @@ const TAM = 6;
 const ALTO = 2.6;
 const GROSOR = 0.15;
 const PARED_SUCIA = new THREE.Color(0xb3a78d);
-const PARED_LIMPIA = new THREE.Color(0xf3eadb);
+const RESALTE_OK = new THREE.Color(0x3cd870);
+const RESALTE_MAL = new THREE.Color(0xff4040);
 
 function caja(w, h, d, color) {
   const m = new THREE.Mesh(
@@ -29,31 +30,31 @@ function zona(geo) {
   return new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }));
 }
 
+function visibleArriba(o) {
+  while (o) {
+    if (!o.visible) return false;
+    o = o.parent;
+  }
+  return true;
+}
+
 export function crearSala(escena) {
   const mitad = TAM / 2;
   const sala = new THREE.Group();
   escena.add(sala);
-  const reparaciones = [];
+  const desperfectos = [];
+  const animaciones = [];
+  const suelo = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 
-  function nuevaReparacion(def, objetos, alProgreso, alCompletar) {
-    const rep = { ...def, objetos, progreso: 0, acumulado: 0, hecha: false, alProgreso, alCompletar };
-    for (const obj of objetos) obj.traverse(o => { if (o.isMesh) o.userData.reparacion = rep; });
-    reparaciones.push(rep);
-    return rep;
+  function nuevoDesperfecto(def, objetos, alProgreso, alCompletar) {
+    const d = { ...def, objetos, hecho: false, alProgreso, alCompletar };
+    for (const obj of objetos) obj.traverse(o => { if (o.isMesh) o.userData.desperfecto = d; });
+    desperfectos.push(d);
+    return d;
   }
 
-  function avanzar(rep, cantidad) {
-    if (rep.hecha) return false;
-    rep.acumulado += cantidad;
-    rep.progreso = Math.min(1, rep.acumulado / rep.cantidad);
-    rep.alProgreso(rep.progreso);
-    if (rep.acumulado >= rep.cantidad - 1e-6) {
-      rep.progreso = 1;
-      rep.hecha = true;
-      rep.alCompletar();
-      return true;
-    }
-    return false;
+  function animar(duracion, alProgreso, alFin) {
+    animaciones.push({ t: 0, duracion, alProgreso, alFin });
   }
 
   const base = caja(TAM + GROSOR * 2 + 0.2, 0.4, TAM + GROSOR * 2 + 0.2, 0xb9a48c);
@@ -68,11 +69,37 @@ export function crearSala(escena) {
     sala.add(tabla);
   }
 
+  const paredes = [];
+  const defs = [
+    { x: 0, z: -mitad - GROSOR / 2, rot: 0, n: new THREE.Vector3(0, 0, -1) },
+    { x: 0, z: mitad + GROSOR / 2, rot: Math.PI, n: new THREE.Vector3(0, 0, 1) },
+    { x: -mitad - GROSOR / 2, z: 0, rot: Math.PI / 2, n: new THREE.Vector3(-1, 0, 0) },
+    { x: mitad + GROSOR / 2, z: 0, rot: -Math.PI / 2, n: new THREE.Vector3(1, 0, 0) }
+  ];
+
+  defs.forEach((d, i) => {
+    const grupo = new THREE.Group();
+    grupo.position.set(d.x, 0, d.z);
+    grupo.rotation.y = d.rot;
+    const muro = caja(TAM + GROSOR * 2, ALTO + 0.1, GROSOR, PARED_SUCIA.getHex());
+    muro.position.y = (ALTO + 0.1) / 2 - 0.1;
+    muro.userData.pared = i;
+    grupo.add(muro);
+    grupo.userData = { normal: d.n, muro, pintura: null, requisito: null, desperfectos: [] };
+    sala.add(grupo);
+    paredes.push(grupo);
+  });
+
+  const cara = GROSOR / 2 + 0.006;
+
   const cucarachas = [];
-  const repCucas = nuevaReparacion(
-    { id: 'cucarachas', nombre: 'Echar a las cucarachas', icono: '🪳', coste: 0, tipo: 'aplastar', cantidad: 6, pista: 'Tócalas para aplastarlas' },
+  const cucas = nuevoDesperfecto(
+    { id: 'cucarachas', mensaje: '¡Adiós, cucarachas!', nombre: 'Cucarachas', material: 'insecticida' },
     [],
-    () => {},
+    p => cucarachas.forEach(c => {
+      c.grupo.scale.setScalar(Math.max(0.001, 1 - p));
+      c.grupo.rotation.z = p * Math.PI;
+    }),
     () => {
       cucarachas.forEach(c => sala.remove(c.grupo));
       cucarachas.length = 0;
@@ -90,28 +117,18 @@ export function crearSala(escena) {
     toque.position.y = 0.12;
     grupo.add(cuerpo, toque);
     grupo.position.set((Math.random() * 2 - 1) * 2.6, 0, (Math.random() * 2 - 1) * 2.6);
-    const c = { grupo, angulo: Math.random() * Math.PI * 2, velocidad: 0.5, pausa: 0, muerta: false, tiempoMuerta: 0 };
-    [cuerpo, toque].forEach(m => {
-      m.userData.reparacion = repCucas;
-      m.userData.cucaracha = c;
-    });
+    [cuerpo, toque].forEach(m => { m.userData.desperfecto = cucas; });
     sala.add(grupo);
-    cucarachas.push(c);
+    cucarachas.push({ grupo, angulo: Math.random() * Math.PI * 2, velocidad: 0.5, pausa: 0 });
   }
-
-  function aplastar(c) {
-    if (!c || c.muerta) return false;
-    c.muerta = true;
-    c.grupo.scale.set(1.4, 0.2, 1.4);
-    return avanzar(repCucas, 1);
-  }
+  cucas.objetos = cucarachas.map(c => c.grupo);
 
   const manchaSuelo = mancha(0.45, 0x3d2c1d, 0.45);
   manchaSuelo.rotation.x = -Math.PI / 2;
   manchaSuelo.position.set(-1, 0.003, 1.4);
   sala.add(manchaSuelo);
-  nuevaReparacion(
-    { id: 'mancha', nombre: 'Fregar la mancha', icono: '🧽', coste: 0, tipo: 'frotar', cantidad: 700, pista: 'Frota para limpiar' },
+  nuevoDesperfecto(
+    { id: 'mancha', mensaje: '¡Suelo limpio!', nombre: 'Mancha del suelo', material: 'limpiador' },
     [manchaSuelo],
     p => { manchaSuelo.material.opacity = manchaSuelo.userData.opacidad * (1 - p); },
     () => sala.remove(manchaSuelo)
@@ -121,38 +138,15 @@ export function crearSala(escena) {
   tablaRota.position.set(1.25, 0.03, 1.6);
   tablaRota.rotation.x = -0.12;
   sala.add(tablaRota);
-  nuevaReparacion(
-    { id: 'tabla', nombre: 'Clavar la tabla', icono: '🔨', coste: 15, tipo: 'toques', cantidad: 5, pista: 'Toca para dar martillazos' },
+  nuevoDesperfecto(
+    { id: 'tabla', mensaje: '¡Tabla clavada!', nombre: 'Tabla levantada', material: 'clavos' },
     [tablaRota],
     p => {
       tablaRota.rotation.x = -0.12 * (1 - p);
-      tablaRota.position.y = 0.03 - 0.08 * p;
+      tablaRota.position.y = 0.03 - 0.08 * p + Math.sin(p * Math.PI * 5) * 0.02;
     },
     () => sala.remove(tablaRota)
   );
-
-  const paredes = [];
-  const defs = [
-    { x: 0, z: -mitad - GROSOR / 2, rot: 0, n: new THREE.Vector3(0, 0, -1) },
-    { x: 0, z: mitad + GROSOR / 2, rot: Math.PI, n: new THREE.Vector3(0, 0, 1) },
-    { x: -mitad - GROSOR / 2, z: 0, rot: Math.PI / 2, n: new THREE.Vector3(-1, 0, 0) },
-    { x: mitad + GROSOR / 2, z: 0, rot: -Math.PI / 2, n: new THREE.Vector3(1, 0, 0) }
-  ];
-
-  for (const d of defs) {
-    const grupo = new THREE.Group();
-    grupo.position.set(d.x, 0, d.z);
-    grupo.rotation.y = d.rot;
-    const muro = caja(TAM + GROSOR * 2, ALTO + 0.1, GROSOR, PARED_SUCIA.getHex());
-    muro.position.y = (ALTO + 0.1) / 2 - 0.1;
-    grupo.add(muro);
-    grupo.userData.normal = d.n;
-    grupo.userData.muro = muro;
-    sala.add(grupo);
-    paredes.push(grupo);
-  }
-
-  const cara = GROSOR / 2 + 0.006;
 
   const ventana = new THREE.Group();
   ventana.position.set(1, 1.5, cara);
@@ -188,24 +182,22 @@ export function crearSala(escena) {
   carton.position.set(0.3, 0, 0.01);
   carton.rotation.z = 0.04;
   ventana.add(carton);
-
-  const cintas = [];
   [0.7, -0.7].forEach(ang => {
     const cinta = caja(0.7, 0.06, 0.005, 0xe0c878);
     cinta.castShadow = false;
+    cinta.position.set(0, 0, 0.015);
     cinta.rotation.z = ang;
     carton.add(cinta);
-    cinta.position.set(0, 0, 0.015);
-    cintas.push(cinta);
   });
 
   paredes[0].add(ventana);
-  nuevaReparacion(
-    { id: 'ventana', nombre: 'Cambiar el cristal', icono: '🪟', coste: 40, tipo: 'mantener', cantidad: 1.5, pista: 'Mantén pulsado' },
+  paredes[0].userData.desperfectos.push(nuevoDesperfecto(
+    { id: 'ventana', mensaje: '¡Cristal nuevo!', nombre: 'Ventana rota', material: 'cristal', pared: 0 },
     [ventana],
     p => {
-      carton.position.z = 0.01 + p * 0.15;
-      carton.rotation.z = 0.04 + p * 0.3;
+      carton.position.z = 0.01 + p * 0.25;
+      carton.position.y = -p * 0.6;
+      carton.rotation.z = 0.04 + p * 0.6;
     },
     () => {
       ventana.remove(carton);
@@ -214,7 +206,7 @@ export function crearSala(escena) {
       nuevo.position.set(0.3, 0, 0.001);
       ventana.add(nuevo);
     }
-  );
+  ));
 
   const grietas = [];
   [[-1.6, 1.9, 0.6, -0.7], [-1.3, 1.55, 0.4, 0.5], [-1.45, 1.2, 0.5, -0.4]].forEach(([x, y, largo, ang]) => {
@@ -229,12 +221,14 @@ export function crearSala(escena) {
   const zonaGrietas = zona(new THREE.PlaneGeometry(1.1, 1.3));
   zonaGrietas.position.set(-1.45, 1.55, cara + 0.003);
   paredes[0].add(zonaGrietas);
-  nuevaReparacion(
-    { id: 'grietas', nombre: 'Tapar las grietas', icono: '🪣', coste: 10, tipo: 'frotar', cantidad: 500, pista: 'Desliza para echar masilla' },
+  const desGrietas = nuevoDesperfecto(
+    { id: 'grietas', mensaje: '¡Grietas tapadas!', nombre: 'Grietas', material: 'masilla', pared: 0 },
     [zonaGrietas, ...grietas],
     p => grietas.forEach(g => { g.material.opacity = 1 - p; }),
     () => [zonaGrietas, ...grietas].forEach(o => paredes[0].remove(o))
   );
+  paredes[0].userData.desperfectos.push(desGrietas);
+  paredes[0].userData.requisito = desGrietas;
 
   const humedades = [];
   [[1.6, 0.4, 0.5, 0.45], [2.1, 0.25, 0.35, 0.35], [1.2, 0.75, 0.3, 0.3], [-2.2, 2.2, 0.4, 0.3]].forEach(([x, y, r, o]) => {
@@ -243,61 +237,18 @@ export function crearSala(escena) {
     paredes[2].add(m);
     humedades.push(m);
   });
-  nuevaReparacion(
-    { id: 'humedad', nombre: 'Quitar la humedad', icono: '💧', coste: 10, tipo: 'frotar', cantidad: 900, pista: 'Frota para quitarla' },
+  const desHumedad = nuevoDesperfecto(
+    { id: 'humedad', mensaje: '¡Adiós, humedad!', nombre: 'Humedad', material: 'antihumedad', pared: 2 },
     humedades,
     p => humedades.forEach(m => { m.material.opacity = m.userData.opacidad * (1 - p); }),
     () => humedades.forEach(m => paredes[2].remove(m))
   );
+  paredes[2].userData.desperfectos.push(desHumedad);
+  paredes[2].userData.requisito = desHumedad;
 
-  paredes.forEach((pared, i) => {
-    const muro = pared.userData.muro;
-    nuevaReparacion(
-      { id: `pintura-${i}`, nombre: `Pintar pared ${i + 1}`, icono: '🖌️', coste: 25, tipo: 'frotar', cantidad: 1600, pista: 'Desliza para pintar' },
-      [muro],
-      p => muro.material.color.lerpColors(PARED_SUCIA, PARED_LIMPIA, p),
-      () => muro.material.color.copy(PARED_LIMPIA)
-    );
-  });
+  escena.add(new THREE.HemisphereLight(0xfff4e6, 0x8a7560, 1.8));
 
-  const cable = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.01, 0.01, 0.6, 6),
-    new THREE.MeshStandardMaterial({ color: 0x222222 })
-  );
-  cable.position.set(0, ALTO - 0.3, 0);
-  sala.add(cable);
-
-  const bombilla = new THREE.Mesh(
-    new THREE.SphereGeometry(0.08, 12, 10),
-    new THREE.MeshStandardMaterial({ color: 0xd9d2bd, emissive: 0xffd27a, emissiveIntensity: 0.25 })
-  );
-  bombilla.position.set(0, ALTO - 0.65, 0);
-  sala.add(bombilla);
-
-  const luz = new THREE.PointLight(0xffd08a, 2.5, 0, 2);
-  luz.position.copy(bombilla.position);
-  sala.add(luz);
-
-  const zonaBombilla = zona(new THREE.SphereGeometry(0.35, 8, 6));
-  zonaBombilla.position.copy(bombilla.position);
-  sala.add(zonaBombilla);
-  nuevaReparacion(
-    { id: 'bombilla', nombre: 'Cambiar la bombilla', icono: '💡', coste: 5, tipo: 'mantener', cantidad: 1.2, pista: 'Mantén pulsado para cambiarla' },
-    [zonaBombilla],
-    p => bombilla.scale.setScalar(1 + p * 0.5),
-    () => {
-      bombilla.scale.setScalar(1);
-      bombilla.material.color.setHex(0xfff1c9);
-      bombilla.material.emissiveIntensity = 1.2;
-      luz.intensity = 10;
-      sala.remove(zonaBombilla);
-    }
-  );
-
-  const hemi = new THREE.HemisphereLight(0xfff4e6, 0x8a7560, 1.4);
-  escena.add(hemi);
-
-  const sol = new THREE.DirectionalLight(0xfff0dd, 1.6);
+  const sol = new THREE.DirectionalLight(0xfff0dd, 2);
   sol.position.set(6, 10, 4);
   sol.castShadow = true;
   sol.shadow.mapSize.set(1024, 1024);
@@ -311,36 +262,137 @@ export function crearSala(escena) {
   escena.add(sol);
 
   function actualizarParedes(direccion) {
-    for (const p of paredes) p.visible = p.userData.normal.dot(direccion) < 0.25;
+    for (const p of paredes) p.visible = p.userData.normal.dot(direccion) < -0.15;
   }
 
   function objetivos() {
     const lista = [];
-    for (const r of reparaciones) {
-      if (r.hecha) continue;
-      if (r.tipo === 'aplastar') cucarachas.forEach(c => { if (!c.muerta) lista.push(c.grupo); });
-      else lista.push(...r.objetos);
-    }
+    for (const d of desperfectos) if (!d.hecho) lista.push(...d.objetos);
+    for (const p of paredes) lista.push(p.userData.muro);
     return lista;
   }
 
-  function completarGuardadas(ids) {
-    for (const r of reparaciones) {
-      if (!ids.includes(r.id)) continue;
-      r.progreso = 1;
-      r.alProgreso(1);
-      r.hecha = true;
-      r.alCompletar();
+  function identificar(objeto, material) {
+    let o = objeto;
+    while (o && !o.userData.desperfecto && o.userData.pared === undefined && !o.userData.def) o = o.parent;
+    if (!o || o.userData.def) return null;
+    if (o.userData.desperfecto) return { tipo: 'desperfecto', d: o.userData.desperfecto };
+    const i = o.userData.pared;
+    const encaja = paredes[i].userData.desperfectos.find(d => !d.hecho && d.material === material.id);
+    if (encaja) return { tipo: 'desperfecto', d: encaja };
+    return { tipo: 'pared', i };
+  }
+
+  function buscar(raycaster, material, ocluyentes) {
+    const hits = raycaster.intersectObjects([...objetivos(), ...ocluyentes], true);
+    for (const h of hits) {
+      if (!visibleArriba(h.object)) continue;
+      const obj = identificar(h.object, material);
+      if (material.id !== 'insecticida') return obj;
+      if (obj && obj.tipo === 'desperfecto' && obj.d === cucas) return obj;
+      break;
+    }
+    if (material.id === 'insecticida' && !cucas.hecho) {
+      const p = new THREE.Vector3();
+      if (raycaster.ray.intersectPlane(suelo, p) && Math.abs(p.x) < mitad && Math.abs(p.z) < mitad) {
+        return { tipo: 'desperfecto', d: cucas };
+      }
+    }
+    return null;
+  }
+
+  function puedeAplicar(material, obj) {
+    if (obj.tipo === 'desperfecto') {
+      if (obj.d.hecho) return { ok: false, motivo: 'Eso ya está arreglado' };
+      if (obj.d.material !== material.id) return { ok: false, motivo: `Eso no sirve para: ${obj.d.nombre.toLowerCase()}` };
+      return { ok: true };
+    }
+    const pared = paredes[obj.i].userData;
+    if (!material.pinta) return { ok: false, motivo: 'Eso no sirve para la pared' };
+    const req = pared.requisito;
+    if (req && !req.hecho) {
+      return { ok: false, motivo: req.id === 'grietas' ? 'Primero tapa las grietas con masilla' : 'Primero quita la humedad' };
+    }
+    if (pared.pintura === material.pinta) return { ok: false, motivo: 'Ya está de ese color' };
+    return { ok: true };
+  }
+
+  function aplicar(material, obj) {
+    if (obj.tipo === 'desperfecto') {
+      const d = obj.d;
+      d.hecho = true;
+      animar(0.9, d.alProgreso, d.alCompletar);
+      return;
+    }
+    const pared = paredes[obj.i].userData;
+    const desde = pared.muro.material.color.clone();
+    const hasta = new THREE.Color(material.pinta);
+    pared.pintura = material.pinta;
+    animar(0.9, p => pared.muro.material.color.lerpColors(desde, hasta, p), () => {});
+  }
+
+  let resaltados = [];
+  function resaltar(obj, valido) {
+    for (const mat of resaltados) {
+      mat.emissive.copy(mat.userData.emisivaBase.color);
+      mat.emissiveIntensity = mat.userData.emisivaBase.intensidad;
+    }
+    resaltados = [];
+    if (!obj) return;
+    const raices = obj.tipo === 'desperfecto' ? obj.d.objetos : [paredes[obj.i].userData.muro];
+    for (const r of raices) {
+      r.traverse(m => {
+        if (!m.isMesh) return;
+        const mat = m.material;
+        if (!mat.emissive || mat.colorWrite === false || resaltados.includes(mat)) return;
+        if (!mat.userData.emisivaBase) mat.userData.emisivaBase = { color: mat.emissive.clone(), intensidad: mat.emissiveIntensity };
+        mat.emissive.copy(valido ? RESALTE_OK : RESALTE_MAL);
+        mat.emissiveIntensity = 0.35;
+        resaltados.push(mat);
+      });
     }
   }
 
-  function animar(dt) {
-    for (const c of cucarachas) {
-      if (c.muerta) {
-        c.tiempoMuerta += dt;
-        if (c.tiempoMuerta > 0.6) c.grupo.visible = false;
-        continue;
+  function estado() {
+    return {
+      arreglos: desperfectos.filter(d => d.hecho).map(d => d.id),
+      paredes: paredes.map(p => p.userData.pintura)
+    };
+  }
+
+  function restaurar(datos) {
+    for (const d of desperfectos) {
+      if (!datos.arreglos.includes(d.id)) continue;
+      d.hecho = true;
+      d.alProgreso(1);
+      d.alCompletar();
+    }
+    datos.paredes.forEach((hex, i) => {
+      if (hex === null || hex === undefined) return;
+      paredes[i].userData.pintura = hex;
+      paredes[i].userData.muro.material.color.setHex(hex);
+    });
+  }
+
+  function progreso() {
+    const hechos = desperfectos.filter(d => d.hecho).length + paredes.filter(p => p.userData.pintura !== null).length;
+    return { hechos, total: desperfectos.length + paredes.length };
+  }
+
+  function actualizar(dt) {
+    for (let i = animaciones.length - 1; i >= 0; i--) {
+      const a = animaciones[i];
+      a.t += dt;
+      const p = Math.min(1, a.t / a.duracion);
+      a.alProgreso(p);
+      if (p >= 1) {
+        animaciones.splice(i, 1);
+        a.alFin();
       }
+    }
+
+    if (cucas.hecho) return;
+    for (const c of cucarachas) {
       if (c.pausa > 0) {
         c.pausa -= dt;
         continue;
@@ -359,5 +411,5 @@ export function crearSala(escena) {
     }
   }
 
-  return { actualizarParedes, animar, reparaciones, objetivos, avanzar, aplastar, completarGuardadas };
+  return { actualizarParedes, actualizar, buscar, puedeAplicar, aplicar, resaltar, estado, restaurar, progreso };
 }
