@@ -277,4 +277,5 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 ## Nombre
 - El juego se llama **Our Place** (igual en los dos idiomas). Descartados: Little Nest (suena a bebés), Hearthly, Snug, Homely, Two Keys, Housewarming.
 - Está en `js/inicio.js` (título animado), `index.html` (title y apple-mobile-web-app-title), `manifest.json` y el texto de invitación de `js/pareja.js`.
+- Antes de publicarlo en tiendas: revisar bien el nombre (existe un juego de itch.io "Our Place" de 2019, la app educativa "OurPlace" y la marca de cocina Our Place, registrada solo para menaje). Valorar un subtítulo o una palabra inventada.
 - "Nuestro Hogar" sigue siendo solo el nombre por defecto de la casa (lo cambia cada pareja en Ajustes).
