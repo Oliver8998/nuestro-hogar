@@ -292,6 +292,22 @@ export class GestorMascotas {
     return this.lista.map(m => m.serializar());
   }
 
+  sincronizar(lista) {
+    const ids = new Set(lista.map(d => d.id));
+    for (const m of [...this.lista]) if (!ids.has(m.id)) this.quitar(m);
+    for (const d of lista) {
+      const m = this.lista.find(x => x.id === d.id);
+      if (!m) {
+        this.cargar([d]);
+        continue;
+      }
+      for (const k of Object.keys(d)) {
+        if (k === 'x' || k === 'z' || k === 'id' || k === 'especie') continue;
+        m[k] = d[k];
+      }
+    }
+  }
+
   intersectar(raycaster) {
     const hits = raycaster.intersectObjects(this.lista.map(m => m.grupo), true);
     if (!hits.length) return null;

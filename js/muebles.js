@@ -29,6 +29,7 @@ function crearMueble(def) {
   const alto = def.soporte ?? new THREE.Box3().setFromObject(grupo).max.y;
   grupo.userData = {
     def, mallas, todas, marcador, luz, alto,
+    uid: Math.random().toString(36).slice(2, 10),
     x0: 0, z0: 0, rot: 0, base: 0, tmp: null,
     color: 0,
     encendido: def.encendible ? def.encendible.inicial : false,
@@ -128,6 +129,7 @@ export class GestorMuebles {
     if (def.colores && extra.color !== undefined && extra.color !== null) mueble.userData.color = extra.color % def.colores.paleta.length;
     if (def.encendible && extra.encendido !== undefined) mueble.userData.encendido = extra.encendido;
     if (extra.datos) mueble.userData.datos = extra.datos;
+    if (extra.uid) mueble.userData.uid = extra.uid;
     const base = extra.base ?? this.apoyo(mueble, x0, z0, rot).base;
     this.escena.add(mueble);
     this.muebles.push(mueble);
@@ -307,7 +309,7 @@ export class GestorMuebles {
   serializar() {
     return this.muebles.map(m => {
       const d = m.userData;
-      return { id: d.def.id, x0: d.x0, z0: d.z0, rot: d.rot, base: +d.base.toFixed(3), color: d.color, encendido: d.encendido, ...(d.datos ? { datos: d.datos } : {}) };
+      return { uid: d.uid, id: d.def.id, x0: d.x0, z0: d.z0, rot: d.rot, base: +d.base.toFixed(3), color: d.color, encendido: d.encendido, ...(d.datos ? { datos: d.datos } : {}) };
     });
   }
 }

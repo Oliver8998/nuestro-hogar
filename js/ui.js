@@ -93,6 +93,8 @@ export class UI {
       pestanas.appendChild(b);
     }
     $('det-comprar').addEventListener('click', () => this.comprarSeleccion());
+    $('det-regalar').addEventListener('click', () => this.sel && this.ev.alRegalar(this.sel.info, this.sel.color, this.sel.precio));
+    $('det-proponer').addEventListener('click', () => this.sel && this.ev.alProponer(this.sel.info, this.sel.color, this.sel.precio));
 
     $('btn-tienda').addEventListener('click', () => this.abrirTienda());
     $('btn-inventario').addEventListener('click', () => this.alternarInventario());
@@ -330,6 +332,10 @@ export class UI {
     const boton = this.$('det-comprar');
     boton.innerHTML = `Comprar${this.sel.cantidad > 1 ? ` ${this.sel.cantidad}` : ''} · 🪙 ${total}`;
     boton.disabled = total > this.monedasActual;
+    const pareja = this.ev.alHayPareja && this.ev.alHayPareja();
+    const regalable = pareja && this.sel.info.tipo === 'mueble' && this.sel.cantidad === 1;
+    this.$('det-regalar').classList.toggle('oculto', !regalable);
+    this.$('det-proponer').classList.toggle('oculto', !regalable);
     const n = this.inventario ? this.inventario.cantidad(this.sel.info.id) : 0;
     const t = this.$('det-tienes');
     t.textContent = `Tienes ${n}`;

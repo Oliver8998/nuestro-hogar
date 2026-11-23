@@ -440,7 +440,7 @@ export function crearSala(escena) {
 
   function restaurar(datos) {
     for (const d of desperfectos) {
-      if (!datos.arreglos.includes(d.id)) continue;
+      if (!datos.arreglos.includes(d.id) || d.hecho) continue;
       d.hecho = true;
       d.alProgreso(1);
       d.alCompletar();

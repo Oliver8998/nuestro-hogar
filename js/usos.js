@@ -84,6 +84,10 @@ export class Usos {
       else if (trabajando) ops.push({ icono: '⏳', texto: this.textoTiempo(t.fin - ahora()), accion: () => ui.aviso(`💻 Trabajando… cobraréis 🪙 ${t.pago} en ${this.textoTiempo(t.fin - ahora())}`) });
       else ops.push({ icono: '💰', texto: `Cobrar ${t.pago}`, accion: () => { this.estado.trabajo = null; this.ctx.ganar(t.pago, m, '💼'); this.ctx.registrar('trabajar'); this.ordenador(m); guardar(); this.ctx.refrescarMenu(); } });
     }
+    if (def.id === 'nevera' && this.ctx.pareja) {
+      const n = (this.estado.notas || []).length;
+      ops.push({ icono: '📝', texto: n ? `Notas (${n})` : 'Nota', accion: () => (n ? this.ctx.pareja.verNotas() : this.ctx.pareja.escribirNota()) });
+    }
     if (def.id === 'tele') {
       ops.push({ icono: '📺', texto: m.userData.encendido ? 'Apagar' : 'Dibujos', accion: () => { this.ctx.gestor.alternarEncendido(m); this.ctx.mascotasMirar && m.userData.encendido && this.ctx.mascotasMirar(m); sonido.pop(); guardar(); this.ctx.refrescarMenu(); } });
     }

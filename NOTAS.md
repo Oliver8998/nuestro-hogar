@@ -93,12 +93,17 @@ Fases:
    - Fotos subidas (`hogar-fotos` en localStorage, reducidas a 640 px) colgadas en 8 huecos de las paredes (`estado.paredFotos`).
    - Foto bonita de la casa con marco, que se puede compartir.
    - Diario con el antes y el después (`hogar-diario`): guarda una foto automática cada 2 días como mínimo.
-3. ⏳ Minijuegos para ganar monedas (cocina, memory, puzzle con foto), racha diaria, teletrabajo (ordenador) y huerto.
-4. ⏳ Objetos que se usan: sofá, tele con dibujos, radio con música y piano con teclas.
+3. ✅ Minijuegos para ganar monedas (cocina, memory, puzzle con foto), racha diaria, teletrabajo (ordenador) y huerto.
+4. ✅ Objetos que se usan: sofá, tele con dibujos, radio con música y piano con teclas.
 5. ⏳ Mascotas: personalidad, crecer, trastadas y accesorios.
 6. ⏳ Progresión: mudanzas y más habitaciones, puntuación de acogedor, colecciones, logros y diario.
-7. ⏳ Pareja con Supabase: sincronizar, notitas en la nevera, regalos, votaciones y misiones de pareja.
-   - Oliver tiene que pasar la URL y la publishable key (`sb_publishable_`); el botón Connect del panel las muestra.
+7. ✅ Pareja con Supabase: sincronizar, notitas en la nevera, regalos, votaciones y misiones de pareja.
+   - Proyecto Supabase `nuestro-hogae`, URL https://lekqmspkizhxsceyswzu.supabase.co, con la publishable key en `js/sync.js`. Oliver ya ejecutó el SQL de las tablas `hogares`, `mensajes` y `fotos` (RLS abierta para anon y realtime activado).
+   - `sync.js` usa REST + sondeo cada 3 s (sin supabase-js). La casa entera va en `hogares.datos`; gana la última escritura y se usa `version` para el bloqueo optimista.
+   - Los muebles llevan `uid` y se aplican por diferencias (`sincronizarMuebles` en main). Solo el móvil "yo=0" (quien creó la casa) genera suciedad.
+   - `pareja.js`: notas (`estado.notas`), regalos (`estado.regalos`), votos (`estado.votos`) y misiones de pareja (`estado.parejaDia`). Las fotos van a la tabla `fotos`.
+   - Desde el contenedor no se llega a supabase.co: se prueba con un Supabase falso en playwright (`/tmp/prueba/pareja.py`).
+   - Juegos y usos: `juegos.js` (cocina, parejas, puzzle; 3 partidas premiadas al día) y `usos.js` (huerto, ordenador/teletrabajo, tele con dibujos, radio con música, piano, sofá con mascotas y notas de la nevera).
 
 ## Ideas pendientes (no pedidas aún)
 - Sincronizar los dos móviles (Supabase).

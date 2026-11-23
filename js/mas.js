@@ -204,6 +204,24 @@ export class Mas {
     return true;
   }
 
+  fusionarFotos(remotas) {
+    if (!remotas) return;
+    let cambio = false;
+    for (const f of remotas.nuevas) {
+      if (!this.fotos.some(x => x.id === f.id)) {
+        this.fotos.push(f);
+        cambio = true;
+      }
+    }
+    const antes = this.fotos.length;
+    this.fotos = this.fotos.filter(f => remotas.todas.includes(f.id) || Date.now() - f.fecha < 60000);
+    if (cambio || antes !== this.fotos.length) {
+      this.fotos.sort((a, b) => b.fecha - a.fecha);
+      this.guardarFotos();
+      this.pintarPared();
+    }
+  }
+
   pintarPared() {
     const { sala } = this.ctx;
     const pared = this.estado.paredFotos || [];
@@ -271,6 +289,7 @@ export class Mas {
           this.fotos.shift();
           return;
         }
+        this.ctx.alFotoNueva && this.ctx.alFotoNueva(this.fotos[0]);
         sonido.arreglo();
         this.abrirAlbum();
         this.elegirHueco(this.fotos[0]);
@@ -300,6 +319,7 @@ export class Mas {
             if (i >= 0) pared[i] = null;
             this.fotos = this.fotos.filter(x => x !== f);
             this.guardarFotos();
+            this.ctx.alFotoBorrada && this.ctx.alFotoBorrada(f.id);
             this.trasCambioPared();
           }
         },

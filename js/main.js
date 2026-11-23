@@ -20,6 +20,8 @@ import { Ambiente, temporada, NOMBRE_TEMPORADA } from './ambiente.js';
 import { Mas } from './mas.js';
 import { Juegos, JUEGOS, PARTIDAS_PREMIADAS } from './juegos.js';
 import { Usos } from './usos.js';
+import { Sync } from './sync.js';
+import { Pareja } from './pareja.js';
 
 await cargarModelos();
 
@@ -112,6 +114,84 @@ const suciedad = new Suciedad(escena, {
 
 const minijuegos = new Minijuegos(sonido);
 
+const LOCALES = ['dia', 'bienvenida', 'juegosHoy', 'gratis'];
+let sync = null;
+let pareja = null;
+
+function instantanea() {
+  const e = {};
+  for (const [k, v] of Object.entries(estado)) if (!LOCALES.includes(k)) e[k] = v;
+  return {
+    estado: e,
+    muebles: gestor.serializar(),
+    inventario: inventario.serializar(),
+    sala: sala.estado(),
+    mascotas: mascotas.serializar(),
+    suciedad: suciedad.serializar()
+  };
+}
+
+function sincronizarMuebles(lista) {
+  const porUid = new Map(gestor.muebles.map(m => [m.userData.uid, m]));
+  const remotos = new Set(lista.map(d => d.uid));
+  const cambiados = [];
+  const ocupado = m => controles && controles.seleccionado === m && controles.modo !== 'nada';
+  for (const m of [...gestor.muebles]) {
+    if (remotos.has(m.userData.uid) || ocupado(m)) continue;
+    if (controles && controles.seleccionado === m) controles.seleccionar(null);
+    gestor.quitar(m);
+    cambiados.push({ tipo: 'quitar', nombre: m.userData.def.nombre });
+  }
+  for (const d of [...lista].sort((a, b) => a.base - b.base)) {
+    const m = porUid.get(d.uid);
+    if (!m) {
+      const n = gestor.anadir(d.id, d.x0, d.z0, d.rot, d);
+      if (n) {
+        n.userData.rebote = 0.8;
+        cambiados.push({ tipo: 'poner', nombre: n.userData.def.nombre });
+      }
+      continue;
+    }
+    if (ocupado(m)) continue;
+    const u = m.userData;
+    if (u.x0 !== d.x0 || u.z0 !== d.z0 || u.rot !== d.rot || Math.abs(u.base - d.base) > 0.001) {
+      gestor.colocar(m, d.x0, d.z0, d.rot, d.base);
+      u.rebote = 0.6;
+      cambiados.push({ tipo: 'mover', nombre: u.def.nombre });
+    }
+    if ((u.color ?? null) !== (d.color ?? null) || u.encendido !== d.encendido) {
+      u.color = d.color;
+      u.encendido = d.encendido;
+      gestor.aplicarApariencia(m);
+    }
+    if (d.datos) u.datos = d.datos;
+  }
+  return cambiados;
+}
+
+function aplicarRemoto(datos, conflicto = false, inicial = false) {
+  if (!datos || !datos.estado) return;
+  for (const [k, v] of Object.entries(datos.estado)) if (!LOCALES.includes(k)) estado[k] = v;
+  const cambios = sincronizarMuebles(datos.muebles || []);
+  inventario.cargar(datos.inventario);
+  ui.pintarInventario(inventario);
+  if (datos.sala) sala.restaurar(datos.sala);
+  mascotas.sincronizar(datos.mascotas || []);
+  if (datos.suciedad) suciedad.sincronizar(datos.suciedad.lista || []);
+  if (estado.jardin) ponerJardin();
+  suciedad.limpiadoraHasta = estado.limpiadoraHasta;
+  mas.pintarPared();
+  mas.montarCartel();
+  refrescarHud();
+  guardar();
+  if (!inicial && cambios.length) {
+    const c = cambios[cambios.length - 1];
+    const verbo = { mover: 'ha movido', poner: 'ha puesto', quitar: 'ha quitado' }[c.tipo];
+    ui.aviso(`💗 ${pareja.otro()} ${verbo} ${c.nombre.toLowerCase()}${cambios.length > 1 ? ` y ${cambios.length - 1} cosa${cambios.length > 2 ? 's' : ''} más` : ''}`);
+  }
+}
+
+
 async function jugarMinijuego(d) {
   const producto = TIPOS_SUCIEDAD[d.tipo].producto;
   if (!inventario.cantidad(producto)) return;
@@ -167,6 +247,7 @@ function pantalla(v) {
 }
 
 function guardar() {
+  if (sync) sync.marcarCambio();
   try {
     localStorage.setItem(CLAVE, JSON.stringify({
       ...estado,
@@ -207,6 +288,8 @@ function cargar() {
   estado.diarias = datos.diarias ?? null;
   estado.historia = datos.historia ?? 0;
   estado.evento = datos.evento ?? null;
+  const MUNDO = ['muebles', 'inventario', 'sala', 'mascotas', 'pedidos', 'suciedad', 't', 'reparaciones'];
+  for (const [k, v] of Object.entries(datos)) if (!MUNDO.includes(k) && !(k in estado)) estado[k] = v;
   for (const m of datos.muebles || []) gestor.anadir(m.id, m.x0, m.z0, m.rot, m);
   inventario.cargar(datos.inventario);
   const antiguas = datos.reparaciones || [];
@@ -541,6 +624,15 @@ const ui = new UI(miniaturas, {
   alMas() {
     mas.abrir();
   },
+  alHayPareja() {
+    return sync && sync.activo;
+  },
+  alRegalar(info, color, precio) {
+    pareja.regalar(info, color, precio);
+  },
+  alProponer(info, color, precio) {
+    pareja.proponer(info, color, precio);
+  },
   alClima() {
     const t = temporadaActual();
     const climas = { sol: 'Hace sol', nubes: 'Está nublado', lluvia: 'Está lloviendo', nieve: '¡Está nevando!' };
@@ -792,6 +884,7 @@ function asegurarDiarias() {
 }
 
 function registrar(evento, n = 1) {
+  if (pareja) pareja.registrar(evento);
   asegurarDiarias();
   for (const d of estado.diarias.lista) {
     const info = infoDiaria(d.id);
@@ -951,6 +1044,8 @@ function temporadaActual() {
 
 const mas = new Mas({
   estado, ui, sonido, sala, ambiente, renderer, escena, camara: camaraIso.camara,
+  alFotoNueva: f => sync && sync.subirFoto(f),
+  alFotoBorrada: id => sync && sync.borrarFoto(id),
   guardar: () => guardar(),
   temporada: () => temporadaActual(),
   extrasMenu: () => (window.extrasMenu ? window.extrasMenu() : [])
@@ -1012,7 +1107,40 @@ function abrirJuegos() {
   }));
 }
 
+sync = new Sync({
+  instantanea,
+  aplicar: (datos, conflicto) => aplicarRemoto(datos, conflicto),
+  mensaje: () => {}
+});
+suciedad.genera = !sync.activo || sync.yo === 0;
+
+pareja = new Pareja({
+  estado, ui, sonido, sync, miniaturas, inventario, infoItem,
+  piezasRegalo: PIEZAS_PREMIO.regalo(0xe58f9e),
+  guardar: () => guardar(),
+  refrescarHud: () => refrescarHud(),
+  dialogoAbierto: () => dialogoAbierto(),
+  comprar: (id, color, precio) => comprarDirecto(id, color, precio),
+  instantanea,
+  aplicarRemoto,
+  abrirMas: () => mas.abrir(),
+  alDesconectar: () => { suciedad.genera = true; }
+});
+usos.ctx.pareja = pareja;
+
+async function sincronizarFotos() {
+  if (!sync.activo) return;
+  const r = await sync.listaFotos(mas.fotos.map(f => f.id));
+  if (r) {
+    const locales = mas.fotos.filter(f => !r.todas.includes(f.id));
+    for (const f of locales) sync.subirFoto(f);
+    if (locales.length) r.todas.push(...locales.map(f => f.id));
+    mas.fusionarFotos(r);
+  }
+}
+
 window.extrasMenu = () => [
+  { id: 'pareja', icono: '💑', texto: 'Pareja', sub: sync.activo ? `Casa compartida · ${sync.codigo}` : 'Compartid la casa entre los dos móviles', accion: () => pareja.abrir() },
   { id: 'juegos', icono: '🎮', texto: 'Minijuegos', sub: 'Jugad para ganar monedas', accion: abrirJuegos }
 ];
 
@@ -1114,6 +1242,7 @@ const puntoMenu = new THREE.Vector3();
 let tGuardado = 0;
 let tChip = 0;
 let tMisiones = 0;
+let tFotos = 25;
 
 function colocarMenu(dt) {
   if (mascotaSel) {
@@ -1149,6 +1278,7 @@ renderer.setAnimationLoop(() => {
   sala.actualizar(dt);
   ambiente.actualizar(dt);
   usos.actualizar(dt);
+  sync.actualizar(dt);
   gestor.actualizar(dt);
   mascotas.actualizar(dt);
   entregas.actualizar(dt);
@@ -1159,6 +1289,12 @@ renderer.setAnimationLoop(() => {
     tMisiones = 0;
     comprobarEvento();
     pintarClima();
+    pareja.revisar();
+    tFotos += 1;
+    if (tFotos > 30) {
+      tFotos = 0;
+      sincronizarFotos();
+    }
     ui.limpieza(suciedad.limpieza());
     ui.contadorMisiones(misionesListas());
     ui.chipEvento(textoChipEvento());

@@ -197,7 +197,7 @@ export class Suciedad {
       if (!p) return null;
       d = { tipo, x: p.x, y: 0, z: p.z, rot: Math.random() * Math.PI * 2 };
     }
-    d.id = `s${Date.now()}${this.contador++}`;
+    d.id = datos && datos.id ? datos.id : `s${Date.now()}${this.contador++}`;
     const g = modelo(tipo);
     g.position.set(d.x, d.y, d.z);
     g.rotation.y = d.rot;
@@ -217,7 +217,7 @@ export class Suciedad {
 
   serializar() {
     return {
-      lista: this.lista.map(d => ({ tipo: d.tipo, x: +d.x.toFixed(2), z: +d.z.toFixed(2), hueco: d.hueco })),
+      lista: this.lista.map(d => ({ id: d.id, tipo: d.tipo, x: +d.x.toFixed(2), z: +d.z.toFixed(2), hueco: d.hueco })),
       tiempos: this.tiempos
     };
   }
@@ -227,7 +227,7 @@ export class Suciedad {
       for (const d of datos.lista || []) this.anadir(d.tipo, d, false);
       Object.assign(this.tiempos, datos.tiempos || {});
     }
-    const s = Math.min(segundosFuera, 6 * 3600);
+    const s = this.genera === false ? 0 : Math.min(segundosFuera, 6 * 3600);
     for (const [tipo, info] of Object.entries(TIPOS)) {
       if (!info.cada) continue;
       if (tipo === 'bichos' && trampa) continue;
@@ -357,10 +357,20 @@ export class Suciedad {
     if (!silencio) this.eventos.alNuevaSuciedad('caca', m);
   }
 
+  sincronizar(lista) {
+    const ids = new Set(lista.map(d => d.id));
+    for (const d of [...this.lista]) {
+      if (!ids.has(d.id)) this.limpiar(d, 'remoto');
+    }
+    for (const d of lista) {
+      if (!this.lista.some(x => x.id === d.id)) this.anadir(d.tipo, d, true);
+    }
+  }
+
   actualizar(dt, trampa) {
     this.t += dt;
     for (const [tipo, info] of Object.entries(TIPOS)) {
-      if (!info.cada) continue;
+      if (!info.cada || this.genera === false) continue;
       if (tipo === 'bichos' && trampa) continue;
       this.tiempos[tipo] = (this.tiempos[tipo] || 0) + dt;
       if (this.tiempos[tipo] >= info.cada) {
@@ -370,7 +380,7 @@ export class Suciedad {
     }
     if (trampa) for (const d of this.lista.filter(x => x.tipo === 'bichos')) this.limpiar(d, 'trampa');
 
-    for (const m of this.mascotas.lista) {
+    for (const m of this.genera === false ? [] : this.mascotas.lista) {
       if (m.tCaca === undefined) m.tCaca = 300 + Math.random() * 300;
       if (m.estado === 'dormir') continue;
       m.tCaca -= dt;
