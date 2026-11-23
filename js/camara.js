@@ -14,10 +14,10 @@ export class CamaraIso {
     this.zoomMax = 3;
     this.angulo = ANGULO_INICIAL;
     this.anguloObj = ANGULO_INICIAL;
-    this.zoomActual = 1;
-    this.zoomObj = 1;
-    this.objetivo = new THREE.Vector3();
-    this.objetivoObj = new THREE.Vector3();
+    this.zoomActual = 0.92;
+    this.zoomObj = 0.92;
+    this.objetivo = new THREE.Vector3(0, 0, 0.7);
+    this.objetivoObj = new THREE.Vector3(0, 0, 0.7);
     this.inercia = 0;
     this.agarrada = false;
     this.anchoVista = this.tamano;
@@ -62,14 +62,14 @@ export class CamaraIso {
     this.objetivoObj.addScaledVector(derecha, -dxPx * porPx);
     this.objetivoObj.addScaledVector(fondo, dyPx * porPx / Math.sin(this.altura));
     this.objetivoObj.x = THREE.MathUtils.clamp(this.objetivoObj.x, -LIMITE_PAN, LIMITE_PAN);
-    this.objetivoObj.z = THREE.MathUtils.clamp(this.objetivoObj.z, -LIMITE_PAN, LIMITE_PAN);
+    this.objetivoObj.z = THREE.MathUtils.clamp(this.objetivoObj.z, -LIMITE_PAN, LIMITE_PAN + 1.2);
   }
 
   reiniciar() {
     const vueltas = Math.round((this.anguloObj - ANGULO_INICIAL) / (Math.PI * 2));
     this.anguloObj = ANGULO_INICIAL + vueltas * Math.PI * 2;
-    this.zoomObj = 1;
-    this.objetivoObj.set(0, 0, 0);
+    this.zoomObj = 0.92;
+    this.objetivoObj.set(0, 0, 0.7);
     this.inercia = 0;
   }
 

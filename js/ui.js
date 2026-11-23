@@ -1,6 +1,7 @@
 import { CATALOGO, MATERIALES, RAREZAS, infoItem } from './catalogo.js';
 import { ESPECIES } from './mascotas.js';
 import { SEGMENTOS, PIEZAS_PREMIO, COLOR_REGALO, COSTE_TIRADA, poolDe } from './ruleta.js';
+import { EscenaTienda } from './tienda3d.js';
 
 const DESPLAZAMIENTO = 70;
 
@@ -9,6 +10,14 @@ const CATEGORIAS = [
   { id: 'deco', nombre: 'Deco', icono: '🪴' },
   { id: 'mascotas', nombre: 'Mascotas', icono: '🐾' },
   { id: 'reparar', nombre: 'Reparar', icono: '🧰' }
+];
+
+const FRASES_PRODUCTO = [
+  'Mirad qué bonito queda dando vueltas.',
+  'Este se vende muchísimo, ¿eh?',
+  'Os lo dejo a buen precio.',
+  'A mí me encanta, de verdad.',
+  'Probad los colores, que hay para todos los gustos.'
 ];
 
 const FRASES_LOLA = [
@@ -64,26 +73,56 @@ export class UI {
     this.girando = false;
     this.anguloRuleta = 0;
 
-    const pestanas = document.querySelector('#tienda .pestanas');
+    this.escena3d = new EscenaTienda($('tienda-escena'));
+    this.sel = null;
+    const pestanas = document.querySelector('#tienda .pestanas-v');
     for (const c of CATEGORIAS) {
       const b = document.createElement('button');
       b.dataset.cat = c.id;
-      b.innerHTML = `<span>${c.icono}</span>${c.nombre}`;
+      b.title = c.nombre;
+      b.textContent = c.icono;
       b.addEventListener('click', () => {
+        if (this.categoria === c.id) return;
         this.categoria = c.id;
         this.ev.alSonido('tocar');
-        this.pintarTienda();
+        this.pintarListaTienda(true);
       });
       pestanas.appendChild(b);
     }
+    $('det-comprar').addEventListener('click', () => this.comprarSeleccion());
 
     $('btn-tienda').addEventListener('click', () => this.abrirTienda());
+    $('btn-inventario').addEventListener('click', () => this.alternarInventario());
+    $('cerrar-inv').addEventListener('click', () => this.cerrarInventario());
+    $('chip-reparto').addEventListener('click', () => this.ev.alChipReparto());
+    this.inventarioAbierto = false;
+    this.elInventario.addEventListener('scroll', () => this.actualizarScroll());
+    window.addEventListener('resize', () => this.actualizarScroll());
+    const pista = $('inv-scroll');
+    const arrastrarScroll = e => {
+      const r = pista.getBoundingClientRect();
+      const k = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+      this.elInventario.scrollTop = k * (this.elInventario.scrollHeight - this.elInventario.clientHeight);
+    };
+    pista.addEventListener('pointerdown', e => {
+      pista.setPointerCapture(e.pointerId);
+      arrastrarScroll(e);
+      const mover = ev => arrastrarScroll(ev);
+      const fin = () => {
+        pista.removeEventListener('pointermove', mover);
+        pista.removeEventListener('pointerup', fin);
+        pista.removeEventListener('pointercancel', fin);
+      };
+      pista.addEventListener('pointermove', mover);
+      pista.addEventListener('pointerup', fin);
+      pista.addEventListener('pointercancel', fin);
+    });
     $('btn-ruleta').addEventListener('click', () => this.abrirRuleta());
     $('btn-refugio').addEventListener('click', () => this.abrirRefugio());
     $('btn-sonido').addEventListener('click', () => this.ev.alAlternarSonido());
     $('btn-tirar').addEventListener('click', () => this.tirar());
     this.elFondo.addEventListener('click', () => this.cerrarHojas());
-    document.querySelectorAll('.hoja .cerrar').forEach(b => b.addEventListener('click', () => this.cerrarHojas()));
+    document.querySelectorAll('.hoja .cerrar, .pantalla .cerrar').forEach(b => b.addEventListener('click', () => this.cerrarHojas()));
   }
 
   img(src, clase = '') {
@@ -102,6 +141,7 @@ export class UI {
   cerrarHojas() {
     if (this.girando) return;
     if (this.hojaAbierta) this.$(this.hojaAbierta).classList.remove('abierta');
+    if (this.hojaAbierta === 'tienda') setTimeout(() => { if (this.hojaAbierta !== 'tienda') this.escena3d.cerrar(); }, 400);
     this.hojaAbierta = null;
     this.elFondo.classList.remove('abierta');
   }
@@ -117,80 +157,152 @@ export class UI {
 
   abrirTienda(categoria) {
     if (categoria) this.categoria = categoria;
-    this.$('img-lola').src = this.mini.personaje('lola');
     this.decirLola(FRASES_LOLA[Math.floor(Math.random() * FRASES_LOLA.length)]);
-    this.pintarTienda();
     this.abrirHoja('tienda');
+    this.escena3d.abrir();
+    this.pintarListaTienda(!categoria && this.sel ? false : true);
   }
 
-  pintarTienda() {
-    for (const b of document.querySelectorAll('#tienda .pestanas button')) b.classList.toggle('activa', b.dataset.cat === this.categoria);
-    const rejilla = document.querySelector('#tienda .rejilla');
-    rejilla.innerHTML = '';
-    rejilla.dataset.cat = this.categoria;
-    rejilla.scrollTop = 0;
-    this.cartas = [];
-
-    const lista = [
-      ...CATALOGO.filter(d => d.enTienda !== false && d.categoria === this.categoria).map(d => ({ ...d, tipo: 'mueble' })),
-      ...MATERIALES.filter(d => d.enTienda !== false && d.categoria === this.categoria).map(d => ({ ...d, tipo: 'material' }))
-    ];
-
+  entradasTienda() {
+    const entradas = [];
     if (this.categoria === 'muebles') {
       const oferta = ofertaDelDia();
-      const info = infoItem(oferta.id);
-      this.crearCarta(rejilla, info, oferta.precio, true);
+      entradas.push({ info: infoItem(oferta.id), precio: oferta.precio, oferta: true });
     }
-    for (const info of lista) this.crearCarta(rejilla, info, info.precio, false);
+    for (const d of [...CATALOGO, ...MATERIALES]) {
+      if (d.enTienda === false || d.categoria !== this.categoria) continue;
+      entradas.push({ info: infoItem(d.id), precio: d.precio, oferta: false });
+    }
+    return entradas;
+  }
+
+  pintarListaTienda(elegirPrimero) {
+    for (const b of document.querySelectorAll('#tienda .pestanas-v button')) b.classList.toggle('activa', b.dataset.cat === this.categoria);
+    const lista = document.querySelector('#tienda .lista-items');
+    lista.innerHTML = '';
+    lista.scrollTop = 0;
+    this.entradas = this.entradasTienda();
+    this.entradas.forEach((entrada, i) => {
+      const b = document.createElement('button');
+      b.className = 'item-lista';
+      b.innerHTML = `${entrada.oferta ? '<span class="etq-oferta">-30%</span>' : ''}${this.img(this.mini.item(entrada.info.id, entrada.info.colores ? 0 : null))}<span>🪙 ${entrada.precio}</span>`;
+      b.addEventListener('click', () => {
+        this.ev.alSonido('tocar');
+        this.seleccionarProducto(i);
+      });
+      entrada.boton = b;
+      lista.appendChild(b);
+    });
+    let indice = 0;
+    if (!elegirPrimero && this.sel) {
+      const k = this.entradas.findIndex(e => e.info.id === this.sel.info.id && e.oferta === this.sel.oferta);
+      if (k >= 0) indice = k;
+    }
+    if (this.entradas.length) this.seleccionarProducto(indice, elegirPrimero);
+  }
+
+  seleccionarProducto(indice, silencio = false) {
+    const entrada = this.entradas[indice];
+    const info = entrada.info;
+    const misma = this.sel && this.sel.info.id === info.id && this.sel.oferta === entrada.oferta;
+    if (!misma) {
+      this.sel = {
+        ...entrada,
+        color: info.colores ? 0 : null,
+        encendido: info.encendible ? true : false,
+        cantidad: 1
+      };
+    }
+    this.entradas.forEach(e => e.boton.classList.toggle('activa', e === entrada));
+    entrada.boton.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    this.escena3d.mostrar(info, this.sel.color, this.sel.encendido);
+    if (!silencio && !misma) this.decirLola(FRASES_PRODUCTO[Math.floor(Math.random() * FRASES_PRODUCTO.length)]);
+    this.pintarDetalle();
+  }
+
+  pintarDetalle() {
+    const { info, oferta } = this.sel;
+    this.$('det-nombre').textContent = info.nombre;
+    const chips = [];
+    if (oferta) chips.push(`<span class="chip oferta">Oferta del día · antes ${info.precio}</span>`);
+    if (info.tipo === 'mueble') {
+      chips.push(`<span class="chip">📐 ${info.ancho * 0.5} × ${info.fondo * 0.5} m</span>`);
+      if (info.soporte) chips.push('<span class="chip">📚 Se puede apilar encima</span>');
+      if (info.paraMascota || info.categoria === 'mascotas') chips.push('<span class="chip">🐾 Para mascotas</span>');
+      if (info.suelo) chips.push('<span class="chip">Va en el suelo</span>');
+    }
+    this.$('det-info').innerHTML = chips.join('') + (info.tipo === 'material' ? `<div>${info.pista}</div>` : '');
+
+    const opciones = this.$('det-opciones');
+    opciones.innerHTML = '';
+    if (info.colores) {
+      const fila = document.createElement('div');
+      fila.className = 'opcion';
+      fila.innerHTML = `<span>Color</span><div class="muestras">${info.colores.paleta.map((p, i) => `<button data-i="${i}" style="background:${hex(p[0])}" class="${i === this.sel.color ? 'activa' : ''}"></button>`).join('')}</div>`;
+      fila.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+        this.sel.color = +b.dataset.i;
+        fila.querySelectorAll('button').forEach(x => x.classList.toggle('activa', x === b));
+        this.escena3d.ponerColor(this.sel.color);
+        this.ev.alSonido('tocar');
+      }));
+      opciones.appendChild(fila);
+    }
+    if (info.encendible) {
+      const fila = document.createElement('div');
+      fila.className = 'opcion';
+      fila.innerHTML = '<span>Luz</span><button class="interruptor"></button>';
+      const b = fila.querySelector('button');
+      const pintar = () => {
+        b.textContent = this.sel.encendido ? '💡 Encendida' : '🌙 Apagada';
+        b.classList.toggle('encendido', this.sel.encendido);
+      };
+      pintar();
+      b.addEventListener('click', () => {
+        this.sel.encendido = !this.sel.encendido;
+        this.escena3d.ponerEncendido(this.sel.encendido);
+        pintar();
+        this.ev.alSonido('pop');
+      });
+      opciones.appendChild(fila);
+    }
+    if (info.tipo === 'material') {
+      const fila = document.createElement('div');
+      fila.className = 'opcion';
+      fila.innerHTML = '<span>Cantidad</span><div class="cantidad"><button data-d="-1">−</button><b></b><button data-d="1">+</button></div>';
+      const valor = fila.querySelector('b');
+      valor.textContent = this.sel.cantidad;
+      fila.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+        this.sel.cantidad = Math.min(9, Math.max(1, this.sel.cantidad + +b.dataset.d));
+        valor.textContent = this.sel.cantidad;
+        this.ev.alSonido('tocar');
+        this.refrescarTienda();
+      }));
+      opciones.appendChild(fila);
+    }
     this.refrescarTienda();
   }
 
-  crearCarta(rejilla, info, precio, oferta) {
-    const carta = document.createElement('div');
-    carta.className = oferta ? 'carta oferta' : 'carta';
-    const detalle = info.tipo === 'mueble'
-      ? `${info.ancho * 0.5} × ${info.fondo * 0.5} m${info.soporte ? ' · se puede apilar encima' : ''}`
-      : info.pista;
-    const estado = { color: info.colores ? 0 : null };
-    carta.innerHTML = `
-      ${oferta ? '<span class="cinta">Oferta del día · -30%</span>' : ''}
-      <span class="tienes"></span>
-      <div class="carta-icono">${this.img(this.mini.item(info.id, estado.color))}</div>
-      <div class="carta-texto">
-        <div class="carta-nombre">${info.nombre}</div>
-        <div class="carta-info">${detalle}</div>
-        ${info.colores ? `<div class="muestras">${info.colores.paleta.map((p, i) => `<button data-i="${i}" style="background:${hex(p[0])}" class="${i === 0 ? 'activa' : ''}"></button>`).join('')}</div>` : ''}
-        <button class="comprar">${oferta ? `<s>${info.precio}</s> ` : ''}🪙 ${precio}</button>
-      </div>`;
-    const boton = carta.querySelector('.comprar');
-    const imagen = carta.querySelector('.carta-icono img');
-    carta.querySelectorAll('.muestras button').forEach(b => b.addEventListener('click', () => {
-      estado.color = +b.dataset.i;
-      carta.querySelectorAll('.muestras button').forEach(x => x.classList.toggle('activa', x === b));
-      imagen.src = this.mini.item(info.id, estado.color);
-      this.ev.alSonido('tocar');
-    }));
-    boton.addEventListener('click', () => {
-      if (!this.ev.alComprar(info, estado.color, precio)) {
-        this.decirLola('Uy… no os llega. ¡Probad suerte en la ruleta!');
-        return;
-      }
-      this.decirLola(['¡Buena elección!', '¡Me encanta ese!', '¡Os va a quedar genial!', '¡Marchando!'][Math.floor(Math.random() * 4)]);
-      carta.classList.remove('comprada');
-      void carta.offsetWidth;
-      carta.classList.add('comprada');
-    });
-    rejilla.appendChild(carta);
-    this.cartas.push({ info, precio, boton, tienes: carta.querySelector('.tienes') });
+  refrescarTienda() {
+    if (!this.sel) return;
+    const total = this.sel.precio * this.sel.cantidad;
+    const boton = this.$('det-comprar');
+    boton.innerHTML = `Comprar${this.sel.cantidad > 1 ? ` ${this.sel.cantidad}` : ''} · 🪙 ${total}`;
+    boton.disabled = total > this.monedasActual;
+    const n = this.inventario ? this.inventario.cantidad(this.sel.info.id) : 0;
+    const t = this.$('det-tienes');
+    t.textContent = `Tienes ${n}`;
+    t.classList.toggle('oculto', !n);
   }
 
-  refrescarTienda() {
-    for (const { info, precio, boton, tienes } of this.cartas) {
-      boton.disabled = precio > this.monedasActual;
-      const n = this.inventario ? this.inventario.cantidad(info.id) : 0;
-      tienes.textContent = n ? `Tienes ${n}` : '';
-      tienes.classList.toggle('oculto', !n);
+  comprarSeleccion() {
+    const { info, color, precio, cantidad } = this.sel;
+    if (!this.ev.alComprar(info, color, precio, cantidad)) {
+      this.escena3d.reaccionar('no');
+      this.decirLola('Uy… no os llega. ¡Probad suerte en la ruleta!');
+      return;
     }
+    this.escena3d.reaccionar('feliz');
+    this.decirLola(['¡Buena elección!', '¡Me encanta ese!', '¡Os va a quedar genial!', '¡Marchando! Os lo mando a casa.'][Math.floor(Math.random() * 4)]);
   }
 
   abrirRefugio(propias = this.ev.alPedirMascotas()) {
@@ -380,8 +492,12 @@ export class UI {
     this.inventario = inventario;
     this.elInventario.innerHTML = '';
     if (!inventario.items.length) {
-      this.elInventario.innerHTML = '<div class="vacio">Aquí aparecerá lo que compréis 🛍️</div>';
+      this.elInventario.innerHTML = '<div class="vacio">Vacío. Lo que pidáis llegará en un paquete a la puerta 📦</div>';
     }
+    const total = inventario.items.reduce((n, i) => n + i.cantidad, 0);
+    const contador = this.$('btn-inventario').querySelector('.contador-inv');
+    contador.textContent = total;
+    contador.classList.toggle('oculto', !total);
     for (const item of inventario.items) {
       const info = infoItem(item.id);
       if (!info) continue;
@@ -392,10 +508,56 @@ export class UI {
       this.elInventario.appendChild(ranura);
     }
     this.refrescarTienda();
+    requestAnimationFrame(() => this.actualizarScroll());
   }
 
   sobreBarra(y) {
-    return y > this.elBarra.getBoundingClientRect().top;
+    return this.inventarioAbierto && y > this.elBarra.getBoundingClientRect().top;
+  }
+
+  alternarInventario() {
+    if (this.inventarioAbierto) this.cerrarInventario();
+    else this.abrirInventario();
+  }
+
+  abrirInventario() {
+    this.ev.alSonido('pop');
+    this.inventarioAbierto = true;
+    this.elBarra.classList.remove('cerrado');
+    this.$('btn-inventario').querySelector('.contador-inv').classList.remove('nuevo');
+    requestAnimationFrame(() => this.actualizarScroll());
+  }
+
+  cerrarInventario() {
+    this.inventarioAbierto = false;
+    this.elBarra.classList.add('cerrado');
+  }
+
+  actualizarScroll() {
+    const el = this.elInventario;
+    const pista = this.$('inv-scroll');
+    const sobra = el.scrollHeight - el.clientHeight;
+    pista.classList.toggle('oculto-scroll', sobra <= 2);
+    if (sobra <= 2) return;
+    const alto = pista.clientHeight;
+    const tam = Math.max(24, alto * el.clientHeight / el.scrollHeight);
+    const pulgar = pista.querySelector('i');
+    pulgar.style.height = `${tam}px`;
+    pulgar.style.top = `${(alto - tam) * (el.scrollTop / sobra)}px`;
+  }
+
+  chipReparto(texto, enPuerta) {
+    const chip = this.$('chip-reparto');
+    chip.classList.toggle('oculto', !texto);
+    chip.classList.toggle('en-puerta', !!enPuerta);
+    if (texto && chip.textContent !== texto) chip.textContent = texto;
+  }
+
+  avisarInventarioNuevo() {
+    const c = this.$('btn-inventario').querySelector('.contador-inv');
+    c.classList.remove('nuevo');
+    void c.offsetWidth;
+    c.classList.add('nuevo');
   }
 
   tocarRanura(e, item, info, ranura) {
@@ -410,7 +572,7 @@ export class UI {
       const dx = ev.clientX - x0;
       const dy = ev.clientY - y0;
       if (!arrastrando) {
-        if (!(dy < -12 && Math.abs(dy) > Math.abs(dx)) || info.mascota) return;
+        if (Math.hypot(dx, dy) < 8 || info.mascota) return;
         arrastrando = true;
         try { ranura.setPointerCapture(id); } catch (err) {}
         ranura.classList.add('levantada');
@@ -489,7 +651,7 @@ export class UI {
     this.elMenu.classList.remove('oculto');
     const w = this.elMenu.offsetWidth;
     const h = this.elMenu.offsetHeight;
-    const limiteAbajo = this.elBarra.getBoundingClientRect().top - 10;
+    const limiteAbajo = this.inventarioAbierto ? this.elBarra.getBoundingClientRect().top - 10 : window.innerHeight - 20;
     const izq = Math.min(Math.max(x, w / 2 + 8), window.innerWidth - w / 2 - 8);
     const abajo = Math.min(Math.max(y - 14, h + 64), limiteAbajo);
     this.elMenu.style.left = `${izq}px`;

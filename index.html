@@ -24,12 +24,15 @@
 <canvas id="escena"></canvas>
 
 <div id="hud">
+  <div class="hud-izquierda">
   <div class="pastilla casa">
     <span id="casa-icono">🏚️</span>
     <div class="casa-datos">
       <div class="casa-texto">Reforma <b id="contador">0/10</b></div>
       <div class="mini-barra"><div id="casa-relleno"></div></div>
     </div>
+  </div>
+  <button id="chip-reparto" class="pastilla reparto oculto"></button>
   </div>
   <div class="hud-derecha">
     <div class="pastilla moneda">🪙 <span id="monedas-valor">0</span></div>
@@ -38,6 +41,8 @@
 </div>
 
 <div id="lateral">
+  <button id="btn-tienda" class="lateral-btn"><span>🛒</span><small>Tienda</small></button>
+  <button id="btn-inventario" class="lateral-btn"><span>🎒</span><small>Inventario</small><b class="insignia contador-inv oculto"></b></button>
   <button id="btn-ruleta" class="lateral-btn"><span>🎡</span><small>Ruleta</small><b class="insignia oculto">¡Gratis!</b></button>
   <button id="btn-refugio" class="lateral-btn"><span>🐾</span><small>Adoptar</small></button>
   <button id="btn-sonido" class="lateral-btn mini"><span>🔊</span></button>
@@ -47,25 +52,39 @@
 <div id="menu-objeto" class="oculto"></div>
 <div id="capa-particulas"></div>
 
-<div id="barra">
-  <button id="btn-tienda"><span>🛒</span><small>Tienda</small></button>
-  <div id="inventario"></div>
+<div id="barra" class="cerrado">
+  <div class="barra-cabecera">
+    <div><b>🎒 Inventario</b><small>Arrastra las cosas hasta la habitación</small></div>
+    <button class="cerrar" id="cerrar-inv">✕</button>
+  </div>
+  <div class="inv-cuerpo">
+    <div id="inventario"></div>
+    <div id="inv-scroll"><i></i></div>
+  </div>
 </div>
 
 <div id="fondo"></div>
 
-<div id="tienda" class="hoja">
-  <div class="asa"></div>
-  <div class="cabecera-personaje">
-    <img id="img-lola" class="personaje" alt="">
-    <div class="bocadillo"><b>Lola</b><span id="frase-lola"></span></div>
-    <div class="cabecera-acciones">
-      <div class="pastilla moneda">🪙 <span class="monedas-hoja">0</span></div>
-      <button class="cerrar">✕</button>
-    </div>
+<div id="tienda" class="pantalla">
+  <canvas id="tienda-escena"></canvas>
+  <div class="tienda-cabecera">
+    <div class="pastilla moneda">🪙 <span class="monedas-hoja">0</span></div>
+    <button class="cerrar">✕</button>
   </div>
-  <div class="pestanas"></div>
-  <div class="rejilla"></div>
+  <div class="bocadillo tienda-bocadillo"><b>Pilar</b><span id="frase-lola"></span></div>
+  <div class="tienda-lista">
+    <div class="pestanas-v"></div>
+    <div class="lista-items"></div>
+  </div>
+  <div class="tienda-detalle">
+    <div class="detalle-fila">
+      <h3 id="det-nombre"></h3>
+      <span id="det-tienes" class="pastilla-tienes oculto"></span>
+    </div>
+    <div id="det-info" class="det-info"></div>
+    <div id="det-opciones"></div>
+    <button id="det-comprar" class="boton-grande verde">Comprar</button>
+  </div>
 </div>
 
 <div id="refugio" class="hoja">

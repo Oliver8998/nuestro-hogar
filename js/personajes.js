@@ -74,5 +74,6 @@ export function crearPersonaje(id) {
   sonrisa.position.set(0, -0.11, 0.25);
   cabeza.add(sonrisa);
 
+  g.userData.cabeza = cabeza;
   return g;
 }

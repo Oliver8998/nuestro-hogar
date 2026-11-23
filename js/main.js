@@ -10,6 +10,7 @@ import { GestorMascotas, ESPECIES } from './mascotas.js';
 import { infoItem, precioVenta, RAREZAS } from './catalogo.js';
 import { elegirSegmento, resolverPremio, COSTE_TIRADA, PIEZAS_PREMIO } from './ruleta.js';
 import { sonido } from './sonido.js';
+import { Entregas } from './entregas.js';
 
 const CLAVE = 'hogar-estado';
 const NOMBRES = ['Michi', 'Coco', 'Luna', 'Toby', 'Nube', 'Canela', 'Pipo', 'Kiwi', 'Lola', 'Bimba', 'Churro', 'Galleta', 'Mochi', 'Rufo', 'Trufa', 'Pelusa'];
@@ -47,6 +48,35 @@ const mascotas = new GestorMascotas(escena, gestor, {
   }
 });
 
+const entregas = new Entregas(escena, {
+  alClaxon() {
+    sonido.claxon();
+  },
+  alLlegar() {
+    sonido.pop();
+    ui.aviso('📦 ¡Ha llegado un paquete! Tocadlo para abrirlo');
+    guardar();
+  }
+});
+
+function tiempoEntrega(cantidad) {
+  return Math.min(45, 20 + 4 * (cantidad - 1));
+}
+
+function abrirPaquete(p) {
+  const pos = p.paquete ? pantalla(p.paquete.position.clone().add(new THREE.Vector3(0, 0.3, 0))) : null;
+  const items = entregas.abrir(p);
+  for (const it of items) inventario.anadir(it.id, it.color ?? null, it.cantidad);
+  sonido.arreglo();
+  if (pos) ui.particula('✨', pos.x, pos.y, 6);
+  const nombres = items.map(it => `${it.cantidad > 1 ? `${it.cantidad} × ` : ''}${infoItem(it.id).nombre}`).join(', ');
+  ui.aviso(`🎁 ${nombres} al inventario`);
+  ui.pintarInventario(inventario);
+  ui.abrirInventario();
+  ui.avisarInventarioNuevo();
+  guardar();
+}
+
 function pantalla(v) {
   const q = v.clone().project(camaraIso.camara);
   const r = canvas.getBoundingClientRect();
@@ -61,6 +91,7 @@ function guardar() {
       inventario: inventario.serializar(),
       sala: sala.estado(),
       mascotas: mascotas.serializar(),
+      pedidos: entregas.serializar(),
       t: Date.now()
     }));
   } catch (e) {}
@@ -92,6 +123,7 @@ function cargar() {
     paredes: [0, 1, 2, 3].map(i => antiguas.includes(`pintura-${i}`) ? 0xf3eadb : null)
   });
   mascotas.cargar(datos.mascotas, datos.t ? (Date.now() - datos.t) / 1000 : 0);
+  entregas.cargar(datos.pedidos);
   return true;
 }
 
@@ -113,7 +145,7 @@ function refrescarHud() {
         titulo: '¡Habitación reformada!',
         texto: 'Ha quedado preciosa. Os habéis ganado un regalo: 150 monedas y 2 tickets.',
         confeti: true,
-        botones: [{ texto: '¡Gracias, Lola!', tipo: 'primario' }]
+        botones: [{ texto: '¡Gracias, Pilar!', tipo: 'primario' }]
       });
       estado.monedas += 150;
       estado.tickets += 2;
@@ -124,20 +156,20 @@ function refrescarHud() {
   refrescarMenu();
 }
 
-function comprarDirecto(id, color = null, precio = null) {
+function comprarDirecto(id, color = null, precio = null, cantidad = 1) {
   const info = infoItem(id);
-  const coste = precio ?? info.precio;
+  const coste = (precio ?? info.precio) * cantidad;
   if (estado.monedas < coste) {
     sonido.error();
     ui.aviso('No te llega el dinero', true);
     return false;
   }
   estado.monedas -= coste;
-  inventario.anadir(id, info.tipo === 'mueble' && info.colores ? (color ?? 0) : null);
+  const segundos = tiempoEntrega(cantidad);
+  entregas.pedir([{ id, color: info.tipo === 'mueble' && info.colores ? (color ?? 0) : null, cantidad }], segundos);
   sonido.comprar();
-  ui.pintarInventario(inventario);
   refrescarHud();
-  ui.aviso(`📦 ${info.nombre} al inventario`);
+  ui.aviso(`🚚 ¡Pedido! ${cantidad > 1 ? `${cantidad} × ` : ''}${info.nombre} llega en ${segundos} s`);
   guardar();
   return true;
 }
@@ -147,7 +179,7 @@ function ofrecerCompra(id, titulo) {
   ui.dialogo({
     imagen: miniaturas.item(id),
     titulo: titulo || `No tenéis ${info.nombre.toLowerCase()}`,
-    texto: '¿Lo compramos? Irá directo a vuestro inventario.',
+    texto: '¿Lo pedimos? Os lo traen a la puerta en un momento.',
     botones: [
       { texto: 'Ahora no', tipo: 'secundario' },
       { texto: `Comprar · 🪙 ${info.precio}`, tipo: 'primario', desactivado: estado.monedas < info.precio, accion: () => comprarDirecto(id) }
@@ -384,8 +416,8 @@ const ui = new UI(miniaturas, {
   alAlternarSonido() {
     ui.iconoSonido(sonido.alternar());
   },
-  alComprar(info, color, precio) {
-    return comprarDirecto(info.id, color, precio);
+  alComprar(info, color, precio, cantidad = 1) {
+    return comprarDirecto(info.id, color, precio, cantidad);
   },
   alPedirMascotas() {
     return mascotas.lista;
@@ -431,24 +463,16 @@ const ui = new UI(miniaturas, {
       });
       return;
     }
-    if (info.tipo === 'material') {
-      ui.aviso(info.pista);
+    ui.aviso(info.tipo === 'material' ? info.pista : `Arrastra ${info.nombre.toLowerCase()} hasta la habitación`);
+  },
+  alChipReparto() {
+    const enPuerta = entregas.enPuerta();
+    if (enPuerta.length) {
+      for (const p of enPuerta) abrirPaquete(p);
       return;
     }
-    const hueco = gestor.buscarHueco(item.id);
-    if (!hueco) {
-      sonido.error();
-      ui.aviso('No cabe, haz hueco', true);
-      return;
-    }
-    inventario.quitar(item.id, item.color);
-    const m = gestor.anadir(item.id, hueco.x, hueco.z, hueco.rot, { color: item.color ?? undefined });
-    m.userData.rebote = 1;
-    seleccionarMascota(null);
-    controles.seleccionar(m);
-    sonido.colocar();
-    ui.pintarInventario(inventario);
-    guardar();
+    const s = entregas.segundosProximo();
+    if (s !== null) ui.aviso(`🚚 El próximo paquete llega en ${s} s`);
   },
   alEmpezarArrastre(item, info) {
     arrastre = { item, info };
@@ -481,7 +505,10 @@ const ui = new UI(miniaturas, {
   }
 });
 
-controles = new Controles(canvas, camaraIso, gestor, sala, mascotas, {
+controles = new Controles(canvas, camaraIso, gestor, sala, mascotas, entregas, {
+  alAbrirPaquete(p) {
+    abrirPaquete(p);
+  },
   alPrimerToque() {
     sonido.desbloquear();
   },
@@ -522,18 +549,24 @@ controles = new Controles(canvas, camaraIso, gestor, sala, mascotas, {
     const d = obj.d;
     const mat = infoItem(d.material);
     const tiene = inventario.cantidad(d.material);
+    const pedido = entregas.cantidadPedida(d.material);
+    const linea = tiene
+      ? `Tenéis ${tiene}. Arrastradlo desde el inventario hasta aquí.`
+      : pedido
+        ? 'Ya lo habéis pedido. Llegará en un paquete a la puerta.'
+        : `Cuesta 🪙 ${mat.precio} en la tienda.`;
     ui.dialogo({
       imagen: miniaturas.item(d.material),
       titulo: d.nombre,
       texto: d.descripcion,
-      html: `<div class="necesita${tiene ? ' tienes-ya' : ''}">
-        <div><b>${tiene ? '✅' : '🛠️'} Necesitas: ${mat.nombre}</b>
-        <small>${tiene ? `Tenéis ${tiene}. Arrastradlo desde el inventario hasta aquí.` : `Cuesta 🪙 ${mat.precio} en la tienda.`}</small></div></div>`,
-      botones: tiene
+      html: `<div class="necesita${tiene || pedido ? ' tienes-ya' : ''}">
+        <div><b>${tiene ? '✅' : pedido ? '🚚' : '🛠️'} Necesitas: ${mat.nombre}</b>
+        <small>${linea}</small></div></div>`,
+      botones: tiene || pedido
         ? [{ texto: '¡Entendido!', tipo: 'primario' }]
         : [
             { texto: 'Ahora no', tipo: 'secundario' },
-            { texto: `Comprar · 🪙 ${mat.precio}`, tipo: 'primario', desactivado: estado.monedas < mat.precio, accion: () => comprarDirecto(d.material) }
+            { texto: `Pedir · 🪙 ${mat.precio}`, tipo: 'primario', desactivado: estado.monedas < mat.precio, accion: () => comprarDirecto(d.material) }
           ]
     });
   }
@@ -571,7 +604,7 @@ setTimeout(() => {
     ui.dialogo({
       imagen: miniaturas.personaje('lola'), personaje: true,
       titulo: '¡Bienvenidos a casa!',
-      texto: 'Soy Lola, la de la tienda. Este piso está hecho un desastre… Tocad lo que esté roto y os diré qué hace falta. ¡Os regalo un ticket para la ruleta!',
+      texto: 'Soy Pilar, la de la tienda. Este piso está hecho un desastre… Tocad lo que esté roto y os diré qué hace falta. Lo que pidáis os llegará en un paquete a la puerta. ¡Os regalo un ticket para la ruleta!',
       botones: [{ texto: '¡Vamos allá!', tipo: 'primario' }]
     });
   } else if (nuevoDia && habiaPartida) {
@@ -590,6 +623,7 @@ setTimeout(() => {
 const reloj = new THREE.Clock();
 const puntoMenu = new THREE.Vector3();
 let tGuardado = 0;
+let tChip = 0;
 
 function colocarMenu(dt) {
   if (mascotaSel) {
@@ -625,7 +659,17 @@ renderer.setAnimationLoop(() => {
   sala.actualizar(dt);
   gestor.actualizar(dt);
   mascotas.actualizar(dt);
+  entregas.actualizar(dt);
   colocarMenu(dt);
+  tChip += dt;
+  if (tChip > 0.25) {
+    tChip = 0;
+    const n = entregas.enPuerta().length;
+    const s = entregas.segundosProximo();
+    if (n) ui.chipReparto(n > 1 ? `📦 ${n} paquetes en la puerta` : '📦 ¡Paquete en la puerta!', true);
+    else if (s !== null) ui.chipReparto(`🚚 ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`, false);
+    else ui.chipReparto(null);
+  }
   renderer.render(escena, camaraIso.camara);
   tGuardado += dt;
   if (tGuardado > 20) {

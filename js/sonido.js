@@ -72,6 +72,10 @@ export const sonido = {
   premio() {
     [523, 659, 784, 1047, 1319].forEach((f, i) => nota(f, i * 0.09, 0.25, { tipo: 'triangle', volumen: 0.11 }));
   },
+  claxon() {
+    nota(392, 0, 0.14, { tipo: 'square', volumen: 0.05 });
+    nota(392, 0.2, 0.22, { tipo: 'square', volumen: 0.05 });
+  },
   mascota() {
     nota(880, 0, 0.08, { tipo: 'sine', hasta: 1200, volumen: 0.1 });
     nota(1100, 0.1, 0.1, { tipo: 'sine', hasta: 1400, volumen: 0.08 });

@@ -1,12 +1,14 @@
 import * as THREE from 'three';
 
 export class Controles {
-  constructor(canvas, camaraIso, gestor, sala, mascotas, eventos) {
+  constructor(canvas, camaraIso, gestor, sala, mascotas, entregas, eventos) {
     this.canvas = canvas;
     this.cam = camaraIso;
     this.gestor = gestor;
     this.sala = sala;
     this.mascotas = mascotas;
+    this.entregas = entregas;
+    this.paqueteTocado = null;
     this.eventos = eventos;
     this.punteros = new Map();
     this.modo = 'nada';
@@ -141,6 +143,12 @@ export class Controles {
 
     if (this.punteros.size === 1) {
       const rayo = this.rayo(e.clientX, e.clientY);
+      const paquete = this.entregas.intersectar(rayo);
+      if (paquete) {
+        this.paqueteTocado = paquete;
+        this.modo = 'paquete';
+        return;
+      }
       const mascota = this.mascotas.intersectar(rayo);
       const hit = this.gestor.intersectar(rayo);
       const distMascota = mascota ? mascota.grupo.position.distanceTo(this.cam.camara.position) : Infinity;
@@ -196,7 +204,7 @@ export class Controles {
         this.avisado = true;
         this.eventos.alAviso('Quita primero lo que tiene encima', true);
       }
-    } else if (this.modo === 'mascota') {
+    } else if (this.modo === 'mascota' || this.modo === 'paquete') {
       if (lejos) {
         this.modo = 'rotar';
         this.cam.agarrar();
@@ -229,6 +237,10 @@ export class Controles {
       if (this.gestor.soltar(this.seleccionado)) this.eventos.alCambiar(this.seleccionado);
       this.modo = 'nada';
     } else if (this.modo === 'bloqueado') {
+      this.modo = 'nada';
+    } else if (this.modo === 'paquete') {
+      this.eventos.alAbrirPaquete(this.paqueteTocado);
+      this.paqueteTocado = null;
       this.modo = 'nada';
     } else if (this.modo === 'mascota') {
       this.seleccionar(null);
