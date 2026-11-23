@@ -350,7 +350,10 @@ export class Mas {
     const c = document.createElement('canvas');
     c.width = ancho;
     c.height = ancho;
-    c.getContext('2d').drawImage(fuente, sx, sy, lado, lado, 0, 0, ancho, ancho);
+    const g = c.getContext('2d');
+    g.fillStyle = document.body.classList.contains('noche') ? '#2b2b45' : '#f6ead9';
+    g.fillRect(0, 0, ancho, ancho);
+    g.drawImage(fuente, sx, sy, lado, lado, 0, 0, ancho, ancho);
     return c;
   }
 

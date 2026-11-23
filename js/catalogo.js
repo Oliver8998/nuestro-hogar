@@ -329,6 +329,22 @@ export const CATALOGO = [
     [0.5, 0.4, 0.5, 0.3, 1.4, 0.15, 0xf9cbd6, 'esfera'],
     [0.5, 0.4, 0.5, -0.3, 1.45, -0.1, 0xf3a6ba, 'esfera']
   ]},
+  { id: 'ordenador', categoria: 'deco', nombre: 'Ordenador portátil', precio: 260, ancho: 1, fondo: 1, ordenador: true, piezas: [
+    [0.36, 0.02, 0.26, 0, 0.01, 0.02, 0x9aa0a6, { metal: 0.4, rugosidad: 0.4 }],
+    [0.34, 0.005, 0.22, 0, 0.022, 0.02, 0x3d3d3d],
+    [0.36, 0.24, 0.015, 0, 0.13, -0.11, 0x9aa0a6, { rx: -0.2, metal: 0.4, rugosidad: 0.4 }],
+    [0.32, 0.2, 0.005, 0, 0.13, -0.1, 0x223040, { rx: -0.2 }]
+  ], encendible: { piezas: [3], brillo: 0x7fb8e8, luz: 0.25, intensidad: 0.6, colorLuz: 0x9fd0ff, inicial: false },
+  colores: { grupos: [[0, 2]], paleta: [[0x9aa0a6], [0xf2b8c6], [0x3d3d3d], [0xd9c27a]] }},
+
+  { id: 'huerto', categoria: 'deco', nombre: 'Huerto en jardinera', precio: 180, ancho: 2, fondo: 1, huerto: true, piezas: [
+    [0.9, 0.3, 0.42, 0, 0.15, 0, 0x9c6b45],
+    [0.84, 0.04, 0.36, 0, 0.29, 0, 0x5e4329],
+    [0.7, 0.06, 0.2, 0, 0.33, 0, 0x7cc46a],
+    [0.7, 0.22, 0.24, 0, 0.42, 0, 0x5a9e4b],
+    [0.08, 0.08, 0.08, 0.2, 0.45, 0.06, 0xe05050, 'esfera']
+  ], colores: { grupos: [[0]], paleta: [[0x9c6b45], [0xf2efe9], [0x7fa3c6], [0x6d4c3d]] }},
+
   { id: 'arbol-navidad', categoria: 'temporada', temporada: 'navidad', enTienda: false, nombre: 'Árbol de Navidad', precio: 220, ancho: 2, fondo: 2, piezas: [
     [0.3, 0.2, 0.3, 0, 0.1, 0, 0xc0504d, 'cil'],
     [0.08, 0.3, 0.08, 0, 0.3, 0, 0x6b4f36, 'cil'],

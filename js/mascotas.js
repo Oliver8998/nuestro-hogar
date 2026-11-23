@@ -433,6 +433,32 @@ export class GestorMascotas {
     this.eventos.particula('✨', m);
   }
 
+  alSofa(mueble) {
+    const d = mueble.userData;
+    const [w, f] = this.muebles.medidas(d.def, d.rot);
+    const alto = d.def.id === 'sofa' ? 0.5 : d.def.id === 'sillon-huevo' ? 0.9 : 0.38;
+    let n = 0;
+    this.lista.forEach((m, i) => {
+      if (m.estado === 'dormir' || n >= 3) return;
+      const celda = this.celdaJunto(mueble);
+      if (!celda) return;
+      const k = n++;
+      this.ir(m, celda, () => {
+        const off = w > 1 ? (k - 1) * 0.35 : 0;
+        const eje = d.rot % 2 === 0 ? 'x' : 'z';
+        m.grupo.position.x = mueble.position.x + (eje === 'x' ? off : 0);
+        m.grupo.position.z = mueble.position.z + (eje === 'z' ? off : 0);
+        m.estado = 'sofa';
+        m.sofa = mueble;
+        m.tEstado = 12;
+        m.alturaSofa = d.base + alto;
+        m.objetivoAngulo = mueble.rotation.y;
+        this.eventos.particula('💗', m);
+      }, 'correr');
+    });
+    return n;
+  }
+
   quitar(m) {
     this.escena.remove(m.grupo);
     liberar(m.grupo);
@@ -522,6 +548,16 @@ export class GestorMascotas {
         m.angulo += dt * 9;
         m.objetivoAngulo = m.angulo;
         alturaSalto = Math.abs(Math.sin(m.t * 10)) * 0.05;
+      } else if (m.estado === 'sofa') {
+        p.cuerpoGrupo.scale.set(1.04, 0.85, 1.04);
+        if (p.cola) p.cola.rotation.y = Math.sin(m.t * 3) * 0.4;
+        if (m.tEstado <= 0) {
+          m.alturaSofa = 0;
+          const c = m.sofa && this.muebles.muebles.includes(m.sofa) ? this.celdaJunto(m.sofa) : this.celdaLibreAlAzar(this.bloqueadas());
+          if (c) pos.copy(centroCelda(c[0], c[1]));
+          m.estado = 'quieto';
+          m.tEstado = 0.5;
+        }
       } else if (m.estado === 'comer') {
         if (p.cabeza) p.cabeza.rotation.x = 0.4 + Math.sin(m.t * 12) * 0.15;
       } else if (m.estado === 'rascar') {
@@ -556,6 +592,6 @@ export class GestorMascotas {
     }
     for (const ala of p.alas) ala.rotation.z = m.estado === 'feliz' ? Math.sin(m.t * 25) * 0.5 : 0;
     if (Math.sin(m.t * 0.9) > 0.995 && m.estado !== 'dormir') for (const o of p.ojos) o.scale.y = o.userData.sy * 0.2;
-    pos.y = alturaSalto + (m.estado === 'dormir' ? (m.alturaCama || 0) : 0);
+    pos.y = alturaSalto + (m.estado === 'dormir' ? (m.alturaCama || 0) : m.estado === 'sofa' ? (m.alturaSofa || 0) : 0);
   }
 }

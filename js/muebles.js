@@ -127,6 +127,7 @@ export class GestorMuebles {
     const mueble = crearMueble(def);
     if (def.colores && extra.color !== undefined && extra.color !== null) mueble.userData.color = extra.color % def.colores.paleta.length;
     if (def.encendible && extra.encendido !== undefined) mueble.userData.encendido = extra.encendido;
+    if (extra.datos) mueble.userData.datos = extra.datos;
     const base = extra.base ?? this.apoyo(mueble, x0, z0, rot).base;
     this.escena.add(mueble);
     this.muebles.push(mueble);
@@ -306,7 +307,7 @@ export class GestorMuebles {
   serializar() {
     return this.muebles.map(m => {
       const d = m.userData;
-      return { id: d.def.id, x0: d.x0, z0: d.z0, rot: d.rot, base: +d.base.toFixed(3), color: d.color, encendido: d.encendido };
+      return { id: d.def.id, x0: d.x0, z0: d.z0, rot: d.rot, base: +d.base.toFixed(3), color: d.color, encendido: d.encendido, ...(d.datos ? { datos: d.datos } : {}) };
     });
   }
 }

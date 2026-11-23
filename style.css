@@ -2057,3 +2057,87 @@ body.noche .pastilla, body.noche #lateral {
 .diario-entrada img { width: 72px; height: 72px; border-radius: 10px; object-fit: cover; }
 .diario-entrada b { display: block; font-weight: 900; }
 .diario-entrada small { color: var(--suave); font-weight: 700; }
+
+#juego {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  background: linear-gradient(180deg, #fbefe0, #f3dcc6);
+  opacity: 0;
+  transform: scale(.96);
+  transition: opacity .25s, transform .25s;
+  display: flex;
+  flex-direction: column;
+  padding: calc(env(safe-area-inset-top) + 12px) 14px calc(env(safe-area-inset-bottom) + 14px);
+}
+#juego.abierto { opacity: 1; transform: none; }
+.jg-cabecera {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: rgba(255, 250, 244, .95); border-radius: 20px; padding: 10px 12px 10px 16px; box-shadow: var(--sombra);
+}
+.jg-cabecera b { display: block; font-size: 18px; font-weight: 900; }
+.jg-cabecera small { color: var(--suave); font-weight: 700; font-size: 13px; }
+.jg-tiempo { height: 10px; border-radius: 5px; background: rgba(0,0,0,.08); margin: 10px 4px 0; overflow: hidden; }
+.jg-tiempo i { display: block; height: 100%; background: var(--verde); transition: width .1s linear; }
+.jg-tiempo.poco i { background: var(--rojo); }
+.jg-cuerpo { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; overflow: hidden; }
+
+.jg-receta { background: #fff; border-radius: 20px; padding: 12px 16px; box-shadow: var(--sombra); text-align: center; }
+.jg-receta b { font-size: 20px; font-weight: 900; }
+.jg-receta .pasos { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 6px; font-size: 32px; }
+.jg-receta .pasos i { font-size: 18px; color: var(--suave); font-style: normal; }
+.jg-receta .pasos span { transition: opacity .2s, transform .2s; }
+.jg-receta .pasos span.hecho { opacity: .35; transform: scale(.8); }
+.jg-sarten { font-size: 76px; }
+.jg-ingredientes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 340px; }
+.jg-ingredientes button { font-size: 40px; padding: 10px 0; border: none; border-radius: 18px; background: #fff; box-shadow: 0 3px 0 var(--borde); }
+.jg-ingredientes button.bien { background: #e3f6ea; }
+.jg-ingredientes button.mal { background: #fde1e1; animation: temblor .25s; }
+@keyframes temblor { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+.jg-memory { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 360px; }
+.carta { aspect-ratio: .85; border: none; padding: 0; background: none; perspective: 600px; position: relative; }
+.carta > div {
+  position: absolute; inset: 0; border-radius: 16px; display: flex; align-items: center; justify-content: center;
+  backface-visibility: hidden; transition: transform .35s; box-shadow: var(--sombra);
+}
+.carta .dorso { background: var(--rosa); font-size: 34px; }
+.carta .frente { background: #fff; transform: rotateY(180deg); }
+.carta .frente img { width: 86%; }
+.carta.vuelta .dorso { transform: rotateY(180deg); }
+.carta.vuelta .frente { transform: none; }
+.carta.hecha .frente { background: #e3f6ea; }
+
+.jg-puzzle { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; width: min(92vw, 360px); aspect-ratio: 1; }
+.jg-puzzle button { border: none; padding: 0; background-size: 300% 300%; border-radius: 6px; outline: 3px solid transparent; transition: outline-color .15s, transform .15s; }
+.jg-puzzle button.sel { outline-color: var(--rosa); transform: scale(.94); }
+.jg-modelo { display: flex; align-items: center; gap: 10px; color: var(--suave); font-weight: 800; }
+.jg-modelo img { width: 70px; height: 70px; object-fit: cover; border-radius: 10px; box-shadow: var(--sombra); }
+
+.jg-final { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+.jg-final span { font-size: 80px; }
+.jg-final b { font-size: 22px; font-weight: 900; max-width: 300px; }
+.jg-final button { border: none; border-radius: 18px; padding: 14px 30px; font: inherit; font-size: 17px; font-weight: 900; background: var(--verde); color: #fff; box-shadow: 0 3px 0 var(--verde-oscuro); }
+
+.lista-juegos { display: flex; flex-direction: column; gap: 10px; }
+.juego-fila { display: flex; align-items: center; gap: 12px; text-align: left; border: none; background: #fff; border-radius: 18px; padding: 12px; box-shadow: 0 3px 0 var(--borde), var(--sombra); font: inherit; color: var(--texto); }
+.juego-fila > span { font-size: 36px; }
+.juego-fila div { flex: 1; }
+.juego-fila b { display: block; font-weight: 900; font-size: 16px; }
+.juego-fila small { color: var(--suave); font-weight: 700; font-size: 12.5px; }
+.juego-fila em { font-style: normal; font-weight: 900; font-size: 13px; text-align: right; white-space: nowrap; }
+.juego-fila em i { font-style: normal; color: var(--suave); font-size: 11px; }
+
+#piano { position: fixed; inset: 0; z-index: 36; display: flex; align-items: flex-end; justify-content: center; background: rgba(40, 30, 25, .35); opacity: 0; transition: opacity .25s; }
+#piano.abierto { opacity: 1; }
+.piano-caja { width: 100%; background: #1f1a17; border-radius: 26px 26px 0 0; padding: 12px 10px calc(env(safe-area-inset-bottom) + 14px); color: #fff; text-align: center; }
+.piano-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.piano-cabecera b { font-size: 18px; }
+.piano-cabecera .cancion { border: none; border-radius: 12px; padding: 6px 10px; font: inherit; font-size: 12px; font-weight: 800; background: #3b322c; color: #fff; margin: 2px; }
+.piano-caja small { color: #b9a898; font-weight: 700; display: block; margin-top: 8px; }
+.teclado { display: flex; height: 190px; position: relative; }
+.blanca { flex: 1; border: 1px solid #ccc; background: linear-gradient(#fff, #efe9e2); border-radius: 0 0 8px 8px; position: relative; padding: 0; touch-action: none; }
+.blanca.pulsada { background: linear-gradient(#f4e6d6, #e5d2bd); }
+.blanca.guia { background: linear-gradient(#ffe0e6, #f4b3be); }
+.negra { position: absolute; z-index: 2; top: 0; right: -30%; width: 60%; height: 60%; background: linear-gradient(#333, #111); border-radius: 0 0 6px 6px; touch-action: none; }
+.negra.pulsada { background: #555; }

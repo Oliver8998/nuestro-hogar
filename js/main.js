@@ -18,6 +18,8 @@ import { Minijuegos } from './minijuegos.js';
 import { cargarModelos } from './modelos.js';
 import { Ambiente, temporada, NOMBRE_TEMPORADA } from './ambiente.js';
 import { Mas } from './mas.js';
+import { Juegos, JUEGOS, PARTIDAS_PREMIADAS } from './juegos.js';
+import { Usos } from './usos.js';
 
 await cargarModelos();
 
@@ -321,10 +323,11 @@ function opcionesMueble(m) {
     }
   }];
 
+  opciones.push(...usos.opciones(m));
   if (def.colores) {
     opciones.push({ icono: '🎨', texto: 'Color', accion: () => { gestor.siguienteColor(m); sonido.pop(); guardar(); } });
   }
-  if (def.encendible) {
+  if (def.encendible && !def.ordenador && def.id !== 'tele') {
     opciones.push({
       icono: datos.encendido ? '🌙' : '💡',
       texto: datos.encendido ? 'Apagar' : 'Encender',
@@ -953,6 +956,66 @@ const mas = new Mas({
   extrasMenu: () => (window.extrasMenu ? window.extrasMenu() : [])
 });
 
+const juegos = new Juegos({ sonido, miniaturas });
+
+function ganar(n, m = null, emoji = '🪙') {
+  estado.monedas += n;
+  sonido.premio();
+  if (m) {
+    const p = pantalla(new THREE.Vector3(m.position.x, m.userData.base + m.userData.alto + 0.2, m.position.z));
+    ui.particula(emoji, p.x, p.y, 4);
+  }
+  ui.aviso(`${emoji} +${n} monedas`);
+  refrescarHud();
+  guardar();
+}
+
+const usos = new Usos({
+  estado, ui, sonido, gestor, mascotas, miniaturas,
+  guardar: () => guardar(),
+  refrescarMenu: () => refrescarMenu(),
+  registrar: e => registrar(e),
+  ganar,
+  particulaEn(m, emoji, n = 2) {
+    const p = pantalla(new THREE.Vector3(m.position.x, m.userData.base + m.userData.alto + 0.15, m.position.z));
+    ui.particula(emoji, p.x, p.y, n);
+  }
+});
+
+function partidasHoy() {
+  const hoy = new Date().toDateString();
+  if (!estado.juegosHoy || estado.juegosHoy.dia !== hoy) estado.juegosHoy = { dia: hoy, n: {} };
+  return estado.juegosHoy.n;
+}
+
+function abrirJuegos() {
+  const n = partidasHoy();
+  const cuerpo = ui.abrirGen('Minijuegos', `
+    <p class="gen-intro">Jugad juntos o por turnos para ganar monedas. Las ${PARTIDAS_PREMIADAS} primeras partidas de cada juego al día dan el premio completo.</p>
+    <div class="lista-juegos">${JUEGOS.map(j => {
+      const hechas = n[j.id] || 0;
+      return `<button class="juego-fila" data-id="${j.id}"><span>${j.icono}</span><div><b>${j.nombre}</b><small>${j.texto}</small></div><em>🪙 ${hechas < PARTIDAS_PREMIADAS ? `hasta ${j.premio}` : `hasta ${Math.round(j.premio * 0.3)}`}<br><i>${Math.min(hechas, PARTIDAS_PREMIADAS)}/${PARTIDAS_PREMIADAS} hoy</i></em></button>`;
+    }).join('')}</div>`, () => mas.abrir());
+  cuerpo.querySelectorAll('.juego-fila').forEach(b => b.addEventListener('click', async () => {
+    const j = JUEGOS.find(x => x.id === b.dataset.id);
+    ui.cerrarHojas();
+    let imagen = null;
+    if (j.id === 'puzzle') imagen = mas.fotos.length && Math.random() < 0.7 ? mas.fotos[Math.floor(Math.random() * mas.fotos.length)].data : mas.capturar(600).toDataURL('image/jpeg', 0.85);
+    const puntos = await juegos.jugar(j.id, { imagen });
+    if (puntos === null || puntos === undefined) return;
+    const veces = partidasHoy();
+    veces[j.id] = (veces[j.id] || 0) + 1;
+    const factor = veces[j.id] <= PARTIDAS_PREMIADAS ? 1 : 0.3;
+    const premio = Math.max(5, Math.round(j.premio * puntos * factor));
+    registrar('minijuego');
+    ganar(premio, null, j.icono);
+  }));
+}
+
+window.extrasMenu = () => [
+  { id: 'juegos', icono: '🎮', texto: 'Minijuegos', sub: 'Jugad para ganar monedas', accion: abrirJuegos }
+];
+
 function aplicarTemporada() {
   const t = temporadaActual();
   ui.ponerTemporada(t && t !== 'aniversario' ? t : null, t ? NOMBRE_TEMPORADA[t] : '');
@@ -1001,6 +1064,8 @@ document.addEventListener('gesturestart', e => e.preventDefault());
 const hoy = new Date().toDateString();
 const nuevoDia = estado.dia !== hoy;
 if (nuevoDia) {
+  const ayer = new Date(Date.now() - 86400000).toDateString();
+  estado.racha = { n: estado.racha && estado.dia === ayer ? estado.racha.n + 1 : 1 };
   estado.gratis = true;
   estado.dia = hoy;
 }
@@ -1027,13 +1092,16 @@ setTimeout(() => {
   } else if (revisarFechas()) {
     return;
   } else if (nuevoDia && habiaPartida) {
-    estado.monedas += 50;
+    const racha = estado.racha ? estado.racha.n : 1;
+    const bonus = 50 + 10 * (Math.min(racha, 7) - 1);
+    estado.monedas += bonus;
     refrescarHud();
     guardar();
     ui.dialogo({
       imagen: miniaturas.piezas('premio:monedas', PIEZAS_PREMIO.monedas),
+      etiqueta: racha > 1 ? { texto: `🔥 Racha de ${racha} días`, color: '#f2a03c' } : null,
       titulo: '¡Buenos días!',
-      texto: 'Por volver hoy: +50 monedas y una tirada gratis en la ruleta.',
+      texto: `Por volver hoy: +${bonus} monedas y una tirada gratis en la ruleta.${racha < 7 ? ' Si volvéis mañana, ¡más!' : ''}`,
       botones: [{ texto: '¡A por ello!', tipo: 'primario' }]
     });
   }
@@ -1080,6 +1148,7 @@ renderer.setAnimationLoop(() => {
   sala.actualizarParedes(camaraIso.direccionHorizontal());
   sala.actualizar(dt);
   ambiente.actualizar(dt);
+  usos.actualizar(dt);
   gestor.actualizar(dt);
   mascotas.actualizar(dt);
   entregas.actualizar(dt);
