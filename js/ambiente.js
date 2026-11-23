@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { horaSolar } from './sol.js';
 
 const CIELO = [
   [0, 0x0b1430, 0x1d2a55],
@@ -91,6 +92,7 @@ export class Ambiente {
     this.t = 0;
     this.tDibujo = 1;
     this.hora = 12;
+    this.horaSol = 12;
     this.clima = 'sol';
     this.calcular();
   }
@@ -102,7 +104,7 @@ export class Ambiente {
   }
 
   esNoche() {
-    return this.hora >= 21 || this.hora < 6.5;
+    return this.horaSol >= 21 || this.horaSol < 6.5;
   }
 
   calcularClima() {
@@ -117,8 +119,9 @@ export class Ambiente {
 
   calcular() {
     this.hora = this.horaActual();
+    this.horaSol = this.horaFija !== null ? this.horaFija : horaSolar();
     this.clima = this.calcularClima();
-    const h = this.hora;
+    const h = this.horaSol;
     const [a, b, t] = tramo(LUZ, h);
     let gris = this.clima === 'lluvia' || this.clima === 'nieve' ? 0.82 : this.clima === 'nubes' ? 0.92 : 1;
     if (this.apagon) gris *= 0.5;
@@ -182,7 +185,7 @@ export class Ambiente {
         c.beginPath(); c.arc(95, 45, 12, 0, Math.PI * 2); c.fill();
       }
     } else if (this.clima === 'sol') {
-      const y = 40 + Math.abs(this.hora - 13) * 10;
+      const y = 40 + Math.abs(this.horaSol - 13) * 10;
       c.fillStyle = 'rgba(255, 236, 150, .35)';
       c.beginPath(); c.arc(40, y, 26, 0, Math.PI * 2); c.fill();
       c.fillStyle = '#ffe58a';

@@ -244,6 +244,12 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
   - La habitación tiene altura fija (52vh, o 44vh con sesión) y todo va centrado, para que no quede hueco hasta los botones.
 - El menú tiene ahora menos texto: el título, el nombre de la sala con puntitos, una tarjeta mini (casa, 🪙, 🔥, 🕯️) y avisos en burbujas con icono (`resumen().novedades` = `{i, t}`).
 
+## Día y noche reales (pedido el 23-nov 20:26) — HECHO
+- `js/sol.js` calcula el amanecer y el atardecer (fórmula NOAA) según la zona horaria del móvil, con una tabla de ciudades (Madrid, Canarias, Lisboa, Latinoamérica…) y la fecha, así que tiene en cuenta la estación.
+- `horaSolar()` estira la hora real para que el amanecer real caiga en el 7 de las tablas de ambiente y el atardecer en el 19,3; `ambiente.horaSol` la usa para luz, cielo y `esNoche`.
+  - `ambiente.hora` sigue siendo la hora real: la usan las visitas, dormir y el lofi.
+- `periodoSolar()` da día, atardecer o noche para el menú (escaparate y cielo). `?hora=` lo sigue forzando.
+
 ## Ideas pendientes (no pedidas aún)
 - Sincronizar los dos móviles (Supabase).
 - Minijuegos para ganar monedas.

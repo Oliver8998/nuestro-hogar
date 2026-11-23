@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GestorMuebles } from './muebles.js';
 import { crearModeloMascota } from './mascotas.js';
 import { SUELOS, PAPELES } from './casa2.js';
+import { periodoSolar } from './sol.js';
 
 const SALAS = [
   {
@@ -56,7 +57,8 @@ function texturaPatron(item, rx, ry) {
 
 export function periodo() {
   const forz = new URLSearchParams(location.search).get('hora');
-  const h = forz !== null ? Number(forz) : new Date().getHours();
+  if (forz === null) return periodoSolar();
+  const h = Number(forz);
   if (h >= 21 || h < 6) return 'noche';
   if (h >= 18 || h < 8) return 'tarde';
   return 'dia';
