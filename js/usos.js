@@ -71,6 +71,9 @@ export class Usos {
     const def = m.userData.def;
     const { ui, sonido, guardar } = this.ctx;
     const ops = [];
+    if (m.userData.datos && m.userData.datos.tirado) {
+      ops.push({ icono: '🙌', texto: 'Levantar', accion: () => { m.userData.datos.tirado = false; m.userData.rebote = 0.8; sonido.arreglo(); guardar(); this.ctx.refrescarMenu(); } });
+    }
     if (def.huerto) {
       const d = this.huerto(m);
       if (d.fase === 0) ops.push({ icono: '🌱', texto: 'Plantar', accion: () => { d.fase = 1; d.listoEn = null; sonido.pop(); ui.aviso('🌱 ¡Plantado! Ahora regadlo'); this.aplicarHuerto(m); guardar(); this.ctx.refrescarMenu(); } });

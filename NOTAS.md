@@ -95,8 +95,16 @@ Fases:
    - Diario con el antes y el después (`hogar-diario`): guarda una foto automática cada 2 días como mínimo.
 3. ✅ Minijuegos para ganar monedas (cocina, memory, puzzle con foto), racha diaria, teletrabajo (ordenador) y huerto.
 4. ✅ Objetos que se usan: sofá, tele con dibujos, radio con música y piano con teclas.
-5. ⏳ Mascotas: personalidad, crecer, trastadas y accesorios.
-6. ⏳ Progresión: mudanzas y más habitaciones, puntuación de acogedor, colecciones, logros y diario.
+5. ✅ Mascotas:
+   - Personalidad (`PERSONALIDADES`). Crecen: son bebés hasta los 4 días (escala de 0,7 a 1).
+   - Trastadas: tiran deco (`datos.tirado` en el mueble) y se levanta con "🙌 Levantar".
+   - Accesorios (`acc-*` en MATERIALES) que se ponen desde el menú de la mascota → 🎀 Ropa.
+6. ✅ Progresión (`progreso.js`):
+   - CASAS: piso cutre, piso reformado, ático, casa con jardín y mansión. Mudarse cuesta monedas y pide un mínimo de acogedor.
+   - Habitaciones: `estado.habs[i]` guarda {muebles, suciedad, paredes}; la actual vive en el juego y `estado.habActual` es local. Se cambia con la pastilla de arriba.
+   - Al mudarse se completan todos los desperfectos (`sala.completarTodo`).
+   - Acogedor de 0 a 100, que da tickets al llegar a 50, 70 y 90.
+   - Colecciones (`COLECCIONES`) y 21 logros (`LOGROS`), que dan +30 monedas cada uno.
 7. ✅ Pareja con Supabase: sincronizar, notitas en la nevera, regalos, votaciones y misiones de pareja.
    - Proyecto Supabase `nuestro-hogae`, URL https://lekqmspkizhxsceyswzu.supabase.co, con la publishable key en `js/sync.js`. Oliver ya ejecutó el SQL de las tablas `hogares`, `mensajes` y `fotos` (RLS abierta para anon y realtime activado).
    - `sync.js` usa REST + sondeo cada 3 s (sin supabase-js). La casa entera va en `hogares.datos`; gana la última escritura y se usa `version` para el bloqueo optimista.

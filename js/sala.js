@@ -63,11 +63,13 @@ export function crearSala(escena) {
   sala.add(base);
 
   const tonos = [0x8a6a4a, 0x7d5f42, 0x93724f, 0x75583c];
+  const tablas = [];
   for (let i = 0; i < 12; i++) {
     const tabla = caja(0.48, 0.1, TAM, tonos[i % tonos.length]);
     tabla.castShadow = false;
     tabla.position.set(-mitad + 0.25 + i * 0.5, -0.05, 0);
     sala.add(tabla);
+    tablas.push(tabla);
   }
 
   const paredes = [];
@@ -373,7 +375,7 @@ export function crearSala(escena) {
       if (o.userData.desperfecto) return { tipo: 'desperfecto', d: o.userData.desperfecto };
       const i = o.userData.pared;
       const req = paredes[i].userData.requisito;
-      if (req && !req.hecho) return { tipo: 'desperfecto', d: req };
+      if (req && !req.hecho && conDesperfectos) return { tipo: 'desperfecto', d: req };
       return { tipo: 'pared', i, pintura: paredes[i].userData.pintura };
     }
     return null;
@@ -388,7 +390,7 @@ export function crearSala(escena) {
     const pared = paredes[obj.i].userData;
     if (!material.pinta) return { ok: false, motivo: 'Eso no sirve para la pared' };
     const req = pared.requisito;
-    if (req && !req.hecho) {
+    if (req && !req.hecho && conDesperfectos) {
       return { ok: false, motivo: req.id === 'grietas' ? 'Primero tapa las grietas con masilla' : 'Primero quita la humedad' };
     }
     if (pared.pintura === material.pinta) return { ok: false, motivo: 'Ya está de ese color' };
@@ -469,7 +471,7 @@ export function crearSala(escena) {
       }
     }
 
-    if (cucas.hecho) return;
+    if (cucas.hecho || !conDesperfectos) return;
     for (const c of cucarachas) {
       if (c.pausa > 0) {
         c.pausa -= dt;
@@ -489,5 +491,37 @@ export function crearSala(escena) {
     }
   }
 
-  return { paredes, cara, ventana, matCristal, hemi, sol, visibles: () => paredes.map(p => p.visible), actualizarParedes, actualizar, buscar, tocar, puedeAplicar, aplicar, resaltar, estado, restaurar, progreso };
+  function pintarSuelo(colores) {
+    tablas.forEach((t, i) => t.material.color.setHex((colores || tonos)[i % (colores || tonos).length]));
+  }
+
+  let conDesperfectos = true;
+  function mostrarDesperfectos(si) {
+    conDesperfectos = si;
+    for (const d of desperfectos) {
+      if (d.hecho) continue;
+      for (const o of d.objetos) o.visible = si;
+    }
+    for (const c of cucarachas) c.grupo.visible = si && !cucas.hecho;
+  }
+
+  function completarTodo() {
+    for (const d of desperfectos) {
+      if (d.hecho) continue;
+      d.hecho = true;
+      d.alProgreso(1);
+      d.alCompletar();
+    }
+    conDesperfectos = false;
+  }
+
+  function pintarParedes(lista, defecto) {
+    paredes.forEach((p, i) => {
+      const hex = lista ? lista[i] : null;
+      p.userData.pintura = hex ?? null;
+      p.userData.muro.material.color.setHex(hex ?? defecto ?? PARED_SUCIA.getHex());
+    });
+  }
+
+  return { paredes, cara, pintarSuelo, mostrarDesperfectos, completarTodo, pintarParedes, conDesperfectos: () => conDesperfectos, ventana, matCristal, hemi, sol, visibles: () => paredes.map(p => p.visible), actualizarParedes, actualizar, buscar, tocar, puedeAplicar, aplicar, resaltar, estado, restaurar, progreso };
 }

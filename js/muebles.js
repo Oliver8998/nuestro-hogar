@@ -303,6 +303,12 @@ export class GestorMuebles {
       } else if (m.scale.y !== 1) {
         m.scale.set(1, 1, 1);
       }
+      const tirado = d.datos && d.datos.tirado;
+      const objetivo = tirado ? 1.4 : 0;
+      if (Math.abs(m.rotation.z - objetivo) > 0.001) {
+        m.rotation.z += (objetivo - m.rotation.z) * Math.min(1, dt * 8);
+        m.position.y = d.base + Math.sin(m.rotation.z) * 0.1;
+      }
     }
   }
 

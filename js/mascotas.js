@@ -14,6 +14,84 @@ export const ESPECIES = {
 const CELDA = 0.5;
 const N = 12;
 
+export const PERSONALIDADES = {
+  dormilona: { nombre: 'Dormilona', icono: '😴', texto: 'Se cansa enseguida y adora sus siestas' },
+  traviesa: { nombre: 'Traviesa', icono: '😼', texto: 'Le encanta tirar cosas al suelo' },
+  glotona: { nombre: 'Glotona', icono: '🍖', texto: 'Siempre tiene hambre' },
+  carinosa: { nombre: 'Cariñosa', icono: '🥰', texto: 'Casi nunca está triste' },
+  juguetona: { nombre: 'Juguetona', icono: '🎾', texto: 'Quiere jugar a todas horas' }
+};
+
+export const ACCESORIOS = {
+  lazo: 'Lazo',
+  gorro: 'Gorrito',
+  collar: 'Collar',
+  gafas: 'Gafas de sol',
+  corona: 'Corona'
+};
+
+function crearAccesorio(id) {
+  const g = new THREE.Group();
+  if (id === 'lazo') {
+    const m = mat(0xe05070);
+    for (const s of [-1, 1]) {
+      const ala = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.06, 10), m);
+      ala.rotation.z = s * Math.PI / 2;
+      ala.position.x = s * 0.035;
+      g.add(ala);
+    }
+    g.add(new THREE.Mesh(new THREE.SphereGeometry(0.018, 10, 8), m));
+    g.position.set(0.05, 0.085, 0.02);
+    g.rotation.z = -0.3;
+  } else if (id === 'gorro') {
+    const cono = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.13, 16), mat(0xd23c3c));
+    cono.position.y = 0.06;
+    const borde = new THREE.Mesh(new THREE.TorusGeometry(0.065, 0.016, 8, 18), mat(0xf7f4ef));
+    borde.rotation.x = Math.PI / 2;
+    const pompon = new THREE.Mesh(new THREE.SphereGeometry(0.022, 10, 8), mat(0xf7f4ef));
+    pompon.position.y = 0.13;
+    g.add(cono, borde, pompon);
+    g.position.set(0, 0.08, -0.01);
+    g.rotation.z = 0.25;
+  } else if (id === 'collar') {
+    const t = new THREE.Mesh(new THREE.TorusGeometry(0.085, 0.014, 8, 20), mat(0x4f81bd));
+    t.rotation.x = Math.PI / 2;
+    const placa = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.006, 12), mat(0xf2c84b, { metalness: 0.6, roughness: 0.3 }));
+    placa.rotation.x = Math.PI / 2;
+    placa.position.set(0, -0.015, 0.09);
+    g.add(t, placa);
+    g.position.set(0, -0.08, 0);
+  } else if (id === 'gafas') {
+    const m = mat(0x1e1e1e, { roughness: 0.3 });
+    for (const s of [-1, 1]) {
+      const lente = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.01, 14), m);
+      lente.rotation.x = Math.PI / 2;
+      lente.position.set(s * 0.05, 0, 0);
+      g.add(lente);
+    }
+    const puente = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.008, 0.008), m);
+    g.add(puente);
+    g.position.set(0, 0.025, 0.1);
+  } else if (id === 'corona') {
+    const m = mat(0xf2c84b, { metalness: 0.6, roughness: 0.3 });
+    const aro = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.06, 0.035, 14, 1, true), m);
+    aro.material.side = THREE.DoubleSide;
+    g.add(aro);
+    for (let k = 0; k < 5; k++) {
+      const a = k / 5 * Math.PI * 2;
+      const pico = new THREE.Mesh(new THREE.ConeGeometry(0.014, 0.04, 6), m);
+      pico.position.set(Math.cos(a) * 0.055, 0.035, Math.sin(a) * 0.055);
+      g.add(pico);
+    }
+    const gema = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 6), mat(0xe05070));
+    gema.position.set(0, 0, 0.06);
+    g.add(gema);
+    g.position.set(0, 0.095, 0);
+  }
+  g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  return g;
+}
+
 function mat(color, extra = {}) {
   return new THREE.MeshStandardMaterial({ color, roughness: 0.8, ...extra });
 }
@@ -198,6 +276,10 @@ class Mascota {
     this.hambre = datos.hambre ?? 80;
     this.felicidad = datos.felicidad ?? 80;
     this.energia = datos.energia ?? 90;
+    const claves = Object.keys(PERSONALIDADES);
+    this.personalidad = datos.personalidad || claves[Math.floor(Math.random() * claves.length)];
+    this.nacida = datos.nacida ?? Date.now() - 5 * 86400000;
+    this.accesorio = datos.accesorio || null;
     this.e = ESPECIES[this.especie];
     this.partes = crearModeloMascota(this.especie);
     this.grupo = this.partes.raiz;
@@ -218,8 +300,32 @@ class Mascota {
     return {
       id: this.id, especie: this.especie, nombre: this.nombre,
       hambre: Math.round(this.hambre), felicidad: Math.round(this.felicidad), energia: Math.round(this.energia),
-      x: +p.x.toFixed(2), z: +p.z.toFixed(2)
+      x: +p.x.toFixed(2), z: +p.z.toFixed(2),
+      personalidad: this.personalidad, nacida: this.nacida, accesorio: this.accesorio
     };
+  }
+
+  edadDias() {
+    return (Date.now() - this.nacida) / 86400000;
+  }
+
+  crecimiento() {
+    return 0.7 + 0.3 * Math.min(1, this.edadDias() / 4);
+  }
+
+  ponerAccesorio(id) {
+    if (this.mallaAccesorio) {
+      this.mallaAccesorio.parent.remove(this.mallaAccesorio);
+      liberar(this.mallaAccesorio);
+      this.mallaAccesorio = null;
+    }
+    this.accesorio = id || null;
+    if (!id) return;
+    const g = crearAccesorio(id);
+    const destino = this.partes.cabeza || this.partes.cuerpoGrupo;
+    if (!this.partes.cabeza) g.position.y += 0.35;
+    destino.add(g);
+    this.mallaAccesorio = g;
   }
 }
 
@@ -263,7 +369,7 @@ export class GestorMascotas {
     const bloqueadas = this.bloqueadas();
     const celda = this.celdaLibreAlAzar(bloqueadas) || [6, 6];
     const p = centroCelda(celda[0], celda[1]);
-    const m = new Mascota({ id: `m${Date.now()}`, especie, nombre, x: p.x, z: p.z, hambre: 70, felicidad: 90, energia: 90 });
+    const m = new Mascota({ id: `m${Date.now()}`, especie, nombre, x: p.x, z: p.z, hambre: 70, felicidad: 90, energia: 90, nacida: Date.now() });
     this.anadir(m);
     m.estado = 'feliz';
     m.tEstado = 1.6;
@@ -274,6 +380,25 @@ export class GestorMascotas {
   anadir(m) {
     this.escena.add(m.grupo);
     this.lista.push(m);
+    m.tTrastada = 300 + Math.random() * 600;
+  }
+
+  trastada(m) {
+    const objetivos = this.muebles.muebles.filter(x => ['planta', 'cactus', 'jarron', 'lampara-mesa', 'libros', 'radio', 'peluche', 'globo', 'rosas', 'lampara-lava'].includes(x.userData.def.id) && !(x.userData.datos && x.userData.datos.tirado));
+    if (!objetivos.length) return false;
+    const obj = objetivos[Math.floor(Math.random() * objetivos.length)];
+    const celda = obj.userData.base > 0.01 ? this.celdaJunto(obj) : this.celdaJunto(obj);
+    if (!celda) return false;
+    return this.ir(m, celda, () => {
+      if (!this.muebles.muebles.includes(obj)) return;
+      if (!obj.userData.datos) obj.userData.datos = {};
+      obj.userData.datos.tirado = true;
+      m.estado = 'feliz';
+      m.tEstado = 1.5;
+      m.objetivoAngulo = Math.atan2(obj.position.x - m.grupo.position.x, obj.position.z - m.grupo.position.z);
+      this.eventos.particula('😼', m, 2);
+      if (this.eventos.trastada) this.eventos.trastada(m, obj);
+    }, 'correr');
   }
 
   cargar(lista, segundosFuera = 0) {
@@ -290,6 +415,16 @@ export class GestorMascotas {
 
   serializar() {
     return this.lista.map(m => m.serializar());
+  }
+
+  sincronizarAccesorios() {
+    for (const m of this.lista) {
+      const actual = m.mallaAccesorio ? m.accesorioPuesto : null;
+      if (actual !== m.accesorio) {
+        m.ponerAccesorio(m.accesorio);
+        m.accesorioPuesto = m.accesorio;
+      }
+    }
   }
 
   sincronizar(lista) {
@@ -360,7 +495,7 @@ export class GestorMascotas {
       this.dormir(m, null);
       return;
     }
-    const r = Math.random();
+    const r = Math.random() * (m.personalidad === 'juguetona' ? 0.5 : 1);
     if (r < 0.15) {
       const pelota = this.buscarMueble(d => d.juguete);
       if (pelota && this.ir(m, this.celdaDeMueble(pelota), () => this.jugarCon(m, pelota), 'correr')) return;
@@ -496,10 +631,24 @@ export class GestorMascotas {
 
     for (const m of this.lista) {
       m.t += dt;
-      m.hambre = Math.max(0, m.hambre - dt * 4 / 3600);
-      m.felicidad = Math.max(0, m.felicidad - dt * 3 / 3600);
+      const pers = m.personalidad;
+      m.hambre = Math.max(0, m.hambre - dt * (pers === 'glotona' ? 5.6 : 4) / 3600);
+      m.felicidad = Math.max(0, m.felicidad - dt * (pers === 'carinosa' ? 1.5 : 3) / 3600);
       if (m.estado === 'dormir') m.energia = Math.min(100, m.energia + dt * 4);
-      else m.energia = Math.max(0, m.energia - dt / 25);
+      else m.energia = Math.max(0, m.energia - dt / (pers === 'dormilona' ? 16 : 25));
+      const traviesa = pers === 'traviesa' || m.felicidad < 35;
+      if (traviesa && m.estado !== 'dormir' && m.estado !== 'sofa' && this.trastadas !== false) {
+        m.tTrastada -= dt * (pers === 'traviesa' ? 1 : 0.6);
+        if (m.tTrastada <= 0) {
+          m.tTrastada = 600 + Math.random() * 900;
+          this.trastada(m);
+        }
+      }
+      if (m.accesorioPuesto !== m.accesorio) {
+        m.ponerAccesorio(m.accesorio);
+        m.accesorioPuesto = m.accesorio;
+      }
+      m.grupo.scale.setScalar(m.e.tam * 1.5 * m.crecimiento());
       this.animar(m, dt);
     }
   }

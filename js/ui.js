@@ -129,6 +129,8 @@ export class UI {
     $('btn-refugio').addEventListener('click', () => this.abrirRefugio());
     $('btn-mas').addEventListener('click', () => this.ev.alMas());
     $('pill-clima').addEventListener('click', () => this.ev.alClima());
+    $('pill-hab').addEventListener('click', () => this.ev.alHabitaciones());
+    $('pill-acogedor').addEventListener('click', () => this.ev.alAcogedor());
     $('gen-atras').addEventListener('click', () => this.genAtras && this.genAtras());
     $('btn-tirar').addEventListener('click', () => this.tirar());
     this.elFondo.addEventListener('click', () => this.cerrarHojas());

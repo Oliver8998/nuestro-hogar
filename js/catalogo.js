@@ -507,6 +507,32 @@ export const MATERIALES = [
     [0.07, 0.07, 0.07, 0.01, 0.13, 0.03, 0x6cc08a, 'esfera'],
     [0.07, 0.07, 0.07, -0.03, 0.15, -0.04, 0x5a9fd6, 'esfera']
   ]},
+  { id: 'acc-lazo', categoria: 'mascotas', nombre: 'Lazo para mascota', precio: 45, accesorio: 'lazo', pista: 'Toca a tu mascota → 🎀 Ropa', piezas: [
+    [0.14, 0.2, 0.14, -0.1, 0.12, 0, 0xe05070, 'cono', { rz: Math.PI / 2 }],
+    [0.14, 0.2, 0.14, 0.1, 0.12, 0, 0xe05070, 'cono', { rz: -Math.PI / 2 }],
+    [0.08, 0.08, 0.08, 0, 0.12, 0, 0xc0405a, 'esfera']
+  ]},
+  { id: 'acc-gorro', categoria: 'mascotas', nombre: 'Gorrito de lana', precio: 60, accesorio: 'gorro', pista: 'Toca a tu mascota → 🎀 Ropa', piezas: [
+    [0.26, 0.3, 0.26, 0, 0.2, 0, 0xd23c3c, 'cono'],
+    [0.3, 0.06, 0.3, 0, 0.05, 0, 0xf7f4ef, 'cil'],
+    [0.08, 0.08, 0.08, 0, 0.37, 0, 0xf7f4ef, 'esfera']
+  ]},
+  { id: 'acc-collar', categoria: 'mascotas', nombre: 'Collar con chapita', precio: 40, accesorio: 'collar', pista: 'Toca a tu mascota → 🎀 Ropa', piezas: [
+    [0.3, 0.04, 0.3, 0, 0.1, 0, 0x4f81bd, 'cil'],
+    [0.07, 0.07, 0.02, 0, 0.06, 0.15, 0xf2c84b, 'cil', { rx: Math.PI / 2, metal: 0.6, rugosidad: 0.3 }]
+  ]},
+  { id: 'acc-gafas', categoria: 'mascotas', nombre: 'Gafas de sol', precio: 70, accesorio: 'gafas', pista: 'Toca a tu mascota → 🎀 Ropa', piezas: [
+    [0.12, 0.02, 0.12, -0.08, 0.1, 0, 0x1e1e1e, 'cil', { rx: Math.PI / 2 }],
+    [0.12, 0.02, 0.12, 0.08, 0.1, 0, 0x1e1e1e, 'cil', { rx: Math.PI / 2 }],
+    [0.06, 0.015, 0.015, 0, 0.1, 0, 0x1e1e1e]
+  ]},
+  { id: 'acc-corona', categoria: 'mascotas', nombre: 'Corona real', precio: 150, accesorio: 'corona', pista: 'Toca a tu mascota → 🎀 Ropa', piezas: [
+    [0.24, 0.1, 0.24, 0, 0.05, 0, 0xf2c84b, 'cil', { metal: 0.6, rugosidad: 0.3 }],
+    [0.05, 0.08, 0.05, 0.09, 0.14, 0, 0xf2c84b, 'cono', { metal: 0.6, rugosidad: 0.3 }],
+    [0.05, 0.08, 0.05, -0.09, 0.14, 0, 0xf2c84b, 'cono', { metal: 0.6, rugosidad: 0.3 }],
+    [0.05, 0.08, 0.05, 0, 0.14, 0.09, 0xf2c84b, 'cono', { metal: 0.6, rugosidad: 0.3 }],
+    [0.04, 0.04, 0.04, 0, 0.05, 0.12, 0xe05070, 'esfera']
+  ]},
   { id: 'vale-zorro', categoria: 'mascotas', nombre: 'Zorrito', enTienda: false, rareza: 'legendario', mascota: 'zorro', pista: 'Tócalo para darle la bienvenida a casa' },
   { id: 'vale-pinguino', categoria: 'mascotas', nombre: 'Pingüino', enTienda: false, rareza: 'epico', mascota: 'pinguino', pista: 'Tócalo para darle la bienvenida a casa' }
 ];
