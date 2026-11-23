@@ -206,6 +206,10 @@ export class UI {
     if (this.categoria === 'muebles') {
       const oferta = ofertaDelDia();
       entradas.push({ info: infoItem(oferta.id), precio: oferta.precio, oferta: true });
+      for (const id of (this.ev.alOfertasExtra ? this.ev.alOfertasExtra() : [])) {
+        if (id === oferta.id || !infoItem(id)) continue;
+        entradas.push({ info: infoItem(id), precio: Math.round(infoItem(id).precio * 0.75), oferta: true });
+      }
     }
     for (const d of [...CATALOGO, ...MATERIALES]) {
       if (this.categoria === 'temporada') {

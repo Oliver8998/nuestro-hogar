@@ -20,6 +20,8 @@ import { Ambiente, temporada, NOMBRE_TEMPORADA } from './ambiente.js';
 import { Mas } from './mas.js';
 import { Juegos, JUEGOS, PARTIDAS_PREMIADAS } from './juegos.js';
 import { Usos } from './usos.js';
+import { Vida } from './vida.js';
+import { JUEGOS_DOS } from './juegos.js';
 import { Sync } from './sync.js';
 import { Pareja } from './pareja.js';
 import { CASAS, COLECCIONES, LOGROS, calcularAcogedor, coleccionesCompletas } from './progreso.js';
@@ -708,6 +710,9 @@ const ui = new UI(miniaturas, {
   alAcogedor() {
     abrirAcogedor();
   },
+  alOfertasExtra() {
+    return [...vida.ofertasHoy(), ...(typeof mercadillo === 'function' ? [] : [])];
+  },
   alHayPareja() {
     return sync && sync.activo;
   },
@@ -1392,12 +1397,12 @@ function abrirJuegos() {
   const n = partidasHoy();
   const cuerpo = ui.abrirGen('Minijuegos', `
     <p class="gen-intro">Jugad juntos o por turnos para ganar monedas. Las ${PARTIDAS_PREMIADAS} primeras partidas de cada juego al día dan el premio completo.</p>
-    <div class="lista-juegos">${JUEGOS.map(j => {
+    <div class="lista-juegos">${[...JUEGOS, ...JUEGOS_DOS].map(j => {
       const hechas = n[j.id] || 0;
       return `<button class="juego-fila" data-id="${j.id}"><span>${j.icono}</span><div><b>${j.nombre}</b><small>${j.texto}</small></div><em>🪙 ${hechas < PARTIDAS_PREMIADAS ? `hasta ${j.premio}` : `hasta ${Math.round(j.premio * 0.3)}`}<br><i>${Math.min(hechas, PARTIDAS_PREMIADAS)}/${PARTIDAS_PREMIADAS} hoy</i></em></button>`;
     }).join('')}</div>`, () => mas.abrir());
   cuerpo.querySelectorAll('.juego-fila').forEach(b => b.addEventListener('click', async () => {
-    const j = JUEGOS.find(x => x.id === b.dataset.id);
+    const j = [...JUEGOS, ...JUEGOS_DOS].find(x => x.id === b.dataset.id);
     ui.cerrarHojas();
     let imagen = null;
     if (j.id === 'puzzle') imagen = mas.fotos.length && Math.random() < 0.7 ? mas.fotos[Math.floor(Math.random() * mas.fotos.length)].data : mas.capturar(600).toDataURL('image/jpeg', 0.85);
@@ -1526,6 +1531,8 @@ async function sincronizarFotos() {
 }
 
 window.extrasMenu = () => [
+  { id: 'buzon', icono: '📬', texto: 'Buzón', sub: vida.noLeidas() ? `${vida.noLeidas()} carta${vida.noLeidas() > 1 ? 's' : ''} sin leer` : 'Cartas, postales y ofertas', insignia: vida.noLeidas() || null, accion: () => vida.abrirCorreo() },
+  { id: 'reto', icono: '🎨', texto: 'Reto de decoración', sub: '10 minutos y tu pareja puntúa', accion: () => (estado.reto && !estado.reto.terminado ? verReto() : empezarReto()) },
   { id: 'casas', icono: CASAS[nivelCasa()].icono, texto: 'Casas', sub: nivelCasa() < CASAS.length - 1 ? `Siguiente: ${CASAS[nivelCasa() + 1].nombre}` : '¡Vivís en la mansión!', accion: abrirCasas },
   { id: 'logros', icono: '🏆', texto: 'Logros', sub: `${(estado.logros || []).length} de ${LOGROS.length}`, accion: abrirLogros },
   { id: 'colecciones', icono: '📚', texto: 'Colecciones', sub: `${(estado.colecciones || []).length} de ${COLECCIONES.length} completas`, accion: abrirColecciones },
@@ -1533,6 +1540,113 @@ window.extrasMenu = () => [
   { id: 'pareja', icono: '💑', texto: 'Pareja', sub: sync.activo ? `Casa compartida · ${sync.codigo}` : 'Compartid la casa entre los dos móviles', accion: () => pareja.abrir() },
   { id: 'juegos', icono: '🎮', texto: 'Minijuegos', sub: 'Jugad para ganar monedas', accion: abrirJuegos }
 ];
+
+const vida = new Vida({
+  estado, ui, sonido, gestor, mascotas, miniaturas, escena, ambiente, inventario, juegos,
+  pantalla: v => pantalla(v),
+  particula: (emoji, m, n) => mascotas.eventos.particula(emoji, m, n),
+  guardar: () => guardar(),
+  refrescarHud: () => refrescarHud(),
+  registrar: e => registrar(e),
+  dialogoAbierto: () => dialogoAbierto(),
+  acogedor: () => acogedor().total,
+  recordar: (...a) => pareja.recordar(...a),
+  abrirMas: () => mas.abrir(),
+  chip: () => pintarChipsVida()
+});
+
+const TEMAS_RETO = [
+  { id: 'playa', nombre: 'Casa de playa', icono: '🏖️' },
+  { id: 'romantico', nombre: 'Rincón romántico', icono: '💕' },
+  { id: 'selva', nombre: 'Selva urbana (muchas plantas)', icono: '🌿' },
+  { id: 'gamer', nombre: 'Cueva gamer', icono: '🎮' },
+  { id: 'minimal', nombre: 'Minimalista (poquitas cosas)', icono: '🤍' },
+  { id: 'abuela', nombre: 'Casa de la abuela', icono: '👵' },
+  { id: 'fiesta', nombre: 'Listo para una fiesta', icono: '🎉' },
+  { id: 'spa', nombre: 'Relax total', icono: '🧖' }
+];
+
+function pintarChipsVida() {
+  const caja = document.getElementById('chips-vida');
+  const chips = [];
+  if (estado.visita) chips.push({ id: 'visita', texto: '🚪 ¡Visita!', accion: () => vida.atenderVisita() });
+  if (estado.averia) chips.push({ id: 'averia', texto: estado.averia.tipo === 'gotera' ? '💧 Gotera' : '⚡ Sin luz', accion: () => vida.arreglarAveria() });
+  const n = vida.noLeidas();
+  if (n) chips.push({ id: 'correo', texto: `✉️ ${n}`, accion: () => vida.abrirCorreo() });
+  if (estado.reto && !estado.reto.terminado) {
+    const min = Math.max(0, Math.ceil((estado.reto.fin - Date.now()) / 60000));
+    chips.push({ id: 'reto', texto: `🎨 ${min} min`, accion: () => verReto() });
+  }
+  caja.innerHTML = chips.map(c => `<button class="pastilla reparto" data-id="${c.id}">${c.texto}</button>`).join('');
+  caja.querySelectorAll('button').forEach(b => b.addEventListener('click', () => chips.find(c => c.id === b.dataset.id).accion()));
+}
+
+function empezarReto() {
+  const tema = TEMAS_RETO[Math.floor(Math.random() * TEMAS_RETO.length)];
+  ui.dialogo({
+    imagen: miniaturas.personaje('lola'), personaje: true,
+    titulo: `🎨 Reto: ${tema.icono} ${tema.nombre}`,
+    texto: `Tenéis 10 minutos para decorar esta habitación con ese estilo. Al acabar, ${sync.activo ? pareja.otro() : 'tu pareja'} la puntuará de 1 a 5 estrellas.`,
+    botones: [
+      { texto: 'Otro tema', tipo: 'secundario', accion: () => setTimeout(empezarReto, 250) },
+      {
+        texto: '¡A decorar!', tipo: 'primario', accion: () => {
+          estado.reto = { tema: tema.id, fin: Date.now() + 10 * 60000, de: sync.activo ? sync.yo : 0, terminado: false, estrellas: null };
+          ui.cerrarHojas();
+          guardar();
+          pintarChipsVida();
+        }
+      }
+    ]
+  });
+}
+
+function verReto() {
+  const r = estado.reto;
+  const tema = TEMAS_RETO.find(t => t.id === r.tema);
+  ui.dialogo({
+    titulo: `🎨 ${tema.icono} ${tema.nombre}`,
+    texto: `Quedan ${Math.max(0, Math.ceil((r.fin - Date.now()) / 60000))} minutos.`,
+    botones: [{ texto: 'Seguir decorando', tipo: 'secundario' }, { texto: '¡Ya está!', tipo: 'primario', accion: () => terminarReto() }]
+  });
+}
+
+function terminarReto() {
+  const r = estado.reto;
+  if (!r || r.terminado) return;
+  r.terminado = true;
+  r.foto = mas.capturar(320).toDataURL('image/jpeg', 0.7);
+  guardar();
+  pintarChipsVida();
+  sonido.arreglo();
+  ui.aviso(sync.activo ? `🎨 ¡Listo! Ahora ${pareja.otro()} lo puntuará` : '🎨 ¡Listo! Dale el móvil a tu pareja para que lo puntúe');
+  if (!sync.activo) setTimeout(puntuarReto, 900);
+}
+
+function puntuarReto() {
+  const r = estado.reto;
+  if (!r || !r.terminado || r.estrellas) return false;
+  if (sync.activo && r.de === sync.yo) return false;
+  const tema = TEMAS_RETO.find(t => t.id === r.tema);
+  const { caja } = ui.dialogo({
+    titulo: `⭐ Puntúa el reto: ${tema.icono} ${tema.nombre}`,
+    html: `<img class="foto-grande" src="${r.foto}" alt=""><div class="estrellas">${[1, 2, 3, 4, 5].map(n => `<button data-n="${n}">⭐</button>`).join('')}</div>`,
+    botones: [{ texto: 'Luego', tipo: 'secundario' }]
+  });
+  caja.querySelectorAll('.estrellas button').forEach(b => b.addEventListener('click', () => {
+    const n = Number(b.dataset.n);
+    r.estrellas = n;
+    estado.monedas += n * 20;
+    registrar('reto');
+    refrescarHud();
+    guardar();
+    caja.querySelector('.dialogo-botones button').click();
+    sonido.premio();
+    ui.aviso(`${'⭐'.repeat(n)} ¡+${n * 20} monedas!`);
+    if (n === 5) pareja.recordar(null, '🎨', `Decoramos un ${tema.nombre.toLowerCase()} de 5 estrellas`);
+  }));
+  return true;
+}
 
 function abrirRecuerdos() {
   const cuerpo = ui.abrirGen('Recuerdos', `
@@ -1687,6 +1801,7 @@ renderer.setAnimationLoop(() => {
   usos.actualizar(dt);
   sync.actualizar(dt);
   animarToques(dt);
+  vida.actualizar(dt);
   gestor.actualizar(dt);
   mascotas.actualizar(dt);
   entregas.actualizar(dt);
@@ -1699,6 +1814,9 @@ renderer.setAnimationLoop(() => {
     pintarClima();
     pareja.revisar();
     pareja.revisarPlanes();
+    if (estado.reto && !estado.reto.terminado && Date.now() > estado.reto.fin) terminarReto();
+    if (estado.reto && estado.reto.terminado && !estado.reto.estrellas && sync.activo && !dialogoAbierto()) puntuarReto();
+    if (tProgreso === 0) pintarChipsVida();
     document.getElementById('acogedor-valor').textContent = acogedor().total;
     tProgreso += 1;
     if (tProgreso >= 3) {

@@ -120,7 +120,10 @@ export class Ambiente {
     this.clima = this.calcularClima();
     const h = this.hora;
     const [a, b, t] = tramo(LUZ, h);
-    const gris = this.clima === 'lluvia' || this.clima === 'nieve' ? 0.82 : this.clima === 'nubes' ? 0.92 : 1;
+    let gris = this.clima === 'lluvia' || this.clima === 'nieve' ? 0.82 : this.clima === 'nubes' ? 0.92 : 1;
+    if (this.apagon) gris *= 0.5;
+    const tardisimo = h >= 23.5 || h < 6;
+    if (tardisimo) gris *= 0.85;
     this.sala.hemi.intensity = (a[1] + (b[1] - a[1]) * t) * (0.94 + 0.06 * gris);
     this.sala.hemi.color.copy(mezclar(a[2], b[2], t));
     this.sala.sol.intensity = (a[3] + (b[3] - a[3]) * t) * gris;
