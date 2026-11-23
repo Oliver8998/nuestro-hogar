@@ -214,6 +214,15 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - Los cuadros pintados son fotos con `pintura: true` (se sincronizan por la tabla `fotos`).
 - Acogedor: cuenta los cuadros de la habitación. Logros nuevos: Artistas y Galería de arte (10 cuadros).
 
+## Trabajo del día (pedido el 23-nov 19:33) — HECHO
+- `js/trabajos.js`: 14 minijuegos de trabajo (`TRABAJOS`): pizza, barista, florista, almacén, fachada, cajero, hamburguesa, dj, jardinero, taxi, fotógrafo, pastelero, biblioteca y fontanero.
+  - Cada uno tiene `jugar(j, {sonido})` sobre `juegos.custom`; los helpers son `cronometro`, `bucle` y `marcador`.
+- Cada día toca uno al azar con semilla por fecha (`delDia`), el mismo en los dos móviles y nunca el mismo que ayer. Para probar uno: `?trabajo=id`.
+- 3 turnos al día a paga completa (hasta `pago`, con propina del 25% si es perfecto); después, horas extra al 30%.
+- Datos en `estado.trabajos` = `{dia, turnos, mejor{}, hechos[]}`. Hay un chip con los turnos que quedan y un mosaico en Más → 💼.
+- Logros: Currantes (5 trabajos distintos); secretos Pluriempleo (los 14) y Empleados del mes (5 turnos perfectos).
+- Test: `/tmp/prueba/t7.py hoja,pizza,...`.
+
 ## Ideas pendientes (no pedidas aún)
 - Sincronizar los dos móviles (Supabase).
 - Minijuegos para ganar monedas.

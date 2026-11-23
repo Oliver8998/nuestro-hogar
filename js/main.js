@@ -32,6 +32,7 @@ import { Mascotas2, TRUCOS } from './mascotas2.js';
 import { Social } from './social.js';
 import { Sorpresas } from './sorpresas.js';
 import { Lofi } from './lofi.js';
+import { Trabajos } from './trabajos.js';
 import { CASAS, COLECCIONES, LOGROS, EXTERIORES, calcularAcogedor, coleccionesCompletas } from './progreso.js';
 
 await cargarModelos();
@@ -139,6 +140,7 @@ let casa2 = null;
 let mascotas2 = null;
 let social = null;
 let sorpresas = null;
+let trabajos = null;
 let visitando = false;
 let guardarPendiente = false;
 let remotoPendiente = null;
@@ -1016,6 +1018,7 @@ function contexto() {
     nivelCasa,
     racha: () => (estado.racha && estado.racha.n) || 0,
     hora: () => new Date().getHours(),
+    trabajosDistintos: () => ((estado.trabajos && estado.trabajos.hechos) || []).length,
     trucosMax: () => Math.max(0, ...mascotas.lista.map(m => TRUCOS.filter(t => (m.trucos[t.id] || 0) >= 3).length)),
     tieneLegendario: () => idsEnCasa().concat(inventario.items.map(i => i.id)).some(id => infoItem(id) && infoItem(id).rareza === 'legendario')
   };
@@ -1664,6 +1667,7 @@ async function sincronizarFotos() {
 window.extrasMenu = () => [
   { id: 'buzon', icono: '📬', texto: 'Buzón', sub: vida.noLeidas() ? `${vida.noLeidas()} carta${vida.noLeidas() > 1 ? 's' : ''} sin leer` : 'Cartas, postales y ofertas', insignia: vida.noLeidas() || null, accion: () => vida.abrirCorreo() },
   { id: 'pase', icono: '🗓️', texto: 'Pase del mes', sub: `${economia.pase().reclamados.length} de 10 tareas`, insignia: economia.pendientesPase() || null, accion: () => economia.abrirPase() },
+  { id: 'trabajos', icono: '💼', texto: 'Trabajo del día', sub: `${trabajos.delDia().icono} ${trabajos.delDia().nombre} · ${Math.max(0, 3 - trabajos.turnosHoy())} turnos`, insignia: trabajos.turnosHoy() < 3 ? '!' : null, accion: () => trabajos.abrir() },
   { id: 'reformas', icono: '🪵', texto: 'Reformas', sub: 'Suelos, papel pintado, ventanas y luces LED', accion: () => casa2.abrirReformas() },
   { id: 'cocina', icono: '🍳', texto: 'Cocina', sub: `${Object.values(estado.despensa || {}).reduce((a, b) => a + b, 0)} ingredientes · ${casa2.totalPlatos()} platos`, accion: () => casa2.abrirCocina(null) },
   { id: 'amigos', icono: '🏘️', texto: 'Amigos', sub: 'Visitad casas, ranking y fiestas', insignia: null, accion: () => social.abrir() },
@@ -1743,6 +1747,16 @@ social = new Social({
   refrescarHud: () => refrescarHud(),
   registrar: e => registrar(e),
   recordar: (...a) => pareja.recordar(...a),
+  abrirMas: () => mas.abrir()
+});
+
+trabajos = new Trabajos({
+  estado, ui, sonido, juegos,
+  guardar: () => guardar(),
+  registrar: e => registrar(e),
+  recordar: (...a) => pareja.recordar(...a),
+  ganar,
+  chip: () => pintarChipsVida(),
   abrirMas: () => mas.abrir()
 });
 
@@ -1863,6 +1877,10 @@ function pintarChipsVida() {
   if (estado.reto && !estado.reto.terminado) {
     const min = Math.max(0, Math.ceil((estado.reto.fin - Date.now()) / 60000));
     chips.push({ id: 'reto', texto: `🎨 ${min} min`, accion: () => verReto() });
+  }
+  if (trabajos) {
+    const ct = trabajos.chip();
+    if (ct) chips.push(ct);
   }
   if (casa2) chips.push(...casa2.chips());
   if (mascotas2) chips.push(...mascotas2.chips());
@@ -2086,7 +2104,7 @@ function colocarMenu(dt) {
   ui.posicionarMenu(s.x, s.y);
 }
 
-if (new URLSearchParams(location.search).has('debug')) window.__h = { estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida };
+if (new URLSearchParams(location.search).has('debug')) window.__h = { trabajos, estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida };
 
 renderer.setAnimationLoop(() => {
   const dt = Math.min(reloj.getDelta(), 0.1);
