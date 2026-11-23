@@ -405,6 +405,7 @@ function refrescarHud() {
   ui.casa(prog);
   ui.limpieza(suciedad.limpieza());
   ui.contadorMisiones(misionesListas());
+  ordenarHud();
   if (!terminada && prog.hechos >= prog.total) {
     terminada = true;
     setTimeout(() => {
@@ -1399,6 +1400,7 @@ function dialogoAbierto() {
 
 function comprobarEvento() {
   if (!estado.bienvenida || dialogoAbierto()) return;
+  if (!estado.evento && guia && guia.activa()) return;
   if (!estado.evento) {
     iniciarEvento(0, true);
     return;
@@ -1434,6 +1436,7 @@ function textoChipEvento() {
   if (!estado.evento) return null;
   const ev = EVENTOS[estado.evento.idx];
   const dias = Math.ceil((estado.evento.fin - Date.now()) / 86400000);
+  if (dias > 2) return null;
   return `${ev.id === 'mama' ? '👵' : '🎉'} ${ev.id === 'mama' ? 'Mamá' : 'Fiesta'} en ${dias} d`;
 }
 
@@ -2139,8 +2142,34 @@ function pintarChipsVida() {
   if (casa2) chips.push(...casa2.chips());
   if (mascotas2) chips.push(...mascotas2.chips());
   if (sorpresas) chips.push(...sorpresas.chips());
-  caja.innerHTML = chips.map(c => `<button class="pastilla reparto" data-id="${c.id}">${c.texto}</button>`).join('');
-  caja.querySelectorAll('button').forEach(b => b.addEventListener('click', () => chips.find(c => c.id === b.dataset.id).accion()));
+  const URGENTES = ['visita', 'averia', 'nieve', 'gato', 'tesoro'];
+  const urgentes = chips.filter(c => URGENTES.includes(c.id));
+  const resto = chips.filter(c => !URGENTES.includes(c.id));
+  if (!resto.length) avisosAbierto = false;
+  caja.innerHTML = urgentes.map(c => `<button class="pastilla reparto" data-id="${c.id}">${c.texto}</button>`).join('')
+    + (resto.length ? `<button class="pastilla reparto avisos-btn ${avisosAbierto ? 'abierto' : ''}" data-id="__avisos">🔔 <b>${resto.length}</b></button>
+      <div class="avisos-panel ${avisosAbierto ? '' : 'oculto'}">${resto.map(c => `<button class="aviso-fila" data-id="${c.id}">${c.texto}</button>`).join('')}</div>` : '');
+  caja.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    if (b.dataset.id === '__avisos') {
+      avisosAbierto = !avisosAbierto;
+      sonido.tocar();
+      pintarChipsVida();
+      return;
+    }
+    avisosAbierto = false;
+    chips.find(c => c.id === b.dataset.id).accion();
+    pintarChipsVida();
+  }));
+}
+
+let avisosAbierto = false;
+
+function ordenarHud() {
+  const prog = estado.reforma || sala.progreso();
+  const enReforma = nivelCasa() === 0 && prog.hechos < prog.total;
+  document.querySelector('#hud .pastilla.casa').classList.toggle('oculto', !enReforma);
+  document.getElementById('pill-acogedor').classList.toggle('oculto', enReforma);
+  document.getElementById('pill-limpieza').classList.toggle('oculto', suciedad.limpieza() >= 100);
 }
 
 function empezarReto() {
@@ -2292,8 +2321,15 @@ refrescarHud();
 redimensionar();
 guardar();
 
-guia = new Guia({ ui, sonido, cara: miniaturas.personaje('lola') });
-setInterval(() => guia && guia.ocultarSi(dialogoAbierto() || !!ui.hojaAbierta), 400);
+guia = new Guia({
+  ui, sonido, cara: miniaturas.personaje('lola'),
+  categoriaTienda: () => ui.categoria,
+  posPaquete: () => {
+    const p = entregas.enPuerta().find(x => x.paquete);
+    return p ? pantalla(p.paquete.position.clone().add(new THREE.Vector3(0, 0.25, 0))) : null;
+  }
+});
+setInterval(() => guia && guia.ocultarSi(dialogoAbierto()), 300);
 setInterval(() => {
   if (!enMenu() && !dialogoAbierto() && !ui.hojaAbierta && !(guia && guia.activa()) && performance.now() > 12000) mas.postalDelDia();
 }, 5000);
@@ -2427,6 +2463,7 @@ renderer.setAnimationLoop(() => {
     ui.limpieza(suciedad.limpieza());
     ui.contadorMisiones(misionesListas());
     ui.chipEvento(textoChipEvento());
+    ordenarHud();
   }
   colocarMenu(dt);
   tChip += dt;

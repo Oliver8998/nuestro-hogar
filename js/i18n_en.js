@@ -1672,5 +1672,18 @@ export default {
 "🐾 Con pelo":"🐾 Furry",
 "🪶 Con plumas":"🪶 Feathered",
 "✨ Especiales":"✨ Special",
-"✨ {0}":"✨ {0}"
+"✨ {0}":"✨ {0}",
+"Este piso necesita un arreglo. Empezamos por mi tienda: tócala 🛒":"This flat needs fixing up. Let's start at my shop: tap it 🛒",
+"En {0} está todo lo que hace falta para arreglar la casa":"{0} has everything you need to fix up the house",
+"Elige algo de la lista (el martillo para la tabla del suelo, por ejemplo) y dale a {0}":"Pick something from the list (the hammer for the floorboard, for example) and tap {0}",
+"¡Pedido hecho! Llega en furgoneta en unos segundos. Cierra la tienda para verla llegar":"Order placed! It arrives by van in a few seconds. Close the shop to watch it arrive",
+"¡Ya está aquí! Toca el {0} de la puerta para abrirlo":"It's here! Tap the {0} at the door to open it",
+"paquete":"parcel",
+"La furgoneta viene de camino… 🚚":"The van is on its way… 🚚",
+"Mantén el dedo sobre lo que has comprado y {0} hasta lo que está roto o sucio":"Hold your finger on what you bought and {0} onto whatever is broken or dirty",
+"arrástralo":"drag it",
+"¡Muy bien! Cada arreglo sube la {0}. Arreglad las 10 cosas para dejar el piso como nuevo":"Great! Every fix raises the {0}. Fix all 10 things to make the flat like new",
+"Si no sabéis qué hacer, mirad las {0}: os guían y dan monedas":"If you don't know what to do, check the {0}: they guide you and give coins",
+"Y en {0} está el trabajo del día para ganar monedas. ¡Ya sabéis lo básico!":"And in {0} you'll find the job of the day to earn coins. You know the basics!",
+"Saltar guía":"Skip guide"
 };
