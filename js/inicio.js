@@ -1,4 +1,4 @@
-import { Escaparate, NUM_SALAS } from './escaparate.js';
+import { Escaparate, periodo } from './escaparate.js';
 
 const CLAVE_CUENTA = 'hogar-cuenta';
 
@@ -6,14 +6,6 @@ function escapar(t) {
   return String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 }
 
-
-function periodo() {
-  const forz = new URLSearchParams(location.search).get('hora');
-  const h = forz !== null ? Number(forz) : new Date().getHours();
-  if (h >= 21 || h < 6) return 'noche';
-  if (h >= 18 || h < 8) return 'tarde';
-  return 'dia';
-}
 
 const CIELOS = {
   dia: ['#9fd3f0', '#cfe9f6', '#fbefe0'],
@@ -56,13 +48,6 @@ function escenaSvg(nivel = 0) {
     </defs>
     <rect width="400" height="800" fill="url(#cielo)"/>
     ${estrellas}${astro}${nubes}${pajaros}
-    <g class="suelo-escena">
-    <path d="M-20 600 Q90 500 210 560 T420 540 V1100 H-20Z" fill="${noche ? '#3d5a52' : '#a8d08d'}"/>
-    <path d="M-20 650 Q120 590 240 630 T420 610 V1100 H-20Z" fill="${noche ? '#2f4a40' : '#8fc46a'}"/>
-    <g class="arbol"><rect x="28" y="545" width="12" height="70" rx="5" fill="#8a5a3c"/><circle cx="34" cy="535" r="34" fill="${noche ? '#35614a' : '#6fae5e'}"/><circle cx="16" cy="552" r="20" fill="${noche ? '#2f5642' : '#62a052'}"/><circle cx="52" cy="550" r="22" fill="${noche ? '#2f5642' : '#62a052'}"/><circle cx="24" cy="528" r="4" fill="#e05050"/><circle cx="46" cy="540" r="4" fill="#e05050"/></g>
-    <g class="arbusto"><circle cx="350" cy="606" r="22" fill="${noche ? '#2f5642' : '#62a052'}"/><circle cx="372" cy="612" r="18" fill="${noche ? '#35614a' : '#6fae5e'}"/><circle cx="352" cy="598" r="3.5" fill="#f4b3be"/><circle cx="366" cy="606" r="3.5" fill="#f4b3be"/></g>
-    ${cerca}${flores}${luciernagas}
-    </g>
   </svg>`;
 }
 
@@ -87,7 +72,7 @@ export class Inicio {
     this.capa.style.display = 'flex';
     const res = this.ctx.resumen ? this.ctx.resumen() : null;
     this.capa.innerHTML = `<div class="inicio-fondo">${escenaSvg(res ? res.nivel : 0)}</div><div class="inicio-titulo">${'Nuestro Hogar'.split('').map((l, i) => `<span style="animation-delay:${(0.1 + i * 0.06).toFixed(2)}s">${l === ' ' ? '&nbsp;' : l}</span>`).join('')}</div>
-      <div class="escaparate"><div class="esc-lienzo"></div><div class="esc-info"><span class="esc-nombre"></span><div class="esc-puntos"></div></div></div><div class="inicio-panel"></div>`;
+      <div class="escaparate"><div class="esc-lienzo"></div></div><div class="inicio-panel"></div>`;
     this.pintar();
     this.montarEscaparate();
     setTimeout(() => this.pintar(this.vista), 0);
@@ -102,17 +87,6 @@ export class Inicio {
     } catch (e) {
       return;
     }
-    const nombre = this.capa.querySelector('.esc-nombre');
-    const puntos = this.capa.querySelector('.esc-puntos');
-    const pintar = (s, i, n) => {
-      nombre.textContent = `${s.icono} ${s.nombre}`;
-      nombre.classList.remove('cambia');
-      void nombre.offsetWidth;
-      nombre.classList.add('cambia');
-      puntos.innerHTML = Array.from({ length: n }, (_, k) => `<i class="${k === i ? 'activo' : ''}"></i>`).join('');
-    };
-    this.escaparate.alCambiar = pintar;
-    pintar(this.escaparate.sala, this.escaparate.indice, NUM_SALAS);
     cont.addEventListener('click', () => this.escaparate && this.escaparate.siguiente());
   }
 

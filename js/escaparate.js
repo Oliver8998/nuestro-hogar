@@ -20,7 +20,7 @@ const SALAS = [
     mascotas: [['hamster', -1.2, 1.4], ['pato', 1.8, 1.6]]
   },
   {
-    icono: '🎮', nombre: 'Rincón gamer', suelo: 'ceniza', papel: 'estrellas', noche: true, led: 0xa070ff,
+    icono: '🎮', nombre: 'Rincón gamer', suelo: 'ceniza', papel: 'estrellas', led: 0xa070ff,
     muebles: [['alfombra', -2, -2, 0, 1], ['arcade', -6, -6, 0], ['escritorio', -2, -6, 0, 2], ['ordenador', -2, -6, 0], ['silla', -1, -4, 2, 2], ['comoda', 2, -6, 0, 2], ['lampara-lava', 2, -6, 0], ['puff', 2, -1, 0, 3], ['tele', -6, -2, 1, 0], ['cactus', 4, -6, 0]],
     mascotas: [['gato', 0.6, 0.4], ['dragon', -1.6, 1.4]]
   },
@@ -30,12 +30,12 @@ const SALAS = [
     mascotas: [['perro', 1.4, 1.6], ['pato', -0.2, 2.2], ['tortuga', 2.2, 1.7]]
   },
   {
-    icono: '🏰', nombre: 'Salón de la mansión', suelo: 'marmol', papel: 'flores', cortina: 0x8a2b3a, noche: true,
-    muebles: [['alfombra', -1, -4, 0, 3], ['chimenea', -1, -6, 0, 0, true], ['lampara', -3, -6, 0, 2], ['piano', -6, -2, 1], ['sillon-huevo', 2, -3, 0, 0], ['acuario', 3, -6, 0], ['planta', 5, -6, 0], ['lampara', 5, 0, 0, 2], ['globo', -1, -6, 0]],
+    icono: '🏰', nombre: 'Salón de la mansión', suelo: 'marmol', papel: 'flores', cortina: 0x8a2b3a,
+    muebles: [['alfombra', -1, -4, 0, 3], ['chimenea', -1, -6, 0, 0], ['lampara', -3, -6, 0, 2], ['piano', -6, -2, 1], ['sillon-huevo', 2, -3, 0, 0], ['acuario', 3, -6, 0], ['planta', 5, -6, 0], ['lampara', 5, 0, 0, 2], ['globo', -1, -6, 0]],
     mascotas: [['zorro', 0.4, 0.4], ['pinguino', 2, 1.6]]
   },
   {
-    icono: '🎄', nombre: 'Navidad en casa', suelo: 'nogal', papel: 'ladrillo', cortina: 0x8a2b3a, noche: true, luz: 0xffc27a,
+    icono: '🎄', nombre: 'Navidad en casa', suelo: 'nogal', papel: 'ladrillo', cortina: 0x8a2b3a, luz: 0xffc27a,
     muebles: [['alfombra', -3, -3, 0, 0], ['arbol-navidad', -6, -6, 0], ['regalos', -4, -6, 0], ['sofa', -2, -6, 0, 3], ['muneco-nieve', 3, -6, 0], ['lampara', 2, -6, 0], ['planta', 4, -6, 0], ['cojin-corazon', 0, -2, 0]],
     mascotas: [['perro', 0.2, -0.3], ['gato', -1.6, 1]]
   }
@@ -54,7 +54,19 @@ function texturaPatron(item, rx, ry) {
   return t;
 }
 
-export const NUM_SALAS = SALAS.length;
+export function periodo() {
+  const forz = new URLSearchParams(location.search).get('hora');
+  const h = forz !== null ? Number(forz) : new Date().getHours();
+  if (h >= 21 || h < 6) return 'noche';
+  if (h >= 18 || h < 8) return 'tarde';
+  return 'dia';
+}
+
+const LUZ = {
+  dia: { hemi: [0xfff4e6, 1.5], sol: [0xfff0dd, 1.7], cristal: [0xa9d4e8, 0x8fc3dd], interior: 0, led: 0.6 },
+  tarde: { hemi: [0xffd9c0, 1.05], sol: [0xffa766, 1.5], cristal: [0xf4a28c, 0xd9785a], interior: 1.2, led: 1.4 },
+  noche: { hemi: [0x8a90d0, 0.55], sol: [0x9aa6ff, 0.3], cristal: [0x2c2d63, 0x1a1b40], interior: 2.4, led: 2.4 }
+};
 
 export class Escaparate {
   constructor(contenedor) {
@@ -124,6 +136,9 @@ export class Escaparate {
   construir(s) {
     this.limpiar();
     this.sala = s;
+    const per = periodo();
+    const L = LUZ[per];
+    const encender = per !== 'dia';
     const g = new THREE.Group();
     this.grupo = g;
     this.escena.add(g);
@@ -178,7 +193,7 @@ export class Escaparate {
         p.position.set(x, y, 0.02);
         v.add(p);
       }
-      const cristal = new THREE.Mesh(new THREE.PlaneGeometry(1.15, 1.2), new THREE.MeshStandardMaterial({ color: s.noche ? 0x2c2d63 : 0xa9d4e8, emissive: s.noche ? 0x1a1b40 : 0x8fc3dd, emissiveIntensity: 0.5 }));
+      const cristal = new THREE.Mesh(new THREE.PlaneGeometry(1.15, 1.2), new THREE.MeshStandardMaterial({ color: L.cristal[0], emissive: L.cristal[1], emissiveIntensity: 0.5 }));
       cristal.position.z = 0.005;
       v.add(cristal);
       if (s.cortina) {
@@ -195,7 +210,7 @@ export class Escaparate {
       }
       if (s.led) {
         for (const [w, d, x, z] of [[6, 0.03, 0, -2.95], [0.03, 6, -2.95, 0]]) {
-          const tira = new THREE.Mesh(new THREE.BoxGeometry(w, 0.035, d), new THREE.MeshStandardMaterial({ color: 0x222222, emissive: s.led, emissiveIntensity: 2.2 }));
+          const tira = new THREE.Mesh(new THREE.BoxGeometry(w, 0.035, d), new THREE.MeshStandardMaterial({ color: 0x222222, emissive: s.led, emissiveIntensity: L.led }));
           tira.position.set(x, 2.56, z);
           g.add(tira);
         }
@@ -204,7 +219,7 @@ export class Escaparate {
     this.gestor = new GestorMuebles(g);
     if (this.gestor.rejilla) this.gestor.rejilla.visible = false;
     s.muebles.forEach(([id, x0, z0, rot, color, encendido], k) => {
-      const m = this.gestor.anadir(id, x0, z0, rot, { color: color ?? 0, encendido: encendido ?? (s.noche ? true : undefined) });
+      const m = this.gestor.anadir(id, x0, z0, rot, { color: color ?? 0, encendido: encendido ?? (encender ? true : false) });
       if (m) {
         m.visible = false;
         m.userData.aparece = 0.15 + k * 0.07;
@@ -220,12 +235,13 @@ export class Escaparate {
       g.add(p.raiz);
       return p;
     });
-    this.hemi.intensity = s.noche ? 0.95 : 1.5;
-    this.hemi.color.setHex(s.noche ? 0x8a90d0 : 0xfff4e6);
-    this.sol.intensity = s.noche ? 0.6 : 1.7;
-    this.sol.color.setHex(s.noche ? 0x9aa6ff : 0xfff0dd);
+    this.hemi.color.setHex(L.hemi[0]);
+    this.hemi.intensity = L.hemi[1];
+    this.sol.color.setHex(L.sol[0]);
+    this.sol.intensity = L.sol[1];
+    this.sol.position.set(per === 'tarde' ? 9 : 6, per === 'tarde' ? 4 : 10, 4);
     this.luzSala.color.setHex(s.luz || s.led || 0xffd9a0);
-    this.luzSala.intensity = s.luz || s.led ? 2.2 : s.noche ? 1.6 : 0;
+    this.luzSala.intensity = s.exterior ? 0 : s.luz || s.led ? Math.max(L.led, L.interior) : L.interior;
     this.tSala = 0;
     this.fase = 'entra';
     if (this.alCambiar) this.alCambiar(s, this.indice, SALAS.length);
