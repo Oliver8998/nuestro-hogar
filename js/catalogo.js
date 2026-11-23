@@ -345,6 +345,11 @@ export const CATALOGO = [
     [0.08, 0.08, 0.08, 0.2, 0.45, 0.06, 0xe05050, 'esfera']
   ], colores: { grupos: [[0]], paleta: [[0x9c6b45], [0xf2efe9], [0x7fa3c6], [0x6d4c3d]] }},
 
+  { id: 'arbol-recuerdos', categoria: 'deco', nombre: 'Árbol de recuerdos', precio: 80, ancho: 2, fondo: 2, piezas: [
+    [0.4, 0.3, 0.4, 0, 0.15, 0, 0xd9c29a, 'cil'],
+    [0.08, 0.8, 0.08, 0, 0.7, 0, 0x7a5a3a, 'cil'],
+    [0.7, 0.55, 0.7, 0, 1.25, 0, 0x7cbf6a, 'esfera', { transparente: 0.35 }]
+  ]},
   { id: 'arbol-navidad', categoria: 'temporada', temporada: 'navidad', enTienda: false, nombre: 'Árbol de Navidad', precio: 220, ancho: 2, fondo: 2, piezas: [
     [0.3, 0.2, 0.3, 0, 0.1, 0, 0xc0504d, 'cil'],
     [0.08, 0.3, 0.08, 0, 0.3, 0, 0x6b4f36, 'cil'],
@@ -534,6 +539,7 @@ export const MATERIALES = [
     [0.04, 0.04, 0.04, 0, 0.05, 0.12, 0xe05070, 'esfera']
   ]},
   { id: 'vale-zorro', categoria: 'mascotas', nombre: 'Zorrito', enTienda: false, rareza: 'legendario', mascota: 'zorro', pista: 'Tócalo para darle la bienvenida a casa' },
+  { id: 'vale-dragon', categoria: 'mascotas', nombre: 'Dragoncito', enTienda: false, rareza: 'legendario', mascota: 'dragon', pista: 'Tócalo para darle la bienvenida a casa' },
   { id: 'vale-pinguino', categoria: 'mascotas', nombre: 'Pingüino', enTienda: false, rareza: 'epico', mascota: 'pinguino', pista: 'Tócalo para darle la bienvenida a casa' }
 ];
 

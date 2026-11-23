@@ -221,6 +221,177 @@ export class Pareja {
     });
   }
 
+  hoyISO() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  recordar(clave, icono, texto) {
+    if (!this.estado.primeros) this.estado.primeros = [];
+    if (clave && this.estado.primeros.includes(clave)) return;
+    if (clave) this.estado.primeros.push(clave);
+    if (!this.estado.recuerdos) this.estado.recuerdos = [];
+    this.estado.recuerdos.push({ t: Date.now(), icono, texto });
+    this.estado.recuerdos = this.estado.recuerdos.slice(-80);
+    this.ctx.guardar();
+    this.ctx.ui.aviso(`🌳 Nuevo recuerdo: ${texto}`);
+  }
+
+  verRecuerdos() {
+    const r = (this.estado.recuerdos || []).slice().reverse();
+    this.ctx.ui.abrirGen('Nuestros recuerdos', `
+      <p class="gen-intro">Los momentos especiales se apuntan solos. Si ponéis el <b>Árbol de recuerdos</b> (tienda → Deco), le sale una hoja por cada uno.</p>
+      <div class="recuerdos">${r.length ? r.map(x => `<div class="recuerdo"><span>${x.icono}</span><div><b>${escapar(x.texto)}</b><small>${new Date(x.t).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</small></div></div>`).join('') : '<p class="vacio">Todavía no hay recuerdos. ¡A crearlos!</p>'}</div>`, () => (this.sync.activo ? this.abrir() : this.ctx.abrirMas()));
+  }
+
+  alternarDeseo(info, color) {
+    const yo = this.sync.activo ? this.sync.yo : 0;
+    if (!this.estado.deseos) this.estado.deseos = { 0: [], 1: [] };
+    const lista = this.estado.deseos[yo] || (this.estado.deseos[yo] = []);
+    const i = lista.findIndex(d => d.id === info.id);
+    if (i >= 0) lista.splice(i, 1);
+    else lista.push({ id: info.id, color });
+    this.ctx.guardar();
+    this.ctx.sonido.pop();
+    this.ctx.ui.aviso(i >= 0 ? '💔 Quitado de tu lista de deseos' : `❤️ Apuntado en tu lista de deseos${this.sync.activo ? ` (${this.otro()} lo verá)` : ''}`);
+    return i < 0;
+  }
+
+  esDeseo(id) {
+    const yo = this.sync.activo ? this.sync.yo : 0;
+    return !!(this.estado.deseos && (this.estado.deseos[yo] || []).some(d => d.id === id));
+  }
+
+  verDeseos() {
+    const lista = ((this.estado.deseos || {})[1 - this.sync.yo] || []);
+    const cuerpo = this.ctx.ui.abrirGen(`Deseos de ${this.otro()}`, `
+      <p class="gen-intro">Lo que a ${escapar(this.otro())} le gustaría tener. ¡Pista para regalos!</p>
+      <div class="deseos">${lista.length ? lista.map((d, i) => {
+        const info = this.ctx.infoItem(d.id);
+        return `<button class="deseo" data-i="${i}"><img src="${this.ctx.miniaturas.item(d.id, d.color)}" alt=""><b>${escapar(info.nombre)}</b><small>🎁 Regalar · 🪙 ${info.precio}</small></button>`;
+      }).join('') : `<p class="vacio">${escapar(this.otro())} aún no ha apuntado nada. Se apunta con ❤️ en la tienda.</p>`}</div>`, () => this.abrir());
+    cuerpo.querySelectorAll('.deseo').forEach(b => b.addEventListener('click', () => {
+      const d = lista[Number(b.dataset.i)];
+      const info = this.ctx.infoItem(d.id);
+      this.regalar(info, d.color, info.precio);
+    }));
+  }
+
+  verCapsulas() {
+    const { ui } = this.ctx;
+    const caps = (this.estado.capsulas || []).slice().reverse();
+    const ahora = Date.now();
+    const cuerpo = ui.abrirGen('Cápsula del tiempo', `
+      <p class="gen-intro">Escribid un mensaje que no se podrá leer hasta la fecha que elijáis.</p>
+      <button id="cap-nueva" class="primario">✍️ Guardar un mensaje</button>
+      <div class="capsulas">${caps.map(c => c.abrir <= ahora
+        ? `<div class="capsula abierta"><span>💌</span><div><b>De ${escapar(this.nombre(c.de))}</b><p>${escapar(c.texto)}</p><small>Escrito el ${new Date(c.creada).toLocaleDateString('es-ES')}</small></div></div>`
+        : `<div class="capsula"><span>🔒</span><div><b>De ${escapar(this.nombre(c.de))}</b><small>Se abre el ${new Date(c.abrir).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })} · faltan ${Math.ceil((c.abrir - ahora) / 86400000)} días</small></div></div>`).join('')}</div>`, () => this.abrir());
+    cuerpo.querySelector('#cap-nueva').addEventListener('click', () => {
+      ui.dialogo({
+        titulo: '⏳ Mensaje para el futuro',
+        html: '<div class="campo"><textarea maxlength="400" rows="4" placeholder="Querido yo del futuro…"></textarea></div>',
+        botones: [
+          { texto: 'En 1 mes', tipo: 'secundario', accion: c => this.guardarCapsula(c, 30) },
+          { texto: 'En 6 meses', tipo: 'secundario', accion: c => this.guardarCapsula(c, 182) },
+          { texto: 'En 1 año', tipo: 'primario', accion: c => this.guardarCapsula(c, 365) }
+        ],
+        columna: true
+      });
+    });
+  }
+
+  guardarCapsula(caja, dias) {
+    const texto = caja.querySelector('textarea').value.trim();
+    if (!texto) return;
+    if (!this.estado.capsulas) this.estado.capsulas = [];
+    const id = `c${Date.now()}`;
+    this.estado.capsulas.push({ id, de: this.sync.activo ? this.sync.yo : 0, texto, creada: Date.now(), abrir: Date.now() + dias * 86400000 });
+    this.marcarVisto(id);
+    this.ctx.guardar();
+    this.ctx.sonido.arreglo();
+    this.ctx.ui.aviso('⏳ Guardado en la cápsula. ¡Hasta entonces!');
+    this.recordar('capsula', '⏳', 'Guardamos nuestro primer mensaje en la cápsula del tiempo');
+    setTimeout(() => this.verCapsulas(), 300);
+  }
+
+  verPlanes() {
+    const { ui } = this.ctx;
+    const hoy = this.hoyISO();
+    const planes = (this.estado.planes || []).filter(p => p.fecha >= hoy).sort((a, b) => a.fecha.localeCompare(b.fecha));
+    const TIPOS = { cena: '🕯️ Cena', viaje: '🧳 Viaje', cine: '🍿 Peli', fiesta: '🎉 Fiesta', otro: '⭐ Otro' };
+    const cuerpo = ui.abrirGen('Nuestros planes', `
+      <p class="gen-intro">Apuntad planes de verdad. El día antes aparecerán cosas en casa (la maleta en la puerta, velas en la mesa…).</p>
+      <div class="ajustes">
+        <input id="pl-titulo" maxlength="40" placeholder="Cena en el italiano">
+        <div class="fila2"><input id="pl-fecha" type="date" min="${hoy}"><select id="pl-tipo">${Object.entries(TIPOS).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select></div>
+        <button id="pl-anadir" class="primario">➕ Apuntar plan</button>
+      </div>
+      <div class="planes">${planes.map(p => `<div class="plan"><span>${TIPOS[p.tipo].split(' ')[0]}</span><div><b>${escapar(p.titulo)}</b><small>${new Date(p.fecha + 'T12:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</small></div><button class="borrar" data-id="${p.id}">✕</button></div>`).join('') || '<p class="vacio">No hay planes apuntados.</p>'}</div>`, () => this.abrir());
+    cuerpo.querySelector('#pl-anadir').addEventListener('click', () => {
+      const titulo = cuerpo.querySelector('#pl-titulo').value.trim();
+      const fecha = cuerpo.querySelector('#pl-fecha').value;
+      const tipo = cuerpo.querySelector('#pl-tipo').value;
+      if (!titulo || !fecha) {
+        ui.aviso('Pon un título y una fecha', true);
+        return;
+      }
+      if (!this.estado.planes) this.estado.planes = [];
+      this.estado.planes.push({ id: `p${Date.now()}`, titulo, fecha, tipo, de: this.sync.activo ? this.sync.yo : 0 });
+      this.ctx.guardar();
+      this.ctx.sonido.arreglo();
+      this.verPlanes();
+    });
+    cuerpo.querySelectorAll('.plan .borrar').forEach(b => b.addEventListener('click', () => {
+      this.estado.planes = this.estado.planes.filter(p => p.id !== b.dataset.id);
+      this.ctx.guardar();
+      this.verPlanes();
+    }));
+  }
+
+  planesActivos() {
+    const hoy = this.hoyISO();
+    const man = new Date(Date.now() + 86400000);
+    const manana = `${man.getFullYear()}-${String(man.getMonth() + 1).padStart(2, '0')}-${String(man.getDate()).padStart(2, '0')}`;
+    return (this.estado.planes || []).filter(p => p.fecha === hoy || p.fecha === manana);
+  }
+
+  revisarPlanes() {
+    const hoy = this.hoyISO();
+    for (const p of this.estado.planes || []) {
+      if (p.fecha < hoy && !p.recordado) {
+        p.recordado = true;
+        const icono = { cena: '🕯️', viaje: '🧳', cine: '🍿', fiesta: '🎉', otro: '⭐' }[p.tipo];
+        this.recordar(null, icono, p.titulo);
+      }
+    }
+    if (this.ctx.dialogoAbierto()) return;
+    for (const p of this.planesActivos()) {
+      const clave = `plan-${p.id}-${p.fecha === hoy ? 'hoy' : 'manana'}`;
+      if (this.vistos.has(clave)) continue;
+      this.marcarVisto(clave);
+      this.ctx.ui.dialogo({
+        imagen: this.ctx.miniaturas.personaje('lola'), personaje: true,
+        titulo: p.fecha === hoy ? `¡Hoy toca: ${escapar(p.titulo)}!` : `Mañana: ${escapar(p.titulo)}`,
+        texto: p.fecha === hoy ? '¡Que lo paséis genial! 💕' : 'Os he dejado algo preparado en casa 😉',
+        botones: [{ texto: '¡Qué ganas!', tipo: 'primario' }]
+      });
+      return;
+    }
+    for (const c of this.estado.capsulas || []) {
+      if (c.abrir > Date.now() || this.vistos.has(c.id)) continue;
+      this.marcarVisto(c.id);
+      this.ctx.sonido.premio();
+      this.ctx.ui.dialogo({
+        titulo: '💌 ¡Se ha abierto la cápsula del tiempo!',
+        html: `<div class="nota-papel"><b>${escapar(this.nombre(c.de))}, ${new Date(c.creada).toLocaleDateString('es-ES')}</b>${escapar(c.texto)}</div>`,
+        confeti: true,
+        botones: [{ texto: '🥹', tipo: 'primario' }]
+      });
+      return;
+    }
+  }
+
   abrir() {
     const { ui } = this.ctx;
     if (!this.sync.activo) {
@@ -254,6 +425,7 @@ export class Pareja {
         e.currentTarget.disabled = true;
         try {
           const codigo = await this.sync.crear(this.ctx.instantanea(), yo);
+          this.ctx.alConectar();
           this.ctx.sonido.premio();
           this.abrir();
           ui.aviso(`🏠 Casa creada. Código: ${codigo}`);
@@ -283,6 +455,7 @@ export class Pareja {
                     return;
                   }
                   this.ctx.aplicarRemoto(datos, false, true);
+                  this.ctx.alConectar();
                   this.ctx.sonido.premio();
                   ui.aviso('💑 ¡Conectados! Ya estáis en la misma casa');
                   this.abrir();
@@ -309,7 +482,11 @@ export class Pareja {
       <div class="seccion-titulo">Cosas de pareja</div>
       <button id="pj-nota" class="secundario">📝 Dejar una nota en la nevera</button>
       <button id="pj-notas" class="secundario">📬 Ver notas (${notas.length})</button>
-      <p class="gen-intro">🎁 Para hacer un regalo o proponer una compra, elegid el objeto en la tienda y usad los botones <b>🎁</b> y <b>🗳️</b>.</p>
+      <button id="pj-deseos" class="secundario">❤️ Lista de deseos de ${escapar(this.otro())} (${((this.estado.deseos || {})[1 - yo] || []).length})</button>
+      <button id="pj-capsula" class="secundario">⏳ Cápsula del tiempo (${(this.estado.capsulas || []).length})</button>
+      <button id="pj-planes" class="secundario">📅 Nuestros planes (${(this.estado.planes || []).filter(p => p.fecha >= this.hoyISO()).length})</button>
+      <button id="pj-recuerdos" class="secundario">🌳 Nuestros recuerdos (${(this.estado.recuerdos || []).length})</button>
+      <p class="gen-intro">🎁 Para hacer un regalo o proponer una compra, elegid el objeto en la tienda y usad los botones <b>🎁</b>, <b>🗳️</b> y <b>❤️</b>.</p>
       <button id="pj-salir" class="secundario">Desconectar este móvil</button>`, () => this.ctx.abrirMas());
     cuerpo.querySelector('#pj-compartir').addEventListener('click', async () => {
       const texto = `Únete a nuestra casa en Nuestro Hogar 🏠💕 Código: ${this.sync.codigo}\nhttps://oliver8998.github.io/nuestro-hogar/`;
@@ -323,6 +500,10 @@ export class Pareja {
     });
     cuerpo.querySelector('#pj-nota').addEventListener('click', () => this.escribirNota());
     cuerpo.querySelector('#pj-notas').addEventListener('click', () => this.verNotas());
+    cuerpo.querySelector('#pj-deseos').addEventListener('click', () => this.verDeseos());
+    cuerpo.querySelector('#pj-capsula').addEventListener('click', () => this.verCapsulas());
+    cuerpo.querySelector('#pj-planes').addEventListener('click', () => this.verPlanes());
+    cuerpo.querySelector('#pj-recuerdos').addEventListener('click', () => this.verRecuerdos());
     cuerpo.querySelector('#pj-salir').addEventListener('click', () => {
       ui.dialogo({
         titulo: '¿Desconectar?',

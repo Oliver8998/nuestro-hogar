@@ -86,7 +86,36 @@ export class Sync {
     return filas[0].datos;
   }
 
+  async conectarDirecto() {
+    if (!this.activo || this.canal) return;
+    try {
+      const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+      this.cliente = createClient(URL_BASE.replace('/rest/v1', ''), CLAVE);
+      this.canal = this.cliente.channel(`hogar-${this.codigo}`, { config: { broadcast: { self: false } } });
+      this.canal.on('broadcast', { event: '*' }, m => this.ev.directo && this.ev.directo(m.event, m.payload));
+      this.canal.subscribe(estado => {
+        this.enDirecto = estado === 'SUBSCRIBED';
+      });
+    } catch (e) {
+      this.enDirecto = false;
+    }
+  }
+
+  emitir(evento, datos) {
+    if (!this.activo) return;
+    const payload = { ...datos, de: this.yo };
+    if (this.enDirecto && this.canal) {
+      this.canal.send({ type: 'broadcast', event: evento, payload });
+    } else if (evento === 'reaccion') {
+      this.mandar('reaccion', payload);
+    }
+  }
+
   salir() {
+    if (this.canal) {
+      this.canal.unsubscribe();
+      this.canal = null;
+    }
     this.conf = null;
     localStorage.removeItem('hogar-sync');
   }

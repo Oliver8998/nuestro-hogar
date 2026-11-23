@@ -116,6 +116,9 @@ export class Mas {
         <label>Cumpleaños 🎂</label>
         <div class="fila2"><input id="aj-c1" type="date" value="${escapar(p.cumples[0])}"><input id="aj-c2" type="date" value="${escapar(p.cumples[1])}"></div>
         <small class="nota">Pilar os avisará en los días especiales (y habrá regalo 🎁).</small>
+        <label>Vuestra canción 🎶 (enlace de Spotify o YouTube)</label>
+        <input id="aj-cancion" type="url" placeholder="https://open.spotify.com/track/…" value="${escapar(p.cancion || '')}">
+        <small class="nota">Sonará al tocar la radio → 💕 Nuestra canción.</small>
         <button id="aj-sonido" class="secundario">${sonido.activo ? '🔊 Sonido activado' : '🔇 Sonido desactivado'}</button>
         <button id="aj-guardar" class="primario">Guardar</button>
       </div>`, () => this.abrir());
@@ -129,6 +132,7 @@ export class Mas {
       p.casa = v('#aj-casa') || 'Nuestro Hogar';
       p.aniversario = v('#aj-aniv');
       p.cumples = [v('#aj-c1'), v('#aj-c2')];
+      p.cancion = v('#aj-cancion');
       this.montarCartel();
       this.ctx.guardar();
       sonido.arreglo();

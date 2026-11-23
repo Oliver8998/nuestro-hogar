@@ -8,6 +8,10 @@ export const ESPECIES = {
   gato: { nombre: 'Gato', precio: 250, texto: 'Independiente y mimoso a ratos', color: 0xf0a860, secundario: 0xfff3e0, orejas: 'punta', cola: 'larga', tam: 1, velocidad: 0.7, gato: true },
   perro: { nombre: 'Perro', precio: 350, texto: 'Leal, juguetón y siempre contento', color: 0xc9925a, secundario: 0xf5e6d0, orejas: 'caidas', cola: 'corta', tam: 1.15, velocidad: 0.85, perro: true },
   pinguino: { nombre: 'Pingüino', exclusivo: 'epico', texto: 'Elegante, aunque se resbala', ave: true, pinguino: true, color: 0x2b2b33, secundario: 0xffffff, pico: 0xf0a020, tam: 0.95, velocidad: 0.4 },
+  cobaya: { nombre: 'Cobaya', precio: 160, texto: 'Hace ruiditos cuando está contenta', color: 0xe0a86a, secundario: 0xf8f2ea, orejas: 'redondas', cola: null, tam: 0.75, velocidad: 0.4 },
+  tortuga: { nombre: 'Tortuga', precio: 200, texto: 'Lenta pero segura, vive muchísimo', color: 0x9cc46a, secundario: 0xd9e8b0, orejas: 'ninguna', cola: null, tam: 0.8, velocidad: 0.18, tortuga: true, caparazon: 0x7a5a3a },
+  loro: { nombre: 'Loro', precio: 380, texto: 'Repite todo lo que oye por casa', ave: true, loro: true, color: 0x4caf50, secundario: 0xf2d06b, pico: 0x3d3d3d, tam: 0.85, velocidad: 0.5 },
+  dragon: { nombre: 'Dragoncito', exclusivo: 'legendario', texto: 'Escupe fueguitos cuando se emociona', color: 0x8e6fd8, secundario: 0xf2c6e0, orejas: 'ninguna', cola: 'larga', tam: 1, velocidad: 0.65, dragon: true },
   zorro: { nombre: 'Zorrito', exclusivo: 'legendario', texto: 'Curioso y con una cola enorme', color: 0xe87a3a, secundario: 0xfff6ee, orejas: 'punta-grande', cola: 'esponjosa', tam: 1, velocidad: 0.8 }
 };
 
@@ -179,6 +183,8 @@ export function crearModeloMascota(especieId) {
         const dentro = esfera(0.025, 0.16, 0.01, e.secundario, 0, 0, 0.012);
         dentro.scale.set(0.5, 0.75, 0.3);
         oreja.add(dentro);
+      } else if (e.orejas === 'ninguna') {
+        continue;
       } else {
         oreja = esfera(0.06, 0.06, 0.03, oscuro, s * 0.075, 0.085, 0);
       }
@@ -224,6 +230,45 @@ export function crearModeloMascota(especieId) {
     }
   }
 
+  if (e.tortuga) {
+    const casco = new THREE.Mesh(new THREE.SphereGeometry(0.2, 18, 10, 0, Math.PI * 2, 0, Math.PI / 2), mat(e.caparazon));
+    casco.scale.set(1, 0.75, 1.15);
+    casco.position.y = 0.17;
+    casco.castShadow = true;
+    cuerpoGrupo.add(casco);
+    for (let k = 0; k < 6; k++) {
+      const a = k / 6 * Math.PI * 2;
+      const placa = esfera(0.07, 0.03, 0.07, 0x9c7a4a, Math.cos(a) * 0.1, 0.27, Math.sin(a) * 0.12);
+      cuerpoGrupo.add(placa);
+    }
+    cuerpoGrupo.add(esfera(0.08, 0.04, 0.08, 0x9c7a4a, 0, 0.31, 0));
+  }
+  if (e.dragon) {
+    for (const s of [-1, 1]) {
+      const ala = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.22, 3), mat(e.secundario));
+      ala.scale.set(1, 1, 0.2);
+      ala.position.set(s * 0.15, 0.33, -0.04);
+      ala.rotation.set(0, 0, -s * 1.0);
+      cuerpoGrupo.add(ala);
+      partes.alas.push(ala);
+      const cuerno = new THREE.Mesh(new THREE.ConeGeometry(0.022, 0.08, 8), mat(0xf2e6c8));
+      cuerno.position.set(s * 0.05, 0.1, -0.03);
+      cuerno.rotation.set(-0.4, 0, -s * 0.2);
+      partes.cabeza.add(cuerno);
+    }
+    for (let k = 0; k < 3; k++) cuerpoGrupo.add(esfera(0.04, 0.05, 0.04, e.secundario, 0, 0.27 - k * 0.01, 0.05 - k * 0.09));
+  }
+  if (e.loro) {
+    for (let k = 0; k < 3; k++) {
+      const pluma = esfera(0.03, 0.09, 0.03, [0xe05050, 0xf2d06b, 0x5a9fd6][k], (k - 1) * 0.025, 0.1, -0.02);
+      pluma.rotation.x = -0.4;
+      partes.cabeza.add(pluma);
+    }
+    const cola = esfera(0.08, 0.04, 0.24, 0x5a9fd6, 0, 0.2, -0.22);
+    cola.rotation.x = 0.4;
+    cuerpoGrupo.add(cola);
+    cuerpoGrupo.add(esfera(0.12, 0.1, 0.06, 0xe05050, 0, 0.25, 0.12));
+  }
   raiz.scale.setScalar(e.tam * 1.5);
   return partes;
 }

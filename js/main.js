@@ -397,6 +397,7 @@ function comprarDirecto(id, color = null, precio = null, cantidad = 1) {
     return true;
   }
   registrar('pedido');
+  pareja.recordar('compra', '🛒', `Nuestra primera compra: ${info.nombre.toLowerCase()}`);
   const segundos = tiempoEntrega(cantidad);
   entregas.pedir([{ id, color: info.tipo === 'mueble' && info.colores ? (color ?? 0) : null, cantidad }], segundos);
   sonido.comprar();
@@ -646,6 +647,7 @@ async function adoptar(especie, gratis = false) {
   if (!gratis) estado.monedas -= e.precio;
   ui.cerrarHojas();
   const m = mascotas.adoptar(especie, nombre);
+  pareja.recordar(mascotas.lista.length === 1 ? 'mascota' : null, '🐾', `Adoptamos a ${nombre} (${e.nombre.toLowerCase()})`);
   sonido.premio();
   ui.aviso(`🏠 ¡Bienvenido a casa, ${nombre}!`);
   seleccionarMascota(m);
@@ -714,6 +716,12 @@ const ui = new UI(miniaturas, {
   },
   alProponer(info, color, precio) {
     pareja.proponer(info, color, precio);
+  },
+  alDesear(info, color) {
+    return pareja.alternarDeseo(info, color);
+  },
+  alEsDeseo(id) {
+    return pareja ? pareja.esDeseo(id) : false;
   },
   alClima() {
     const t = temporadaActual();
@@ -1087,6 +1095,7 @@ function mudarse(n) {
   refrescarHud();
   guardar();
   registrar('mudanza');
+  pareja.recordar(null, c.icono, `Nos mudamos a nuestro ${c.nombre.toLowerCase()}`);
   setTimeout(() => {
     sonido.premio();
     ui.dialogo({
@@ -1141,6 +1150,7 @@ function revisarProgreso() {
   for (const col of coleccionesCompletas(idsEnCasa())) {
     if (estado.colecciones.includes(col.id)) continue;
     estado.colecciones.push(col.id);
+    pareja.recordar(null, col.icono, `Completamos la colección ${col.nombre}`);
     estado.monedas += col.premio.monedas;
     estado.tickets += col.premio.tickets;
     refrescarHud();
@@ -1361,7 +1371,7 @@ function ganar(n, m = null, emoji = '🪙') {
 }
 
 const usos = new Usos({
-  estado, ui, sonido, gestor, mascotas, miniaturas,
+  estado, ui, sonido, gestor, mascotas, miniaturas, escena,
   guardar: () => guardar(),
   refrescarMenu: () => refrescarMenu(),
   registrar: e => registrar(e),
@@ -1402,11 +1412,89 @@ function abrirJuegos() {
   }));
 }
 
+const toquesPareja = [];
+function mostrarReaccion(emoji, de) {
+  const el = document.createElement('div');
+  el.className = 'reaccion-grande';
+  el.textContent = emoji;
+  el.style.left = `${30 + Math.random() * 40}%`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2600);
+  if (de !== undefined && de !== sync.yo) {
+    sonido.mascota();
+    ui.aviso(`${emoji} ${pareja.nombre(de)}`);
+  }
+}
+
+function marcaToque(x, z, de) {
+  const lienzo = document.createElement('canvas');
+  lienzo.width = 128;
+  lienzo.height = 128;
+  const c = lienzo.getContext('2d');
+  c.font = '84px serif';
+  c.textAlign = 'center';
+  c.fillText('💗', 64, 86);
+  c.font = '900 30px Nunito, sans-serif';
+  c.fillStyle = '#fff';
+  c.fillText((pareja.nombre(de) || '?')[0].toUpperCase(), 64, 74);
+  const tex = new THREE.CanvasTexture(lienzo);
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
+  sprite.scale.set(0.45, 0.45, 1);
+  sprite.position.set(x, 0.35, z);
+  sprite.renderOrder = 10;
+  escena.add(sprite);
+  toquesPareja.push({ sprite, t: 0 });
+}
+
+function animarToques(dt) {
+  for (const k of [...toquesPareja]) {
+    k.t += dt;
+    k.sprite.position.y += dt * 0.25;
+    k.sprite.material.opacity = Math.max(0, 1 - k.t / 1.6);
+    if (k.t > 1.6) {
+      escena.remove(k.sprite);
+      k.sprite.material.map.dispose();
+      k.sprite.material.dispose();
+      toquesPareja.splice(toquesPareja.indexOf(k), 1);
+    }
+  }
+}
+
 sync = new Sync({
   instantanea,
   aplicar: (datos, conflicto) => aplicarRemoto(datos, conflicto),
-  mensaje: () => {}
+  mensaje: m => {
+    if (m.tipo === 'reaccion' && m.datos && Date.now() - Date.parse(m.creado) < 60000) mostrarReaccion(m.datos.emoji, m.datos.de);
+  },
+  directo: (evento, datos) => {
+    if (evento === 'reaccion') mostrarReaccion(datos.emoji, datos.de);
+    if (evento === 'toque') marcaToque(datos.x, datos.z, datos.de);
+  }
 });
+
+let ultimoToque = 0;
+const rayoToque = new THREE.Raycaster();
+const sueloToque = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+renderer.domElement.addEventListener('pointerdown', e => {
+  if (!sync.activo || !sync.enDirecto || performance.now() - ultimoToque < 350) return;
+  ultimoToque = performance.now();
+  const r = renderer.domElement.getBoundingClientRect();
+  rayoToque.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camaraIso.camara);
+  const p = new THREE.Vector3();
+  if (rayoToque.ray.intersectPlane(sueloToque, p) && Math.abs(p.x) < 3.2 && Math.abs(p.z) < 3.2) sync.emitir('toque', { x: +p.x.toFixed(2), z: +p.z.toFixed(2) });
+});
+
+function pintarBotonReaccion() {
+  document.getElementById('btn-reaccion').classList.toggle('oculto', !sync.activo);
+}
+document.getElementById('btn-reaccion').addEventListener('click', () => {
+  document.getElementById('reacciones').classList.toggle('oculto');
+});
+document.querySelectorAll('#reacciones button').forEach(b => b.addEventListener('click', () => {
+  document.getElementById('reacciones').classList.add('oculto');
+  mostrarReaccion(b.textContent);
+  sync.emitir('reaccion', { emoji: b.textContent });
+}));
 suciedad.genera = !sync.activo || sync.yo === 0;
 
 pareja = new Pareja({
@@ -1419,9 +1507,12 @@ pareja = new Pareja({
   instantanea,
   aplicarRemoto,
   abrirMas: () => mas.abrir(),
-  alDesconectar: () => { suciedad.genera = true; }
+  alDesconectar: () => { suciedad.genera = true; pintarBotonReaccion(); },
+  alConectar: () => { pintarBotonReaccion(); sync.conectarDirecto(); pareja.recordar('pareja', '💑', 'Conectamos nuestras casas'); }
 });
 usos.ctx.pareja = pareja;
+pintarBotonReaccion();
+sync.conectarDirecto();
 
 async function sincronizarFotos() {
   if (!sync.activo) return;
@@ -1438,9 +1529,21 @@ window.extrasMenu = () => [
   { id: 'casas', icono: CASAS[nivelCasa()].icono, texto: 'Casas', sub: nivelCasa() < CASAS.length - 1 ? `Siguiente: ${CASAS[nivelCasa() + 1].nombre}` : '¡Vivís en la mansión!', accion: abrirCasas },
   { id: 'logros', icono: '🏆', texto: 'Logros', sub: `${(estado.logros || []).length} de ${LOGROS.length}`, accion: abrirLogros },
   { id: 'colecciones', icono: '📚', texto: 'Colecciones', sub: `${(estado.colecciones || []).length} de ${COLECCIONES.length} completas`, accion: abrirColecciones },
+  { id: 'recuerdos', icono: '🌳', texto: 'Recuerdos', sub: 'Cápsula del tiempo, planes y momentos', accion: abrirRecuerdos },
   { id: 'pareja', icono: '💑', texto: 'Pareja', sub: sync.activo ? `Casa compartida · ${sync.codigo}` : 'Compartid la casa entre los dos móviles', accion: () => pareja.abrir() },
   { id: 'juegos', icono: '🎮', texto: 'Minijuegos', sub: 'Jugad para ganar monedas', accion: abrirJuegos }
 ];
+
+function abrirRecuerdos() {
+  const cuerpo = ui.abrirGen('Recuerdos', `
+    <p class="gen-intro">Vuestro rincón de momentos especiales.</p>
+    <button id="rc-recuerdos" class="secundario">🌳 Nuestros recuerdos (${(estado.recuerdos || []).length})</button>
+    <button id="rc-capsula" class="secundario">⏳ Cápsula del tiempo (${(estado.capsulas || []).length})</button>
+    <button id="rc-planes" class="secundario">📅 Nuestros planes</button>`, () => mas.abrir());
+  cuerpo.querySelector('#rc-recuerdos').addEventListener('click', () => pareja.verRecuerdos());
+  cuerpo.querySelector('#rc-capsula').addEventListener('click', () => pareja.verCapsulas());
+  cuerpo.querySelector('#rc-planes').addEventListener('click', () => pareja.verPlanes());
+}
 
 function aplicarTemporada() {
   const t = temporadaActual();
@@ -1453,6 +1556,7 @@ function revisarFechas() {
   for (const f of mas.fechasEspeciales()) {
     if (estado.celebrado[f.clave]) continue;
     estado.celebrado[f.clave] = true;
+    if (!f.temporada) pareja.recordar(null, f.titulo.includes('aniversario') ? '💍' : '🎂', f.titulo.replace(/!|¡/g, '').trim());
     if (f.temporada) estado.tickets += 1;
     else {
       estado.monedas += 150;
@@ -1582,6 +1686,7 @@ renderer.setAnimationLoop(() => {
   ambiente.actualizar(dt);
   usos.actualizar(dt);
   sync.actualizar(dt);
+  animarToques(dt);
   gestor.actualizar(dt);
   mascotas.actualizar(dt);
   entregas.actualizar(dt);
@@ -1593,6 +1698,7 @@ renderer.setAnimationLoop(() => {
     comprobarEvento();
     pintarClima();
     pareja.revisar();
+    pareja.revisarPlanes();
     document.getElementById('acogedor-valor').textContent = acogedor().total;
     tProgreso += 1;
     if (tProgreso >= 3) {

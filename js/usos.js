@@ -94,6 +94,12 @@ export class Usos {
     if (def.id === 'tele') {
       ops.push({ icono: '📺', texto: m.userData.encendido ? 'Apagar' : 'Dibujos', accion: () => { this.ctx.gestor.alternarEncendido(m); this.ctx.mascotasMirar && m.userData.encendido && this.ctx.mascotasMirar(m); sonido.pop(); guardar(); this.ctx.refrescarMenu(); } });
     }
+    if (def.id === 'arbol-recuerdos' && this.ctx.pareja) {
+      ops.push({ icono: '📜', texto: 'Recuerdos', accion: () => this.ctx.pareja.verRecuerdos() });
+    }
+    if (def.id === 'radio' && this.estado.pareja && this.estado.pareja.cancion) {
+      ops.push({ icono: '💕', texto: 'Nuestra canción', accion: () => { window.open(this.estado.pareja.cancion, '_blank'); this.ctx.registrar('cancion'); } });
+    }
     if (def.id === 'radio') {
       ops.push({ icono: this.musica ? '🔇' : '🎵', texto: this.musica ? 'Parar' : 'Música', accion: () => { this.alternarMusica(m); this.ctx.refrescarMenu(); } });
     }
@@ -243,6 +249,106 @@ export class Usos {
     malla.material.emissiveIntensity = 0.6;
   }
 
+  propsPlanes() {
+    const activos = this.ctx.pareja ? new Set(this.ctx.pareja.planesActivos().map(p => p.tipo)) : new Set();
+    if (!this.props) this.props = {};
+    const mat = (c, extra = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.7, ...extra });
+    const crear = tipo => {
+      const g = new THREE.Group();
+      const muebles = this.ctx.gestor.muebles;
+      const buscar = ids => muebles.find(m => ids.includes(m.userData.def.id));
+      if (tipo === 'viaje') {
+        const cuerpo = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.55, 0.22), mat(0xe05050));
+        cuerpo.position.y = 0.3;
+        const asa = new THREE.Mesh(new THREE.TorusGeometry(0.07, 0.015, 6, 12, Math.PI), mat(0x333333));
+        asa.position.y = 0.58;
+        const ruedas = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.04, 0.18), mat(0x333333));
+        ruedas.position.y = 0.02;
+        const pegatina = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.01, 12), mat(0xf2d06b));
+        pegatina.rotation.x = Math.PI / 2;
+        pegatina.position.set(0.08, 0.35, 0.115);
+        g.add(cuerpo, asa, ruedas, pegatina);
+        g.position.set(1.6, 0, 2.6);
+        g.rotation.y = 0.3;
+      } else if (tipo === 'cena' || tipo === 'cine') {
+        const base = buscar(tipo === 'cena' ? ['mesa', 'escritorio', 'mesita'] : ['mesa', 'mesita', 'sofa', 'tele']);
+        const y = base ? base.userData.base + base.userData.alto : 0;
+        if (tipo === 'cena') {
+          for (const dx of [-0.1, 0.1]) {
+            const vela = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.18, 10), mat(0xf7f3e8));
+            vela.position.set(dx, y + 0.09, 0);
+            const llama = new THREE.Mesh(new THREE.SphereGeometry(0.022, 8, 6), mat(0xffc040, { emissive: 0xffa020, emissiveIntensity: 2 }));
+            llama.scale.y = 1.6;
+            llama.position.set(dx, y + 0.21, 0);
+            g.add(vela, llama);
+          }
+          const luz = new THREE.PointLight(0xffa040, 0.8, 2.5);
+          luz.position.set(0, y + 0.3, 0);
+          g.add(luz);
+        } else {
+          const bol = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.08, 0.12, 14), mat(0xe05050));
+          bol.position.y = y + 0.06;
+          g.add(bol);
+          for (let k = 0; k < 10; k++) {
+            const p = new THREE.Mesh(new THREE.SphereGeometry(0.03, 6, 5), mat(0xfff3d0));
+            const a = k * 2.4;
+            p.position.set(Math.cos(a) * 0.06, y + 0.13 + (k % 3) * 0.02, Math.sin(a) * 0.06);
+            g.add(p);
+          }
+        }
+        if (base) g.position.set(base.position.x, 0, base.position.z);
+      } else if (tipo === 'fiesta' || tipo === 'otro') {
+        const colores = [0xe05070, 0x5a9fd6, 0xf2d06b, 0x6cc08a];
+        for (let k = 0; k < (tipo === 'fiesta' ? 4 : 2); k++) {
+          const globo = new THREE.Mesh(new THREE.SphereGeometry(0.14, 14, 10), mat(colores[k], { roughness: 0.35 }));
+          globo.scale.y = 1.2;
+          globo.position.set(k * 0.18 - 0.25, 1.5 + (k % 2) * 0.2, (k % 2) * 0.1);
+          const hilo = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 1.4, 4), mat(0xffffff));
+          hilo.position.set(k * 0.18 - 0.25, 0.75 + (k % 2) * 0.1, (k % 2) * 0.1);
+          g.add(globo, hilo);
+        }
+        g.position.set(-2.4, 0, -2.4);
+      }
+      g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+      return g;
+    };
+    for (const tipo of ['viaje', 'cena', 'cine', 'fiesta', 'otro']) {
+      const debe = activos.has(tipo);
+      if (debe && !this.props[tipo]) {
+        this.props[tipo] = crear(tipo);
+        this.ctx.escena.add(this.props[tipo]);
+      } else if (!debe && this.props[tipo]) {
+        this.ctx.escena.remove(this.props[tipo]);
+        this.props[tipo] = null;
+      }
+    }
+  }
+
+  hojasRecuerdo(m) {
+    const n = Math.min(60, (this.estado.recuerdos || []).length);
+    if (m.userData.nHojas === n) return;
+    if (m.userData.hojas) {
+      m.remove(m.userData.hojas);
+      m.userData.hojas.traverse(o => o.isMesh && o.material.dispose());
+    }
+    const g = new THREE.Group();
+    const geo = this.geoHoja || (this.geoHoja = new THREE.SphereGeometry(0.05, 8, 6));
+    const colores = [0xf4a3b0, 0xf2d06b, 0x8fd08a, 0xe58f9e, 0xb39ddb];
+    for (let i = 0; i < n; i++) {
+      const a = i * 2.399;
+      const y = 1.0 + ((i * 0.37) % 1) * 0.5;
+      const r = 0.3 * Math.sin(Math.PI * (y - 0.95) / 0.6) + 0.05;
+      const hoja = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: colores[i % colores.length], roughness: 0.6 }));
+      hoja.position.set(Math.cos(a) * r, y, Math.sin(a) * r);
+      hoja.scale.set(1, 0.6, 1.3);
+      hoja.castShadow = true;
+      g.add(hoja);
+    }
+    m.add(g);
+    m.userData.hojas = g;
+    m.userData.nHojas = n;
+  }
+
   actualizar(dt) {
     this.t += dt;
     this.tDibujo = (this.tDibujo || 0) + dt;
@@ -256,7 +362,9 @@ export class Usos {
       if (def.id === 'tele' && dibujar) this.dibujarTele(m);
       if (lento && def.huerto) this.aplicarHuerto(m);
       if (lento && def.ordenador) this.ordenador(m);
+      if (lento && def.id === 'arbol-recuerdos') this.hojasRecuerdo(m);
     }
     if (this.musica && !this.ctx.gestor.muebles.includes(this.musica.m)) this.alternarMusica();
+    if (lento) this.propsPlanes();
   }
 }

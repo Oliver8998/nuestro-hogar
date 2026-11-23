@@ -94,6 +94,11 @@ export class UI {
     }
     $('det-comprar').addEventListener('click', () => this.comprarSeleccion());
     $('det-regalar').addEventListener('click', () => this.sel && this.ev.alRegalar(this.sel.info, this.sel.color, this.sel.precio));
+    $('det-desear').addEventListener('click', () => {
+      if (!this.sel) return;
+      const si = this.ev.alDesear(this.sel.info, this.sel.color);
+      this.$('det-desear').textContent = si ? '❤️' : '🤍';
+    });
     $('det-proponer').addEventListener('click', () => this.sel && this.ev.alProponer(this.sel.info, this.sel.color, this.sel.precio));
 
     $('btn-tienda').addEventListener('click', () => this.abrirTienda());
@@ -337,6 +342,8 @@ export class UI {
     const pareja = this.ev.alHayPareja && this.ev.alHayPareja();
     const regalable = pareja && this.sel.info.tipo === 'mueble' && this.sel.cantidad === 1;
     this.$('det-regalar').classList.toggle('oculto', !regalable);
+    this.$('det-desear').classList.toggle('oculto', this.sel.info.tipo !== 'mueble');
+    this.$('det-desear').textContent = this.ev.alEsDeseo && this.ev.alEsDeseo(this.sel.info.id) ? '❤️' : '🤍';
     this.$('det-proponer').classList.toggle('oculto', !regalable);
     const n = this.inventario ? this.inventario.cantidad(this.sel.info.id) : 0;
     const t = this.$('det-tienes');

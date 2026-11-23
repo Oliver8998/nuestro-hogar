@@ -2212,3 +2212,35 @@ body.noche .pastilla, body.noche #lateral {
 .col-items div.tiene { opacity: 1; filter: none; }
 .col-items img { width: 56px; height: 56px; }
 .col-items small { display: block; font-size: 10px; font-weight: 800; line-height: 1.1; }
+
+.reaccion-grande {
+  position: fixed; bottom: 20%; z-index: 60; font-size: 90px; pointer-events: none;
+  animation: subirReaccion 2.6s ease-out forwards;
+}
+@keyframes subirReaccion {
+  0% { transform: translateY(40px) scale(.3); opacity: 0; }
+  15% { transform: translateY(0) scale(1.15); opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: translateY(-260px) scale(.9); opacity: 0; }
+}
+#reacciones {
+  position: fixed; right: 10px; top: calc(env(safe-area-inset-top) + 150px); z-index: 20;
+  display: flex; flex-direction: column; gap: 4px; background: rgba(255, 250, 244, .96);
+  border-radius: 22px; padding: 6px; box-shadow: var(--sombra);
+}
+#reacciones button { border: none; background: none; font-size: 30px; padding: 4px 6px; }
+.recuerdos, .capsulas, .planes, .deseos { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.recuerdo, .capsula, .plan { display: flex; gap: 10px; align-items: center; background: #fff; border-radius: 14px; padding: 10px 12px; box-shadow: 0 2px 0 var(--borde); }
+.recuerdo span, .capsula span, .plan span { font-size: 28px; }
+.recuerdo div, .capsula div, .plan div { flex: 1; }
+.recuerdo b, .capsula b, .plan b { display: block; font-weight: 900; }
+.recuerdo small, .capsula small, .plan small { color: var(--suave); font-weight: 700; font-size: 12px; }
+.capsula p { margin: 4px 0; font-weight: 700; white-space: pre-wrap; }
+.capsula.abierta { background: #fff7c2; }
+.plan .borrar { border: none; background: #f6e9e9; border-radius: 10px; width: 32px; height: 32px; font-weight: 900; }
+.ajustes select { border: 2px solid var(--borde); border-radius: 14px; padding: 10px; font: inherit; font-weight: 800; background: #fff; }
+.deseos { display: grid; grid-template-columns: 1fr 1fr; }
+.deseo { border: none; background: #fff; border-radius: 16px; padding: 10px; box-shadow: 0 3px 0 var(--borde); font: inherit; color: var(--texto); }
+.deseo img { width: 70px; height: 70px; }
+.deseo b { display: block; font-weight: 900; }
+.deseo small { color: var(--suave); font-weight: 800; }
