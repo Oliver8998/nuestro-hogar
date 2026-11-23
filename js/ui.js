@@ -2,6 +2,9 @@ import { CATALOGO, MATERIALES, RAREZAS, infoItem } from './catalogo.js';
 import { ESPECIES } from './mascotas.js';
 import { SEGMENTOS, PIEZAS_PREMIO, COLOR_REGALO, COSTE_TIRADA, poolDe } from './ruleta.js';
 import { EscenaTienda } from './tienda3d.js';
+import * as THREE from 'three';
+
+const escapar = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 const DESPLAZAMIENTO = 70;
 
@@ -386,32 +389,86 @@ export class UI {
     this.decirLola(['¡Buena elección!', '¡Me encanta ese!', '¡Os va a quedar genial!', '¡Marchando! Os lo mando a casa.'][Math.floor(Math.random() * 4)]);
   }
 
+  rasgosEspecie(e) {
+    const r = [];
+    r.push(e.tam < 0.8 ? '🤏 Pequeñito' : e.tam < 1.05 ? '🐾 Mediano' : '🦮 Grande');
+    r.push(e.velocidad < 0.3 ? '🐢 Muy tranquilo' : e.velocidad < 0.6 ? '😌 Tranquilo' : e.velocidad < 0.8 ? '⚡ Activo' : '🚀 Muy activo');
+    if (e.gato) r.push('🧶 Usa el rascador');
+    if (e.perro) r.push('🦴 Le encanta pasear');
+    if (e.hocico === 'zorro') r.push('🦴 Sale de paseo');
+    if (e.salta) r.push('🐇 Da saltitos');
+    if (e.mofletes) r.push('🌰 Guarda comida en los mofletes');
+    if (e.pinguino) r.push('🛷 Se desliza al correr');
+    if (e.loro) r.push('💬 Repite lo que oye');
+    if (e.dragon) r.push('🔥 Echa fueguitos');
+    if (e.tortuga) r.push('⏳ Vive muchísimo');
+    if (e.ave && !e.pinguino && !e.loro) r.push('🪶 Aletea cuando está contento');
+    if (e.manchas) r.push('🍀 Hace ruiditos felices');
+    return r;
+  }
+
+  fichaEspecie(id) {
+    const e = ESPECIES[id];
+    const rasgos = this.rasgosEspecie(e);
+    const exclusivo = e.exclusivo;
+    const puede = !exclusivo && e.precio <= this.monedasActual;
+    this.dialogo({
+      imagen: this.mini.mascota(id),
+      titulo: e.nombre,
+      etiqueta: exclusivo ? { texto: `✨ ${RAREZAS[exclusivo].nombre}`, color: RAREZAS[exclusivo].color } : null,
+      html: `<p class="adopta-texto">${e.texto}</p><div class="adopta-rasgos">${rasgos.map(t => `<span>${t}</span>`).join('')}</div>
+        <p class="adopta-nota">Cada mascota llega con su propia personalidad: dormilona, traviesa, glotona, cariñosa o juguetona.</p>`,
+      botones: exclusivo
+        ? [{ texto: '🎡 Solo sale en la ruleta', tipo: 'secundario' }]
+        : [{ texto: 'Ahora no', tipo: 'secundario' }, { texto: puede ? `🐾 Adoptar · 🪙 ${e.precio}` : `Faltan 🪙 ${e.precio - this.monedasActual}`, tipo: puede ? 'primario' : 'secundario', accion: () => puede && this.ev.alAdoptar(id) }]
+    });
+  }
+
   abrirRefugio(propias = this.ev.alPedirMascotas()) {
     this.$('img-mateo').src = this.mini.personaje('mateo');
     const lista = this.$('lista-mascotas');
+    const barra = (v, color) => `<i class="adopta-barra"><b style="width:${Math.max(4, Math.round(v))}%;background:${color}"></b></i>`;
+    const pers = { dormilona: '😴', traviesa: '😼', glotona: '🍖', carinosa: '🥰', juguetona: '🎾' };
     lista.innerHTML = propias.length
-      ? propias.map(m => `<div class="chip-mascota">${this.img(this.mini.mascota(m.especie))}<span>${m.nombre}</span><small>❤️ ${Math.round(m.felicidad)}</small></div>`).join('')
-      : '<div class="vacio">Todavía no tenéis mascota</div>';
+      ? propias.map((m, k) => `<button class="adopta-mia" data-k="${k}">
+          <span class="adopta-mia-img">${this.img(this.mini.mascota(m.especie))}<em>${pers[m.personalidad] || '🐾'}</em></span>
+          <span class="adopta-mia-datos"><b>${escapar(m.nombre)}</b><small>${m.edadDias() < 4 ? '🍼 Bebé' : ESPECIES[m.especie].nombre}</small>
+          <span class="adopta-stats"><span>❤️${barra(m.felicidad, '#ef7f98')}</span><span>🍖${barra(m.hambre, '#f2a03c')}</span><span>⚡${barra(m.energia, '#6cc3a0')}</span></span></span>
+        </button>`).join('')
+      : '<div class="vacio adopta-vacio">🏠 Todavía no tenéis mascota. ¡Mirad quién espera abajo!</div>';
+    lista.querySelectorAll('.adopta-mia').forEach(b => b.addEventListener('click', () => {
+      const m = propias[Number(b.dataset.k)];
+      if (this.ev.alVerMascota) this.ev.alVerMascota(m);
+    }));
     const rejilla = document.querySelector('#refugio .rejilla');
-    rejilla.innerHTML = '';
-    for (const [id, e] of Object.entries(ESPECIES)) {
-      const carta = document.createElement('div');
-      carta.className = 'carta' + (e.exclusivo ? ' exclusiva' : '');
-      carta.innerHTML = `
-        ${e.exclusivo ? `<span class="cinta" style="background:${RAREZAS[e.exclusivo].color}">Solo en la ruleta</span>` : ''}
-        <div class="carta-icono">${this.img(this.mini.mascota(id))}</div>
-        <div class="carta-texto">
-          <div class="carta-nombre">${e.nombre}</div>
-          <div class="carta-info">${e.texto}</div>
-          ${e.exclusivo ? '<button class="comprar" disabled>🎡 Ruleta</button>' : `<button class="comprar">🐾 ${e.precio}</button>`}
-        </div>`;
-      if (!e.exclusivo) {
-        const boton = carta.querySelector('.comprar');
-        boton.disabled = e.precio > this.monedasActual;
-        boton.addEventListener('click', () => this.ev.alAdoptar(id));
-      }
-      rejilla.appendChild(carta);
-    }
+    rejilla.classList.add('adopta-rejilla');
+    const filtros = [
+      ['todas', 'Todas'], ['pelo', '🐾 Con pelo'], ['plumas', '🪶 Con plumas'], ['especiales', '✨ Especiales']
+    ];
+    const pinta = filtro => {
+      const ids = Object.entries(ESPECIES).filter(([, e]) => filtro === 'todas' || (filtro === 'especiales' ? e.exclusivo : filtro === 'plumas' ? e.ave && !e.exclusivo : !e.ave && !e.exclusivo)).map(([id]) => id);
+      rejilla.innerHTML = `<div class="adopta-filtros">${filtros.map(([f, t]) => `<button class="${f === filtro ? 'activo' : ''}" data-f="${f}">${t}</button>`).join('')}</div>` + ids.map((id, k) => {
+        const e = ESPECIES[id];
+        const tono = `#${new THREE.Color(e.color).lerp(new THREE.Color(0xffffff), 0.72).getHexString()}`;
+        const rasgo = this.rasgosEspecie(e).slice(1, 2)[0] || '';
+        return `<button class="adopta-carta${e.exclusivo ? ' exclusiva' : ''}" data-id="${id}" style="--tono:${tono};animation-delay:${k * 0.04}s">
+          ${e.exclusivo ? `<span class="adopta-cinta" style="background:${RAREZAS[e.exclusivo].color}">✨ ${RAREZAS[e.exclusivo].nombre}</span>` : ''}
+          <span class="adopta-foto">${this.img(this.mini.mascota(id))}</span>
+          <b>${e.nombre}</b>
+          <small>${rasgo}</small>
+          <span class="adopta-precio ${e.exclusivo ? 'ruleta' : e.precio > this.monedasActual ? 'caro' : ''}">${e.exclusivo ? '🎡 Ruleta' : `🪙 ${e.precio}`}</span>
+        </button>`;
+      }).join('');
+      rejilla.querySelectorAll('.adopta-filtros button').forEach(b => b.addEventListener('click', () => {
+        this.ev.alSonido && this.ev.alSonido('tocar');
+        pinta(b.dataset.f);
+      }));
+      rejilla.querySelectorAll('.adopta-carta').forEach(b => b.addEventListener('click', () => {
+        this.ev.alSonido && this.ev.alSonido('tocar');
+        this.fichaEspecie(b.dataset.id);
+      }));
+    };
+    pinta('todas');
     this.abrirHoja('refugio');
   }
 

@@ -2640,8 +2640,8 @@ body.colgando #lateral, body.colgando #chips-vida, body.colgando #menu-objeto, b
 .tb-caja { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; width: 100%; }
 .tb-caja button, .tb-bandeja span { border: none; font: inherit; font-weight: 900; color: #3b2f26; }
 .tb-caja button { padding: 10px 0; box-shadow: 0 3px 0 rgba(0,0,0,.15); }
-.moneda { background: radial-gradient(circle at 35% 35%, #fbe7a0, #d9b040); border-radius: 50% !important; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 13px; }
-.billete { background: linear-gradient(135deg, #b8dcc4, #8fc4a4); border-radius: 6px !important; font-size: 14px; }
+.tb-caja .moneda, .tb-bandeja .moneda { background: radial-gradient(circle at 35% 35%, #fbe7a0, #d9b040); border-radius: 50% !important; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+.tb-caja .billete, .tb-bandeja .billete { background: linear-gradient(135deg, #b8dcc4, #8fc4a4); border-radius: 6px !important; font-size: 14px; }
 .tb-bandeja span { padding: 4px 7px; font-size: 11.5px; }
 .tb-bandeja span.moneda { width: 34px; padding: 0; }
 
@@ -2860,3 +2860,43 @@ body.colgando #lateral, body.colgando #chips-vida, body.colgando #menu-objeto, b
 .animo span { font-size: 26px; }
 .animo small { font-size: 11px; font-weight: 800; color: #6b4a36; line-height: 1.15; text-align: center; }
 .animo.activo { border-color: #e98aa2; background: #fdeef2; }
+
+/* Refugio nuevo */
+#lista-mascotas { display: flex; gap: 10px; overflow-x: auto; padding: 4px 14px 10px; }
+.adopta-vacio { background: #fff7ec; border-radius: 16px; padding: 12px 14px !important; font-weight: 800; color: #8a6a52; }
+.adopta-mia { flex: 0 0 auto; display: flex; gap: 10px; align-items: center; background: #fff; border: 0; border-radius: 20px; padding: 8px 14px 8px 8px; box-shadow: 0 3px 10px rgba(59, 47, 38, .08); text-align: left; }
+.adopta-mia-img { position: relative; width: 62px; height: 62px; border-radius: 18px; background: radial-gradient(circle at 50% 60%, #fff, #fbeff2 80%); display: flex; align-items: center; justify-content: center; }
+.adopta-mia-img img { width: 92%; height: 92%; object-fit: contain; }
+.adopta-mia-img em { position: absolute; right: -4px; bottom: -4px; font-style: normal; font-size: 16px; background: #fff; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 4px rgba(0, 0, 0, .12); }
+.adopta-mia-datos { display: flex; flex-direction: column; gap: 2px; min-width: 112px; }
+.adopta-mia-datos b { font-size: 15px; font-weight: 900; color: #4b3426; }
+.adopta-mia-datos small { font-size: 11px; font-weight: 800; color: #a0806a; }
+.adopta-stats { display: flex; flex-direction: column; gap: 3px; margin-top: 2px; }
+.adopta-stats > span { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.adopta-barra { display: block; flex: 1; height: 6px; border-radius: 4px; background: #f1e6da; overflow: hidden; }
+.adopta-barra b { display: block; height: 100%; border-radius: 4px; }
+.adopta-rejilla { display: grid !important; grid-template-columns: repeat(2, 1fr); gap: 12px !important; }
+.adopta-filtros { grid-column: 1 / -1; min-height: 42px; display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 4px; }
+.adopta-filtros button { flex: 0 0 auto; border: 0; border-radius: 999px; padding: 7px 13px; font-weight: 900; font-size: 13px; background: #fff; color: #8a6a52; box-shadow: 0 2px 6px rgba(59, 47, 38, .07); }
+.adopta-filtros button.activo { background: #e98aa2; color: #fff; }
+.adopta-carta { min-height: 220px;
+  position: relative; border: 0; border-radius: 24px; padding: 10px 10px 12px; background: #fff; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  box-shadow: 0 4px 12px rgba(59, 47, 38, .08); animation: adopta-entra .4s cubic-bezier(.3, 1.5, .5, 1) both; overflow: hidden;
+}
+.adopta-carta:active { transform: scale(.96); }
+.adopta-foto { width: 100%; height: 130px; flex: none; border-radius: 20px; background: radial-gradient(circle at 50% 62%, #fff 0%, var(--tono) 78%); display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
+.adopta-foto img { width: 88%; height: 88%; object-fit: contain; animation: adopta-respira 3s ease-in-out infinite; }
+.adopta-carta:nth-child(2n) .adopta-foto img { animation-delay: -1.5s; }
+.adopta-carta b { font-size: 15px; font-weight: 900; color: #4b3426; }
+.adopta-carta small { font-size: 11px; font-weight: 800; color: #a0806a; }
+.adopta-precio { margin-top: 5px; padding: 6px 14px; border-radius: 999px; background: #6cc3a0; color: #fff; font-weight: 900; font-size: 13px; box-shadow: 0 3px 0 #4fa685; }
+.adopta-precio.caro { background: #e9ddd0; color: #a0806a; box-shadow: 0 3px 0 #d7c6b4; }
+.adopta-precio.ruleta { background: #efe2f9; color: #a35ee0; box-shadow: 0 3px 0 #dcc6f0; }
+.adopta-carta.exclusiva { background: linear-gradient(160deg, #fff 60%, #f6ecff); }
+.adopta-cinta { position: absolute; top: 10px; left: -26px; transform: rotate(-35deg); color: #fff; font-size: 10px; font-weight: 900; padding: 3px 30px; z-index: 1; box-shadow: 0 2px 4px rgba(0, 0, 0, .12); }
+.adopta-texto { text-align: center; margin: 0 0 10px; font-weight: 700; color: #6b4a36; }
+.adopta-rasgos { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.adopta-rasgos span { background: #fff4e4; border-radius: 999px; padding: 5px 10px; font-size: 12px; font-weight: 800; color: #7a5640; }
+.adopta-nota { font-size: 12px; color: #a0806a; text-align: center; margin: 10px 0 0; font-weight: 700; }
+@keyframes adopta-entra { from { transform: translateY(14px) scale(.92); opacity: 0; } }
+@keyframes adopta-respira { 50% { transform: translateY(-3px) scale(1.03); } }

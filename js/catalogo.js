@@ -403,6 +403,14 @@ export const CATALOGO = [
     [0.04, 1.9, 0.04, 0, 0.95, 0, 0xf2efe9, 'cil'],
     [1.6, 0.35, 1.6, 0, 1.85, 0, 0xe05050, 'cono']
   ], colores: { grupos: [[2]], paleta: [[0xe05050], [0x5a9fd6], [0xf2d06b], [0x6cc08a]] }},
+  { id: 'farola', categoria: 'exterior', exterior: true, nivel: 2, nombre: 'Farola de jardín', precio: 140, ancho: 1, fondo: 1, piezas: [
+    [0.3, 0.08, 0.3, 0, 0.04, 0, 0x2f3a36, 'cil'],
+    [0.07, 1.6, 0.07, 0, 0.85, 0, 0x2f3a36, 'cil'],
+    [0.3, 0.05, 0.3, 0, 1.66, 0, 0x2f3a36, 'cil'],
+    [0.24, 0.3, 0.24, 0, 1.83, 0, 0xfff1c9, 'cil'],
+    [0.38, 0.16, 0.38, 0, 2.06, 0, 0x2f3a36, 'cono']
+  ], encendible: { piezas: [3], luz: 1.85, inicial: true, intensidad: 5, colorLuz: 0xffd28a },
+  colores: { grupos: [[0, 1, 2, 4]], paleta: [[0x2f3a36], [0x6a4a3a], [0xf2efe9], [0x3d5a80]] }},
   { id: 'maceta-grande', categoria: 'exterior', exterior: true, nivel: 2, nombre: 'Olivo en maceta', precio: 150, ancho: 1, fondo: 1, piezas: [
     [0.42, 0.4, 0.42, 0, 0.2, 0, 0xc0704a, 'cil'],
     [0.06, 0.6, 0.06, 0, 0.7, 0, 0x7a5a3a, 'cil'],

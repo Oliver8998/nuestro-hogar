@@ -298,3 +298,16 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
   - Servidor MONTADO (23-nov 22:05): tablas de `supabase/avisos.sql` creadas y Edge Function `avisar` (código en `supabase/functions/avisar/index.ts`) desplegada desde el panel, con **Verify JWT desactivado**. Las claves VAPID se generaron solas y están en `push_claves`. Probado: clave, suscribir, enviar y quitar responden 200.
   - En iPhone solo funciona con el juego añadido a la pantalla de inicio (iOS 16.4+).
 - Tests nuevos: `/tmp/prueba/t11.py` (jugador nuevo), `t12.py` (Más, guía, foto del día, copia, ampliar) y `t13.py <es|en>` (ánimo, racha y llamadas push).
+
+## Mascotas nuevas, refugio, menú y noches (23-nov 22:15)
+- Modelos: `js/modeloMascota.js` (`crearModeloMascota(especie, ESPECIES)`, mascotas.js lo reexporta). Ojos con brillo, hocico, nariz, boca, mejillas, bigotes, orejas con interior, patitas, colas de 2 tramos, rayas (gato), parche (perro), mofletes (hámster), dientes (conejo), manchas (cobaya), alas de membrana y pinchos (dragón), caparazón con placas (tortuga), aves con alas en pivote. Parámetros nuevos en `ESPECIES`: redondo, largo, mofletes, bigotes, dientes, pies, rayas, calcetines, hocico ('largo'|'zorro'), parche, manchas, patasCortas, cabezaGrande. Geometrías compartidas (`userData.compartida`).
+  - Partes: raiz, cuerpoGrupo, cabeza, patas[], ojos[] (grupos), alas[] (pivotes), orejas[], cola + colaPunta, boca, lengua.
+  - Visor: `blender/vista-mascotas.html?ids=gato,perro&lado=1.1&zoom=1` (`/tmp/prueba/vm.py salida.png "query"`).
+- Comportamiento (`decidir` en mascotas.js, por pesos y personalidad): paseos de 2–4 paradas (`paseo`/`siguePaseo`), curiosear muebles, saludar a otra mascota, sentado, tumbado, estirarse, bostezo, acicalarse, perseguir la cola, aletear (aves y dragón, con 🔥), saltito (conejo/hámster), mirar alrededor, rascador, caseta, comedero, pelota. `accion(m, estado, dur, extra)` arranca un estado con duración.
+  - `animar`: aceleración al andar, cabeza que mira y cabecea, orejas que se mueven, cola según felicidad, lengua del perro al correr/jugar, bostezo con boca, dormir hecho un ovillo, pingüino que se desliza al correr, tortuga que mete la cabeza al dormir.
+- Refugio nuevo (`ui.abrirRefugio`): tarjetas de vuestras mascotas con barras ❤️🍖⚡ (al tocar se abre su menú), filtros (Todas / Con pelo / Con plumas / Especiales), tarjetas grandes con fondo del color de la especie y ficha (`ui.fichaEspecie`) con rasgos y botón de adoptar. Clases CSS `adopta-*`.
+- Escaparate del menú: mascotas de verdad con `GestorMascotas` (`mas.crear`), que se mueven solas; salas con más muebles y cada sala con luz de noche (lámparas, farolas en el jardín). Cada sala dura 7,5 s. `LUZ.noche` más clara.
+- Objeto nuevo `farola` (exterior, encendible, 140 monedas).
+- Noches más claras en el juego: tabla `LUZ` de ambiente.js subida y `ambiente.luzNocturna()` añade una luz cálida de techo de 20:00 a 7:00 (no con apagón).
+- Arreglo: un estilo `.moneda` del minijuego del cajero se aplicaba al contador de monedas de arriba (lo ponía como círculo dorado). Ahora solo afecta a `.tb-caja` / `.tb-bandeja`.
+- Tests: `t14.py <hora> <n>` (mascotas en casa, cuenta estados), `t15.py` (refugio), `t16.py <hora>` (salas del menú).

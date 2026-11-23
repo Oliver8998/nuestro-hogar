@@ -815,6 +815,10 @@ const ui = new UI(miniaturas, {
   alAdoptar(especie) {
     adoptar(especie);
   },
+  alVerMascota(m) {
+    ui.cerrarHojas();
+    setTimeout(() => seleccionarMascota(m), 250);
+  },
   alEstadoRuleta() {
     return { gratis: estado.gratis, tickets: estado.tickets };
   },

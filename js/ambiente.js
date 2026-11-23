@@ -14,14 +14,14 @@ const CIELO = [
 ];
 
 const LUZ = [
-  [0, 0.55, 0x8ea0d8, 0.3, 0xaab8ff, 0x2b2b45, 0x1c1c30],
-  [5.5, 0.6, 0x8ea0d8, 0.3, 0xaab8ff, 0x2b2b45, 0x1c1c30],
+  [0, 0.85, 0xa4b0e0, 0.45, 0xb4c0ff, 0x2b2b45, 0x1c1c30],
+  [5.5, 0.88, 0xa4b0e0, 0.45, 0xb4c0ff, 0x2b2b45, 0x1c1c30],
   [7, 1.2, 0xffd9c0, 1.1, 0xffb07a, 0xf6e3d6, 0xe8cdb8],
   [9, 1.5, 0xfff4e6, 1.7, 0xfff0dd, 0xfbf3ea, 0xf3e6d6],
   [17.5, 1.5, 0xfff4e6, 1.7, 0xfff0dd, 0xfbf3ea, 0xf3e6d6],
   [19.5, 1.15, 0xffc9a8, 1.1, 0xffa070, 0xf3d9c6, 0xdcbca6],
-  [21, 0.65, 0x9aa6dc, 0.35, 0xaab8ff, 0x34324f, 0x22213a],
-  [24, 0.55, 0x8ea0d8, 0.3, 0xaab8ff, 0x2b2b45, 0x1c1c30]
+  [21, 0.92, 0xaab4e2, 0.48, 0xb4c0ff, 0x34324f, 0x22213a],
+  [24, 0.85, 0xa4b0e0, 0.45, 0xb4c0ff, 0x2b2b45, 0x1c1c30]
 ];
 
 const ICONOS_CLIMA = { sol: '☀️', nubes: '⛅', lluvia: '🌧️', nieve: '❄️', luna: '🌙', nubesNoche: '☁️' };
@@ -107,6 +107,19 @@ export class Ambiente {
     return this.horaSol >= 21 || this.horaSol < 6.5;
   }
 
+  luzNocturna(h) {
+    const escena = this.sala.hemi.parent;
+    if (!escena) return;
+    if (!this.luzTecho) {
+      this.luzTecho = new THREE.PointLight(0xffd6a0, 0, 10, 1.2);
+      this.luzTecho.position.set(0, 2.7, 0);
+      escena.add(this.luzTecho);
+    }
+    const noche = h >= 20 || h < 7;
+    const k = h >= 20 ? Math.min(1, (h - 20) / 1.2) : h < 6 ? 1 : h < 7 ? 7 - h : 0;
+    this.luzTecho.intensity = noche && !this.apagon ? 2.4 * k : 0;
+  }
+
   calcularClima() {
     if (this.climaFijo) return this.climaFijo;
     const d = new Date();
@@ -126,7 +139,7 @@ export class Ambiente {
     let gris = this.clima === 'lluvia' || this.clima === 'nieve' ? 0.82 : this.clima === 'nubes' ? 0.92 : 1;
     if (this.apagon) gris *= 0.5;
     const tardisimo = h >= 23.5 || h < 6;
-    if (tardisimo) gris *= 0.85;
+    if (tardisimo) gris *= 0.93;
     this.sala.hemi.intensity = (a[1] + (b[1] - a[1]) * t) * (0.94 + 0.06 * gris);
     this.sala.hemi.color.copy(mezclar(a[2], b[2], t));
     this.sala.sol.intensity = (a[3] + (b[3] - a[3]) * t) * gris;
@@ -138,6 +151,7 @@ export class Ambiente {
     const fondoB = mezclar(a[6], b[6], t);
     document.body.style.background = `radial-gradient(circle at 50% 40%, #${fondoA.getHexString()} 0%, #${fondoB.getHexString()} 70%)`;
     document.body.classList.toggle('noche', this.esNoche());
+    this.luzNocturna(h);
     const [c1, c2, tc] = tramo(CIELO, h);
     this.cieloArriba = mezclar(c1[1], c2[1], tc);
     this.cieloAbajo = mezclar(c1[2], c2[2], tc);

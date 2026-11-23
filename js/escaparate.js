@@ -1,44 +1,44 @@
 import * as THREE from 'three';
 import { GestorMuebles } from './muebles.js';
-import { crearModeloMascota } from './mascotas.js';
+import { GestorMascotas } from './mascotas.js';
 import { SUELOS, PAPELES } from './casa2.js';
 import { periodoSolar } from './sol.js';
 
 const SALAS = [
   {
     icono: '🛋️', nombre: 'Salón acogedor', suelo: 'roble', papel: 'rayas', cortina: 0xf2b8c4,
-    muebles: [['alfombra', -3, -3, 0, 0], ['sofa', -3, -6, 0, 0], ['lampara', 2, -6, 0], ['estanteria', 3, -6, 0, 0], ['libros', 3, -6, 0], ['planta', -6, -6, 0], ['tele', -6, -2, 1, 0], ['mesita', -1, -2, 0, 1], ['jarron', -1, -2, 0], ['puff', 2, -1, 0, 1]],
+    muebles: [['alfombra', -3, -3, 0, 0], ['sofa', -3, -6, 0, 0], ['lampara', -6, -4, 0], ['estanteria', 3, -6, 0, 0], ['libros', 3, -6, 0], ['globo', 4, -6, 0], ['planta', -6, -6, 0], ['tele', -6, -2, 1, 0], ['mesita', -1, -2, 0, 1], ['jarron', -1, -2, 0], ['puff', 2, -1, 0, 1], ['cama-mascota', 2, 2, 0, 0], ['pelota', 0, 3, 0], ['planta', 5, 4, 0], ['cojin-corazon', -5, 2, 0], ['radio', 5, 0, 0]],
     mascotas: [['gato', 0.2, -0.9], ['perro', 1.6, 0.8]]
   },
   {
     icono: '🛏️', nombre: 'Dormitorio romántico', suelo: 'blanca', papel: 'corazones', cortina: 0xf3eee4, luz: 0xffb0c8,
-    muebles: [['alfombra', -2, -2, 0, 0], ['cama', -2, -6, 0, 0], ['mesita', -3, -6, 0, 1], ['lampara-mesa', -3, -6, 0], ['mesita', 1, -6, 0, 1], ['rosas', 1, -6, 0], ['puff-corazon', 2, 0, 0], ['espejo', -6, -1, 1], ['peluche', 3, -6, 0], ['cojin-corazon', -5, 1, 0]],
-    mascotas: [['conejo', 0.4, 1.3]]
+    muebles: [['alfombra', -2, -2, 0, 0], ['cama', -2, -6, 0, 0], ['mesita', -3, -6, 0, 1], ['lampara-mesa', -3, -6, 0], ['mesita', 1, -6, 0, 1], ['rosas', 1, -6, 0], ['comoda', 3, -6, 0, 0], ['peluche', 3, -6, 0], ['lampara-corazon', 4, -6, 0], ['puff-corazon', 2, 0, 0], ['espejo', -6, -1, 1], ['planta', -6, -6, 0], ['cama-mascota', 3, 3, 0, 1], ['cojin-corazon', -5, 2, 0], ['lampara', -6, 4, 0, 1]],
+    mascotas: [['conejo', 0.4, 1.3], ['gato', -1.4, 1.8]]
   },
   {
     icono: '🍳', nombre: 'Cocina', suelo: 'ajedrez', papel: 'vichy', cortina: 0xd9a63a,
-    muebles: [['nevera', -6, -6, 0, 1], ['cocina', -4, -6, 0, 0], ['lavadora', -2, -6, 0, 2], ['huerto', 2, -6, 0], ['planta', 4, -6, 0], ['mesa', 0, -1, 0, 1], ['silla', -1, -1, 1, 1], ['silla', 2, 0, 3, 1], ['radio', 0, -1, 0]],
-    mascotas: [['hamster', -1.2, 1.4], ['pato', 1.8, 1.6]]
+    muebles: [['nevera', -6, -6, 0, 1], ['cocina', -4, -6, 0, 0], ['lavadora', -2, -6, 0, 2], ['huerto', 2, -6, 0], ['planta', 4, -6, 0], ['mesa', 0, -1, 0, 1], ['lampara-mesa', 1, -1, 0], ['silla', -1, -1, 1, 1], ['silla', 2, 0, 3, 1], ['radio', 0, -1, 0], ['lampara', 5, -3, 0, 4], ['comedero', 3, 3, 0], ['planta', -6, 3, 0], ['robot', -3, 2, 0], ['cactus', 5, 4, 0]],
+    mascotas: [['hamster', -1.2, 1.4], ['pato', 1.8, 1.6], ['cobaya', 0.2, 2.2]]
   },
   {
     icono: '🎮', nombre: 'Rincón gamer', suelo: 'ceniza', papel: 'estrellas', led: 0xa070ff,
-    muebles: [['alfombra', -2, -2, 0, 1], ['arcade', -6, -6, 0], ['escritorio', -2, -6, 0, 2], ['ordenador', -2, -6, 0], ['silla', -1, -4, 2, 2], ['comoda', 2, -6, 0, 2], ['lampara-lava', 2, -6, 0], ['puff', 2, -1, 0, 3], ['tele', -6, -2, 1, 0], ['cactus', 4, -6, 0]],
+    muebles: [['alfombra', -2, -2, 0, 1], ['arcade', -6, -6, 0], ['escritorio', -2, -6, 0, 2], ['ordenador', -2, -6, 0], ['silla', -1, -4, 2, 2], ['comoda', 2, -6, 0, 2], ['lampara-lava', 2, -6, 0], ['peluche', 3, -6, 0], ['puff', 2, -1, 0, 3], ['tele', -6, -2, 1, 0], ['cactus', 5, -6, 0], ['puff-corazon', 3, 2, 0], ['pelota', 0, 3, 0], ['planta', 5, 5, 0], ['rascador', -5, 3, 0], ['lampara', -6, 1, 0, 3]],
     mascotas: [['gato', 0.6, 0.4], ['dragon', -1.6, 1.4]]
   },
   {
     icono: '🌳', nombre: 'Jardín', exterior: true,
-    muebles: [['piscina-hinchable', 0, -5, 0, 0], ['tumbona', -5, -5, 0, 0], ['tumbona', -4, -5, 0, 1], ['sombrilla', -3, -6, 0, 0], ['mesa-picnic', -5, 0, 0], ['barbacoa', 3, -6, 0], ['cerezo', -2, 3, 0], ['maceta-grande', 4, 2, 0], ['maceta-grande', -6, 4, 0]],
-    mascotas: [['perro', 1.4, 1.6], ['pato', -1.5, 0.3], ['tortuga', 2.2, 1.7]]
+    muebles: [['piscina-hinchable', 0, -5, 0, 0], ['tumbona', -5, -5, 0, 0], ['tumbona', -4, -5, 0, 1], ['sombrilla', -3, -6, 0, 0], ['mesa-picnic', -5, 0, 0], ['barbacoa', 3, -6, 0], ['cerezo', -2, 3, 0], ['maceta-grande', 4, 2, 0], ['maceta-grande', -6, 4, 0], ['farola', 5, -6, 0], ['farola', -6, -2, 0], ['farola', 2, 4, 0], ['fuente', 4, -1, 0], ['huerto', -1, 5, 0]],
+    mascotas: [['perro', 1.4, 1.6], ['pato', -1.5, 0.3], ['tortuga', 2.2, 1.7], ['zorro', 0.4, -0.6]]
   },
   {
     icono: '🏰', nombre: 'Salón de la mansión', suelo: 'marmol', papel: 'flores', cortina: 0x8a2b3a,
-    muebles: [['alfombra', -1, -4, 0, 3], ['chimenea', -1, -6, 0, 0], ['lampara', -3, -6, 0, 2], ['piano', -6, -2, 1], ['sillon-huevo', 2, -3, 0, 0], ['acuario', 3, -6, 0], ['planta', 5, -6, 0], ['lampara', 5, 0, 0, 2], ['globo', -1, -6, 0]],
-    mascotas: [['zorro', 0.4, 0.4], ['pinguino', 2, 1.6]]
+    muebles: [['alfombra', -1, -4, 0, 3], ['chimenea', -1, -6, 0, 0], ['lampara', -3, -6, 0, 2], ['piano', -6, -2, 1], ['sillon-huevo', 2, -3, 0, 0], ['acuario', 3, -6, 0], ['planta', 5, -6, 0], ['lampara', 5, 0, 0, 2], ['globo', -1, -6, 0], ['sofa', -3, 3, 2, 3], ['mesita', -1, 1, 0, 1], ['lampara-mesa', -1, 1, 0], ['jarron', 4, 4, 0], ['rosas', 5, 4, 0], ['cama-mascota', 2, 2, 0, 2]],
+    mascotas: [['zorro', 0.4, 0.4], ['pinguino', 2, 1.6], ['loro', -2.2, 0.2]]
   },
   {
     icono: '🎄', nombre: 'Navidad en casa', suelo: 'nogal', papel: 'ladrillo', cortina: 0x8a2b3a, luz: 0xffc27a,
-    muebles: [['alfombra', -3, -3, 0, 0], ['arbol-navidad', -6, -6, 0], ['regalos', -4, -6, 0], ['sofa', -2, -6, 0, 3], ['muneco-nieve', 3, -6, 0], ['lampara', 2, -6, 0], ['planta', 4, -6, 0], ['cojin-corazon', 0, -2, 0]],
-    mascotas: [['perro', 0.2, -0.3], ['gato', -1.6, 1]]
+    muebles: [['alfombra', -3, -3, 0, 0], ['arbol-navidad', -6, -6, 0], ['regalos', -4, -6, 0], ['regalos', -6, -4, 0], ['sofa', -2, -6, 0, 3], ['muneco-nieve', 3, -6, 0], ['lampara', 2, -6, 0], ['planta', 4, -6, 0], ['cojin-corazon', 0, -2, 0], ['mesita', 4, 1, 0, 1], ['lampara-corazon', 4, 1, 0], ['cama-mascota', 1, 2, 0, 0], ['puff', -1, 3, 0, 0], ['estanteria', -6, 1, 1, 0], ['libros', -6, 1, 0]],
+    mascotas: [['perro', 0.2, -0.3], ['gato', -1.6, 1], ['conejo', 1.2, 1.4]]
   }
 ];
 
@@ -67,7 +67,7 @@ export function periodo() {
 const LUZ = {
   dia: { hemi: [0xfff4e6, 1.5], sol: [0xfff0dd, 1.7], cristal: [0xa9d4e8, 0x8fc3dd], interior: 0, led: 0.6 },
   tarde: { hemi: [0xffd9c0, 1.05], sol: [0xffa766, 1.5], cristal: [0xf4a28c, 0xd9785a], interior: 1.2, led: 1.4 },
-  noche: { hemi: [0x8a90d0, 0.55], sol: [0x9aa6ff, 0.3], cristal: [0x2c2d63, 0x1a1b40], interior: 2.4, led: 2.4 }
+  noche: { hemi: [0xa8b0e0, 1.0], sol: [0xaab4ff, 0.5], cristal: [0x2c2d63, 0x1a1b40], interior: 3.6, led: 2.6 }
 };
 
 export class Escaparate {
@@ -123,6 +123,7 @@ export class Escaparate {
 
   limpiar() {
     if (!this.grupo) return;
+    if (this.mas) for (const m of [...this.mas.lista]) this.mas.quitar(m);
     for (const m of [...this.gestor.muebles]) this.gestor.quitar(m);
     this.escena.remove(this.grupo);
     this.grupo.traverse(o => {
@@ -227,15 +228,17 @@ export class Escaparate {
         m.userData.aparece = 0.15 + k * 0.07;
       }
     });
+    this.mas = new GestorMascotas(g, this.gestor, { particula: () => {} });
+    this.mas.trastadas = false;
+    const personalidades = ['juguetona', 'carinosa', 'traviesa', 'juguetona'];
     this.mascotas = s.mascotas.map(([esp, x, z], k) => {
-      const p = crearModeloMascota(esp);
-      p.raiz.position.set(x, 0, z);
-      p.raiz.rotation.y = Math.atan2(4 - x, 4 - z) + (Math.random() - 0.5) * 0.8;
-      p.raiz.visible = false;
-      p.raiz.userData.aparece = 0.35 + k * 0.15;
-      p.raiz.userData.fase = Math.random() * 6;
-      g.add(p.raiz);
-      return p;
+      const m = this.mas.crear({ id: `esc${k}`, especie: esp, nombre: '', x, z, hambre: 90, felicidad: 95, energia: 90, nacida: Date.now() - 10 * 86400000, personalidad: personalidades[k % 4] });
+      m.angulo = Math.atan2(4 - x, 4 - z) + (Math.random() - 0.5) * 0.8;
+      m.objetivoAngulo = m.angulo;
+      m.tEstado = 0.4 + k * 0.5 + Math.random() * 0.5;
+      m.grupo.visible = false;
+      m.grupo.userData.aparece = 0.35 + k * 0.15;
+      return m;
     });
     this.hemi.color.setHex(L.hemi[0]);
     this.hemi.intensity = L.hemi[1];
@@ -258,7 +261,7 @@ export class Escaparate {
     const dt = Math.min(0.05, this.reloj.getDelta());
     this.t += dt;
     this.tSala += dt;
-    const DUR = 6.5;
+    const DUR = 7.5;
     if (this.fase === 'entra') {
       this.k = Math.min(1, this.tSala / 0.6);
       if (this.k >= 1) this.fase = 'quieta';
@@ -283,14 +286,10 @@ export class Escaparate {
       }
     }
     this.gestor.actualizar(dt);
-    for (const p of this.mascotas) {
-      const r = p.raiz;
-      if (!r.visible && this.tSala > r.userData.aparece) r.visible = true;
-      const f = this.t * 2.4 + r.userData.fase;
-      r.position.y = Math.abs(Math.sin(f * 2)) * 0.05;
-      if (p.cola) p.cola.rotation.y = Math.sin(f * 4) * 0.6;
-      if (p.cabeza) p.cabeza.rotation.y = Math.sin(f * 0.5) * 0.4;
+    for (const m of this.mascotas) {
+      if (!m.grupo.visible && this.tSala > m.grupo.userData.aparece) m.grupo.visible = true;
     }
+    if (this.mas) this.mas.actualizar(dt);
     const ang = Math.PI / 4 + Math.sin(this.t * 0.25) * 0.35;
     const d = 14;
     this.camara.position.set(Math.sin(ang) * d, 9.2, Math.cos(ang) * d);
