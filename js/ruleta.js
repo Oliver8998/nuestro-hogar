@@ -1,15 +1,15 @@
 import { CATALOGO, MATERIALES } from './catalogo.js';
 
-export const COSTE_TIRADA = 40;
+export const COSTE_TIRADA = 80;
 
 export const SEGMENTOS = [
-  { tipo: 'monedas', cantidad: 30, peso: 20, color: '#f7e2a0' },
+  { tipo: 'monedas', cantidad: 40, peso: 20, color: '#f7e2a0' },
   { tipo: 'item', rareza: 'raro', peso: 15, color: '#cfe0f7' },
   { tipo: 'ticket', cantidad: 1, peso: 12, color: '#f8d3da' },
   { tipo: 'item', rareza: 'comun', peso: 20, color: '#e6ebef' },
-  { tipo: 'monedas', cantidad: 100, peso: 8, color: '#f2d06b' },
+  { tipo: 'monedas', cantidad: 120, peso: 8, color: '#f2d06b' },
   { tipo: 'item', rareza: 'epico', peso: 7, color: '#e3d0f5' },
-  { tipo: 'monedas', cantidad: 15, peso: 15, color: '#faefcf' },
+  { tipo: 'monedas', cantidad: 20, peso: 15, color: '#faefcf' },
   { tipo: 'item', rareza: 'legendario', peso: 3, color: '#ffe0a3' }
 ];
 

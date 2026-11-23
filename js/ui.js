@@ -235,6 +235,7 @@ export class UI {
       if (info.paraMascota || info.categoria === 'mascotas') chips.push('<span class="chip">🐾 Para mascotas</span>');
       if (info.suelo) chips.push('<span class="chip">Va en el suelo</span>');
     }
+    if (info.usos > 1) chips.push(`<span class="chip">🔁 ${info.usos} usos</span>`);
     this.$('det-info').innerHTML = chips.join('') + (info.tipo === 'material' ? `<div>${info.pista}</div>` : '');
 
     const opciones = this.$('det-opciones');
@@ -515,7 +516,8 @@ export class UI {
       if (!info) continue;
       const ranura = document.createElement('div');
       ranura.className = 'ranura' + (info.rareza ? ` rareza-${info.rareza}` : '');
-      ranura.innerHTML = `${this.img(this.mini.item(item.id, item.color))}${item.cantidad > 1 ? `<span class="cuenta">${item.cantidad}</span>` : ''}`;
+      const usos = info.usos > 1 ? `<span class="usos">${item.usos ?? info.usos}/${info.usos}</span>` : '';
+      ranura.innerHTML = `${this.img(this.mini.item(item.id, item.color))}${item.cantidad > 1 ? `<span class="cuenta">${item.cantidad}</span>` : ''}${usos}`;
       ranura.addEventListener('pointerdown', e => this.tocarRanura(e, item, info, ranura));
       this.elInventario.appendChild(ranura);
     }

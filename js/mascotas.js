@@ -2,11 +2,11 @@ import * as THREE from 'three';
 import { liberar } from './modelos.js';
 
 export const ESPECIES = {
-  hamster: { nombre: 'Hámster', precio: 40, texto: 'Pequeñito y siempre comiendo', color: 0xe8b878, secundario: 0xfff3e0, orejas: 'redondas', cola: null, tam: 0.6, velocidad: 0.45 },
-  conejo: { nombre: 'Conejo', precio: 60, texto: 'Tranquilo y suave como una nube', color: 0xf2ede6, secundario: 0xf6c9d0, orejas: 'largas', cola: 'bola', tam: 0.85, velocidad: 0.6, salta: true },
-  pato: { nombre: 'Pato', precio: 70, texto: 'Un poco ruidoso, muy divertido', ave: true, color: 0xf7d84a, secundario: 0xf7d84a, pico: 0xf08c2a, tam: 0.9, velocidad: 0.5 },
-  gato: { nombre: 'Gato', precio: 80, texto: 'Independiente y mimoso a ratos', color: 0xf0a860, secundario: 0xfff3e0, orejas: 'punta', cola: 'larga', tam: 1, velocidad: 0.7, gato: true },
-  perro: { nombre: 'Perro', precio: 120, texto: 'Leal, juguetón y siempre contento', color: 0xc9925a, secundario: 0xf5e6d0, orejas: 'caidas', cola: 'corta', tam: 1.15, velocidad: 0.85, perro: true },
+  hamster: { nombre: 'Hámster', precio: 120, texto: 'Pequeñito y siempre comiendo', color: 0xe8b878, secundario: 0xfff3e0, orejas: 'redondas', cola: null, tam: 0.6, velocidad: 0.45 },
+  conejo: { nombre: 'Conejo', precio: 180, texto: 'Tranquilo y suave como una nube', color: 0xf2ede6, secundario: 0xf6c9d0, orejas: 'largas', cola: 'bola', tam: 0.85, velocidad: 0.6, salta: true },
+  pato: { nombre: 'Pato', precio: 220, texto: 'Un poco ruidoso, muy divertido', ave: true, color: 0xf7d84a, secundario: 0xf7d84a, pico: 0xf08c2a, tam: 0.9, velocidad: 0.5 },
+  gato: { nombre: 'Gato', precio: 250, texto: 'Independiente y mimoso a ratos', color: 0xf0a860, secundario: 0xfff3e0, orejas: 'punta', cola: 'larga', tam: 1, velocidad: 0.7, gato: true },
+  perro: { nombre: 'Perro', precio: 350, texto: 'Leal, juguetón y siempre contento', color: 0xc9925a, secundario: 0xf5e6d0, orejas: 'caidas', cola: 'corta', tam: 1.15, velocidad: 0.85, perro: true },
   pinguino: { nombre: 'Pingüino', exclusivo: 'epico', texto: 'Elegante, aunque se resbala', ave: true, pinguino: true, color: 0x2b2b33, secundario: 0xffffff, pico: 0xf0a020, tam: 0.95, velocidad: 0.4 },
   zorro: { nombre: 'Zorrito', exclusivo: 'legendario', texto: 'Curioso y con una cola enorme', color: 0xe87a3a, secundario: 0xfff6ee, orejas: 'punta-grande', cola: 'esponjosa', tam: 1, velocidad: 0.8 }
 };

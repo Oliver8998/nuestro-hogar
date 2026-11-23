@@ -35,7 +35,7 @@ const inventario = new Inventario();
 const miniaturas = new Miniaturas(160);
 
 const estado = {
-  monedas: 300,
+  monedas: 250,
   tickets: 0,
   dia: null,
   gratis: true,
@@ -114,7 +114,7 @@ async function jugarMinijuego(d) {
     return;
   }
   if (d.limpia) return;
-  inventario.quitar(producto);
+  inventario.usar(producto, null, infoItem(producto).usos || 1);
   ui.pintarInventario(inventario);
   suciedad.eventos.particula('✨', d.grupo.position, 5);
   suciedad.limpiar(d, 'yo');
@@ -189,7 +189,7 @@ function cargar() {
     suciedad.anadir('telarana', { hueco: 0 }, false);
     return false;
   }
-  estado.monedas = datos.monedas ?? 300;
+  estado.monedas = datos.monedas ?? 250;
   estado.tickets = datos.tickets ?? 0;
   estado.dia = datos.dia ?? null;
   estado.gratis = datos.gratis ?? true;
@@ -232,11 +232,11 @@ function refrescarHud() {
       ui.dialogo({
         imagen: miniaturas.personaje('lola'), personaje: true,
         titulo: '¡Habitación reformada!',
-        texto: 'Ha quedado preciosa. Os habéis ganado un regalo: 150 monedas y 2 tickets.',
+        texto: 'Ha quedado preciosa. Os habéis ganado un regalo: 200 monedas y 2 tickets.',
         confeti: true,
         botones: [{ texto: '¡Gracias, Pilar!', tipo: 'primario' }]
       });
-      estado.monedas += 150;
+      estado.monedas += 200;
       estado.tickets += 2;
       refrescarHud();
       guardar();
@@ -405,7 +405,7 @@ function opcionesMascota(m) {
     {
       icono: '🍖', texto: comida ? `Comer ×${comida}` : 'Comer', accion: () => {
         if (!comida) return ofrecerCompra('pienso', `${m.nombre} tiene hambre`);
-        inventario.quitar('pienso');
+        inventario.usar('pienso', null, infoItem('pienso').usos);
         mascotas.alimentar(m);
         registrar('comer');
         sonido.mascota();
@@ -417,7 +417,7 @@ function opcionesMascota(m) {
     {
       icono: '🍬', texto: chuches ? `Premio ×${chuches}` : 'Premio', accion: () => {
         if (!chuches) return ofrecerCompra('chuches', `Sin chuches para ${m.nombre}`);
-        inventario.quitar('chuches');
+        inventario.usar('chuches', null, infoItem('chuches').usos);
         mascotas.premio(m);
         sonido.mascota();
         ui.pintarInventario(inventario);
@@ -614,7 +614,8 @@ const ui = new UI(miniaturas, {
       return;
     }
     if (r.ok) {
-      inventario.quitar(a.item.id, a.item.color);
+      if (a.info.tipo === 'material') inventario.usar(a.item.id, a.item.color, a.info.usos || 1);
+      else inventario.quitar(a.item.id, a.item.color);
       if (r.suciedad) {
         sonido.arreglo();
         ui.particula('✨', x, y, 5);
@@ -714,7 +715,7 @@ function tocarSuciedad(d) {
   const prod = infoItem(info.producto);
   const tiene = inventario.cantidad(info.producto);
   const pedido = entregas.cantidadPedida(info.producto);
-  const expres = Math.max(5, prod.precio * 3);
+  const expres = 40;
   const soluciones = {
     polvo: 'Un robot friegasuelos lo limpia solo. Robi, el robot de limpieza, también.',
     barro: 'Un robot friegasuelos lo limpia solo. Robi, el robot de limpieza, también.',
