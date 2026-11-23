@@ -8,7 +8,7 @@ export class CamaraIso {
     this.tamano = 10;
     this.camara = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100);
     this.camara.layers.enable(1);
-    this.altura = THREE.MathUtils.degToRad(45);
+    this.altura = THREE.MathUtils.degToRad(32);
     this.distancia = 20;
     this.zoomMin = 0.7;
     this.zoomMax = 3;
@@ -16,8 +16,8 @@ export class CamaraIso {
     this.anguloObj = ANGULO_INICIAL;
     this.zoomActual = 1;
     this.zoomObj = 1;
-    this.objetivo = new THREE.Vector3(0, 0, 0.3);
-    this.objetivoObj = new THREE.Vector3(0, 0, 0.3);
+    this.objetivo = new THREE.Vector3(0, 0.3, 0.3);
+    this.objetivoObj = new THREE.Vector3(0, 0.3, 0.3);
     this.inercia = 0;
     this.agarrada = false;
     this.anchoVista = this.tamano;
@@ -69,7 +69,7 @@ export class CamaraIso {
     const vueltas = Math.round((this.anguloObj - ANGULO_INICIAL) / (Math.PI * 2));
     this.anguloObj = ANGULO_INICIAL + vueltas * Math.PI * 2;
     this.zoomObj = 1;
-    this.objetivoObj.set(0, 0, 0.3);
+    this.objetivoObj.set(0, 0.3, 0.3);
     this.inercia = 0;
   }
 
