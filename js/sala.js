@@ -512,5 +512,5 @@ export function crearSala(escena) {
     }
   }
 
-  return { actualizarParedes, actualizar, buscar, tocar, puedeAplicar, aplicar, resaltar, estado, restaurar, progreso };
+  return { visibles: () => paredes.map(p => p.visible), actualizarParedes, actualizar, buscar, tocar, puedeAplicar, aplicar, resaltar, estado, restaurar, progreso };
 }

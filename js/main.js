@@ -11,6 +11,9 @@ import { infoItem, precioVenta, RAREZAS } from './catalogo.js';
 import { elegirSegmento, resolverPremio, COSTE_TIRADA, PIEZAS_PREMIO } from './ruleta.js';
 import { sonido } from './sonido.js';
 import { Entregas } from './entregas.js';
+import { Suciedad, TIPOS as TIPOS_SUCIEDAD, construirJardin } from './suciedad.js';
+import { HISTORIA, EVENTOS, puntuacion, nuevasDiarias, infoDiaria, textoPremio } from './misiones.js';
+import { poolDe } from './ruleta.js';
 
 const CLAVE = 'hogar-estado';
 const NOMBRES = ['Michi', 'Coco', 'Luna', 'Toby', 'Nube', 'Canela', 'Pipo', 'Kiwi', 'Lola', 'Bimba', 'Churro', 'Galleta', 'Mochi', 'Rufo', 'Trufa', 'Pelusa'];
@@ -33,7 +36,12 @@ const estado = {
   tickets: 0,
   dia: null,
   gratis: true,
-  bienvenida: false
+  bienvenida: false,
+  jardin: false,
+  limpiadoraHasta: 0,
+  diarias: null,
+  historia: 0,
+  evento: null
 };
 
 let mascotaSel = null;
@@ -59,6 +67,50 @@ const entregas = new Entregas(escena, {
   }
 });
 
+const suciedad = new Suciedad(escena, {
+  mascotas,
+  gestor,
+  eventos: {
+    particula(emoji, pos, n = 2) {
+      const p = pantalla(new THREE.Vector3(pos.x, (pos.y || 0) + 0.3, pos.z));
+      ui.particula(emoji, p.x, p.y, n);
+    },
+    alLimpiado(d, quien) {
+      if (quien === 'yo' || quien === 'expres') {
+        registrar('limpiar');
+        if (d.tipo === 'caca') registrar('limpiar-caca');
+      }
+      refrescarHud();
+      guardar();
+    },
+    alNuevaSuciedad(tipo, m) {
+      if (tipo === 'caca' && m) ui.aviso(`💩 ${m.nombre} ha hecho caca en el suelo`);
+      else if (tipo === 'bichos') ui.aviso('🐜 ¡Han entrado hormigas!');
+      refrescarHud();
+    },
+    alLlegaLimpiadora() {
+      sonido.pop();
+      ui.aviso('🧹 Ha llegado Sol a limpiar');
+    },
+    alVisitaLimpiadora() {
+      ui.aviso('✨ Sol ha dejado la casa reluciente');
+      guardar();
+    }
+  }
+});
+
+let jardinMalla = null;
+function ponerJardin() {
+  if (jardinMalla) return;
+  jardinMalla = construirJardin();
+  escena.add(jardinMalla);
+  suciedad.jardin = true;
+}
+
+function hayTrampa() {
+  return gestor.muebles.some(m => m.userData.def.trampa);
+}
+
 function tiempoEntrega(cantidad) {
   return Math.min(45, 20 + 4 * (cantidad - 1));
 }
@@ -74,6 +126,7 @@ function abrirPaquete(p) {
   ui.pintarInventario(inventario);
   ui.abrirInventario();
   ui.avisarInventarioNuevo();
+  registrar('paquete');
   guardar();
 }
 
@@ -92,6 +145,7 @@ function guardar() {
       sala: sala.estado(),
       mascotas: mascotas.serializar(),
       pedidos: entregas.serializar(),
+      suciedad: suciedad.serializar(),
       t: Date.now()
     }));
   } catch (e) {}
@@ -108,6 +162,9 @@ function cargar() {
     gestor.anadir('caja', 4, -4, 0);
     gestor.anadir('caja', 3, -3, 0);
     gestor.anadir('caja', 3, -4, 0, { base: 0.42 });
+    suciedad.anadir('polvo', null, false);
+    suciedad.anadir('polvo', null, false);
+    suciedad.anadir('telarana', { hueco: 0 }, false);
     return false;
   }
   estado.monedas = datos.monedas ?? 300;
@@ -115,6 +172,11 @@ function cargar() {
   estado.dia = datos.dia ?? null;
   estado.gratis = datos.gratis ?? true;
   estado.bienvenida = datos.bienvenida ?? true;
+  estado.jardin = datos.jardin ?? false;
+  estado.limpiadoraHasta = datos.limpiadoraHasta ?? 0;
+  estado.diarias = datos.diarias ?? null;
+  estado.historia = datos.historia ?? 0;
+  estado.evento = datos.evento ?? null;
   for (const m of datos.muebles || []) gestor.anadir(m.id, m.x0, m.z0, m.rot, m);
   inventario.cargar(datos.inventario);
   const antiguas = datos.reparaciones || [];
@@ -124,6 +186,9 @@ function cargar() {
   });
   mascotas.cargar(datos.mascotas, datos.t ? (Date.now() - datos.t) / 1000 : 0);
   entregas.cargar(datos.pedidos);
+  if (estado.jardin) ponerJardin();
+  suciedad.limpiadoraHasta = estado.limpiadoraHasta;
+  suciedad.cargar(datos.suciedad, datos.t ? (Date.now() - datos.t) / 1000 : 0, hayTrampa());
   return true;
 }
 
@@ -136,6 +201,8 @@ function refrescarHud() {
   ui.tiradaGratis(estado.gratis);
   const prog = sala.progreso();
   ui.casa(prog);
+  ui.limpieza(suciedad.limpieza());
+  ui.contadorMisiones(misionesListas());
   if (!terminada && prog.hechos >= prog.total) {
     terminada = true;
     setTimeout(() => {
@@ -164,7 +231,28 @@ function comprarDirecto(id, color = null, precio = null, cantidad = 1) {
     ui.aviso('No te llega el dinero', true);
     return false;
   }
+  if (info.servicio === 'jardin' && estado.jardin) {
+    ui.aviso('Ya tenéis jardín 🌳');
+    return false;
+  }
   estado.monedas -= coste;
+  if (info.servicio) {
+    if (info.servicio === 'limpiadora') {
+      estado.limpiadoraHasta = Math.max(Date.now(), estado.limpiadoraHasta) + 3 * 86400000;
+      suciedad.limpiadoraHasta = estado.limpiadoraHasta;
+      suciedad.tVisita = 2;
+      ui.aviso('🧹 Sol vendrá a limpiar durante 3 días');
+    } else if (info.servicio === 'jardin') {
+      estado.jardin = true;
+      ponerJardin();
+      ui.aviso('🌳 ¡Jardín instalado junto a la casa!');
+    }
+    sonido.premio();
+    refrescarHud();
+    guardar();
+    return true;
+  }
+  registrar('pedido');
   const segundos = tiempoEntrega(cantidad);
   entregas.pedir([{ id, color: info.tipo === 'mueble' && info.colores ? (color ?? 0) : null, cantidad }], segundos);
   sonido.comprar();
@@ -286,6 +374,7 @@ function opcionesMascota(m) {
     {
       icono: '💕', texto: 'Mimos', accion: () => {
         mascotas.acariciar(m);
+        registrar('mimos');
         sonido.mascota();
         guardar();
         refrescarMenu();
@@ -296,6 +385,7 @@ function opcionesMascota(m) {
         if (!comida) return ofrecerCompra('pienso', `${m.nombre} tiene hambre`);
         inventario.quitar('pienso');
         mascotas.alimentar(m);
+        registrar('comer');
         sonido.mascota();
         ui.pintarInventario(inventario);
         guardar();
@@ -320,6 +410,7 @@ function opcionesMascota(m) {
           return;
         }
         mascotas.jugar(m);
+        registrar('jugar');
         sonido.mascota();
         guardar();
         refrescarMenu();
@@ -422,6 +513,14 @@ const ui = new UI(miniaturas, {
   alPedirMascotas() {
     return mascotas.lista;
   },
+  alPedirMisiones() {
+    return datosMisiones();
+  },
+  alInfoLimpieza() {
+    const pct = suciedad.limpieza();
+    const n = suciedad.lista.length;
+    ui.aviso(n ? `🧹 Limpieza ${pct}% · ${n} cosa${n > 1 ? 's' : ''} por limpiar. ¡Tocadlas!` : '✨ ¡La casa está reluciente!');
+  },
   alAdoptar(especie) {
     adoptar(especie);
   },
@@ -437,6 +536,7 @@ const ui = new UI(miniaturas, {
       ui.aviso('No tenéis tickets ni monedas suficientes', true);
       return null;
     }
+    registrar('ruleta');
     const indice = elegirSegmento();
     const premio = resolverPremio(indice);
     if (premio.tipo === 'monedas') estado.monedas += premio.cantidad;
@@ -488,12 +588,17 @@ const ui = new UI(miniaturas, {
     const r = controles.soltarColocacion(x, y, cancelar);
     if (r.ok) {
       inventario.quitar(a.item.id, a.item.color);
-      if (a.info.tipo === 'material') {
+      if (r.suciedad) {
+        sonido.arreglo();
+        ui.particula('✨', x, y, 5);
+        ui.aviso('✨ ¡Limpio!');
+      } else if (a.info.tipo === 'material') {
         sonido.arreglo();
         ui.particula('✨', x, y, 6);
         ui.aviso(r.objetivo.tipo === 'pared' ? '🖌️ ¡Pared pintada!' : `✨ ${r.objetivo.d.mensaje}`);
       } else {
         sonido.colocar();
+        registrar('colocar');
       }
       guardar();
     } else if (r.motivo) {
@@ -534,6 +639,10 @@ controles = new Controles(canvas, camaraIso, gestor, sala, mascotas, entregas, {
     if (error) sonido.error();
     ui.aviso(texto, error);
   },
+  alTocarSuciedad(d) {
+    sonido.pop();
+    tocarSuciedad(d);
+  },
   alTocarDesperfecto(obj) {
     sonido.pop();
     if (obj.tipo === 'pared') {
@@ -571,6 +680,228 @@ controles = new Controles(canvas, camaraIso, gestor, sala, mascotas, entregas, {
     });
   }
 });
+
+
+function tocarSuciedad(d) {
+  const info = TIPOS_SUCIEDAD[d.tipo];
+  const prod = infoItem(info.producto);
+  const tiene = inventario.cantidad(info.producto);
+  const pedido = entregas.cantidadPedida(info.producto);
+  const expres = Math.max(5, prod.precio * 3);
+  const soluciones = {
+    polvo: 'Un robot friegasuelos lo limpia solo. Sol, la limpiadora, también.',
+    barro: 'Un robot friegasuelos lo limpia solo. Sol, la limpiadora, también.',
+    caca: 'Con un arenero (gatos, conejos y hámsters) o un jardín (perros, patos, pingüinos y zorros) no volverá a pasar.',
+    bichos: 'Una trampa para bichos los mantiene lejos para siempre.',
+    telarana: 'Sol, la limpiadora, también las quita.'
+  };
+  const botones = [];
+  if (tiene) {
+    botones.push({
+      texto: `Usar ${prod.nombre.toLowerCase()} (tenéis ${tiene})`, tipo: 'primario', accion: () => {
+        inventario.quitar(info.producto);
+        ui.pintarInventario(inventario);
+        sonido.arreglo();
+        suciedad.eventos.particula('✨', d.grupo.position, 4);
+        suciedad.limpiar(d, 'yo');
+      }
+    });
+  } else if (!pedido) {
+    botones.push({ texto: `Pedir ${prod.nombre.toLowerCase()} · 🪙 ${prod.precio}`, tipo: 'primario', desactivado: estado.monedas < prod.precio, accion: () => comprarDirecto(info.producto) });
+  }
+  botones.push({
+    texto: `⚡ Limpiar ya · 🪙 ${expres}`, tipo: 'rosa', desactivado: estado.monedas < expres, accion: () => {
+      estado.monedas -= expres;
+      sonido.arreglo();
+      suciedad.eventos.particula('✨', d.grupo.position, 4);
+      suciedad.limpiar(d, 'expres');
+    }
+  });
+  botones.push({ texto: 'Ahora no', tipo: 'secundario' });
+  ui.dialogo({
+    imagen: miniaturas.item(info.producto),
+    titulo: info.nombre,
+    texto: d.tipo === 'caca' ? info.descripcion + ' 💩' : info.descripcion,
+    html: `<div class="necesita${tiene || pedido ? ' tienes-ya' : ''}"><div><b>${tiene ? '✅' : pedido ? '🚚' : '🧽'} A mano: ${prod.nombre}</b>
+      <small>${tiene ? 'Arrastradlo encima o usadlo desde aquí.' : pedido ? 'Ya está pedido, llegará a la puerta.' : `Cuesta 🪙 ${prod.precio}.`}</small></div></div>
+      <div class="solucion">💡 ${soluciones[d.tipo]}</div>`,
+    botones,
+    columna: true
+  });
+}
+
+function contexto() {
+  const est = sala.estado();
+  return {
+    arreglado: id => est.arreglos.includes(id),
+    tieneMueble: id => gestor.muebles.some(m => m.userData.def.id === id),
+    paredesPintadas: () => est.paredes.filter(p => p !== null && p !== undefined).length,
+    numMascotas: () => mascotas.lista.length,
+    numMuebles: () => gestor.muebles.filter(m => m.userData.def.id !== 'colchon' && m.userData.def.id !== 'caja').length,
+    limpieza: () => suciedad.limpieza(),
+    reformaCompleta: () => sala.progreso().hechos >= sala.progreso().total,
+    reformaPct: () => sala.progreso().hechos / sala.progreso().total
+  };
+}
+
+function asegurarDiarias() {
+  const hoy = new Date().toDateString();
+  if (!estado.diarias || estado.diarias.dia !== hoy) {
+    estado.diarias = { dia: hoy, lista: nuevasDiarias(mascotas.lista.length > 0) };
+  }
+}
+
+function registrar(evento, n = 1) {
+  asegurarDiarias();
+  for (const d of estado.diarias.lista) {
+    const info = infoDiaria(d.id);
+    if (!info || info.evento !== evento || d.reclamada || d.progreso >= info.meta) continue;
+    d.progreso = Math.min(info.meta, d.progreso + n);
+    if (d.progreso >= info.meta) {
+      setTimeout(() => {
+        sonido.premio();
+        ui.aviso(`📋 ¡Misión cumplida: ${info.texto}!`);
+      }, 900);
+    }
+  }
+  ui.contadorMisiones(misionesListas());
+}
+
+function darPremio(premio) {
+  if (premio.monedas) estado.monedas = Math.max(0, estado.monedas + premio.monedas);
+  if (premio.tickets) estado.tickets += premio.tickets;
+  let item = null;
+  if (premio.item) {
+    const pool = poolDe(premio.item);
+    item = pool[Math.floor(Math.random() * pool.length)];
+    inventario.anadir(item, infoItem(item).colores ? 0 : null);
+    ui.pintarInventario(inventario);
+  }
+  refrescarHud();
+  guardar();
+  return item;
+}
+
+function misionesListas() {
+  asegurarDiarias();
+  let n = estado.diarias.lista.filter(d => !d.reclamada && d.progreso >= (infoDiaria(d.id)?.meta ?? 1)).length;
+  const h = HISTORIA[estado.historia];
+  if (h && h.check(contexto())) n++;
+  return n;
+}
+
+function restanteTexto(ms) {
+  const h = Math.max(0, Math.floor(ms / 3600000));
+  const d = Math.floor(h / 24);
+  if (d >= 1) return `${d} día${d > 1 ? 's' : ''} y ${h % 24} h`;
+  const m = Math.max(0, Math.floor(ms / 60000) % 60);
+  return `${h} h ${m} min`;
+}
+
+function iniciarEvento(idx, avisar) {
+  const ev = EVENTOS[idx % EVENTOS.length];
+  estado.evento = { idx: idx % EVENTOS.length, fin: Date.now() + ev.dias * 86400000 };
+  guardar();
+  if (avisar) {
+    ui.dialogo({
+      imagen: miniaturas.personaje(ev.personaje), personaje: true,
+      titulo: ev.titulo,
+      texto: ev.texto,
+      botones: [{ texto: '¡Nos ponemos a ello!', tipo: 'primario' }]
+    });
+  }
+}
+
+function dialogoAbierto() {
+  return document.getElementById('dialogo').classList.contains('abierto');
+}
+
+function comprobarEvento() {
+  if (!estado.bienvenida || dialogoAbierto()) return;
+  if (!estado.evento) {
+    iniciarEvento(0, true);
+    return;
+  }
+  if (Date.now() < estado.evento.fin) return;
+  const ev = EVENTOS[estado.evento.idx];
+  const { total } = puntuacion(ev, contexto());
+  const res = ev.resultados.find(r => total >= r.min);
+  const siguiente = estado.evento.idx + 1;
+  iniciarEvento(siguiente, false);
+  const item = darPremio(res.premio);
+  sonido.premio();
+  ui.dialogo({
+    imagen: miniaturas.personaje(ev.personaje), personaje: true,
+    etiqueta: { texto: `${total}/100`, color: total >= 80 ? '#6cc08a' : total >= 50 ? '#f2a03c' : '#e57373' },
+    titulo: res.titulo,
+    texto: res.texto + (item ? ` (${infoItem(item).nombre})` : ''),
+    confeti: total >= 80,
+    botones: [{
+      texto: 'Vale', tipo: 'primario', accion: () => setTimeout(() => {
+        const nuevo = EVENTOS[estado.evento.idx];
+        ui.dialogo({
+          imagen: miniaturas.personaje(nuevo.personaje), personaje: true,
+          titulo: nuevo.titulo, texto: nuevo.texto,
+          botones: [{ texto: '¡Nos ponemos a ello!', tipo: 'primario' }]
+        });
+      }, 400)
+    }]
+  });
+}
+
+function textoChipEvento() {
+  if (!estado.evento) return null;
+  const ev = EVENTOS[estado.evento.idx];
+  const dias = Math.ceil((estado.evento.fin - Date.now()) / 86400000);
+  return `${ev.id === 'mama' ? '👵' : '🎉'} ${ev.id === 'mama' ? 'Mamá' : 'Fiesta'} en ${dias} d`;
+}
+
+function datosMisiones() {
+  asegurarDiarias();
+  const c = contexto();
+  let evento = null;
+  if (estado.evento) {
+    const ev = EVENTOS[estado.evento.idx];
+    const p = puntuacion(ev, c);
+    evento = {
+      personaje: ev.personaje, titulo: ev.titulo, texto: ev.texto,
+      restante: `Faltan ${restanteTexto(estado.evento.fin - Date.now())}`,
+      puntos: p.total,
+      detalle: `Reforma ${Math.round(p.partes.reforma * 100)}% · Limpieza ${Math.round(p.partes.limpieza * 100)}% · Muebles ${c.numMuebles()}/${ev.objetivoMuebles}`
+    };
+  }
+  const iconos = { limpiar: '🧹', colocar: '🛋️', pedido: '📦', ruleta: '🎡', paquete: '🎁', mimos: '💕', comer: '🍖', jugar: '🎾', caca: '💩' };
+  const diarias = estado.diarias.lista.map(d => {
+    const info = infoDiaria(d.id);
+    const lista = d.progreso >= info.meta;
+    return {
+      icono: iconos[d.id] || '⭐', texto: info.texto, progreso: d.progreso, meta: info.meta,
+      premioTexto: textoPremio(info.premio),
+      estado: d.reclamada ? 'hecha' : lista ? 'lista' : 'curso',
+      accion: () => {
+        d.reclamada = true;
+        sonido.premio();
+        darPremio(info.premio);
+        ui.aviso(`🎉 ${textoPremio(info.premio)}`);
+      }
+    };
+  });
+  const h = HISTORIA[estado.historia];
+  const historia = h ? {
+    icono: '🏠', texto: `${estado.historia + 1}/${HISTORIA.length} · ${h.texto}`, progreso: 0, meta: 1,
+    premioTexto: textoPremio(h.premio),
+    estado: h.check(c) ? 'lista' : 'curso',
+    accion: () => {
+      estado.historia++;
+      sonido.premio();
+      darPremio(h.premio);
+      ui.aviso(`🎉 ${textoPremio(h.premio)}`);
+    }
+  } : null;
+  return { evento, diarias, historia };
+}
+
+controles.suciedad = suciedad;
 
 function redimensionar() {
   const w = window.innerWidth;
@@ -624,6 +955,7 @@ const reloj = new THREE.Clock();
 const puntoMenu = new THREE.Vector3();
 let tGuardado = 0;
 let tChip = 0;
+let tMisiones = 0;
 
 function colocarMenu(dt) {
   if (mascotaSel) {
@@ -660,6 +992,16 @@ renderer.setAnimationLoop(() => {
   gestor.actualizar(dt);
   mascotas.actualizar(dt);
   entregas.actualizar(dt);
+  suciedad.visibilidadParedes(sala.visibles());
+  suciedad.actualizar(dt, hayTrampa());
+  tMisiones += dt;
+  if (tMisiones > 1) {
+    tMisiones = 0;
+    comprobarEvento();
+    ui.limpieza(suciedad.limpieza());
+    ui.contadorMisiones(misionesListas());
+    ui.chipEvento(textoChipEvento());
+  }
   colocarMenu(dt);
   tChip += dt;
   if (tChip > 0.25) {

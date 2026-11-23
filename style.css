@@ -1593,3 +1593,160 @@ input {
 .boton-grande.verde:active {
   box-shadow: 0 1px 0 var(--verde-oscuro);
 }
+
+#pill-limpieza.sucio {
+  background: #fde7c4;
+}
+
+#pill-limpieza.muy-sucio {
+  background: #f8d0d0;
+}
+
+.misiones-cuerpo {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 14px 24px;
+  touch-action: pan-y;
+}
+
+.misiones-cuerpo .seccion-titulo {
+  padding: 14px 4px 8px;
+}
+
+.evento {
+  display: flex;
+  gap: 12px;
+  background: linear-gradient(130deg, #fff 40%, #f7e9fb);
+  border: 2px solid #e3d0f5;
+  border-radius: 22px;
+  padding: 12px;
+}
+
+.evento img {
+  width: 86px;
+  height: 86px;
+  flex-shrink: 0;
+}
+
+.evento h4 {
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.evento p {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6f5c4c;
+  margin: 4px 0 8px;
+  line-height: 1.3;
+}
+
+.cuenta-atras {
+  display: inline-block;
+  background: #a35ee0;
+  color: #fff;
+  font-weight: 900;
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 10px;
+}
+
+.puntos {
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.puntos .barra-stat {
+  height: 9px;
+  border-radius: 5px;
+  background: var(--borde);
+  overflow: hidden;
+  margin: 4px 0;
+}
+
+.puntos .barra-stat i {
+  display: block;
+  height: 100%;
+  border-radius: 5px;
+}
+
+.puntos small {
+  display: block;
+  color: var(--suave);
+  font-size: 11px;
+}
+
+.mision {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border-radius: 18px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 6px rgba(59, 47, 38, .06);
+}
+
+.mision.hecha {
+  opacity: .55;
+}
+
+.mision .icono-m {
+  font-size: 24px;
+}
+
+.mision .texto-m {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.mision .texto-m small {
+  display: block;
+  color: var(--suave);
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.mision .barra-stat {
+  height: 7px;
+  border-radius: 4px;
+  background: var(--borde);
+  overflow: hidden;
+  margin-top: 5px;
+}
+
+.mision .barra-stat i {
+  display: block;
+  height: 100%;
+  background: var(--verde);
+}
+
+.mision button {
+  border: none;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-weight: 900;
+  font-size: 12px;
+  background: var(--verde);
+  color: #fff;
+  box-shadow: 0 3px 0 var(--verde-oscuro);
+  animation: brinco 1.2s ease-in-out infinite;
+}
+
+.dialogo-botones.columna {
+  flex-direction: column;
+}
+
+.solucion {
+  width: 100%;
+  font-size: 12px;
+  font-weight: 700;
+  color: #6f5c4c;
+  background: #f6efe6;
+  border-radius: 14px;
+  padding: 8px 10px;
+  text-align: left;
+}

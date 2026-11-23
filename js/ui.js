@@ -9,6 +9,7 @@ const CATEGORIAS = [
   { id: 'muebles', nombre: 'Muebles', icono: '🛋️' },
   { id: 'deco', nombre: 'Deco', icono: '🪴' },
   { id: 'mascotas', nombre: 'Mascotas', icono: '🐾' },
+  { id: 'limpieza', nombre: 'Limpieza', icono: '🧹' },
   { id: 'reparar', nombre: 'Reparar', icono: '🧰' }
 ];
 
@@ -95,6 +96,9 @@ export class UI {
     $('btn-inventario').addEventListener('click', () => this.alternarInventario());
     $('cerrar-inv').addEventListener('click', () => this.cerrarInventario());
     $('chip-reparto').addEventListener('click', () => this.ev.alChipReparto());
+    $('btn-misiones').addEventListener('click', () => this.abrirMisiones());
+    $('pill-evento').addEventListener('click', () => this.abrirMisiones());
+    $('pill-limpieza').addEventListener('click', () => this.ev.alInfoLimpieza());
     this.inventarioAbierto = false;
     this.elInventario.addEventListener('scroll', () => this.actualizarScroll());
     window.addEventListener('resize', () => this.actualizarScroll());
@@ -553,6 +557,72 @@ export class UI {
     if (texto && chip.textContent !== texto) chip.textContent = texto;
   }
 
+  limpieza(pct) {
+    this.$('limpieza-valor').textContent = `${pct}%`;
+    const p = this.$('pill-limpieza');
+    p.classList.toggle('sucio', pct < 80 && pct >= 50);
+    p.classList.toggle('muy-sucio', pct < 50);
+  }
+
+  chipEvento(texto) {
+    const c = this.$('pill-evento');
+    c.classList.toggle('oculto', !texto);
+    if (texto && c.textContent !== texto) c.textContent = texto;
+  }
+
+  contadorMisiones(n) {
+    const b = this.$('btn-misiones').querySelector('.contador-mis');
+    b.textContent = n;
+    b.classList.toggle('oculto', !n);
+  }
+
+  abrirMisiones() {
+    this.pintarMisiones(this.ev.alPedirMisiones());
+    this.abrirHoja('misiones');
+  }
+
+  pintarMisiones(d) {
+    const ev = d.evento;
+    this.$('evento-tarjeta').innerHTML = ev ? `
+      <div class="evento">
+        ${this.img(this.mini.personaje(ev.personaje))}
+        <div>
+          <h4>${ev.titulo}</h4>
+          <p>${ev.texto}</p>
+          <span class="cuenta-atras">⏳ ${ev.restante}</span>
+          <div class="puntos">Cómo está la casa ahora: <b>${ev.puntos}/100</b>
+            <div class="barra-stat"><i style="width:${ev.puntos}%;background:${ev.puntos >= 80 ? '#6cc08a' : ev.puntos >= 50 ? '#f2a03c' : '#e57373'}"></i></div>
+            <small>${ev.detalle}</small>
+          </div>
+        </div>
+      </div>` : '';
+
+    const lista = this.$('lista-diarias');
+    lista.innerHTML = '';
+    for (const m of d.diarias) lista.appendChild(this.filaMision(m));
+    const h = this.$('historia-tarjeta');
+    h.innerHTML = '';
+    if (d.historia) h.appendChild(this.filaMision(d.historia));
+    else h.innerHTML = '<div class="vacio">¡Habéis completado toda la historia! 🏆</div>';
+  }
+
+  filaMision(m) {
+    const fila = document.createElement('div');
+    fila.className = 'mision' + (m.estado === 'hecha' ? ' hecha' : '');
+    fila.innerHTML = `
+      <span class="icono-m">${m.estado === 'hecha' ? '✅' : m.icono}</span>
+      <div class="texto-m">${m.texto}<small>${m.premioTexto}${m.meta > 1 ? ` · ${m.progreso}/${m.meta}` : ''}</small>
+        ${m.meta > 1 && m.estado === 'curso' ? `<div class="barra-stat"><i style="width:${Math.round(m.progreso / m.meta * 100)}%"></i></div>` : ''}
+      </div>
+      ${m.estado === 'lista' ? '<button>¡Recoger!</button>' : ''}`;
+    const b = fila.querySelector('button');
+    if (b) b.addEventListener('click', () => {
+      m.accion();
+      this.pintarMisiones(this.ev.alPedirMisiones());
+    });
+    return fila;
+  }
+
   avisarInventarioNuevo() {
     const c = this.$('btn-inventario').querySelector('.contador-inv');
     c.classList.remove('nuevo');
@@ -695,7 +765,7 @@ export class UI {
     }
   }
 
-  dialogo({ imagen = '', titulo = '', etiqueta = null, texto = '', html = '', botones = [{ texto: 'Vale', tipo: 'primario' }], confeti = false, personaje = false }) {
+  dialogo({ imagen = '', titulo = '', etiqueta = null, texto = '', html = '', botones = [{ texto: 'Vale', tipo: 'primario' }], confeti = false, personaje = false, columna = false }) {
     const caja = this.elDialogo.querySelector('.dialogo-caja');
     caja.innerHTML = `
       ${imagen ? `<div class="dialogo-imagen${personaje ? ' personaje' : ''}">${this.img(imagen)}</div>` : ''}
@@ -705,6 +775,7 @@ export class UI {
       ${html}
       <div class="dialogo-botones"></div>`;
     const fila = caja.querySelector('.dialogo-botones');
+    fila.classList.toggle('columna', columna);
     const cerrar = () => {
       this.elDialogo.classList.remove('abierto');
       setTimeout(() => {

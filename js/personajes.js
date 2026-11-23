@@ -14,7 +14,9 @@ function esfera(sx, sy, sz, color, x, y, z) {
 export const PERSONAJES = {
   lola: { piel: 0xf6d2b8, pelo: 0x7a4a2e, ropa: 0xf4b3be, delantal: 0x6cc08a, peinado: 'mono' },
   mateo: { piel: 0xe0b08f, pelo: 0x2f2a28, ropa: 0x9bb8d9, delantal: 0xffffff, peinado: 'corto', gafas: true },
-  sol: { piel: 0xf3c9a6, pelo: 0xe0a83a, ropa: 0xb39ddb, delantal: 0xf2d06b, peinado: 'coletas' }
+  sol: { piel: 0xf3c9a6, pelo: 0xe0a83a, ropa: 0xb39ddb, delantal: 0xf2d06b, peinado: 'coletas' },
+  mama: { piel: 0xf2cdb4, pelo: 0xb8b0a8, ropa: 0x8e6bbf, delantal: 0xe8dccb, peinado: 'mono', gafas: true },
+  amigos: { piel: 0xd9a27e, pelo: 0x3b2f26, ropa: 0x6cc08a, delantal: 0xf2d06b, peinado: 'corto' }
 };
 
 export function crearPersonaje(id) {

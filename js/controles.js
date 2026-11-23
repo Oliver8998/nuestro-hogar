@@ -9,6 +9,7 @@ export class Controles {
     this.mascotas = mascotas;
     this.entregas = entregas;
     this.paqueteTocado = null;
+    this.suciedad = null;
     this.eventos = eventos;
     this.punteros = new Map();
     this.modo = 'nada';
@@ -86,6 +87,16 @@ export class Controles {
       c.preview.visible = true;
       return c.preview.userData.tmp.valido ? 'ok' : 'mal';
     }
+    if (c.info.limpia && this.suciedad) {
+      const d = sobreBarra ? null : this.suciedad.buscar(this.rayo(x, y), c.info, this.gestor.muebles);
+      if (d) {
+        this.sala.resaltar(null);
+        const r = this.suciedad.puedeLimpiar(c.info, d);
+        this.suciedad.resaltar(d, r.ok);
+        return r.ok ? 'ok' : 'mal';
+      }
+      this.suciedad.resaltar(null);
+    }
     const obj = sobreBarra ? null : this.sala.buscar(this.rayo(x, y), c.info, this.gestor.muebles);
     if (!obj) {
       this.sala.resaltar(null);
@@ -116,7 +127,17 @@ export class Controles {
     }
 
     this.sala.resaltar(null);
+    if (this.suciedad) this.suciedad.resaltar(null);
     if (cancelar) return { ok: false };
+    if (c.info.limpia && this.suciedad) {
+      const d = this.suciedad.buscar(this.rayo(x, y), c.info, this.gestor.muebles);
+      if (d) {
+        const r = this.suciedad.puedeLimpiar(c.info, d);
+        if (!r.ok) return { ok: false, motivo: r.motivo };
+        this.suciedad.limpiar(d, 'yo');
+        return { ok: true, suciedad: d };
+      }
+    }
     const obj = this.sala.buscar(this.rayo(x, y), c.info, this.gestor.muebles);
     if (!obj) return { ok: false, motivo: c.info.pista };
     const r = this.sala.puedeAplicar(c.info, obj);
@@ -259,8 +280,12 @@ export class Controles {
           this.ultimoToque = { t: 0, x: 0, y: 0 };
         } else {
           this.ultimoToque = { t: ahora, x: e.clientX, y: e.clientY };
-          const obj = this.sala.tocar(this.rayo(e.clientX, e.clientY), this.gestor.muebles);
-          if (obj) this.eventos.alTocarDesperfecto(obj);
+          const sucio = this.suciedad && this.suciedad.tocar(this.rayo(e.clientX, e.clientY), this.gestor.muebles);
+          if (sucio) this.eventos.alTocarSuciedad(sucio);
+          else {
+            const obj = this.sala.tocar(this.rayo(e.clientX, e.clientY), this.gestor.muebles);
+            if (obj) this.eventos.alTocarDesperfecto(obj);
+          }
         }
       }
       this.modo = 'nada';

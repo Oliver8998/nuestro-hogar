@@ -32,6 +32,8 @@
       <div class="mini-barra"><div id="casa-relleno"></div></div>
     </div>
   </div>
+  <button id="pill-limpieza" class="pastilla reparto">🧹 <b id="limpieza-valor">100%</b></button>
+  <button id="pill-evento" class="pastilla reparto oculto"></button>
   <button id="chip-reparto" class="pastilla reparto oculto"></button>
   </div>
   <div class="hud-derecha">
@@ -43,6 +45,7 @@
 <div id="lateral">
   <button id="btn-tienda" class="lateral-btn"><span>🛒</span><small>Tienda</small></button>
   <button id="btn-inventario" class="lateral-btn"><span>🎒</span><small>Inventario</small><b class="insignia contador-inv oculto"></b></button>
+  <button id="btn-misiones" class="lateral-btn"><span>📋</span><small>Misiones</small><b class="insignia contador-inv contador-mis oculto"></b></button>
   <button id="btn-ruleta" class="lateral-btn"><span>🎡</span><small>Ruleta</small><b class="insignia oculto">¡Gratis!</b></button>
   <button id="btn-refugio" class="lateral-btn"><span>🐾</span><small>Adoptar</small></button>
   <button id="btn-sonido" class="lateral-btn mini"><span>🔊</span></button>
@@ -122,6 +125,21 @@
     <p class="ruleta-nota">Una tirada gratis cada día · también podéis ganar tickets</p>
     <div class="seccion-titulo">Solo se consiguen aquí</div>
     <div id="exclusivos"></div>
+  </div>
+</div>
+
+<div id="misiones" class="hoja">
+  <div class="asa"></div>
+  <div class="cabecera-simple">
+    <h2>Misiones</h2>
+    <div class="cabecera-acciones"><button class="cerrar">✕</button></div>
+  </div>
+  <div class="misiones-cuerpo">
+    <div id="evento-tarjeta"></div>
+    <div class="seccion-titulo">Misiones de hoy</div>
+    <div id="lista-diarias"></div>
+    <div class="seccion-titulo">Vuestra historia</div>
+    <div id="historia-tarjeta"></div>
   </div>
 </div>
 
