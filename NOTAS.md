@@ -311,3 +311,4 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - Noches más claras en el juego: tabla `LUZ` de ambiente.js subida y `ambiente.luzNocturna()` añade una luz cálida de techo de 20:00 a 7:00 (no con apagón).
 - Arreglo: un estilo `.moneda` del minijuego del cajero se aplicaba al contador de monedas de arriba (lo ponía como círculo dorado). Ahora solo afecta a `.tb-caja` / `.tb-bandeja`.
 - Tests: `t14.py <hora> <n>` (mascotas en casa, cuenta estados), `t15.py` (refugio), `t16.py <hora>` (salas del menú).
+- Pantalla de carga (23-nov 23:15): `#carga` en index.html (cielo según la hora, título, casita que bota, "Cargando…"/"Loading…") tapa el juego mientras se cargan los módulos y los modelos; main.js la quita con un fundido justo después de `inicio.mostrar()`. Si hay un error al cargar, dice "Algo ha fallado. Recarga la página".

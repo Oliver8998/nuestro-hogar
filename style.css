@@ -2900,3 +2900,15 @@ body.colgando #lateral, body.colgando #chips-vida, body.colgando #menu-objeto, b
 .adopta-nota { font-size: 12px; color: #a0806a; text-align: center; margin: 10px 0 0; font-weight: 700; }
 @keyframes adopta-entra { from { transform: translateY(14px) scale(.92); opacity: 0; } }
 @keyframes adopta-respira { 50% { transform: translateY(-3px) scale(1.03); } }
+
+#carga {
+  position: fixed; inset: 0; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  background: linear-gradient(180deg, #8ecdf0 0%, #bfe3f5 55%, #fbe3d2 100%); transition: opacity .5s;
+}
+#carga.tarde { background: linear-gradient(180deg, #6a7fc4 0%, #f49a6c 70%, #fbd2b0 100%); }
+#carga.noche { background: linear-gradient(180deg, #0b1430 0%, #1d2a55 60%, #3a3a6a 100%); }
+#carga.fuera { opacity: 0; pointer-events: none; }
+.carga-titulo { font-size: clamp(40px, 12vw, 58px); font-weight: 900; color: #fff; letter-spacing: -1px; text-shadow: 0 3px 0 #e58f9e, 0 5px 0 #c9707f, 0 10px 18px rgba(59,47,38,.25); font-family: 'Nunito', system-ui, sans-serif; }
+.carga-casa { font-size: 54px; animation: carga-bota 1s ease-in-out infinite; }
+.carga-texto { color: #fff; font-weight: 900; font-size: 15px; text-shadow: 0 2px 6px rgba(59,47,38,.35); font-family: 'Nunito', system-ui, sans-serif; }
+@keyframes carga-bota { 50% { transform: translateY(-12px) scale(1.06); } }

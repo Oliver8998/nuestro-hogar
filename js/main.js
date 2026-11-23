@@ -1782,6 +1782,12 @@ const inicio = new Inicio({
   }
 });
 inicio.mostrar();
+setTimeout(() => {
+  const carga = document.getElementById('carga');
+  if (!carga) return;
+  carga.classList.add('fuera');
+  setTimeout(() => carga.remove(), 600);
+}, 350);
 
 async function sincronizarFotos() {
   if (!sync.activo) return;

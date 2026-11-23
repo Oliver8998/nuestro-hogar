@@ -21,6 +21,21 @@
 </script>
 </head>
 <body>
+<div id="carga"><div class="carga-titulo">Our Place</div><div class="carga-casa">🏠</div><div class="carga-texto">Cargando…</div></div>
+<script>
+(function () {
+  var h = new Date().getHours();
+  var c = document.getElementById('carga');
+  if (h >= 21 || h < 7) c.classList.add('noche');
+  else if (h >= 19) c.classList.add('tarde');
+  var en = localStorage.getItem('hogar-idioma') === 'en' || (!localStorage.getItem('hogar-idioma') && !/^es/i.test(navigator.language || ''));
+  if (en) c.querySelector('.carga-texto').textContent = 'Loading…';
+  window.addEventListener('error', function () {
+    var t = c.querySelector('.carga-texto');
+    if (t) t.textContent = en ? 'Something went wrong. Reload the page' : 'Algo ha fallado. Recarga la página';
+  });
+})();
+</script>
 <canvas id="escena"></canvas>
 
 <div id="hud">
