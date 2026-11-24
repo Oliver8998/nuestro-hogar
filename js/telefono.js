@@ -126,13 +126,6 @@ function modeloTelefono() {
   return { raiz, cuerpo, auricular, campanilla };
 }
 
-const SITIOS = [
-  { pared: 0, x: -2.45 },
-  { pared: 2, x: -0.8 },
-  { pared: 3, x: -1.7 },
-  { pared: 1, x: 1.6 }
-];
-
 export class Telefono {
   constructor(escena, sala) {
     this.escena = escena;
@@ -174,6 +167,12 @@ export class Telefono {
     this.colocar();
   }
 
+  fijar(pared, x, y) {
+    this.fijo = { pared, x, y };
+    this.sitio = null;
+    this.colocar();
+  }
+
   colocar() {
     if (this.sala.esExterior()) {
       if (this.sitio !== 'poste') {
@@ -186,13 +185,12 @@ export class Telefono {
       return;
     }
     this.poste.visible = false;
-    const vis = this.sala.visibles();
-    const s = SITIOS.find(s => vis[s.pared]) || SITIOS[0];
-    if (this.sitio === s) return;
-    this.sala.paredes[s.pared].add(this.grupo);
-    this.grupo.position.set(s.x, 1.3, this.sala.cara);
+    const f = this.fijo || { pared: 0, x: -2.45, y: 1.3 };
+    if (this.sitio === f) return;
+    this.sala.paredes[f.pared].add(this.grupo);
+    this.grupo.position.set(f.x, f.y, this.sala.cara);
     this.grupo.rotation.set(0, 0, 0);
-    this.sitio = s;
+    this.sitio = f;
   }
 
   marcar(pendiente) {

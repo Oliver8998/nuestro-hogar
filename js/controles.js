@@ -215,6 +215,20 @@ export class Controles {
       if (this.capturaToque || distCuadro < Math.min(distMueble, distMascota)) {
         this.modo = 'rotar';
         this.cam.agarrar();
+        if (!this.capturaToque && this.eventos.mantenerPared) {
+          const x0 = e.clientX;
+          const y0 = e.clientY;
+          const id = e.pointerId;
+          this.esperar(() => {
+            const p = this.punteros.get(id);
+            if (this.modo !== 'rotar' || !p || Math.hypot(p.x - x0, p.y - y0) > 10) return;
+            if (this.eventos.mantenerPared(this.rayo(x0, y0))) {
+              this.vibrar();
+              this.cam.soltar(false);
+              this.modo = 'hecho';
+            }
+          });
+        }
         return;
       }
 

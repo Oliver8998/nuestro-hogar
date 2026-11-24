@@ -448,8 +448,7 @@ export class Casa2 {
     sala.ponerPapel(p ? this.tex('papel', p) : null);
     const marco = d.marco && MARCOS.find(x => x.id === d.marco && !x.grande);
     sala.ventana.children.slice(0, 5).forEach((o, i) => o.material.color.setHex(marco ? marco.color : this.coloresMarco[i]));
-    const grande = (d.ventana || d.marco === 'grande') && !fuera;
-    sala.ventana.scale.set(grande ? 1.3 : 1, grande ? 1.15 : 1, 1);
+    this.ventanaGrande = (d.ventana || d.marco === 'grande') && !fuera;
     this.ponerCortina(fuera ? null : d.cortina || null);
     this.led = !fuera && d.led ? LEDS.find(x => x.id === d.led) : null;
     for (const t of this.tiras) {
@@ -460,6 +459,7 @@ export class Casa2 {
     this.bombilla = d.bombilla ? BOMBILLAS.find(x => x.id === d.bombilla) : null;
     if (this.bombilla) this.luzBombilla.color.setHex(this.bombilla.color);
     this.ajustarLuces();
+    if (this.ctx.alAplicar) this.ctx.alAplicar();
   }
 
   ajustarLuces() {
@@ -536,6 +536,7 @@ export class Casa2 {
     const cuerpo = ui.abrirGen('Reformas', `
       <p class="gen-intro">${fuera ? 'Estáis fuera: aquí solo valen las bombillas. Entrad en una habitación para cambiar suelo, papel o ventana.' : `Cambiad el suelo, el papel, la ventana y las luces de <b>${hab}</b>. Lo que compréis se puede poner en todas las habitaciones.`}</p>
       <div class="reforma-tabs">${CATS.map(c => `<button data-cat="${c.id}" class="${c.id === cat ? 'activa' : ''}">${c.icono}<small>${c.nombre}</small></button>`).join('')}</div>
+      ${cat === 'marco' && !fuera ? '<button class="reforma-otra-ventana">➕ Añadir otra ventana · 🪙 200<small>Mantened pulsada una ventana para moverla o cambiarle el tamaño</small></button>' : ''}
       <div class="reforma-grid">
         <button class="reforma-item ${!this.actual()[cat] ? 'puesto' : ''}" data-id=""><span class="muestra-emoji">↩️</span><b>Original</b><small>${!this.actual()[cat] ? '✓ Puesto' : 'Quitar'}</small></button>
         ${info.lista.map(it => {
@@ -544,6 +545,8 @@ export class Casa2 {
           return `<button class="reforma-item ${puesto ? 'puesto' : ''}" data-id="${it.id}">${this.muestra(cat, it)}<b>${it.nombre}</b><small>${puesto ? '✓ Puesto' : tiene ? 'Poner' : `🪙 ${it.precio}`}</small></button>`;
         }).join('')}
       </div>`, () => this.ctx.abrirMas());
+    const otra = cuerpo.querySelector('.reforma-otra-ventana');
+    if (otra) otra.addEventListener('click', () => this.ctx.comprarVentana());
     cuerpo.querySelectorAll('.reforma-tabs button').forEach(b => b.addEventListener('click', () => this.abrirReformas(b.dataset.cat)));
     cuerpo.querySelectorAll('.reforma-item').forEach(b => b.addEventListener('click', () => {
       if (fuera && cat !== 'bombilla') {

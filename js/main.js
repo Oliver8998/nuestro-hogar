@@ -38,6 +38,7 @@ import { Guia } from './guia.js';
 import * as avisos from './avisos.js';
 import { Telefono } from './telefono.js';
 import { Interacciones } from './interacciones.js';
+import { ObjetosPared } from './paredObjs.js';
 
 let guia = null;
 import { CASAS, COLECCIONES, LOGROS, EXTERIORES, calcularAcogedor, coleccionesCompletas } from './progreso.js';
@@ -81,6 +82,7 @@ const estado = {
 let mascotaSel = null;
 let controles = null;
 let interacciones = null;
+let paredObjs = null;
 let mas = null;
 let arrastre = null;
 let tRefrescoMenu = 0;
@@ -937,14 +939,13 @@ const ui = new UI(miniaturas, {
 });
 
 controles = new Controles(canvas, camaraIso, gestor, sala, mascotas, entregas, {
-  distCuadro: r => Math.min(telefono.distancia(r), mas && !visitando ? mas.cuadros.distancia(r) : Infinity),
+  distCuadro: r => Math.min(paredObjs ? paredObjs.distancia(r) : Infinity, mas && !visitando ? mas.cuadros.distancia(r) : Infinity),
   tocarCuadro: r => {
-    if (!visitando && telefono.tocar(r)) {
-      abrirTelefono();
-      return true;
-    }
+    if (mas && mas.cuadros.colocando) return mas.cuadros.tocar(r);
+    if (paredObjs && paredObjs.tocar(r)) return true;
     return mas && !visitando ? mas.cuadros.tocar(r) : false;
   },
+  mantenerPared: r => !!(paredObjs && paredObjs.mantener(r)),
   alAbrirPaquete(p) {
     abrirPaquete(p);
   },
@@ -1945,6 +1946,21 @@ const economia = new Economia({
 });
 ui.ponerMercadillo(economia.esFinde());
 
+paredObjs = new ObjetosPared({
+  estado: () => estado, ui, sonido, sala, telefono, ambiente,
+  claveHab: () => `${nivelCasa()}-${estado.habActual || 0}`,
+  visitando: () => !!visitando,
+  controles: () => controles,
+  cuadros: () => mas.cuadros,
+  pantalla: v => pantalla(v),
+  abrirTelefono: () => abrirTelefono(),
+  ventanaGrande: () => !!(casa2 && casa2.ventanaGrande),
+  refrescarHud: () => refrescarHud(),
+  registrar: e => registrar(e),
+  guardar: () => guardar()
+});
+mas.ctx.paredObjs = paredObjs;
+
 casa2 = new Casa2({
   estado, ui, sonido, sala, gestor, juegos, inventario, miniaturas, escena, ambiente, mascotas,
   nivelCasa,
@@ -1959,7 +1975,9 @@ casa2 = new Casa2({
   recordar: (...a) => pareja.recordar(...a),
   ganar,
   chip: () => pintarChipsVida(),
-  abrirMas: () => mas.abrir()
+  abrirMas: () => mas.abrir(),
+  alAplicar: () => paredObjs && paredObjs.pintar(),
+  comprarVentana: () => paredObjs.comprarVentana()
 });
 
 mascotas2 = new Mascotas2({
@@ -2520,7 +2538,7 @@ function colocarMenu(dt) {
   ui.posicionarMenu(s.x, s.y);
 }
 
-if (new URLSearchParams(location.search).has('debug')) window.__h = { interacciones, controles, guia, telefono, entregas, trabajos, estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida };
+if (new URLSearchParams(location.search).has('debug')) window.__h = { THREE, sala, paredObjs, interacciones, controles, guia, telefono, entregas, trabajos, estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida };
 
 renderer.setAnimationLoop(() => {
   const dt = Math.min(reloj.getDelta(), 0.1);
@@ -2529,6 +2547,7 @@ renderer.setAnimationLoop(() => {
   sala.actualizar(dt);
   telefono.activo = !visitando;
   telefono.actualizar(dt);
+  if (paredObjs) paredObjs.actualizar(dt);
   ambiente.actualizar(dt);
   usos.actualizar(dt);
   sync.actualizar(dt);

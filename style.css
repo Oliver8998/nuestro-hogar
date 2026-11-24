@@ -2554,9 +2554,9 @@ body.de-fiesta { animation: fiesta-fondo 2s linear infinite; }
 .gen-cuerpo .album-botones .primario, .gen-cuerpo .album-botones .rosa { margin: 0; font-size: 14.5px; padding: 13px 6px; }
 .album-foto em { position: absolute; right: 4px; top: 4px; font-style: normal; font-size: 16px; background: rgba(255,255,255,.92); border-radius: 8px; padding: 0 4px; }
 body.colgando #lateral, body.colgando #chips-vida, body.colgando #menu-objeto, body.colgando #barra { display: none !important; }
-#colocar-cuadro { position: fixed; left: 10px; right: 10px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 40; background: rgba(255,250,244,.97); border-radius: 22px; box-shadow: var(--sombra); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
-#colocar-cuadro.oculto { display: none; }
-#colocar-cuadro > b { text-align: center; font-weight: 900; font-size: 15px; }
+#colocar-cuadro, #colocar-pared { position: fixed; left: 10px; right: 10px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 40; background: rgba(255,250,244,.97); border-radius: 22px; box-shadow: var(--sombra); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+#colocar-cuadro.oculto, #colocar-pared.oculto { display: none; }
+#colocar-cuadro > b, #colocar-pared > b { text-align: center; font-weight: 900; font-size: 15px; }
 .cc-fila { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 2px; }
 .cc-fila button { flex: 0 0 auto; border: none; background: #fff; border-radius: 12px; padding: 7px 10px; font: inherit; font-weight: 800; font-size: 12.5px; color: var(--texto); box-shadow: 0 2px 0 var(--borde); display: flex; align-items: center; gap: 5px; }
 .cc-fila button i { width: 14px; height: 14px; border-radius: 4px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.15); }
@@ -2971,3 +2971,5 @@ body.colgando #lateral, body.colgando #chips-vida, body.colgando #menu-objeto, b
 .bocadillo-obj { position: absolute; transform: translate(-50%, -100%); background: #fff; color: #4a3b35; font-weight: 800; font-size: 13px; padding: 6px 11px; border-radius: 14px; box-shadow: 0 4px 14px rgba(60,40,30,.18); white-space: nowrap; pointer-events: none; animation: bocadilloObj 2.2s ease forwards; }
 .bocadillo-obj::after { content: ''; position: absolute; left: 50%; bottom: -5px; width: 10px; height: 10px; background: #fff; transform: translateX(-50%) rotate(45deg); }
 @keyframes bocadilloObj { 0% { opacity: 0; transform: translate(-50%, -80%) scale(.6); } 12% { opacity: 1; transform: translate(-50%, -100%) scale(1.05); } 20% { transform: translate(-50%, -100%) scale(1); } 80% { opacity: 1; transform: translate(-50%, -112%); } 100% { opacity: 0; transform: translate(-50%, -125%); } }
+.reforma-otra-ventana { width: 100%; border: none; border-radius: 16px; background: var(--verde); color: #fff; font: inherit; font-weight: 900; font-size: 15px; padding: 11px 12px; margin: 4px 0 10px; box-shadow: 0 3px 0 var(--verde-oscuro); display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.reforma-otra-ventana small { font-size: 11.5px; font-weight: 700; opacity: .9; }

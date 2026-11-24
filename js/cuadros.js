@@ -284,12 +284,10 @@ export class Cuadros {
   }
 
   choca(c) {
-    const { sala } = this.ctx;
     const [w, h] = this.medidas(c);
-    if (c.pared === 0) {
-      const s = sala.ventana.scale;
-      return Math.abs(c.x - 1) < 0.66 * s.x + w / 2 && Math.abs(c.y - 1.5) < 0.7 * s.y + h / 2;
-    }
+    const b = (MARCOS[c.marco] ? MARCOS[c.marco].borde : 0.05) * 2;
+    const po = this.ctx.paredObjs;
+    if (po) return po.choca({ x: c.x, y: c.y, w: w + b, h: h + b }, c.pared, null, false);
     if (c.pared === 1) return Math.abs(c.x + 1) < 0.56 + w / 2 && c.y - h / 2 < 2.15;
     return false;
   }
@@ -310,7 +308,7 @@ export class Cuadros {
     this.ajustar(prueba);
     if (this.choca(prueba)) {
       sonido.error();
-      ui.aviso(i === 0 ? 'Ahí está la ventana' : 'Ahí está la puerta', true);
+      ui.aviso('Ahí choca con otra cosa de la pared', true);
       return;
     }
     Object.assign(c, { pared: i, x: +prueba.x.toFixed(3), y: +prueba.y.toFixed(3) });

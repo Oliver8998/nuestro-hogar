@@ -1,4 +1,4 @@
-const CACHE = 'hogar-v49';
+const CACHE = 'hogar-v50';
 const ARCHIVOS = [
   './',
   './index.html',
@@ -11,6 +11,7 @@ const ARCHIVOS = [
   './js/telefono.js',
   './js/interacciones.js',
   './js/mostrador.js',
+  './js/paredObjs.js',
   './js/modeloMascota.js',
   './js/avisos.js',
   './js/camara.js',
