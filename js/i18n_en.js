@@ -2371,5 +2371,10 @@ export default {
 "Un recibo de la luz":"An electricity bill",
 "Nada, que ya sabe que la quiero":"Nothing, they know I love them",
 "¡Tenéis toda la razón! Sois los mejores.":"You're absolutely right! You're the best.",
-"Pasaba a saludar. Tomad esto para la casa.":"Just dropping by. Here's something for the house."
+"Pasaba a saludar. Tomad esto para la casa.":"Just dropping by. Here's something for the house.",
+"Pis":"Pee",
+"Un charquito sospechoso… ¡alguien no ha aguantado!":"A suspicious little puddle… someone couldn't hold it!",
+"💦 {0} ha hecho pis en el suelo":"💦 {0} peed on the floor",
+"Se friega con la fregona. Con un arenero (gatos, conejos y koalas) o un jardín (perros y zorros) lo harán en su sitio. El robot friegasuelos también lo limpia.":"Clean it with the mop. With a litter box (cats, rabbits and koalas) or a garden (dogs and foxes) they'll go in the right place. The floor-cleaning robot also cleans it.",
+"Con un arenero (gatos, conejos y koalas) o un jardín (perros, pollitos, pingüinos y zorros) no volverá a pasar.":"With a litter box (cats, rabbits and koalas) or a garden (dogs, chicks, penguins and foxes) it won't happen again."
 };

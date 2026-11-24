@@ -411,7 +411,12 @@ function modeloKenney(e) {
   const mixer = new THREE.AnimationMixer(escena);
   const acciones = {};
   for (const clip of g.animations) acciones[clip.name] = mixer.clipAction(clip);
-  const partes = { raiz, cuerpoGrupo: cuerpo, patas: [], ojos: [], alas: [], orejas: [], cola: null, colaPunta: null, cabeza: null, boca: null, lengua: null, mixer, acciones, clip: null, kenney: true };
+  const nodos = {};
+  for (const n of ['wing-left', 'wing-right', 'tail', 'leg-back-left', 'leg-back-right', 'leg-front-left', 'leg-front-right', 'body']) {
+    const o = escena.getObjectByName(n);
+    if (o) nodos[n] = { obj: o, q0: o.quaternion.clone() };
+  }
+  const partes = { raiz, cuerpoGrupo: cuerpo, patas: [], ojos: [], alas: [], orejas: [], cola: null, colaPunta: null, cabeza: null, boca: null, lengua: null, mixer, acciones, clip: null, kenney: true, nodos };
   ponerClip(partes, 'idle', 0);
   mixer.update(0.01);
   raiz.scale.setScalar(e.tam * 1.5);

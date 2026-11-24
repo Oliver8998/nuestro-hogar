@@ -4,16 +4,16 @@ import { liberar } from './modelos.js';
 import { crearModeloMascota as crearModelo, ponerClip } from './modeloMascota.js';
 
 export const ESPECIES = {
-  conejo: { nombre: 'Conejo', kenney: 'animal-bunny', precio: 180, texto: 'Tranquilo y suave como una nube', color: 0xf2ede6, secundario: 0xf6c9d0, orejas: 'largas', cola: 'bola', tam: 0.85, velocidad: 0.6, salta: true, dientes: true, bigotes: true, pies: 0.12 },
-  pato: { nombre: 'Pollito', kenney: 'animal-chick', precio: 160, texto: 'Pequeñito, amarillo y muy curioso', ave: true, color: 0xf7d84a, secundario: 0xf7d84a, pico: 0xf08c2a, tam: 0.8, velocidad: 0.5 },
-  cerdito: { nombre: 'Cerdito', kenney: 'animal-pig', precio: 200, texto: 'Glotón, rosita y muy cariñoso', color: 0xf4a6b8, secundario: 0xf8c8d4, orejas: 'redondas', cola: 'corta', tam: 0.95, velocidad: 0.5 },
-  gato: { nombre: 'Gato', kenney: 'animal-cat', precio: 250, texto: 'Independiente y mimoso a ratos', color: 0xf0a860, secundario: 0xfff3e0, orejas: 'punta', cola: 'larga', tam: 1, velocidad: 0.7, gato: true, rayas: true, calcetines: 0xfff3e0 },
-  koala: { nombre: 'Koala', kenney: 'animal-koala', precio: 300, texto: 'Dormilón y abrazable', color: 0x9a9aa6, secundario: 0xe0e0e6, orejas: 'redondas', cola: null, tam: 0.95, velocidad: 0.4 },
-  perro: { nombre: 'Perro', kenney: 'animal-dog', precio: 350, texto: 'Leal, juguetón y siempre contento', color: 0xc9925a, secundario: 0xf5e6d0, orejas: 'caidas', cola: 'corta', tam: 1.15, velocidad: 0.85, perro: true, hocico: 'largo', parche: true },
-  loro: { nombre: 'Loro', kenney: 'animal-parrot', precio: 380, texto: 'Repite todo lo que oye por casa', ave: true, loro: true, color: 0x4caf50, secundario: 0xf2d06b, pico: 0x3d3d3d, tam: 0.85, velocidad: 0.5 },
-  pinguino: { nombre: 'Pingüino', kenney: 'animal-penguin', exclusivo: 'epico', texto: 'Elegante, aunque se resbala', ave: true, pinguino: true, color: 0x2b2b33, secundario: 0xffffff, pico: 0xf0a020, tam: 0.95, velocidad: 0.4 },
-  zorro: { nombre: 'Zorrito', kenney: 'animal-fox', exclusivo: 'legendario', texto: 'Curioso y con una cola enorme', color: 0xe87a3a, secundario: 0xfff6ee, orejas: 'punta-grande', cola: 'esponjosa', tam: 1, velocidad: 0.8, hocico: 'zorro', calcetines: 0x3b2a22, bigotes: true },
-  panda: { nombre: 'Panda', kenney: 'animal-panda', exclusivo: 'legendario', texto: 'Tranquilo, redondito y adorable', color: 0xf4f4f4, secundario: 0x2b2b33, orejas: 'redondas', cola: null, tam: 1.05, velocidad: 0.45 }
+  conejo: { nombre: 'Conejo', kenney: 'animal-bunny', precio: 180, texto: 'Tranquilo y suave como una nube', color: 0xf2ede6, secundario: 0xf6c9d0, orejas: 'largas', cola: 'bola', tam: 0.85, velocidad: 0.6, salta: true, dientes: true, bigotes: true, pies: 0.12, salto: 0.45 },
+  pato: { nombre: 'Pollito', kenney: 'animal-chick', precio: 160, texto: 'Pequeñito, amarillo y muy curioso', ave: true, color: 0xf7d84a, secundario: 0xf7d84a, pico: 0xf08c2a, tam: 0.8, velocidad: 0.5, salto: 0.5, aletea: true },
+  cerdito: { nombre: 'Cerdito', kenney: 'animal-pig', precio: 200, texto: 'Glotón, rosita y muy cariñoso', color: 0xf4a6b8, secundario: 0xf8c8d4, orejas: 'redondas', cola: 'corta', tam: 0.95, velocidad: 0.5, salto: 0.4 },
+  gato: { nombre: 'Gato', kenney: 'animal-cat', precio: 250, texto: 'Independiente y mimoso a ratos', color: 0xf0a860, secundario: 0xfff3e0, orejas: 'punta', cola: 'larga', tam: 1, velocidad: 0.7, gato: true, rayas: true, calcetines: 0xfff3e0, salto: 0.85 },
+  koala: { nombre: 'Koala', kenney: 'animal-koala', precio: 300, texto: 'Dormilón y abrazable', color: 0x9a9aa6, secundario: 0xe0e0e6, orejas: 'redondas', cola: null, tam: 0.95, velocidad: 0.4, salto: 0.6 },
+  perro: { nombre: 'Perro', kenney: 'animal-dog', precio: 350, texto: 'Leal, juguetón y siempre contento', color: 0xc9925a, secundario: 0xf5e6d0, orejas: 'caidas', cola: 'corta', tam: 1.15, velocidad: 0.85, perro: true, hocico: 'largo', parche: true, salto: 0.55, levantaPata: true },
+  loro: { nombre: 'Loro', kenney: 'animal-parrot', precio: 380, texto: 'Repite todo lo que oye por casa', ave: true, loro: true, color: 0x4caf50, secundario: 0xf2d06b, pico: 0x3d3d3d, tam: 0.85, velocidad: 0.5, salto: 1.9, vuela: true },
+  pinguino: { nombre: 'Pingüino', kenney: 'animal-penguin', exclusivo: 'epico', texto: 'Elegante, aunque se resbala', ave: true, pinguino: true, color: 0x2b2b33, secundario: 0xffffff, pico: 0xf0a020, tam: 0.95, velocidad: 0.4, salto: 0 },
+  zorro: { nombre: 'Zorrito', kenney: 'animal-fox', exclusivo: 'legendario', texto: 'Curioso y con una cola enorme', color: 0xe87a3a, secundario: 0xfff6ee, orejas: 'punta-grande', cola: 'esponjosa', tam: 1, velocidad: 0.8, hocico: 'zorro', calcetines: 0x3b2a22, bigotes: true, salto: 0.62, levantaPata: true },
+  panda: { nombre: 'Panda', kenney: 'animal-panda', exclusivo: 'legendario', texto: 'Tranquilo, redondito y adorable', color: 0xf4f4f4, secundario: 0x2b2b33, orejas: 'redondas', cola: null, tam: 1.05, velocidad: 0.45, salto: 0.5 }
 };
 
 export const ESPECIE_ANTIGUA = { hamster: 'conejo', cobaya: 'cerdito', tortuga: 'koala', dragon: 'panda' };
@@ -21,6 +21,13 @@ export const ESPECIE_ANTIGUA = { hamster: 'conejo', cobaya: 'cerdito', tortuga: 
 for (const e of Object.values(ESPECIES)) if (typeof e.precio === 'number') e.precio = caro(e.precio);
 
 const CELDA = 0.5;
+const SUBIBLE = { sofa: 0.5, cama: 0.55, puff: 0.375, 'puff-corazon': 0.42, mesita: 0.5, caja: 0.42, comoda: 0.8, escritorio: 0.75, mesa: 0.755, tumbona: 0.3, 'sillon-huevo': 0.62, lavadora: 0.85, rascador: 0.9, estanteria: 1.6, nevera: 1.8, piano: 1.08, 'mesa-picnic': 0.75 };
+const CON_RESPALDO = new Set(['sofa', 'cama', 'sillon-huevo']);
+const QUIETO_ENCIMA = ['sentado', 'tumbado', 'mirar', 'acicalarse', 'bostezo', 'mirar'];
+const Q = new THREE.Quaternion();
+const EJES = { x: new THREE.Vector3(1, 0, 0), y: new THREE.Vector3(0, 1, 0), z: new THREE.Vector3(0, 0, 1) };
+const giroNodo = (n, eje, a) => { if (n && a) n.obj.quaternion.multiply(Q.setFromAxisAngle(EJES[eje], a)); };
+const curva = x => x * x * (3 - 2 * x);
 let NX = 12;
 let NZ = 12;
 
@@ -319,6 +326,8 @@ export class GestorMascotas {
       m.felicidad = Math.max(15, m.felicidad - horas * 3);
       m.energia = Math.min(100, m.energia + horas * 20);
       this.anadir(m);
+      usarRejilla(this.muebles);
+      this.soltar(m);
     }
   }
 
@@ -361,6 +370,14 @@ export class GestorMascotas {
   }
 
   ir(m, destino, alLlegar, estadoAndar = 'andar') {
+    if (m.estado === 'saltar' && m.salto) {
+      m.salto.despues = () => this.ir(m, destino, alLlegar, estadoAndar);
+      return true;
+    }
+    if (m.encima) {
+      if (this.bajar(m, () => this.ir(m, destino, alLlegar, estadoAndar))) return true;
+      this.soltar(m);
+    }
     const bloqueadas = this.bloqueadas();
     const ruta = camino(bloqueadas, celdaDe(m.grupo.position.x, m.grupo.position.z), destino);
     if (!ruta) return false;
@@ -398,12 +415,169 @@ export class GestorMascotas {
   }
 
   accion(m, estado, dur, extra = {}) {
+    if (m.estado === 'saltar' && m.salto) {
+      m.salto.despues = () => this.accion(m, estado, dur, extra);
+      return true;
+    }
+    m.alAcabar = null;
     m.ruta = [];
     m.alLlegar = null;
     m.estado = estado;
     m.tEstado = dur;
     m.dur = dur;
     Object.assign(m, extra);
+    return true;
+  }
+
+
+  ocupadaEncima(mueble, i, j, m) {
+    const tapan = this.muebles.muebles.some(o => {
+      const d = o.userData;
+      if (o === mueble || d.base < 0.01 || d.def.suelo) return false;
+      const [w, f] = this.muebles.medidas(d.def, d.rot);
+      return i >= d.x0 && i < d.x0 + w && j >= d.z0 && j < d.z0 + f;
+    });
+    if (tapan) return true;
+    return this.lista.some(o => o !== m && o.encima && o.encima.mueble === mueble && o.encima.i === i && o.encima.j === j);
+  }
+
+  superficie(m, mueble) {
+    const d = mueble.userData;
+    const alto = SUBIBLE[d.def.id];
+    if (alto === undefined || d.base > 0.01 || d.datos && d.datos.tirado) return null;
+    const [w, f] = this.muebles.medidas(d.def, d.rot);
+    const celdas = [];
+    for (let i = d.x0; i < d.x0 + w; i++) {
+      for (let j = d.z0; j < d.z0 + f; j++) {
+        if (CON_RESPALDO.has(d.def.id) && (w > 1 || f > 1)) {
+          const atras = d.rot === 0 ? j === d.z0 : d.rot === 1 ? i === d.x0 : d.rot === 2 ? j === d.z0 + f - 1 : i === d.x0 + w - 1;
+          if (atras) continue;
+        }
+        if (!this.ocupadaEncima(mueble, i, j, m)) celdas.push([i, j]);
+      }
+    }
+    if (!celdas.length) return null;
+    const [i, j] = celdas[Math.floor(Math.random() * celdas.length)];
+    const p = new THREE.Vector3((i + 0.5) * CELDA, alto, (j + 0.5) * CELDA);
+    return { p, i, j, alto };
+  }
+
+  candidatosSubir(m, min = 0) {
+    const max = m.e.salto || 0;
+    return this.muebles.muebles.filter(x => {
+      const a = SUBIBLE[x.userData.def.id];
+      return a !== undefined && a <= max && a >= min && x.userData.base < 0.01 && !(m.encima && m.encima.mueble === x);
+    });
+  }
+
+  saltarA(m, destino, alFin, op = {}) {
+    const de = m.grupo.position.clone();
+    de.y = m.alturaBase || 0;
+    const dist = Math.hypot(destino.x - de.x, destino.z - de.z);
+    const volar = !!op.volar;
+    const dur = op.dur ?? (volar ? 0.9 + dist / 1.4 : 0.55 + Math.abs(destino.y - de.y) * 0.25);
+    const arco = op.arco ?? (volar ? 0.35 + Math.min(0.5, dist * 0.08) : 0.22 + Math.max(0, destino.y - de.y) * 0.35);
+    m.ruta = [];
+    m.alLlegar = null;
+    m.estado = 'saltar';
+    m.salto = { de, a: destino.clone(), t: 0, dur, arco, volar, alFin, despues: null };
+    m.objetivoAngulo = Math.atan2(destino.x - de.x, destino.z - de.z);
+    return true;
+  }
+
+  soltar(m) {
+    m.encima = null;
+    const [i, j] = celdaDe(m.grupo.position.x, m.grupo.position.z);
+    if (this.bloqueadas().has(i * NZ + j)) {
+      const c = this.celdaLibreAlAzar(this.bloqueadas());
+      if (c) m.grupo.position.copy(centroCelda(c[0], c[1]));
+    }
+  }
+
+  subirA(m, mueble, alSubir) {
+    const celda = this.celdaJunto(mueble);
+    if (!celda) return false;
+    return this.ir(m, celda, () => {
+      if (!this.muebles.muebles.includes(mueble)) return;
+      const sup = this.superficie(m, mueble);
+      if (!sup) return;
+      this.accion(m, 'agacharse', 0.35, {
+        alAcabar: () => this.saltarA(m, sup.p, () => {
+          m.encima = { mueble, i: sup.i, j: sup.j, alto: sup.alto, x0: mueble.userData.x0, z0: mueble.userData.z0, hasta: m.t + 8 + Math.random() * 14 };
+          if (alSubir) alSubir();
+          else this.accion(m, Math.random() < 0.5 ? 'sentado' : 'mirar', 2 + Math.random() * 2, { mirarA: (Math.random() - 0.5) * 2 });
+        })
+      });
+    }, Math.random() < 0.3 ? 'correr' : 'andar');
+  }
+
+  subirAlgo(m) {
+    const opciones = this.candidatosSubir(m);
+    if (!opciones.length) return false;
+    const mueble = opciones[Math.floor(Math.random() * opciones.length)];
+    if (!this.superficie(m, mueble)) return false;
+    return this.subirA(m, mueble);
+  }
+
+  volarAlgo(m) {
+    const altos = this.candidatosSubir(m, 0.5).filter(x => this.superficie(m, x));
+    if (altos.length && Math.random() < 0.75) {
+      const mueble = altos[Math.floor(Math.random() * altos.length)];
+      const sup = this.superficie(m, mueble);
+      this.eventos.particula('🪶', m);
+      return this.accion(m, 'aletear', 0.5, {
+        alAcabar: () => this.saltarA(m, sup.p, () => {
+          m.encima = { mueble, i: sup.i, j: sup.j, alto: sup.alto, x0: mueble.userData.x0, z0: mueble.userData.z0, hasta: m.t + 10 + Math.random() * 20 };
+          this.accion(m, 'mirar', 2.5, { mirarA: (Math.random() - 0.5) * 2 });
+        }, { volar: true })
+      });
+    }
+    const c = this.celdaLibreAlAzar(this.bloqueadas());
+    if (!c) return false;
+    const destino = centroCelda(c[0], c[1]);
+    if (m.grupo.position.distanceTo(destino) < 1.2) return false;
+    return this.accion(m, 'aletear', 0.4, {
+      alAcabar: () => this.saltarA(m, destino, () => {
+        this.soltar(m);
+        this.accion(m, 'aletear', 0.8);
+      }, { volar: true, arco: 0.9 })
+    });
+  }
+
+  bajar(m, alFin) {
+    const e = m.encima;
+    if (!e) return false;
+    const vuela = m.e.vuela;
+    let destino = null;
+    if (this.muebles.muebles.includes(e.mueble)) {
+      const c = this.celdaJunto(e.mueble);
+      if (c) destino = centroCelda(c[0], c[1]);
+    }
+    if (!destino) {
+      const c = this.celdaLibreAlAzar(this.bloqueadas());
+      if (!c) return false;
+      destino = centroCelda(c[0], c[1]);
+    }
+    destino.y = 0;
+    m.encima = null;
+    return this.saltarA(m, destino, () => {
+      if (alFin) alFin();
+      else this.accion(m, 'quieto', 0.6);
+    }, { volar: vuela, dur: vuela ? undefined : 0.45 + (m.alturaBase || 0) * 0.3, arco: vuela ? 0.3 : 0.15 });
+  }
+
+  necesidad(m, tipo, alFin, junto = null) {
+    if (['dormir', 'sofa', 'saltar', 'truco', 'caca', 'pis'].includes(m.estado)) return false;
+    const hacer = () => {
+      this.accion(m, tipo, tipo === 'caca' ? 2.6 : 2.4, { alAcabar: () => { if (alFin) alFin(); }, objetivoMirar: junto ? junto.position.clone() : null });
+      this.eventos.particula(tipo === 'caca' ? '😣' : '💦', m);
+    };
+    if (junto) {
+      const c = this.celdaJunto(junto);
+      if (c && this.ir(m, c, hacer)) return true;
+    }
+    if (m.encima) return this.bajar(m, hacer);
+    hacer();
     return true;
   }
 
@@ -456,6 +630,27 @@ export class GestorMascotas {
   }
 
   decidir(m) {
+    if (m.encima) {
+      const e = m.encima;
+      const d = e.mueble.userData;
+      if (!this.muebles.muebles.includes(e.mueble) || d.x0 !== e.x0 || d.z0 !== e.z0) {
+        this.soltar(m);
+      } else {
+        const cama = ['sofa', 'cama', 'sillon-huevo', 'puff', 'puff-corazon'].includes(d.def.id);
+        if (m.energia < 25 && cama) { this.dormir(m, null); return; }
+        if (m.t > e.hasta || m.energia < 25 || Math.random() < 0.12) {
+          if (m.e.vuela && Math.random() < 0.5 && this.volarAlgo(m)) return;
+          if (this.bajar(m)) return;
+          this.soltar(m);
+        } else {
+          const est = QUIETO_ENCIMA[Math.floor(Math.random() * QUIETO_ENCIMA.length)];
+          if (est === 'acicalarse' && !(m.e.gato || m.e.ave || m.e.orejas === 'largas' || m.e.hocico === 'zorro')) this.accion(m, 'tumbado', 4 + Math.random() * 4);
+          else if (m.e.vuela && Math.random() < 0.25) this.accion(m, 'aletear', 1.2);
+          else this.accion(m, est, 2.5 + Math.random() * 3.5, { mirarA: (Math.random() - 0.5) * 2.2, objetivoMirar: null });
+          return;
+        }
+      }
+    }
     if (m.paseo && this.siguePaseo(m)) return;
     if (m.energia < 25) {
       const cama = this.buscarMueble(d => d.camaMascota || (d.id === 'caseta' && m.e.perro));
@@ -501,6 +696,8 @@ export class GestorMascotas {
         return this.accion(m, 'aletear', 1.6);
       }],
       [e.salta || e.mofletes ? 0.07 : 0, () => this.accion(m, 'saltito', 1.1)],
+      [e.vuela ? 0.16 : 0, () => this.volarAlgo(m)],
+      [!e.vuela && (e.salto || 0) > 0.3 ? (e.gato ? 0.16 : pers === 'traviesa' || pers === 'juguetona' ? 0.09 : 0.06) : 0, () => this.subirAlgo(m)],
       [0.1, () => this.accion(m, 'mirar', 1.5 + Math.random() * 2.5, { mirarA: (Math.random() - 0.5) * 2.2, objetivoMirar: null })]
     ];
     let total = opciones.reduce((a, o) => a + o[0], 0);
@@ -522,6 +719,7 @@ export class GestorMascotas {
   dormir(m, cama) {
     m.estado = 'dormir';
     m.tEstado = 8;
+    m.alAcabar = null;
     m.alturaCama = cama && cama.userData.def.camaMascota ? 0.14 : 0;
   }
 
@@ -677,8 +875,43 @@ export class GestorMascotas {
     const patasObj = [0, 0, 0, 0];
     const k = m.dur ? 1 - Math.max(0, m.tEstado) / m.dur : 0;
     const sn = Math.sin(Math.min(1, k) * Math.PI);
+    let pataPis = 0;
+    let colaArriba = 0;
+    let vuelo = false;
 
-    if (m.estado === 'andar' || m.estado === 'correr') {
+    if (m.estado !== 'saltar' && !m.encima && (m.alturaBase || 0) > 0.001) m.alturaBase = Math.max(0, m.alturaBase - dt * 3);
+    if (m.estado === 'saltar' && m.salto) {
+      const S = m.salto;
+      S.t += dt;
+      const u = Math.min(1, S.t / S.dur);
+      const ue = S.volar ? curva(u) : u;
+      pos.x = S.de.x + (S.a.x - S.de.x) * ue;
+      pos.z = S.de.z + (S.a.z - S.de.z) * ue;
+      m.alturaBase = S.de.y + (S.a.y - S.de.y) * (S.volar ? curva(u) : u) + Math.sin(u * Math.PI) * S.arco;
+      const sube = Math.cos(u * Math.PI);
+      if (S.volar) {
+        vuelo = true;
+        alas = 1.8;
+        c.rotation.x = 0.25 - sube * 0.15;
+        objCab.x = -0.15;
+        colaAmp = 0.1;
+      } else {
+        c.rotation.x = -sube * 0.45;
+        c.scale.set(1 - Math.sin(u * Math.PI) * 0.05, 1 + Math.sin(u * Math.PI) * 0.12, 1);
+        for (let i = 0; i < 4; i++) patasObj[i] = (i < 2 ? -0.9 : 0.9) * Math.sin(u * Math.PI);
+        if (m.e.aletea || m.e.ave) alas = 1.5;
+        colaAmp = 0.1;
+      }
+      if (u >= 1) {
+        m.alturaBase = S.a.y;
+        m.salto = null;
+        m.estado = 'quieto';
+        m.tEstado = 0.4;
+        if (!S.volar && S.a.y < 0.01) m.aterriza = 0.25;
+        if (S.alFin) S.alFin();
+        if (S.despues) S.despues();
+      }
+    } else if (m.estado === 'andar' || m.estado === 'correr') {
       const objetivo = m.ruta[0];
       if (!objetivo) {
         m.estado = 'quieto';
@@ -705,7 +938,34 @@ export class GestorMascotas {
     } else {
       m.tEstado -= dt;
       const est = m.estado;
-      if (est === 'dormir') {
+      if (est === 'agacharse') {
+        const e2 = Math.min(1, (m.dur - m.tEstado) * 6);
+        c.scale.set(1.06, 1 - 0.16 * e2, 1.06);
+        c.position.y = -0.02 * e2;
+        c.rotation.x = 0.12 * e2;
+        objCab.x = -0.25 * e2;
+        colaAmp = 0.6;
+        colaVel = 14;
+      } else if (est === 'caca' || est === 'pis') {
+        const e2 = Math.min(1, (m.dur - m.tEstado) * 4, m.tEstado * 4);
+        const pata = est === 'pis' && m.e.levantaPata;
+        if (pata && m.objetivoMirar) m.objetivoAngulo = Math.atan2(-(m.objetivoMirar.z - pos.z), m.objetivoMirar.x - pos.x);
+        if (pata) {
+          c.rotation.z = 0.2 * e2;
+          pataPis = e2;
+          patasObj[3] = -1.2 * e2;
+        } else {
+          c.rotation.x = -(est === 'caca' ? 0.34 : 0.22) * e2;
+          c.position.y = -0.035 * e2;
+          c.position.x = Math.sin(m.t * 45) * (est === 'caca' ? 0.007 : 0.004) * e2;
+          patasObj[2] = patasObj[3] = 0.7 * e2;
+        }
+        colaArriba = e2;
+        colaAmp = 0.05;
+        objCab.x = -0.15 * e2;
+        objCab.y = Math.sin(m.t * 1.5) * 0.4;
+        ojosCerrados = est === 'caca' && e2 > 0.6 && Math.sin(m.t * 3) > -0.3;
+      } else if (est === 'dormir') {
         c.scale.set(1.06, 0.8, 1.04);
         c.rotation.z = m.e.ave ? 0 : 0.18;
         objCab.x = 0.35;
@@ -860,7 +1120,12 @@ export class GestorMascotas {
         }
         objCab.y = m.mirarIdle || 0;
       }
-      if (m.tEstado <= 0 && m.estado !== 'dormir') this.decidir(m);
+      if (m.tEstado <= 0 && m.estado !== 'dormir') {
+        const fin = m.alAcabar;
+        m.alAcabar = null;
+        if (fin) fin();
+        if (m.tEstado <= 0 && m.estado !== 'saltar' && m.estado !== 'andar' && m.estado !== 'correr') this.decidir(m);
+      }
     }
 
     if (m.objetivoAngulo !== undefined) {
@@ -895,6 +1160,11 @@ export class GestorMascotas {
         pata.rotation.x += (patasObj[i] - pata.rotation.x) * Math.min(1, dt * 8);
       });
       c.scale.y *= 1 + Math.sin(m.t * 2.5) * 0.015;
+      if (m.aterriza > 0) {
+        m.aterriza -= dt;
+        const a = Math.sin(Math.max(0, m.aterriza) / 0.25 * Math.PI);
+        c.scale.set(c.scale.x * (1 + a * 0.08), c.scale.y * (1 - a * 0.14), c.scale.z * (1 + a * 0.08));
+      }
     }
 
     if (cab) {
@@ -934,8 +1204,21 @@ export class GestorMascotas {
       else if (est === 'saludo') clip = 'gesture-positive';
       else if (est === 'feliz' || est === 'jugar' || est === 'vueltas' || est === 'cola' || est === 'truco' || est === 'saltito' || est === 'aletear') clip = 'dance';
       else if (est === 'dormir' || est === 'sofa' || est === 'tumbado') clip = 'static';
+      if (est === 'saltar' || est === 'caca' || est === 'pis' || est === 'agacharse') clip = vuelo ? 'idle' : 'static';
       ponerClip(p, clip);
+      const n = p.nodos || {};
+      for (const k in n) n[k].obj.quaternion.copy(n[k].q0);
       p.mixer.update(dt);
+      if (alas) {
+        const a = (0.35 + Math.sin(m.t * (vuelo ? 26 : 20)) * 0.55) * Math.min(1.2, alas);
+        giroNodo(n['wing-left'], 'z', a);
+        giroNodo(n['wing-right'], 'z', -a);
+      }
+      if (n.tail) {
+        giroNodo(n.tail, 'y', Math.sin(m.t * colaVel) * colaAmp * 0.9);
+        giroNodo(n.tail, 'x', -0.7 * colaArriba);
+      }
+      if (pataPis) giroNodo(n['leg-back-left'], 'z', 1.1 * pataPis);
     }
     if (p.boca) {
       const sy = 1 + bocaAbierta * 3;
@@ -948,6 +1231,6 @@ export class GestorMascotas {
       ala.rotation.z = base + (alas ? s * Math.sin(m.t * 22) * 0.5 * alas : 0) + (andando && m.e.pinguino ? s * Math.sin((m.fasePaso || 0)) * 0.3 : 0);
     });
     if (ojosCerrados || (Math.sin(m.t * 0.9 + m.id.length) > 0.996)) for (const o of p.ojos) o.scale.y = o.userData.sy * 0.12;
-    pos.y = alturaSalto + (m.estado === 'dormir' ? (m.alturaCama || 0) : m.estado === 'sofa' ? (m.alturaSofa || 0) : 0);
+    pos.y = alturaSalto + Math.max(m.alturaBase || 0, m.estado === 'dormir' ? (m.alturaCama || 0) : 0, m.estado === 'sofa' ? (m.alturaSofa || 0) : 0);
   }
 }

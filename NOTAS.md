@@ -491,3 +491,25 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - main.js: mientras se ve el menú de inicio (`enMenu()`), el bucle del juego no renderiza (antes había dos escenas 3D a la vez). Solo sigue la sincronización.
 - CSS: quitado `filter: drop-shadow` del canvas, que era carísimo en móvil. Ahora la sombra es un degradado debajo (`.esc-lienzo::before`).
 - Medido en pruebas: la mediana de fotograma pasó de 167 a 83 ms y el pico de 350 a 150 ms (en el renderizado por software de las pruebas, que es mucho más lento que un móvil).
+
+## Mascotas: subirse a muebles, volar, caca y pis (v78)
+- `mascotas.js`:
+  - Cada especie tiene `salto`, la altura máxima a la que sube: gato 0,85, zorro 0,62, koala 0,6, perro 0,55, pollito 0,5 (aletea), panda 0,5, conejo 0,45, cerdito 0,4, pingüino 0. El loro tiene `vuela` y llega a 1,9.
+  - `SUBIBLE` da la altura de la superficie de cada mueble (sofá 0,5, cama 0,55, puff, mesita, cómoda, mesa, estantería 1,6, nevera 1,8…). En sofá, cama y sillón huevo no se usa la fila del respaldo. Tampoco las casillas tapadas por objetos encima ni las ocupadas por otra mascota (`superficie`).
+  - `subirA` / `subirAlgo`: va al lado, se agacha (`agacharse`) y salta en arco (`saltarA`: estado `saltar` con `m.salto`, y `m.alturaBase` marca la altura). Arriba guarda `m.encima` y solo se sienta, se tumba, mira, se acicala o bosteza. Si está cansada duerme allí (si es sofá, cama o puff). Al rato baja con `bajar`.
+  - `ir()` baja primero si la mascota está encima de algo y espera a que acabe un salto. `accion()` también espera al salto.
+  - Si quitan o mueven el mueble, la mascota se suelta (`soltar`) y cae.
+  - Al aterrizar en el suelo hace un pequeño aplastamiento.
+  - El loro (`volarAlgo`) vuela a muebles altos (75%) o da una vuelta y aterriza en otro sitio. Vuela en curva batiendo las alas, y desde arriba a veces vuela a otro mueble.
+  - Estados nuevos `caca` y `pis`. En caca se agacha temblando, con la cola arriba y los ojos apretados. En pis el perro y el zorro levantan la pata trasera junto a un mueble (`levantaPata`); los demás se agachan.
+  - `m.alAcabar` es un callback que se ejecuta al terminar una acción. `necesidad(m, tipo, alFin, junto)`.
+  - Kenney: `modeloMascota` guarda `partes.nodos` (alas, cola, patas, cuerpo con su quaternion de reposo). Tras el mixer se suman giros: las alas aletean, la cola se mueve y se levanta, y la pata se levanta para el pis.
+  - Al cargar, si una mascota queda dentro de un mueble, se mueve a una casilla libre.
+- `suciedad.js`:
+  - Tipo nuevo `pis`: charco amarillo brillante. Se limpia con la fregona (`limpiaTipo`; el minijuego es el del barro), con el robot o con Robi.
+  - `necesidad()` sustituye a la caca instantánea:
+    - Si tienen arenero, gatos, conejos y koalas van y lo hacen allí, sin ensuciar.
+    - Si hay jardín, perros, pollitos, pingüinos y zorros salen a hacerlo fuera.
+    - Si no, se hace la animación y aparece la caca o el charco detrás. El perro lo hace junto a una planta o un mueble.
+  - Temporizadores: `tCaca` cada 6–12 min y `tPis` cada 5–11 min (las aves no hacen pis). Si la mascota está ocupada se reintenta a los 15 s.
+- El escaparate del inicio también usa todo esto: el gato se sube al sofá y el loro vuela.

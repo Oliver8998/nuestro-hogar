@@ -140,6 +140,7 @@ const suciedad = new Suciedad(escena, {
     },
     alNuevaSuciedad(tipo, m) {
       if (tipo === 'caca' && m) ui.aviso(`💩 ${m.nombre} ha hecho caca en el suelo`);
+      else if (tipo === 'pis' && m) ui.aviso(`💦 ${m.nombre} ha hecho pis en el suelo`);
       else if (tipo === 'bichos') ui.aviso('🐜 ¡Han entrado hormigas!');
       refrescarHud();
     },
@@ -351,7 +352,7 @@ async function jugarMinijuego(d) {
   const producto = TIPOS_SUCIEDAD[d.tipo].producto;
   if (!inventario.cantidad(producto)) return;
   ui.cerrarInventario();
-  const ok = await minijuegos.jugar(d.tipo);
+  const ok = await minijuegos.jugar(d.tipo === 'pis' ? 'barro' : d.tipo);
   if (!ok) {
     ui.aviso('Lo dejáis para luego');
     return;
@@ -1124,7 +1125,8 @@ function tocarSuciedad(d) {
   const soluciones = {
     polvo: 'Un robot friegasuelos lo limpia solo. Robi, el robot de limpieza, también.',
     barro: 'Un robot friegasuelos lo limpia solo. Robi, el robot de limpieza, también.',
-    caca: 'Con un arenero (gatos, conejos y hámsters) o un jardín (perros, patos, pingüinos y zorros) no volverá a pasar.',
+    caca: 'Con un arenero (gatos, conejos y koalas) o un jardín (perros, pollitos, pingüinos y zorros) no volverá a pasar.',
+    pis: 'Se friega con la fregona. Con un arenero (gatos, conejos y koalas) o un jardín (perros y zorros) lo harán en su sitio. El robot friegasuelos también lo limpia.',
     bichos: 'Una trampa para bichos los mantiene lejos para siempre.',
     telarana: 'Robi, el robot de limpieza, también las quita.'
   };
@@ -2775,7 +2777,7 @@ function colocarMenu(dt) {
   ui.posicionarMenu(s.x, s.y);
 }
 
-if (new URLSearchParams(location.search).has('debug')) window.__h = { minijuegos, encargos, THREE, sala, paredObjs, interacciones, controles, guia, telefono, entregas, trabajos, estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida, experiencia, suciedad, vida, inmobiliaria: () => inmobiliaria, registrar, abrirObras, refrescarHud, inicio };
+if (new URLSearchParams(location.search).has('debug')) window.__h = { minijuegos, encargos, THREE, sala, paredObjs, interacciones, controles, guia, telefono, entregas, trabajos, estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida, experiencia, suciedad, vida, inmobiliaria: () => inmobiliaria, registrar, abrirObras, refrescarHud, inicio, camaraIso };
 
 renderer.setAnimationLoop(() => {
   const dt = Math.min(reloj.getDelta(), 0.1);

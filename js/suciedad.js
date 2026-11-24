@@ -7,10 +7,12 @@ export const TIPOS = {
   telarana: { nombre: 'Telaraña', producto: 'plumero', descripcion: 'Una araña se ha puesto muy cómoda en la esquina.', cada: 480, max: 4, peso: 8 },
   bichos: { nombre: 'Hormigas', producto: 'insecticida', descripcion: 'Una fila de hormigas buscando migas.', cada: 600, max: 2, peso: 12 },
   barro: { nombre: 'Mancha pegajosa', producto: 'limpiador', descripcion: 'Algo se ha derramado y el suelo se pega.', cada: 420, max: 3, peso: 10, robot: true },
-  caca: { nombre: 'Caca', producto: 'bolsitas', descripcion: 'Alguien no ha llegado a tiempo…', peso: 15 }
+  caca: { nombre: 'Caca', producto: 'bolsitas', descripcion: 'Alguien no ha llegado a tiempo…', peso: 15 },
+  pis: { nombre: 'Pis', producto: 'limpiador', descripcion: 'Un charquito sospechoso… ¡alguien no ha aguantado!', peso: 8, robot: true }
 };
 
 const AL_ARENERO = ['gato', 'conejo', 'koala'];
+const limpiaTipo = (material, tipo) => material.limpia === tipo || (material.limpia === 'barro' && tipo === 'pis');
 const AL_JARDIN = ['perro', 'pato', 'pinguino', 'zorro'];
 
 const HUECOS_TELARANA = [
@@ -62,6 +64,16 @@ function modelo(tipo) {
       g.add(c);
     }
     g.add(zona(new THREE.CylinderGeometry(0.32, 0.32, 0.12, 10)));
+  } else if (tipo === 'pis') {
+    const m = mat(0xf2d34b, { transparent: true, opacity: 0.55, roughness: 0.08, metalness: 0.1, depthWrite: false });
+    for (const [rx, rz, x, z] of [[0.2, 0.15, 0, 0], [0.11, 0.09, 0.16, 0.08], [0.08, 0.07, -0.15, 0.1], [0.05, 0.05, 0.06, -0.17]]) {
+      const c = new THREE.Mesh(new THREE.CircleGeometry(1, 20), m);
+      c.scale.set(rx, rz, 1);
+      c.rotation.x = -Math.PI / 2;
+      c.position.set(x, 0.005, z);
+      g.add(c);
+    }
+    g.add(zona(new THREE.CylinderGeometry(0.3, 0.3, 0.12, 10)));
   } else if (tipo === 'caca') {
     const m = mat(0x7a4a2a, { roughness: 0.4 });
     g.add(esfera(0.17, 0.08, 0.17, m, 0, 0.04, 0));
@@ -247,6 +259,7 @@ export class Suciedad {
       for (const m of this.mascotas.lista) {
         const n = Math.min(2, Math.floor(s / 1800));
         for (let k = 0; k < n; k++) this.hacerCaca(m, true);
+        if (n) this.hacerPis(m, true);
       }
     }
   }
@@ -292,7 +305,7 @@ export class Suciedad {
     if (material.limpia && material.limpia !== 'telarana') {
       const p = new THREE.Vector3();
       if (raycaster.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), p)) {
-        const cerca = this.lista.filter(x => x.tipo === material.limpia).sort((a, b) => Math.hypot(a.x - p.x, a.z - p.z) - Math.hypot(b.x - p.x, b.z - p.z))[0];
+        const cerca = this.lista.filter(x => limpiaTipo(material, x.tipo)).sort((a, b) => Math.hypot(a.x - p.x, a.z - p.z) - Math.hypot(b.x - p.x, b.z - p.z))[0];
         if (cerca && Math.hypot(cerca.x - p.x, cerca.z - p.z) < 0.45) return cerca;
       }
     }
@@ -300,7 +313,7 @@ export class Suciedad {
   }
 
   puedeLimpiar(material, d) {
-    if (material.limpia === d.tipo) return { ok: true };
+    if (limpiaTipo(material, d.tipo)) return { ok: true };
     return { ok: false, motivo: `Para ${TIPOS[d.tipo].nombre.toLowerCase()} hace falta otra cosa` };
   }
 
@@ -339,30 +352,54 @@ export class Suciedad {
   }
 
   hacerCaca(m, silencio = false) {
-    if (this.cuenta('caca') >= 6) return;
+    return this.necesidad(m, 'caca', silencio);
+  }
+
+  hacerPis(m, silencio = false) {
+    return this.necesidad(m, 'pis', silencio);
+  }
+
+  necesidad(m, tipo, silencio = false) {
+    if (this.cuenta(tipo) >= (tipo === 'caca' ? 6 : 4)) return true;
     const arenero = this.mascotas.buscarMueble(def => def.arenero);
+    if (silencio) {
+      if ((AL_ARENERO.includes(m.especie) && arenero) || (AL_JARDIN.includes(m.especie) && this.jardin) || (tipo === 'pis' && m.e.ave)) return true;
+      const pos = this.posicionLibre();
+      if (pos) this.anadir(tipo, pos, false);
+      return true;
+    }
     if (AL_ARENERO.includes(m.especie) && arenero) {
-      if (!silencio) {
-        this.mascotas.ir(m, this.mascotas.celdaDeMueble(arenero), () => {
-          m.estado = 'quieto';
-          m.tEstado = 2;
+      return this.mascotas.ir(m, this.mascotas.celdaDeMueble(arenero), () => {
+        this.mascotas.necesidad(m, tipo, () => {
           this.eventos.particula('✨', m.grupo.position);
+          this.mascotas.accion(m, 'rascar', 1.4, { objetivoMirar: arenero.position.clone() });
         });
-      }
-      return;
+      });
     }
     if (AL_JARDIN.includes(m.especie) && this.jardin) {
-      if (!silencio) this.eventos.particula('🌳', m.grupo.position);
-      return;
+      this.eventos.particula('🌳', m.grupo.position);
+      return true;
     }
-    const pos = silencio ? this.posicionLibre() : { x: m.grupo.position.x - Math.sin(m.angulo) * 0.25, z: m.grupo.position.z - Math.cos(m.angulo) * 0.25 };
-    if (!pos) return;
-    const mx = this.mascotas.muebles.lx * 0.5 - 0.2;
-    const mz = this.mascotas.muebles.lz * 0.5 - 0.2;
-    pos.x = THREE.MathUtils.clamp(pos.x, -mx, mx);
-    pos.z = THREE.MathUtils.clamp(pos.z, -mz, mz);
-    this.anadir('caca', pos, !silencio);
-    if (!silencio) this.eventos.alNuevaSuciedad('caca', m);
+    let junto = null;
+    if (tipo === 'pis' && m.e.levantaPata && Math.random() < 0.8) {
+      const opciones = this.gestor.muebles.filter(x => x.userData.base < 0.01 && !x.userData.def.suelo && !x.userData.def.paraMascota);
+      if (opciones.length) junto = opciones[Math.floor(Math.random() * opciones.length)];
+    }
+    return this.mascotas.necesidad(m, tipo, () => {
+      const atras = tipo === 'caca' ? 0.24 : m.e.levantaPata ? 0.02 : 0.16;
+      const lado = tipo === 'pis' && m.e.levantaPata ? 0.14 : 0;
+      const pos = {
+        x: m.grupo.position.x - Math.sin(m.angulo) * atras + Math.cos(m.angulo) * lado,
+        z: m.grupo.position.z - Math.cos(m.angulo) * atras - Math.sin(m.angulo) * lado
+      };
+      const mx = this.mascotas.muebles.lx * 0.5 - 0.2;
+      const mz = this.mascotas.muebles.lz * 0.5 - 0.2;
+      pos.x = THREE.MathUtils.clamp(pos.x, -mx, mx);
+      pos.z = THREE.MathUtils.clamp(pos.z, -mz, mz);
+      this.anadir(tipo, pos, true);
+      this.eventos.alNuevaSuciedad(tipo, m);
+      if (Math.random() < 0.5) this.mascotas.accion(m, 'feliz', 1.2);
+    }, junto);
   }
 
   sincronizar(lista) {
@@ -390,12 +427,12 @@ export class Suciedad {
 
     for (const m of this.genera === false ? [] : this.mascotas.lista) {
       if (m.tCaca === undefined) m.tCaca = 300 + Math.random() * 300;
+      if (m.tPis === undefined) m.tPis = 200 + Math.random() * 300;
       if (m.estado === 'dormir') continue;
       m.tCaca -= dt;
-      if (m.tCaca <= 0) {
-        m.tCaca = 360 + Math.random() * 360;
-        this.hacerCaca(m);
-      }
+      m.tPis -= dt;
+      if (m.tCaca <= 0) m.tCaca = this.hacerCaca(m) ? 360 + Math.random() * 360 : 15;
+      else if (m.tPis <= 0 && !m.e.ave) m.tPis = this.hacerPis(m) ? 280 + Math.random() * 360 : 15;
     }
 
     for (const obj of [...this.escena.children]) {
