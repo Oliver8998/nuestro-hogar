@@ -326,26 +326,39 @@ export class Vida {
     return cat ? cat.ofertas : [];
   }
 
+  cartasSinLeer() {
+    return ((this.estado.correo && this.estado.correo.lista) || []).filter(x => !x.leida);
+  }
+
+  iconoCarta(c) {
+    return c.tipo === 'postal' ? '🖼️' : c.tipo === 'catalogo' ? '📰' : '💌';
+  }
+
   abrirCorreo() {
-    const { ui, miniaturas } = this.ctx;
+    const { ui } = this.ctx;
     const lista = ((this.estado.correo && this.estado.correo.lista) || []).slice().reverse();
-    const cuerpo = ui.abrirGen('Buzón', lista.length ? `<div class="cartas">${lista.map(c => `<button class="carta-correo ${c.leida ? '' : 'nueva'}" data-id="${c.id}"><span>${c.tipo === 'postal' ? '🖼️' : c.tipo === 'catalogo' ? '📰' : '💌'}</span><div><b>${c.titulo}</b><small>De ${c.de} · ${new Date(c.t).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</small></div></button>`).join('')}</div>` : '<p class="vacio">El buzón está vacío. Mañana llegará algo.</p>', () => this.ctx.abrirMas());
+    const cuerpo = ui.abrirGen('📬 Cartas', lista.length ? `<div class="cartas">${lista.map(c => `<button class="carta-correo ${c.leida ? '' : 'nueva'}" data-id="${c.id}"><span>${this.iconoCarta(c)}</span><div><b>${c.titulo}</b><small>De ${c.de} · ${new Date(c.t).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</small></div></button>`).join('')}</div>` : '<p class="vacio">Todavía no ha llegado ninguna carta.</p>', this.ctx.abrirTelefono ? () => this.ctx.abrirTelefono() : null);
     cuerpo.querySelectorAll('.carta-correo').forEach(b => b.addEventListener('click', () => {
       const c = this.estado.correo.lista.find(x => x.id === b.dataset.id);
-      const primera = !c.leida;
-      c.leida = true;
-      if (primera && c.monedas) {
-        this.estado.monedas += c.monedas;
-        this.ctx.refrescarHud();
-      }
-      this.ctx.guardar();
-      this.ctx.chip();
-      ui.dialogo({
-        titulo: c.titulo,
-        html: `<div class="nota-papel"><b>De ${c.de}</b>${c.texto}${c.ofertas ? `<div class="ofertas-carta">${c.ofertas.map(id => `<img src="${miniaturas.item(id, 0)}" alt="">`).join('')}</div>` : ''}${c.monedas ? `<small>🪙 +${c.monedas} monedas</small>` : ''}</div>`,
-        botones: c.ofertas && c.dia === hoyClave() ? [{ texto: 'Cerrar', tipo: 'secundario' }, { texto: '🛒 Ir a la tienda', tipo: 'primario', accion: () => ui.abrirTienda('muebles') }] : [{ texto: 'Cerrar', tipo: 'primario', accion: () => this.abrirCorreo() }]
-      });
+      this.abrirCarta(c, true);
     }));
+  }
+
+  abrirCarta(c, desdeLista = false) {
+    const { ui, miniaturas } = this.ctx;
+    const primera = !c.leida;
+    c.leida = true;
+    if (primera && c.monedas) {
+      this.estado.monedas += c.monedas;
+      this.ctx.refrescarHud();
+    }
+    this.ctx.guardar();
+    this.ctx.chip();
+    ui.dialogo({
+      titulo: c.titulo,
+      html: `<div class="nota-papel"><b>De ${c.de}</b>${c.texto}${c.ofertas ? `<div class="ofertas-carta">${c.ofertas.map(id => `<img src="${miniaturas.item(id, 0)}" alt="">`).join('')}</div>` : ''}${c.monedas ? `<small>🪙 +${c.monedas} monedas</small>` : ''}</div>`,
+      botones: c.ofertas && c.dia === hoyClave() ? [{ texto: 'Cerrar', tipo: 'secundario' }, { texto: '🛒 Ir a la tienda', tipo: 'primario', accion: () => ui.abrirTienda('mostrador') }] : [{ texto: 'Cerrar', tipo: 'primario', accion: desdeLista ? () => this.abrirCorreo() : undefined }]
+    });
   }
 
   actualizar(dt) {

@@ -47,6 +47,74 @@ export class Pareja {
     if (evento === 'limpiar') d.limpiezas[this.sync.yo]++;
   }
 
+  chips() {
+    if (!this.sync || this.sync.yo === undefined || this.sync.yo === null) return [];
+    const yo = this.sync.yo;
+    const l = [];
+    for (const n of this.estado.notas || []) {
+      if (n.de === yo || this.vistos.has(n.t)) continue;
+      l.push({ id: `nota-${n.t}`, titulo: `Nota de ${this.nombre(n.de)}`, texto: `📝 ${n.texto.length > 40 ? `${n.texto.slice(0, 40)}…` : n.texto}`, noTraducir: true, accion: () => this.verNota(n) });
+    }
+    for (const r of this.estado.regalos || []) {
+      if (r.para !== yo || r.abierto) continue;
+      l.push({ id: `regalo-${r.rid || r.id}`, titulo: `Regalo de ${this.nombre(r.de)}`, texto: '🎁 ¡Te ha hecho un regalo!', accion: () => this.abrirRegalo(r) });
+    }
+    for (const v of this.estado.votos || []) {
+      if (v.de === yo || v.estado !== 'pendiente') continue;
+      const info = this.ctx.infoItem(v.id);
+      l.push({ id: `voto-${v.vid}`, titulo: `${this.nombre(v.de)} quiere comprar algo`, texto: `🗳️ ${info.nombre} · 🪙 ${v.precio}`, accion: () => this.verVoto(v) });
+    }
+    return l;
+  }
+
+  verNota(n) {
+    const { ui, sonido } = this.ctx;
+    this.marcarVisto(n.t);
+    sonido.mascota();
+    ui.dialogo({
+      titulo: `📝 Nota de ${this.nombre(n.de)}`,
+      html: `<div class="nota-papel">${escapar(n.texto)}</div>`,
+      botones: [{ texto: 'Responder', tipo: 'secundario', accion: () => setTimeout(() => this.escribirNota(), 250) }, { texto: '💕', tipo: 'primario' }]
+    });
+    if (this.ctx.chip) this.ctx.chip();
+  }
+
+  abrirRegalo(r) {
+    const { ui, sonido } = this.ctx;
+    sonido.premio();
+    ui.dialogo({
+      imagen: this.ctx.miniaturas.piezas('premio:regalo:raro', this.ctx.piezasRegalo),
+      titulo: `🎁 ¡${this.nombre(r.de)} te ha hecho un regalo!`,
+      texto: r.mensaje ? `"${escapar(r.mensaje)}"` : '¿Qué será?',
+      botones: [{
+        texto: 'Abrirlo', tipo: 'primario', accion: () => {
+          r.abierto = true;
+          this.ctx.inventario.anadir(r.id, r.color ?? null);
+          this.ctx.ui.pintarInventario(this.ctx.inventario);
+          this.ctx.guardar();
+          setTimeout(() => {
+            sonido.premio();
+            ui.dialogo({ imagen: this.ctx.miniaturas.item(r.id, r.color), titulo: this.ctx.infoItem(r.id).nombre, texto: 'Ya está en el inventario. ¡Dale las gracias!', confeti: true, botones: [{ texto: '💕 ¡Gracias!', tipo: 'primario' }] });
+          }, 300);
+        }
+      }]
+    });
+  }
+
+  verVoto(v) {
+    const { ui } = this.ctx;
+    const info = this.ctx.infoItem(v.id);
+    ui.dialogo({
+      imagen: this.ctx.miniaturas.item(v.id, v.color),
+      titulo: `🗳️ ${this.nombre(v.de)} quiere comprar…`,
+      texto: `${info.nombre} por 🪙 ${v.precio}. ¿Qué te parece?`,
+      botones: [
+        { texto: '👎 Mejor no', tipo: 'secundario', accion: () => this.responderVoto(v, false) },
+        { texto: '👍 ¡Sí!', tipo: 'primario', accion: () => this.responderVoto(v, true) }
+      ]
+    });
+  }
+
   revisar() {
     if (!this.sync.activo) return;
     const { ui, sonido } = this.ctx;
@@ -72,53 +140,6 @@ export class Pareja {
       ui.aviso('🧹💑 ¡Misión de pareja: limpiar juntos! +60 monedas');
     }
     if (this.ctx.dialogoAbierto()) return;
-    for (const n of this.estado.notas || []) {
-      if (n.de === this.sync.yo || this.vistos.has(n.t)) continue;
-      this.marcarVisto(n.t);
-      sonido.mascota();
-      ui.dialogo({
-        titulo: `📝 Nota de ${this.nombre(n.de)}`,
-        html: `<div class="nota-papel">${escapar(n.texto)}</div>`,
-        botones: [{ texto: 'Responder', tipo: 'secundario', accion: () => setTimeout(() => this.escribirNota(), 250) }, { texto: '💕', tipo: 'primario' }]
-      });
-      return;
-    }
-    for (const r of this.estado.regalos || []) {
-      if (r.para !== this.sync.yo || r.abierto) continue;
-      sonido.premio();
-      ui.dialogo({
-        imagen: this.ctx.miniaturas.piezas('premio:regalo:raro', this.ctx.piezasRegalo),
-        titulo: `🎁 ¡${this.nombre(r.de)} te ha hecho un regalo!`,
-        texto: r.mensaje ? `"${escapar(r.mensaje)}"` : '¿Qué será?',
-        botones: [{
-          texto: 'Abrirlo', tipo: 'primario', accion: () => {
-            r.abierto = true;
-            this.ctx.inventario.anadir(r.id, r.color ?? null);
-            this.ctx.ui.pintarInventario(this.ctx.inventario);
-            this.ctx.guardar();
-            setTimeout(() => {
-              sonido.premio();
-              ui.dialogo({ imagen: this.ctx.miniaturas.item(r.id, r.color), titulo: this.ctx.infoItem(r.id).nombre, texto: 'Ya está en el inventario. ¡Dale las gracias!', confeti: true, botones: [{ texto: '💕 ¡Gracias!', tipo: 'primario' }] });
-            }, 300);
-          }
-        }]
-      });
-      return;
-    }
-    for (const v of this.estado.votos || []) {
-      if (v.de === this.sync.yo || v.estado !== 'pendiente') continue;
-      const info = this.ctx.infoItem(v.id);
-      ui.dialogo({
-        imagen: this.ctx.miniaturas.item(v.id, v.color),
-        titulo: `🗳️ ${this.nombre(v.de)} quiere comprar…`,
-        texto: `${info.nombre} por 🪙 ${v.precio}. ¿Qué te parece?`,
-        botones: [
-          { texto: '👎 Mejor no', tipo: 'secundario', accion: () => this.responderVoto(v, false) },
-          { texto: '👍 ¡Sí!', tipo: 'primario', accion: () => this.responderVoto(v, true) }
-        ]
-      });
-      return;
-    }
     for (const v of this.estado.votos || []) {
       if (v.de !== this.sync.yo || v.estado === 'pendiente' || this.vistos.has(v.vid)) continue;
       this.marcarVisto(v.vid);

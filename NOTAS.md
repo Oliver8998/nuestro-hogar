@@ -369,3 +369,12 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 ## Minijuegos propios de los encargos (v55)
 - `js/favores.js` → `JUEGOS_FAVOR`: 13 minijuegos nuevos que solo salen en encargos (ninguno repite los trabajos del día): tartaletas (mantener y soltar en la raya), cesped (arrastrar para cortar sin pisar flores), gotas (mover el cubo), buscar (objeto escondido en el trastero), escalera (izquierda/derecha alternando con equilibrio), regar (mantener 6 plantas en la zona verde), cuadros (clavar cuando está recto), parrilla (dar la vuelta y servir sin quemar), globos (inflar hasta la marca sin explotar), hoguera (frotar de lado a lado), cola (dar a cada cliente lo que pide), bici (saltar obstáculos), bandeja (equilibrar). Estilos `.fv-*`.
 - `encargos.js`: los tipos usan `favor:` en vez de `trabajo:`; los de juegos.js (puzzle de mamá, duelo de limpieza de Sol, cena en equipo, parejas de Pilar) y la receta se mantienen porque ya no se pueden jugar sueltos.
+
+## Todo llega al teléfono; fuera el buzón (v57)
+- Quitada la tile "Buzón" de Más y el aviso del trabajo del día del teléfono (el botón Trabajar ya lleva el contador).
+- Cada carta sin leer es un mensaje propio en el teléfono ("Carta de X" + título) que abre la carta directamente (`vida.abrirCarta`). Las ya leídas: botón "📬 Cartas anteriores" en el teléfono (`vida.abrirCorreo`, vuelve al teléfono).
+- Lo de la pareja ya no salta solo: notas, regalos y propuestas de compra llegan como mensajes del teléfono (`pareja.chips()`, `verNota`, `abrirRegalo`, `verVoto`). La respuesta a tus propuestas sigue saliendo sola.
+- Los chips pueden traer `titulo` (se usa como título de la fila del teléfono).
+
+## Lofi sin petardeo (v57)
+- El "vinilo" tenía clics aleatorios metidos en el ruido (~40/s) y la caja y el charles usaban ese mismo ruido con clics → petardeo. Ahora: ruido limpio para la batería, siseo suave sin clics y con fundido en el bucle, y ataques de 4-5 ms en bombo/caja/charles. Medido renderizando 10 s: 300-400 saltos bruscos antes, 0 ahora, mismo volumen.

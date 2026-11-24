@@ -2014,5 +2014,13 @@ export default {
 "Llegaron {0} de 4 vasos":"{0} of 4 glasses made it",
 "Todo por el suelo… ¡a fregar!":"Everything on the floor… time to mop!",
 "🌱 {0}%":"🌱 {0}%",
-"💧 {0}":"💧 {0}"
+"💧 {0}":"💧 {0}",
+"📬 Cartas":"📬 Letters",
+"Todavía no ha llegado ninguna carta.":"No letters have arrived yet.",
+"Carta de {0}":"Letter from {0}",
+"📬 Cartas anteriores":"📬 Earlier letters",
+"Nota de {0}":"Note from {0}",
+"Regalo de {0}":"Gift from {0}",
+"🎁 ¡Te ha hecho un regalo!":"🎁 They sent you a gift!",
+"{0} quiere comprar algo":"{0} wants to buy something"
 };

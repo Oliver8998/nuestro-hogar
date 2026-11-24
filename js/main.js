@@ -1766,6 +1766,7 @@ pareja = new Pareja({
   guardar: () => guardar(),
   refrescarHud: () => refrescarHud(),
   dialogoAbierto: () => dialogoAbierto(),
+  chip: () => pintarChipsVida(),
   comprar: (id, color, precio) => comprarDirecto(id, color, precio),
   instantanea,
   aplicarRemoto,
@@ -1965,7 +1966,6 @@ window.extrasMenu = () => {
   const h = estado.historia || 0;
   const tieneCocina = gestor.muebles.some(m => m.userData.def.id === 'cocina') || (estado.habs || []).some(x => (x.muebles || []).some(d => d.id === 'cocina'));
   return [
-    { id: 'buzon', icono: '📬', texto: 'Buzón', sub: vida.noLeidas() ? `${vida.noLeidas()} carta${vida.noLeidas() > 1 ? 's' : ''} sin leer` : 'Cartas, postales y ofertas', insignia: vida.noLeidas() || null, accion: () => vida.abrirCorreo() },
     { id: 'nosotros', icono: '💕', texto: 'Nosotros', sub: 'Notas, regalos, preguntas, viajes y recuerdos', insignia: pareja2.pendientePregunta() ? '!' : null, accion: abrirNosotros },
     { id: 'mascotas', icono: '🐾', texto: 'Vuestras mascotas', sub: mascotas.lista.length ? `${mascotas.lista.length} en casa · cómo están` : 'Adoptad una en el mostrador de Pilar', accion: () => ui.abrirRefugio() },
     { id: 'objetivos', icono: '🏆', texto: 'Objetivos', sub: 'Pase del mes, logros y colecciones', insignia: economia.pendientesPase() || null, accion: abrirObjetivos },
@@ -1980,6 +1980,7 @@ window.extrasMenu = () => {
 
 const vida = new Vida({
   estado, ui, sonido, gestor, mascotas, miniaturas, escena, ambiente, inventario, juegos,
+  abrirTelefono: () => abrirTelefono(),
   pantalla: v => pantalla(v),
   particula: (emoji, m, n) => mascotas.eventos.particula(emoji, m, n),
   guardar: () => guardar(),
@@ -2282,7 +2283,8 @@ function pintarChipsVida() {
   if (estado.visita) chips.push({ id: 'visita', texto: '🚪 ¡Visita!', accion: () => vida.atenderVisita() });
   if (estado.averia) chips.push({ id: 'averia', texto: estado.averia.tipo === 'gotera' ? '💧 Gotera' : '⚡ Sin luz', accion: () => vida.arreglarAveria() });
   const n = vida.noLeidas();
-  if (n) chips.push({ id: 'correo', texto: `✉️ ${n}`, accion: () => vida.abrirCorreo() });
+  for (const c of vida.cartasSinLeer()) chips.push({ id: `carta-${c.id}`, titulo: `Carta de ${c.de}`, texto: `${vida.iconoCarta(c)} ${c.titulo}`, accion: () => vida.abrirCarta(c) });
+  if (pareja) chips.push(...pareja.chips());
   const ca = pareja2.chipCuentaAtras();
   if (ca) chips.push({ id: 'cuenta', texto: ca, accion: () => pareja2.abrirCuentaAtras() });
   if (estado.reto && !estado.reto.terminado) {
@@ -2290,8 +2292,7 @@ function pintarChipsVida() {
     chips.push({ id: 'reto', texto: `🎨 ${min} min`, accion: () => verReto() });
   }
   if (trabajos) {
-    const ct = trabajos.chip();
-    if (ct) chips.push(ct);
+
   }
   if (casa2) chips.push(...casa2.chips());
   if (mascotas2) chips.push(...mascotas2.chips());
@@ -2325,6 +2326,7 @@ const TITULOS_TELEFONO = { correo: 'Cartas nuevas', animo: 'Cómo estáis hoy', 
 let vistosAlAbrir = [];
 
 function tituloMensaje(c) {
+  if (c.titulo) return c.titulo;
   if (TITULOS_TELEFONO[c.id]) return TITULOS_TELEFONO[c.id];
   if (c.id.startsWith('cria-')) return 'Vuestra cría';
   return '';
@@ -2354,7 +2356,10 @@ function abrirTelefono() {
   const d = ui.dialogo({
     titulo: '☎️ Teléfono',
     html: '<div class="tel-lista"></div>',
-    botones: [{ texto: 'Colgar', tipo: 'secundario', accion: () => { telefonoAbierto = null; } }]
+    botones: [
+      { texto: '📬 Cartas anteriores', tipo: 'secundario', accion: () => { telefonoAbierto = null; setTimeout(() => vida.abrirCorreo(), 250); } },
+      { texto: 'Colgar', tipo: 'secundario', accion: () => { telefonoAbierto = null; } }
+    ]
   });
   telefonoAbierto = d;
   vistosAlAbrir = vistosTelefono();

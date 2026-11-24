@@ -58,17 +58,30 @@ export class Lofi {
     this.filtro.connect(this.master).connect(c.destination);
     const buf = c.createBuffer(1, c.sampleRate * 2, c.sampleRate);
     const d = buf.getChannelData(0);
-    for (let i = 0; i < d.length; i++) d[i] = Math.random() < 0.0009 ? (Math.random() * 2 - 1) * 0.9 : (Math.random() * 2 - 1) * 0.012;
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
     this.ruidoBuf = buf;
+    const siseo = c.createBuffer(1, c.sampleRate * 2, c.sampleRate);
+    const sd = siseo.getChannelData(0);
+    let previo = 0;
+    for (let i = 0; i < sd.length; i++) {
+      previo = previo * 0.97 + (Math.random() * 2 - 1) * 0.03;
+      sd[i] = previo;
+    }
+    const fundido = 2000;
+    for (let i = 0; i < fundido; i++) {
+      const k = i / fundido;
+      sd[i] *= k;
+      sd[sd.length - 1 - i] *= k;
+    }
     const vinilo = c.createBufferSource();
-    vinilo.buffer = buf;
+    vinilo.buffer = siseo;
     vinilo.loop = true;
-    const hp = c.createBiquadFilter();
-    hp.type = 'highpass';
-    hp.frequency.value = 1200;
+    const lp = c.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 3000;
     const vv = c.createGain();
-    vv.gain.value = 0.35;
-    vinilo.connect(hp).connect(vv).connect(this.master);
+    vv.gain.value = 0.12;
+    vinilo.connect(lp).connect(vv).connect(this.master);
     vinilo.start();
     this.siguiente = c.currentTime + 0.1;
     return true;
@@ -96,7 +109,8 @@ export class Lofi {
       const g = c.createGain();
       o.frequency.setValueAtTime(110, t);
       o.frequency.exponentialRampToValueAtTime(42, t + 0.18);
-      g.gain.setValueAtTime(this.estilo === 'noche' ? 0.22 : 0.32, t);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(this.estilo === 'noche' ? 0.22 : 0.32, t + 0.005);
       g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
       o.connect(g).connect(this.filtro);
       o.start(t);
@@ -109,9 +123,10 @@ export class Lofi {
     f.type = tipo === 'caja' ? 'bandpass' : 'highpass';
     f.frequency.value = tipo === 'caja' ? 1800 : 7000;
     const g = c.createGain();
-    const vol = tipo === 'caja' ? 2.2 : 0.9;
+    const vol = tipo === 'caja' ? 0.13 : 0.03;
     const dur = tipo === 'caja' ? 0.16 : 0.04;
-    g.gain.setValueAtTime(vol, t);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.004);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     src.connect(f).connect(g).connect(this.filtro);
     src.start(t, Math.random());
