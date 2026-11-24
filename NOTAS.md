@@ -441,3 +441,7 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 
 ## Inventario con nombres (v71)
 - Cada casilla del inventario lleva el nombre debajo (`.nombre-ranura`, hasta 2 líneas). Filas de 86 px y bandeja de 160 px de alto.
+
+## Barra de durabilidad y cartel movible (v73)
+- Inventario: los objetos con `usos > 1` llevan una barra de durabilidad (`.durabilidad`) en vez del "x/y". Es verde por encima del 60%, amarilla por encima del 30% y roja por debajo, y baja animada (`ui.durPrev` guarda el valor anterior). En esas casillas el nombre se queda en una línea.
+- El cartel "Nuestro Hogar" (`mas.cartel`) es ahora un objeto de pared más (`tipo: 'cartel'`, por defecto `c-<hab>` en la pared 0, x=-0,35, y=2,1, medidas 0,95×0,8). Se mantiene pulsado para moverlo, al tocarlo se balancea, y su menú tiene ✏️ Cambiar texto, que abre Ajustes.

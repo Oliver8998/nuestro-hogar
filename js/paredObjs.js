@@ -66,6 +66,7 @@ export class ObjetosPared {
     const l = this.lista();
     if (!l.some(o => o.hab === k && o.principal)) l.push({ id: `v0-${k}`, tipo: 'ventana', principal: true, hab: k, pared: 0, x: 1, y: 1.5 });
     if (!l.some(o => o.hab === k && o.tipo === 'telefono')) l.push({ id: `t-${k}`, tipo: 'telefono', hab: k, pared: 0, x: -2.45, y: 1.3 });
+    if (!l.some(o => o.hab === k && o.tipo === 'cartel')) l.push({ id: `c-${k}`, tipo: 'cartel', hab: k, pared: 0, x: -0.35, y: 2.1 });
     return l.filter(o => o.hab === k);
   }
 
@@ -77,6 +78,7 @@ export class ObjetosPared {
 
   medidas(o) {
     if (o.tipo === 'telefono') return [0.5, 0.7];
+    if (o.tipo === 'cartel') return [0.95, 0.8];
     const k = TAM_VENTANA[this.tamDe(o)].k;
     return [1.32 * k, 1.36 * k];
   }
@@ -103,7 +105,7 @@ export class ObjetosPared {
     const pared = sala.paredes[o.pared];
     if (!pared) return;
     if (obj.parent !== pared) pared.add(obj);
-    obj.position.set(o.x, o.y, sala.cara + (o.tipo === 'ventana' ? 0 : 0));
+    obj.position.set(o.x, o.y, sala.cara + (o.tipo === 'cartel' ? 0.03 : 0));
   }
 
   pintar() {
@@ -129,6 +131,11 @@ export class ObjetosPared {
     for (const o of lista) {
       if (o.tipo === 'telefono') {
         telefono.fijar(o.pared, o.x, o.y);
+        continue;
+      }
+      if (o.tipo === 'cartel') {
+        const c = this.ctx.cartel && this.ctx.cartel();
+        if (c) this.colocarEn(c.grupo, o);
         continue;
       }
       const s = TAM_VENTANA[this.tamDe(o)].k;
@@ -198,6 +205,9 @@ export class ObjetosPared {
     for (const o of this.deHab(k)) {
       if (o.tipo === 'telefono') {
         if (telefono.visible()) l.push({ obj: telefono.zona, id: o.id, tipo: 'telefono' });
+      } else if (o.tipo === 'cartel') {
+        const c = this.ctx.cartel && this.ctx.cartel();
+        if (c && c.grupo.visible && c.grupo.parent && c.grupo.parent.visible) l.push({ obj: c.grupo, id: o.id, tipo: 'cartel' });
       } else if (o.principal) {
         if (this.ventanaArreglada() && sala.ventana.parent && sala.ventana.parent.visible) l.push({ obj: sala.ventana, id: o.id, tipo: 'ventana' });
       } else {
@@ -233,6 +243,17 @@ export class ObjetosPared {
     if (h.tipo === 'telefono') {
       this.ctx.telefono.descolgado = 1.4;
       this.ctx.abrirTelefono();
+    } else if (h.tipo === 'cartel') {
+      const g = h.obj;
+      let t = 0;
+      this.ctx.sonido.tic && this.ctx.sonido.tic();
+      const paso = () => {
+        t += 1 / 60;
+        g.rotation.z = Math.sin(t * 14) * 0.12 * Math.max(0, 1 - t / 1.2);
+        if (t < 1.2) requestAnimationFrame(paso);
+        else g.rotation.z = 0;
+      };
+      requestAnimationFrame(paso);
     } else {
       this.reaccionVentana(h.obj);
     }
@@ -345,6 +366,7 @@ export class ObjetosPared {
     }
     const o = sel.ref;
     if (o.tipo === 'telefono') return this.ctx.telefono.grupo;
+    if (o.tipo === 'cartel') return this.ctx.cartel && this.ctx.cartel() ? this.ctx.cartel().grupo : null;
     if (o.principal) return this.ctx.sala.ventana;
     return this.extras.find(g => g.userData.paredObj === o.id) || null;
   }
@@ -510,6 +532,9 @@ export class ObjetosPared {
     const r = s.ref;
     if (s.tipo === 'cuadro') return this.ctx.cuadros().opcionesMenu(r, () => this.tras());
     const { ui, sonido } = this.ctx;
+    if (r.tipo === 'cartel') {
+      return [{ icono: '✏️', texto: 'Cambiar texto', accion: () => { this.deseleccionar(); this.ctx.refrescarMenu && this.ctx.refrescarMenu(); this.ctx.abrirAjustes && this.ctx.abrirAjustes(); } }];
+    }
     if (r.tipo === 'telefono') {
       return [{ icono: '☎️', texto: 'Mensajes', accion: () => { this.ctx.telefono.descolgado = 1.4; this.ctx.abrirTelefono(); } }];
     }

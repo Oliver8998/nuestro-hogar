@@ -2230,5 +2230,6 @@ export default {
 "Pequeñito, amarillo y muy curioso":"Tiny, yellow and very curious",
 "Glotón, rosita y muy cariñoso":"Greedy, pink and very cuddly",
 "Dormilón y abrazable":"Sleepy and huggable",
-"Tranquilo, redondito y adorable":"Calm, chubby and adorable"
+"Tranquilo, redondito y adorable":"Calm, chubby and adorable",
+"Cambiar texto":"Change text"
 };

@@ -2169,6 +2169,8 @@ paredObjs = new ObjetosPared({
   cuadros: () => mas.cuadros,
   pantalla: v => pantalla(v),
   abrirTelefono: () => abrirTelefono(),
+  cartel: () => (mas ? mas.cartel : null),
+  abrirAjustes: () => mas && mas.abrirAjustes(),
   limpiarSeleccion: () => {
     if (controles) controles.seleccionar(null);
     seleccionarMascota(null);

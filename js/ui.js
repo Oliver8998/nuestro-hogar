@@ -700,8 +700,23 @@ export class UI {
       if (!info) continue;
       const ranura = document.createElement('div');
       ranura.className = 'ranura' + (info.rareza ? ` rareza-${info.rareza}` : '');
-      const usos = info.usos > 1 ? `<span class="usos">${item.usos ?? info.usos}/${info.usos}</span>` : '';
+      let usos = '';
+      let fraccion = null;
+      if (info.usos > 1) {
+        fraccion = Math.max(0, Math.min(1, (item.usos ?? info.usos) / info.usos));
+        const color = fraccion > 0.6 ? '#6cc08a' : fraccion > 0.3 ? '#f2b33d' : '#e5626a';
+        usos = `<span class="durabilidad" title="${item.usos ?? info.usos}/${info.usos}"><i style="background:${color}"></i></span>`;
+      }
       ranura.innerHTML = `${this.img(this.mini.item(item.id, item.color))}<small class="nombre-ranura">${info.nombre}</small>${item.cantidad > 1 ? `<span class="cuenta">${item.cantidad}</span>` : ''}${usos}`;
+      if (fraccion !== null) {
+        const clave = `${item.id}:${item.color ?? ''}`;
+        if (!this.durPrev) this.durPrev = {};
+        const barra = ranura.querySelector('.durabilidad i');
+        const antes = this.durPrev[clave];
+        barra.style.width = `${(antes ?? fraccion) * 100}%`;
+        if (antes !== undefined && antes !== fraccion) requestAnimationFrame(() => requestAnimationFrame(() => { barra.style.width = `${fraccion * 100}%`; }));
+        this.durPrev[clave] = fraccion;
+      }
       ranura.addEventListener('pointerdown', e => this.tocarRanura(e, item, info, ranura));
       this.elInventario.appendChild(ranura);
     }
