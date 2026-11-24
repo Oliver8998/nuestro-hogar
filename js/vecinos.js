@@ -16,7 +16,7 @@ export const EVENTOS = {
   pelis: { quien: ['amigos'], peso: 2, aviso: () => '🍿 Vuestros amigos se presentan con una peli. ¿Noche de cine?' },
   tupper: { quien: ['mama'], peso: 2, aviso: () => '🥡 Mamá viene cargada de tuppers' },
   muestras: { quien: ['lola'], peso: 2, aviso: () => '🎁 Pilar os trae muestras de la tienda' },
-  ruido: { quien: ['ramon', 'mateo'], peso: 1, aviso: n => `😠 ${n} ha subido con cara de pocos amigos…` },
+  ruido: { quien: ['ramon', 'mateo'], peso: 0.5, aviso: n => `😠 ${n} ha subido con cara de pocos amigos…` },
   cita: { quien: ['sol'], peso: 2, aviso: () => '👗 Sol necesita vuestra opinión ¡urgente!' },
   karaoke: { quien: ['amigos'], peso: 1, aviso: () => '🎤 Vuestros amigos vienen a buscaros para ir al karaoke' },
   esquejes: { quien: ['ramon', 'mama'], peso: 1, aviso: n => `🌱 ${n} trae algo verde en una maceta` },
@@ -109,7 +109,7 @@ export function atenderEvento(vida, v, nombre) {
         setTimeout(() => dialogo(`¿Habéis bajado a por ello? ¡Qué majos! Tomad, que os lo pago con creces.${c}`, [{ texto: `Cobrar 🪙 ${m}`, tipo: 'primario', accion: () => { dar(ctx, m); cerrar(); } }]), 260);
       } });
     }
-    botones.push({ texto: 'Lo sentimos, no tenemos', tipo: 'secundario', accion: () => { conf(ctx, v.quien, -1); ui.aviso(`${nombre} lo pedirá en otra puerta`); cerrar(); } });
+    botones.push({ texto: 'Lo sentimos, no tenemos', tipo: 'secundario', accion: () => { ui.aviso(`${nombre} lo pedirá en otra puerta`); cerrar(); } });
     dialogo(frases[v.quien] || frases.mateo, botones);
     return;
   }
@@ -134,7 +134,7 @@ export function atenderEvento(vida, v, nombre) {
         ctx.registrar('minijuego');
         setTimeout(() => dialogo(`${textos[ev]}${c}`, [{ texto: `Cobrar 🪙 ${m}`, tipo: 'primario', accion: () => { dar(ctx, m); cerrar(); } }], { confeti: p >= 0.85 }), 300);
       } },
-      { texto: 'Hoy no podemos', tipo: 'secundario', accion: () => { conf(ctx, v.quien, -1); cerrar(); } }
+      { texto: 'Hoy no podemos', tipo: 'secundario', accion: () => cerrar() }
     ]);
     return;
   }
@@ -159,7 +159,7 @@ export function atenderEvento(vida, v, nombre) {
       const c = conf(ctx, v.quien, 4);
       setTimeout(() => dialogo(`¡Pizza y peli, el plan perfecto! Y encima la elegimos nosotros 😏${c}`, [{ texto: '¡Qué buena noche! 🍕', tipo: 'primario', accion: cerrar }]), 260);
     } });
-    botones.push({ texto: 'Mejor otro día', tipo: 'secundario', accion: () => { conf(ctx, v.quien, -1); cerrar(); } });
+    botones.push({ texto: 'Mejor otro día', tipo: 'secundario', accion: () => cerrar() });
     dialogo('¡Sorpresa! Hemos traído una peli de miedo. Vosotros ponéis la casa y la comida, ¿no?', botones);
     return;
   }
@@ -220,7 +220,7 @@ export function atenderEvento(vida, v, nombre) {
         const c = conf(ctx, v.quien, 6);
         setTimeout(() => dialogo(`Hombre… si es así, da gusto. ¡Qué casa más maja tenéis, por cierto!${c}`, [{ texto: '☕ ¡Cuando quiera!', tipo: 'primario', accion: cerrar }]), 260);
       } },
-      { texto: 'Hacerse el sordo 🙉', tipo: 'secundario', accion: () => { const c = conf(ctx, v.quien, -6); ui.aviso(`${nombre} se ha ido refunfuñando…${c}`, true); cerrar(); } }
+      { texto: 'Hacerse el sordo 🙉', tipo: 'secundario', accion: () => { const c = conf(ctx, v.quien, -2); ui.aviso(`${nombre} se ha ido refunfuñando…${c}`, true); cerrar(); } }
     ]);
     return;
   }

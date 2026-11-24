@@ -1219,7 +1219,7 @@ function idsEnCasa() {
 
 function acogedor() {
   return calcularAcogedor({
-    muebles: gestor.muebles.filter(m => !(m.userData.datos && m.userData.datos.mustia)),
+    muebles: gestor.muebles,
     limpieza: suciedad.limpieza(),
     paredesPintadas: sala.estado().paredes.filter(p => p !== null && p !== undefined).length,
     fotos: mas ? mas.cuadros.enEstaHab().length : 0,
@@ -2720,9 +2720,17 @@ document.addEventListener('gesturestart', e => e.preventDefault());
 const hoy = new Date().toDateString();
 const nuevoDia = estado.dia !== hoy;
 const diasFuera = estado.dia ? Math.round((new Date(hoy) - new Date(estado.dia)) / 86400000) : 0;
+let rachaPerdonada = false;
 if (nuevoDia) {
   const ayer = new Date(Date.now() - 86400000).toDateString();
-  estado.racha = { n: estado.racha && estado.dia === ayer ? estado.racha.n + 1 : 1 };
+  const anteayer = new Date(Date.now() - 2 * 86400000).toDateString();
+  const previa = estado.racha || { n: 0 };
+  const semana = Math.floor(Math.max(0, previa.n - 1) / 7);
+  if (estado.dia === ayer) estado.racha = { n: previa.n + 1, perdon: previa.perdon };
+  else if (estado.dia === anteayer && previa.n > 0 && previa.perdon !== semana) {
+    estado.racha = { n: previa.n + 1, perdon: semana };
+    rachaPerdonada = true;
+  } else estado.racha = { n: 1 };
   estado.gratis = true;
   estado.dia = hoy;
 }
@@ -2804,6 +2812,7 @@ setTimeout(function alEntrar() {
     if (premio.tickets) partes.push(`${premio.tickets} 🎟️`);
     partes.push(...premio.cosas);
     d.racha = { titulo: premio.dia === 7 ? '¡Semana completa!' : `Día ${premio.dia} de 7`, premio: partes.join(' · '), html: album.rachaHtml(racha) };
+    if (rachaPerdonada) d.vuelta = 'Ayer no pasasteis por casa, pero os hemos guardado la racha 😉 (un día de gracia por semana)';
     if (racha > 1) d.etiqueta = { texto: `🔥 ${racha} días seguidos`, color: '#f2a03c' };
     if (premio.dia === 7) d.confeti = true;
     const postal = mas.postalHoy();

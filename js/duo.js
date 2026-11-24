@@ -75,7 +75,7 @@ export class Duo {
       <p class="gen-intro">Minijuegos para jugar a la vez, cada uno desde su móvil. ${this.ctx.sync.enDirecto ? '🟢 Conectados en directo' : '🟡 Conectando…'}</p>
       <div class="duo-lista">${Object.entries(JUEGOS_DUO).map(([id, g]) => `
         <button class="duo-juego" data-id="${id}"><span>${g.icono}</span><div><b>${g.nombre}</b><small>${g.texto}</small><em>⏱️ ${g.duracion} · 🪙 hasta ${paga(160)}</em></div></button>`).join('')}</div>
-      <small class="nota">Las monedas van a la hucha de la casa, así que son para los dos.</small>`, volver);
+      <small class="nota">Las monedas van a la hucha de la casa, así que son para los dos. Las 3 primeras partidas de cada día dan el premio completo.</small>`, volver);
     cuerpo.querySelectorAll('.duo-juego').forEach(b => b.addEventListener('click', () => this.invitar(b.dataset.id)));
   }
 
@@ -222,7 +222,12 @@ export class Duo {
         terminar: (texto, puntos) => {
           if (ses.estado !== 'jugando') return;
           ses.estado = 'fin';
-          const monedas = paga(Math.round(40 + 120 * puntos));
+          const est = this.ctx.estado;
+          const hoy = new Date().toDateString();
+          if (!est.duoHoy || est.duoHoy.dia !== hoy) est.duoHoy = { dia: hoy, n: 0 };
+          est.duoHoy.n++;
+          const factor = est.duoHoy.n <= 3 ? 1 : 0.3;
+          const monedas = Math.max(5, Math.round(paga(Math.round(40 + 120 * puntos)) * factor));
           this.enviar('fin', { texto, p: puntos, monedas });
           ses.monedas = monedas;
           j.final(`${texto}<br><small>+${monedas} monedas para la casa</small>`, puntos);

@@ -12,6 +12,7 @@ export const TIPOS = {
 };
 
 const AL_ARENERO = ['gato', 'conejo', 'koala'];
+const TOPE_SUCIEDAD = 7;
 const limpiaTipo = (material, tipo) => material.limpia === tipo || (material.limpia === 'barro' && tipo === 'pis');
 const AL_JARDIN = ['perro', 'pato', 'pinguino', 'zorro'];
 
@@ -246,18 +247,23 @@ export class Suciedad {
       Object.assign(this.tiempos, datos.tiempos || {});
     }
     const s = this.genera === false ? 0 : Math.min(segundosFuera, 6 * 3600);
+    let nuevos = 0;
     for (const [tipo, info] of Object.entries(TIPOS)) {
       if (!info.cada) continue;
       if (tipo === 'bichos' && trampa) continue;
       this.tiempos[tipo] = (this.tiempos[tipo] || 0) + s;
       while (this.tiempos[tipo] >= info.cada) {
         this.tiempos[tipo] -= info.cada;
-        if (this.cuenta(tipo) < info.max) this.anadir(tipo, null, false);
+        if (this.cuenta(tipo) < info.max && nuevos < 3 && this.lista.length < TOPE_SUCIEDAD) {
+          this.anadir(tipo, null, false);
+          nuevos++;
+        }
       }
     }
     if (s > 600) {
       for (const m of this.mascotas.lista) {
-        const n = Math.min(2, Math.floor(s / 1800));
+        if (this.lista.length >= TOPE_SUCIEDAD) break;
+        const n = Math.min(1, Math.floor(s / 1800));
         for (let k = 0; k < n; k++) this.hacerCaca(m, true);
         if (n) this.hacerPis(m, true);
       }
@@ -360,7 +366,7 @@ export class Suciedad {
   }
 
   necesidad(m, tipo, silencio = false) {
-    if (this.cuenta(tipo) >= (tipo === 'caca' ? 6 : 4)) return true;
+    if (this.cuenta(tipo) >= (tipo === 'caca' ? 3 : 2) || this.lista.length >= TOPE_SUCIEDAD + 2) return true;
     const arenero = this.mascotas.buscarMueble(def => def.arenero);
     if (silencio) {
       if ((AL_ARENERO.includes(m.especie) && arenero) || (AL_JARDIN.includes(m.especie) && this.jardin) || (tipo === 'pis' && m.e.ave)) return true;
@@ -420,7 +426,7 @@ export class Suciedad {
       this.tiempos[tipo] = (this.tiempos[tipo] || 0) + dt;
       if (this.tiempos[tipo] >= info.cada) {
         this.tiempos[tipo] = 0;
-        if (this.cuenta(tipo) < info.max && this.anadir(tipo)) this.eventos.alNuevaSuciedad(tipo);
+        if (this.cuenta(tipo) < info.max && this.lista.length < TOPE_SUCIEDAD && this.anadir(tipo)) this.eventos.alNuevaSuciedad(tipo);
       }
     }
     if (trampa) for (const d of this.lista.filter(x => x.tipo === 'bichos')) this.limpiar(d, 'trampa');
