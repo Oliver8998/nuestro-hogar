@@ -18,6 +18,11 @@ export class Lofi {
     } catch (e) {
       this.activo = false;
     }
+    this.volumen = 1;
+    try {
+      const v = parseFloat(localStorage.getItem('hogar-vol-musica'));
+      if (!isNaN(v)) this.volumen = Math.max(0, Math.min(1, v));
+    } catch (e) {}
     this.c = null;
     this.paso = 0;
     this.siguiente = 0;
@@ -32,6 +37,13 @@ export class Lofi {
     } catch (e) {}
     if (!this.activo && this.master) this.master.gain.setTargetAtTime(0, this.c.currentTime, 0.3);
     return this.activo;
+  }
+
+  ponerVolumen(v) {
+    this.volumen = Math.max(0, Math.min(1, v));
+    try {
+      localStorage.setItem('hogar-vol-musica', String(this.volumen));
+    } catch (e) {}
   }
 
   montar() {
@@ -170,7 +182,7 @@ export class Lofi {
     const c = this.c;
     if (c.state === 'suspended') return;
     this.estilo = hora >= 7 && hora < 13 ? 'manana' : hora >= 13 && hora < 20 ? 'tarde' : 'noche';
-    const objetivo = silenciar || document.hidden ? 0 : 0.5;
+    const objetivo = silenciar || document.hidden ? 0 : 0.5 * this.volumen;
     this.master.gain.setTargetAtTime(objetivo, c.currentTime, 0.6);
     this.filtro.frequency.setTargetAtTime(ESTILOS[this.estilo].corte, c.currentTime, 2);
     if (this.siguiente < c.currentTime - 0.5) this.siguiente = c.currentTime + 0.05;

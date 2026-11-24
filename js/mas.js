@@ -8,6 +8,27 @@ import { NOMBRE_TEMPORADA } from './ambiente.js';
 const CLAVE_FOTOS = 'hogar-fotos';
 const CLAVE_DIARIO = 'hogar-diario';
 const CLAVE_POSTALES = 'hogar-postales';
+
+function leerLS(clave, def) {
+  try {
+    return localStorage.getItem(clave) || def;
+  } catch (e) {
+    return def;
+  }
+}
+
+export function tamTexto() {
+  return leerLS('hogar-texto', 'normal');
+}
+
+function modoAvisos() {
+  return leerLS('hogar-avisos-modo', 'todos');
+}
+
+export function aplicarTamTexto(v = tamTexto()) {
+  document.body.classList.toggle('texto-grande', v === 'grande');
+  document.body.classList.toggle('texto-muy', v === 'muy');
+}
 const CLAVE_POSTAL_DIA = 'hogar-postal-dia';
 
 
@@ -239,9 +260,17 @@ export class Mas {
         <button id="aj-avisos" class="secundario">${window.avisos && window.avisos.activos() ? '🔔 Avisos al móvil: sí' : '🔕 Avisos al móvil: no'}</button>
         <small class="nota">Te llega un aviso cuando tu pareja te deja una nota, un regalo o te manda un 💗.</small>
         <button id="aj-sonido" class="secundario">${sonido.activo ? '🔊 Sonido activado' : '🔇 Sonido desactivado'}</button>
+        <label>🎧 Música de fondo</label>
+        <input id="aj-musica" class="aj-rango" type="range" min="0" max="100" step="5" value="${this.ctx.lofi && this.ctx.lofi.activo ? Math.round(this.ctx.lofi.volumen * 100) : 0}">
+        <small class="nota">Música lofi tranquila que cambia con la hora del día. Del todo a la izquierda, apagada.</small>
+        <label>🔔 Efectos de sonido</label>
+        <input id="aj-efectos" class="aj-rango" type="range" min="0" max="100" step="5" value="${Math.round((sonido.volumen ?? 1) * 100)}">
+        <label>🔤 Tamaño del texto</label>
+        <div class="aj-opciones" id="aj-texto">${[['normal', 'Normal'], ['grande', 'Grande'], ['muy', 'Muy grande']].map(([v, t]) => `<button data-v="${v}" class="${tamTexto() === v ? 'activo' : ''}">${t}</button>`).join('')}</div>
+        <label>💬 Avisos en pantalla</label>
+        <div class="aj-opciones" id="aj-modo-avisos">${[['todos', 'Todos'], ['pocos', 'Solo importantes']].map(([v, t]) => `<button data-v="${v}" class="${modoAvisos() === v ? 'activo' : ''}">${t}</button>`).join('')}</div>
+        <small class="nota">Con «Solo importantes» no salen los avisos de ambiente (lo que hace tu pareja, pegatinas, recuerdos, la lluvia…).</small>
         <button id="aj-idioma" class="secundario" data-no-traducir>${idioma() === 'en' ? '🌐 Language: English' : '🌐 Idioma: Español'}</button>
-        <button id="aj-lofi" class="secundario">${this.ctx.lofi && this.ctx.lofi.activo ? '🎧 Música lofi: sí' : '🎧 Música lofi: no'}</button>
-        <small class="nota">Música tranquila de fondo que cambia con la hora del día.</small>
         <label>Copia de seguridad 💾</label>
         <div class="fila2"><button id="aj-copia" class="secundario">💾 Descargar</button><button id="aj-restaurar" class="secundario">📂 Restaurar</button></div>
         <small class="nota">Guarda toda la casa, las fotos y el diario en un archivo por si acaso.</small>
@@ -254,12 +283,29 @@ export class Mas {
       e.currentTarget.textContent = on ? '🔊 Sonido activado' : '🔇 Sonido desactivado';
     });
     cuerpo.querySelector('#aj-idioma').addEventListener('click', () => ponerIdioma(idioma() === 'en' ? 'es' : 'en'));
-    cuerpo.querySelector('#aj-lofi').addEventListener('click', e => {
-      if (!this.ctx.lofi) return;
-      const on = this.ctx.lofi.alternar();
-      if (on && !sonido.activo) sonido.alternar();
-      e.currentTarget.textContent = on ? '🎧 Música lofi: sí' : '🎧 Música lofi: no';
+    cuerpo.querySelector('#aj-musica').addEventListener('input', e => {
+      const lofi = this.ctx.lofi;
+      if (!lofi) return;
+      const v = Number(e.target.value) / 100;
+      if (v > 0) lofi.ponerVolumen(v);
+      if ((v > 0) !== lofi.activo) lofi.alternar();
+      if (v > 0 && !sonido.activo) {
+        sonido.alternar();
+        cuerpo.querySelector('#aj-sonido').textContent = '🔊 Sonido activado';
+      }
     });
+    cuerpo.querySelector('#aj-efectos').addEventListener('input', e => sonido.ponerVolumen && sonido.ponerVolumen(Number(e.target.value) / 100));
+    cuerpo.querySelector('#aj-efectos').addEventListener('change', () => sonido.pop());
+    const opciones = (sel, clave, alCambiar) => cuerpo.querySelectorAll(`${sel} button`).forEach(b => b.addEventListener('click', () => {
+      try {
+        localStorage.setItem(clave, b.dataset.v);
+      } catch (e) {}
+      cuerpo.querySelectorAll(`${sel} button`).forEach(x => x.classList.toggle('activo', x === b));
+      sonido.pop();
+      if (alCambiar) alCambiar(b.dataset.v);
+    }));
+    opciones('#aj-texto', 'hogar-texto', aplicarTamTexto);
+    opciones('#aj-modo-avisos', 'hogar-avisos-modo');
     cuerpo.querySelector('#aj-avisos').addEventListener('click', e => this.alternarAvisos(e.currentTarget));
     cuerpo.querySelector('#aj-copia').addEventListener('click', () => this.descargarCopia());
     cuerpo.querySelector('#aj-restaurar').addEventListener('click', () => cuerpo.querySelector('#aj-archivo').click());

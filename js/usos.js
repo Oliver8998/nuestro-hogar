@@ -648,7 +648,7 @@ export class Usos {
       if (def.id === 'acuario') this.animarAcuario(m, dt);
     }
     if (llovio) {
-      this.ctx.ui.aviso('🌧️ La lluvia ha regado las plantas');
+      (this.ctx.ui.avisoSuave || this.ctx.ui.aviso).call(this.ctx.ui, '🌧️ La lluvia ha regado las plantas');
       this.ctx.guardar();
     }
     if (this.musica && !this.ctx.gestor.muebles.includes(this.musica.m)) this.alternarMusica();

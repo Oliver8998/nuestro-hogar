@@ -5,11 +5,21 @@ try {
   activo = localStorage.getItem('hogar-sonido') !== 'no';
 } catch (e) {}
 
+let volEfectos = 1;
+try {
+  const v = parseFloat(localStorage.getItem('hogar-vol-efectos'));
+  if (!isNaN(v)) volEfectos = Math.max(0, Math.min(1, v));
+} catch (e) {}
+let busEfectos = null;
+
 function contexto() {
   if (!ctx) {
     const C = window.AudioContext || window.webkitAudioContext;
     if (!C) return null;
     ctx = new C();
+    busEfectos = ctx.createGain();
+    busEfectos.gain.value = volEfectos;
+    busEfectos.connect(ctx.destination);
   }
   if (ctx.state === 'suspended') ctx.resume();
   return ctx;
@@ -17,7 +27,7 @@ function contexto() {
 
 function nota(freq, inicio, duracion, { tipo = 'sine', volumen = 0.15, hasta = null } = {}) {
   const c = contexto();
-  if (!c || !activo) return;
+  if (!c || !activo || volEfectos <= 0.001) return;
   const t = c.currentTime + inicio;
   const osc = c.createOscillator();
   const g = c.createGain();
@@ -27,7 +37,7 @@ function nota(freq, inicio, duracion, { tipo = 'sine', volumen = 0.15, hasta = n
   g.gain.setValueAtTime(0.0001, t);
   g.gain.exponentialRampToValueAtTime(volumen, t + 0.012);
   g.gain.exponentialRampToValueAtTime(0.0001, t + duracion);
-  osc.connect(g).connect(c.destination);
+  osc.connect(g).connect(busEfectos);
   osc.start(t);
   osc.stop(t + duracion + 0.02);
 }
@@ -51,7 +61,7 @@ function ruido(duracion, { volumen = 0.08, freq = 1800, q = 1, inicio = 0 } = {}
   const g = c.createGain();
   g.gain.setValueAtTime(volumen, t);
   g.gain.exponentialRampToValueAtTime(0.0001, t + duracion);
-  src.connect(f).connect(g).connect(c.destination);
+  src.connect(f).connect(g).connect(busEfectos);
   src.start(t, Math.random() * 0.5);
   src.stop(t + duracion + 0.02);
 }
@@ -72,6 +82,16 @@ export const sonido = {
   },
   get activo() {
     return activo;
+  },
+  get volumen() {
+    return volEfectos;
+  },
+  ponerVolumen(v) {
+    volEfectos = Math.max(0, Math.min(1, v));
+    try {
+      localStorage.setItem('hogar-vol-efectos', String(volEfectos));
+    } catch (e) {}
+    if (busEfectos) busEfectos.gain.setTargetAtTime(volEfectos, ctx.currentTime, 0.05);
   },
   alternar() {
     activo = !activo;

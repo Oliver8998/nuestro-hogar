@@ -93,7 +93,7 @@ export class Album {
     if (primera) return this.ctx.guardar();
     d.nuevas.push(...nuevas);
     const x = this.lista.find(l => l.clave === nuevas[0]);
-    this.ctx.ui.aviso(`📒 ¡Pegatina nueva para el álbum: ${this.nombre(x)}!${nuevas.length > 1 ? ` (+${nuevas.length - 1})` : ''}`);
+    this.ctx.ui.avisoSuave(`📒 ¡Pegatina nueva para el álbum: ${this.nombre(x)}!${nuevas.length > 1 ? ` (+${nuevas.length - 1})` : ''}`);
     if (this.pendientes()) setTimeout(() => this.ctx.ui.aviso('🎁 ¡Tenéis un premio del álbum por recoger!'), 2200);
     this.ctx.guardar();
   }

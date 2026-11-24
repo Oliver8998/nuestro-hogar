@@ -3714,7 +3714,7 @@ body.colgando #lateral, body.colgando #chips-vida, body.colgando #menu-objeto, b
 .sueno-meta.hecha .sm-barra i { background: var(--verde); }
 .sueno-botones { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
 
-body.modo-cine #hud, body.modo-cine .hud, body.modo-cine #barra, body.modo-cine #avisos, body.modo-cine .chips { opacity: 0 !important; pointer-events: none !important; transition: opacity .6s; }
+body.modo-cine #hud, body.modo-cine #lateral, body.modo-cine #aviso, body.modo-cine #barra, body.modo-cine .chips { opacity: 0 !important; pointer-events: none !important; transition: opacity .6s; }
 #final-sueno { position: fixed; inset: 0; z-index: 400; pointer-events: auto; animation: sf-entra .8s ease; }
 #final-sueno.saliendo { opacity: 0; transition: opacity .6s; }
 @keyframes sf-entra { from { opacity: 0; } }
@@ -3766,3 +3766,13 @@ body.modo-cine #hud, body.modo-cine .hud, body.modo-cine #barra, body.modo-cine 
 .lb-pie button { border: none; width: 44px; height: 44px; border-radius: 50%; background: #f6ecdd; font-size: 24px; font-weight: 900; color: var(--texto); }
 .lb-pie button:disabled { opacity: .3; }
 .lb-num { font-weight: 800; color: var(--suave); }
+
+/* Ajustes: volumen, tamaño de texto y avisos */
+.ajustes input.aj-rango { padding: 0; border: none; background: none; accent-color: var(--rosa); height: 32px; }
+.aj-opciones { display: flex; gap: 6px; }
+.aj-opciones button { flex: 1; border: 2px solid var(--borde); border-radius: 14px; padding: 9px 6px; font: inherit; font-weight: 800; font-size: 14px; background: #fff; color: var(--texto); }
+.aj-opciones button.activo { border-color: var(--rosa); background: #fdeef1; color: var(--rosa-oscuro); }
+body.texto-grande .hoja, body.texto-grande .dialogo-caja, body.texto-grande .in-caja, body.texto-grande .lb-libro, body.texto-grande #aviso, body.texto-grande .bv-caja { zoom: 1.12; }
+body.texto-muy .hoja, body.texto-muy .dialogo-caja, body.texto-muy .in-caja, body.texto-muy .lb-libro, body.texto-muy #aviso, body.texto-muy .bv-caja { zoom: 1.25; }
+body.texto-grande .hoja { height: calc(80vh / 1.12); }
+body.texto-muy .hoja { height: calc(80vh / 1.25); }

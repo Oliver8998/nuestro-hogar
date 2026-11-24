@@ -257,7 +257,7 @@ export class Pareja {
     this.estado.recuerdos.push({ t: Date.now(), icono, texto });
     this.estado.recuerdos = this.estado.recuerdos.slice(-80);
     this.ctx.guardar();
-    this.ctx.ui.aviso(`🌳 Nuevo recuerdo: ${texto}`);
+    (this.ctx.ui.avisoSuave || this.ctx.ui.aviso).call(this.ctx.ui, `🌳 Nuevo recuerdo: ${texto}`);
   }
 
   verRecuerdos() {

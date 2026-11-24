@@ -19,7 +19,7 @@ import { cargarModelos } from './modelos.js';
 import { cargarMascotasKenney } from './modeloMascota.js';
 import { cargarPersonajesKenney, actualizarPersonajes } from './personajes.js';
 import { Ambiente, temporada, NOMBRE_TEMPORADA } from './ambiente.js';
-import { Mas } from './mas.js';
+import { Mas, aplicarTamTexto } from './mas.js';
 import { Juegos, JUEGOS, PARTIDAS_PREMIADAS } from './juegos.js';
 import { Usos } from './usos.js';
 import { Vida } from './vida.js';
@@ -53,6 +53,7 @@ import { Duo } from './duo.js';
 import { Sueno } from './sueno.js';
 import { anotarActividad, actividadNueva, marcarActividadVista, textoActividad, mostrarBienvenida } from './bienvenida.js';
 import { Inmobiliaria, INV, NIVEL_INMOBILIARIA } from './inmobiliaria.js';
+aplicarTamTexto();
 
 activarTraduccion();
 await Promise.all([cargarModelos(), cargarMascotasKenney(ESPECIES), cargarPersonajesKenney()]);
@@ -143,7 +144,7 @@ const suciedad = new Suciedad(escena, {
       guardar();
     },
     alNuevaSuciedad(tipo, m) {
-      if (tipo === 'caca' && m) ui.aviso(`💩 ${m.nombre} ha hecho caca en el suelo`);
+      if (tipo === 'caca' && m) ui.avisoSuave(`💩 ${m.nombre} ha hecho caca en el suelo`);
       else if (tipo === 'pis' && m) ui.aviso(`💦 ${m.nombre} ha hecho pis en el suelo`);
       else if (tipo === 'bichos') ui.aviso('🐜 ¡Han entrado hormigas!');
       refrescarHud();
@@ -320,7 +321,7 @@ function aplicarRemoto(datos, conflicto = false, inicial = false) {
   if (!inicial && otroYo !== null) {
     const nuevas = (estado.actividad || []).filter(a => a.de === otroYo && a.t > actividadAntes && Date.now() - a.t < 180000).slice(-2);
     const otro = (estado.pareja && estado.pareja.nombres && estado.pareja.nombres[otroYo]) || 'Tu pareja';
-    nuevas.forEach((a, i) => setTimeout(() => { const x = textoActividad(a, otro); ui.aviso(`${x.icono} ${x.texto}`); }, 600 + i * 2200));
+    nuevas.forEach((a, i) => setTimeout(() => { const x = textoActividad(a, otro); ui.avisoSuave(`${x.icono} ${x.texto}`); }, 600 + i * 2200));
     if (nuevas.length) marcarActividadVista();
   }
   monedasVistas = estado.monedas;

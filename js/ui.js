@@ -938,11 +938,48 @@ export class UI {
   }
 
   aviso(texto, error = false) {
+    if (!texto) return;
+    const ahora = Date.now();
+    if (texto === this.avisoTexto && ahora - this.avisoDesde < 2300) return;
+    if (!error && this.avisoDesde && ahora - this.avisoDesde < 1300 && this.elAviso.classList.contains('visible')) {
+      if (!this.colaAvisos) this.colaAvisos = [];
+      if (!this.colaAvisos.includes(texto) && this.colaAvisos.length < 3) this.colaAvisos.push(texto);
+      clearTimeout(this.tCola);
+      this.tCola = setTimeout(() => this.siguienteAviso(), 1300 - (ahora - this.avisoDesde));
+      return;
+    }
+    this.mostrarAviso(texto, error);
+  }
+
+  avisoSuave(texto) {
+    if (UI.pocosAvisos()) return;
+    this.aviso(texto);
+  }
+
+  static pocosAvisos() {
+    try {
+      return localStorage.getItem('hogar-avisos-modo') === 'pocos';
+    } catch (e) {
+      return false;
+    }
+  }
+
+  mostrarAviso(texto, error) {
+    this.avisoTexto = texto;
+    this.avisoDesde = Date.now();
     this.elAviso.textContent = texto;
     this.elAviso.classList.toggle('error', error);
     this.elAviso.classList.add('visible');
     clearTimeout(this.tAviso);
-    this.tAviso = setTimeout(() => this.elAviso.classList.remove('visible'), 2300);
+    this.tAviso = setTimeout(() => {
+      this.elAviso.classList.remove('visible');
+      if (this.colaAvisos && this.colaAvisos.length) this.tCola = setTimeout(() => this.siguienteAviso(), 250);
+    }, 2300);
+  }
+
+  siguienteAviso() {
+    const t = this.colaAvisos && this.colaAvisos.shift();
+    if (t) this.mostrarAviso(t, false);
   }
 
   particula(emoji, x, y, n = 1) {
