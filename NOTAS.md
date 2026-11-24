@@ -378,3 +378,4 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 
 ## Lofi sin petardeo (v57)
 - El "vinilo" tenía clics aleatorios metidos en el ruido (~40/s) y la caja y el charles usaban ese mismo ruido con clics → petardeo. Ahora: ruido limpio para la batería, siseo suave sin clics y con fundido en el bucle, y ataques de 4-5 ms en bombo/caja/charles. Medido renderizando 10 s: 300-400 saltos bruscos antes, 0 ahora, mismo volumen.
+- Furgoneta (v58): la franja rosa acababa justo en la cara trasera de la caja → parpadeo (z-fighting). Ahora sobresale 1-2 cm (`PIEZAS_FURGONETA[4]` = 1.53 × 0.97, x -0.255).
