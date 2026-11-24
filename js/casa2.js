@@ -332,12 +332,12 @@ const CATS = [
 ];
 
 export const INGREDIENTES = {
-  tomate: { icono: '🍅', nombre: 'Tomate', huerto: true },
-  lechuga: { icono: '🥬', nombre: 'Lechuga', huerto: true },
-  zanahoria: { icono: '🥕', nombre: 'Zanahoria', huerto: true },
-  patata: { icono: '🥔', nombre: 'Patata', huerto: true },
-  fresa: { icono: '🍓', nombre: 'Fresa', huerto: true },
-  pimiento: { icono: '🫑', nombre: 'Pimiento', huerto: true },
+  tomate: { icono: '🍅', nombre: 'Tomate', huerto: true, precio: 4 },
+  lechuga: { icono: '🥬', nombre: 'Lechuga', huerto: true, precio: 4 },
+  zanahoria: { icono: '🥕', nombre: 'Zanahoria', huerto: true, precio: 3 },
+  patata: { icono: '🥔', nombre: 'Patata', huerto: true, precio: 3 },
+  fresa: { icono: '🍓', nombre: 'Fresa', huerto: true, precio: 6 },
+  pimiento: { icono: '🫑', nombre: 'Pimiento', huerto: true, precio: 4 },
   huevo: { icono: '🥚', nombre: 'Huevos', precio: 6 },
   harina: { icono: '🌾', nombre: 'Harina', precio: 5 },
   queso: { icono: '🧀', nombre: 'Queso', precio: 9 },
@@ -659,7 +659,7 @@ export class Casa2 {
     const cuerpo = ui.abrirGen('🍳 Cocina', `
       <p class="gen-intro">Lo que cosechéis en el huerto va a la despensa. Cocinad platos para comer juntos, dar a las mascotas o servir en una fiesta.</p>
       <h4 class="gen-sub">Despensa</h4>
-      <div class="despensa">${Object.entries(INGREDIENTES).map(([k, ing]) => `<div class="${d[k] ? '' : 'vacio'}"><span>${ing.icono}</span><b>${d[k] || 0}</b>${ing.precio ? `<button data-compra="${k}">+1 · 🪙${ing.precio}</button>` : `<small>${ing.huerto ? 'Huerto' : 'Paseos'}</small>`}</div>`).join('')}</div>
+      <div class="despensa">${Object.entries(INGREDIENTES).map(([k, ing]) => `<div class="${d[k] ? '' : 'vacio'}"><span>${ing.icono}</span><b>${d[k] || 0}</b>${ing.precio ? `<button data-compra="${k}">+1 · 🪙${ing.precio}</button>` : '<small>Paseos</small>'}</div>`).join('')}</div>
       ${hayPlatos.length ? `<h4 class="gen-sub">Platos listos</h4><div class="platos">${hayPlatos.map(r => `<div class="plato"><span>${r.icono}</span><div><b>${r.nombre} ×${platos[r.id]}</b><small>
         <button data-comer="${r.id}">😋 Comer juntos</button><button data-mascota="${r.id}">🐾 A una mascota</button></small></div></div>`).join('')}</div>` : ''}
       <h4 class="gen-sub">Recetas</h4>
@@ -732,9 +732,23 @@ export class Casa2 {
   }
 
   async cocinar(r, m) {
-    const { ui, juegos, sonido } = this.ctx;
+    const { ui } = this.ctx;
     if (!this.puedeCocinar(r)) return;
     ui.cerrarHojas();
+    const puntos = await this.juegoCoccion(r);
+    if (puntos === null || puntos === undefined) return;
+    const p = this.platos();
+    const raciones = puntos >= 0.99 ? 2 : 1;
+    p[r.id] = (p[r.id] || 0) + raciones;
+    this.ctx.registrar('cocinar');
+    if (puntos > 0) this.ctx.ganar(Math.round(10 + puntos * 20), m, r.icono);
+    ui.aviso(`${r.icono} ${raciones > 1 ? '¡Os han salido 2 raciones!' : 'Plato listo'} · en la cocina`);
+    this.ctx.guardar();
+  }
+
+  async juegoCoccion(r) {
+    const { juegos, sonido } = this.ctx;
+    if (!this.puedeCocinar(r)) return null;
     const d = this.despensa();
     for (const [k, n] of Object.entries(r.ing)) d[k] -= n;
     const puntos = await juegos.custom(r.icono, r.nombre, j => {
@@ -789,15 +803,10 @@ export class Casa2 {
     if (puntos === null || puntos === undefined) {
       for (const [k, n] of Object.entries(r.ing)) d[k] += n;
       this.ctx.guardar();
-      return;
+      return null;
     }
-    const p = this.platos();
-    const raciones = puntos >= 0.99 ? 2 : 1;
-    p[r.id] = (p[r.id] || 0) + raciones;
     this.ctx.registrar('cocinar');
-    if (puntos > 0) this.ctx.ganar(Math.round(10 + puntos * 20), m, r.icono);
-    ui.aviso(`${r.icono} ${raciones > 1 ? '¡Os han salido 2 raciones!' : 'Plato listo'} · en la cocina`);
-    this.ctx.guardar();
+    return puntos;
   }
 
   ropa() {

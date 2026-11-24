@@ -5,7 +5,7 @@ const COSTE_PIEZAS = { raro: 8, epico: 18, legendario: 35 };
 const TAREAS_PASE = [
   { id: 'limpiar', icono: '🧹', texto: 'Limpiad', meta: 40, premio: { monedas: 80 } },
   { id: 'regar', icono: '💧', texto: 'Regad plantas', meta: 20, premio: { monedas: 60 } },
-  { id: 'minijuego', icono: '🎮', texto: 'Jugad minijuegos', meta: 15, premio: { tickets: 1 } },
+  { id: 'encargo', icono: '📞', texto: 'Ayudad con encargos', meta: 5, premio: { tickets: 1 } },
   { id: 'colocar', icono: '🛋️', texto: 'Colocad muebles', meta: 30, premio: { monedas: 60 } },
   { id: 'mimos', icono: '🥰', texto: 'Dad mimos', meta: 30, premio: { monedas: 60 } },
   { id: 'cosechar', icono: '🍅', texto: 'Cosechad', meta: 5, premio: { monedas: 100 } },

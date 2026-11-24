@@ -950,7 +950,7 @@ export class Trabajos {
     const d = this.datos();
     const t = this.delDia();
     if (d.turnos >= TURNOS) return null;
-    return { id: 'trabajo', texto: `${t.icono} ${TURNOS - d.turnos}`, accion: () => this.abrir() };
+    return { id: 'trabajo', texto: `${t.icono} ${TURNOS - d.turnos}`, accion: () => (window.abrirGanar ? window.abrirGanar() : this.abrir()) };
   }
 
   abrir() {
@@ -966,12 +966,7 @@ export class Trabajos {
         <div class="trabajo-datos"><em>🪙 hasta ${t.pago}</em><em>⏱️ Turnos ${Math.min(d.turnos, TURNOS)}/${TURNOS}</em>${mejor ? `<em>🏅 Mejor ${Math.round(mejor * 100)}%</em>` : ''}</div>
         <button class="primario" id="ir-trabajar">${d.turnos < TURNOS ? '¡A trabajar!' : 'Hacer horas extra (paga reducida)'}</button>
       </div>
-      <p class="gen-intro">Cada día hay un trabajo distinto. Los ${TURNOS} primeros turnos pagan entero; después, horas extra a un 30%. Mañana… ¡sorpresa!</p>
-      <h4 class="gen-sub">Trabajos probados (${d.hechos.length} de ${TRABAJOS.length})</h4>
-      <div class="trabajos-lista">${TRABAJOS.map(x => {
-        const hecho = d.hechos.includes(x.id);
-        return `<div class="${hecho ? 'hecho' : ''} ${x.id === t.id ? 'hoy' : ''}"><span>${hecho || x.id === t.id ? x.icono : '❔'}</span><small>${hecho || x.id === t.id ? x.nombre : '???'}</small>${d.mejor[x.id] ? `<i>${Math.round(d.mejor[x.id] * 100)}%</i>` : ''}</div>`;
-      }).join('')}</div>`, () => (window.abrirGanar || this.ctx.abrirMas)());
+`, () => (window.abrirGanar || this.ctx.abrirMas)());
     cuerpo.querySelector('#ir-trabajar').addEventListener('click', () => this.trabajar(t));
   }
 

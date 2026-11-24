@@ -39,6 +39,7 @@ import * as avisos from './avisos.js';
 import { Telefono } from './telefono.js';
 import { Interacciones } from './interacciones.js';
 import { ObjetosPared } from './paredObjs.js';
+import { Encargos, CLIENTES } from './encargos.js';
 
 let guia = null;
 import { CASAS, COLECCIONES, LOGROS, EXTERIORES, calcularAcogedor, coleccionesCompletas } from './progreso.js';
@@ -83,6 +84,7 @@ let mascotaSel = null;
 let controles = null;
 let interacciones = null;
 let paredObjs = null;
+let encargos = null;
 let mas = null;
 let arrastre = null;
 let tRefrescoMenu = 0;
@@ -841,7 +843,9 @@ const ui = new UI(miniaturas, {
   alImprescindibles() {
     const h = estado.historia || 0;
     const pide = { 4: 'cama', 7: 'robot' }[h];
-    return pide && !gestor.muebles.some(m => m.userData.def.id === pide) ? [pide] : [];
+    const lista = pide && !gestor.muebles.some(m => m.userData.def.id === pide) ? [pide] : [];
+    if (encargos && encargos.datos().activos.some(e => e.receta) && !tieneCocinaEnCasa()) lista.push('cocina');
+    return lista;
   },
   alVerMascota(m) {
     ui.cerrarHojas();
@@ -1895,24 +1899,33 @@ function abrirTrabajar() {
   const hechos = trabajos.turnosHoy();
   const quedan = Math.max(0, 3 - hechos);
   const gratis = !!ui.ruletaGratis;
+  const pendientes = encargos.datos().activos.length;
   const cuerpo = ui.abrirGen('💼 Trabajar', `
     <div class="tr-hero">
       <div class="tr-cabecera"><span class="tr-ico">${t.icono}</span><div><small>Trabajo de hoy</small><b>${t.nombre}</b></div></div>
       <p>${t.texto}</p>
       <div class="tr-turnos">${[0, 1, 2].map(i => `<i class="${i < hechos ? 'hecho' : ''}">${i < hechos ? '✓' : i + 1}</i>`).join('')}<em>${quedan ? `Te ${quedan === 1 ? 'queda 1 turno' : `quedan ${quedan} turnos`} con paga entera` : 'Turnos de hoy hechos: ahora son horas extra al 30%'}</em></div>
       <button class="primario tr-ir" id="tr-ir">${quedan ? '¡A trabajar!' : 'Hacer horas extra'}<small>hasta 🪙 ${quedan ? t.pago : Math.round(t.pago * 0.3)}</small></button>
-      <button class="tr-todos" id="tr-todos">Ver todos los trabajos ›</button>
     </div>
     <h4 class="gen-sub">Más formas de ganar</h4>
     <div class="tr-otros">
       <button data-a="ruleta" class="${gratis ? 'destacado' : ''}"><span>🎡</span><b>Ruleta diaria</b><small>${gratis ? '¡Tirada gratis hoy!' : 'Ya tirada · vuelve mañana'}</small></button>
-      <button data-a="juegos"><span>🎮</span><b>Minijuegos</b><small>Para sacar un extra</small></button>
-    </div>
-    <p class="gen-intro tr-nota">💡 Mañana habrá otro trabajo distinto. Con lo que ganéis, pasad por la tienda de Pilar.</p>`);
+      <button data-a="encargos" class="${pendientes ? 'destacado' : ''}"><span>📞</span><b>Encargos</b><small>${pendientes ? `${pendientes} ${pendientes === 1 ? 'favor pendiente' : 'favores pendientes'}` : 'Os llamarán para pedir favores'}</small></button>
+    </div>`);
   cuerpo.querySelector('#tr-ir').addEventListener('click', () => trabajos.trabajar(t));
-  cuerpo.querySelector('#tr-todos').addEventListener('click', () => trabajos.abrir());
   cuerpo.querySelector('[data-a="ruleta"]').addEventListener('click', () => { ui.cerrarHojas(); setTimeout(() => ui.abrirRuleta(), 200); });
-  cuerpo.querySelector('[data-a="juegos"]').addEventListener('click', () => abrirJuegos());
+  cuerpo.querySelector('[data-a="encargos"]').addEventListener('click', () => abrirEncargos());
+}
+
+function abrirEncargos() {
+  const agenda = encargos.agenda();
+  const cuerpo = ui.abrirGen('📞 Encargos', `
+    <p class="gen-intro">La familia, los vecinos y los amigos os llamarán de vez en cuando para pedir ayuda. Cuanto mejor lo hagáis, más os llamarán y para cosas mejor pagadas.</p>
+    <div class="enc-agenda">${agenda.map(({ q, c, activo }) => `<button class="enc-fila${activo ? ' activo' : ''}" data-q="${q}"><img src="${miniaturas.personaje(c.personaje)}" alt=""><div><b>${c.nombre}${c.sub ? `<span>${c.sub}</span>` : ''}</b><small>${activo ? `📞 ${encargos.tipo(activo).titulo(encargos.receta(activo))} · 🪙 ${activo.pago}` : 'Ahora no necesita nada'}</small><i>${encargos.corazones(q)}</i></div>${activo ? '<em>!</em>' : ''}</button>`).join('')}</div>`, () => abrirTrabajar());
+  cuerpo.querySelectorAll('.enc-fila.activo').forEach(b => b.addEventListener('click', () => {
+    const e = encargos.datos().activos.find(a => a.quien === b.dataset.q);
+    if (e) encargos.abrir(e);
+  }));
 }
 
 function abrirGanar() {
@@ -1988,6 +2001,26 @@ const economia = new Economia({
   abrirMas: () => mas.abrir()
 });
 ui.ponerMercadillo(economia.esFinde());
+
+encargos = new Encargos({
+  estado, ui, sonido, miniaturas, juegos,
+  guardar: () => guardar(),
+  refrescarHud: () => refrescarHud(),
+  registrar: e => registrar(e),
+  recordar: (...a) => pareja.recordar(...a),
+  ganar: (n, m, icono) => ganar(n, m, icono),
+  chip: () => pintarChipsVida(),
+  avisarPareja: (t, x) => window.avisarPareja && window.avisarPareja(t, x),
+  tieneCocina: () => tieneCocinaEnCasa(),
+  cocinar: r => casa2.juegoCoccion(r),
+  imagenPuzzle: () => (mas.fotos.length && Math.random() < 0.7 ? mas.fotos[Math.floor(Math.random() * mas.fotos.length)].data : mas.capturar(600).toDataURL('image/jpeg', 0.85)),
+  puedeLlamar: () => soyGenerador() && !visitando && !enMenu() && !(guia && guia.activa()) && !!estado.bienvenida
+});
+if (new URLSearchParams(location.search).has('encargo')) encargos.datos().proximo = 0;
+
+function tieneCocinaEnCasa() {
+  return gestor.muebles.some(m => m.userData.def.id === 'cocina') || (estado.habs || []).some(x => (x.muebles || []).some(d => d.id === 'cocina'));
+}
 
 paredObjs = new ObjetosPared({
   estado: () => estado, ui, sonido, sala, telefono, ambiente,
@@ -2263,6 +2296,7 @@ function pintarChipsVida() {
   if (casa2) chips.push(...casa2.chips());
   if (mascotas2) chips.push(...mascotas2.chips());
   if (sorpresas) chips.push(...sorpresas.chips());
+  if (encargos) chips.push(...encargos.chips());
   const URGENTES = ['visita', 'averia', 'nieve', 'gato', 'tesoro'];
   const urgentes = chips.filter(c => URGENTES.includes(c.id));
   mensajesTelefono = chips.filter(c => !URGENTES.includes(c.id));
@@ -2582,7 +2616,7 @@ function colocarMenu(dt) {
   ui.posicionarMenu(s.x, s.y);
 }
 
-if (new URLSearchParams(location.search).has('debug')) window.__h = { THREE, sala, paredObjs, interacciones, controles, guia, telefono, entregas, trabajos, estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida };
+if (new URLSearchParams(location.search).has('debug')) window.__h = { encargos, THREE, sala, paredObjs, interacciones, controles, guia, telefono, entregas, trabajos, estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida };
 
 renderer.setAnimationLoop(() => {
   const dt = Math.min(reloj.getDelta(), 0.1);
@@ -2592,6 +2626,7 @@ renderer.setAnimationLoop(() => {
   telefono.activo = !visitando;
   telefono.actualizar(dt);
   if (paredObjs) paredObjs.actualizar(dt);
+  if (encargos) encargos.actualizar(dt);
   ambiente.actualizar(dt);
   usos.actualizar(dt);
   sync.actualizar(dt);

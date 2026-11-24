@@ -3047,3 +3047,23 @@ body.colgando #lateral, body.colgando #chips-vida, body.colgando #menu-objeto, b
 .tr-otros button.destacado { background: #fff4dc; box-shadow: 0 2px 0 #f2d7a0; }
 .tr-otros button.destacado small { color: #c27a12; }
 .tr-nota { margin-top: 10px; }
+
+/* Encargos */
+.enc-reqs { display: flex; flex-direction: column; gap: 6px; background: #fff4ec; border-radius: 14px; padding: 9px 11px; margin: 2px 0 8px; font-weight: 800; font-size: 13.5px; text-align: left; }
+.enc-reqs small { font-weight: 700; color: var(--suave); }
+.enc-ings { display: flex; flex-wrap: wrap; gap: 5px; }
+.enc-ings span { background: #fde3e7; border-radius: 10px; padding: 3px 8px; font-size: 13px; }
+.enc-ings span.ok { background: #d9f1e1; }
+.enc-pie { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; font-weight: 800; color: var(--suave); margin: 2px 2px 6px; }
+.enc-nuevo { margin: 4px 0 8px; font-weight: 900; color: var(--verde-oscuro); font-size: 13.5px; }
+.enc-agenda { display: flex; flex-direction: column; gap: 8px; }
+.enc-fila { position: relative; display: flex; align-items: center; gap: 10px; border: none; background: #fff; border-radius: 18px; padding: 8px 12px 8px 8px; text-align: left; font: inherit; color: var(--texto); box-shadow: 0 2px 0 var(--borde); }
+.enc-fila img { width: 52px; height: 52px; border-radius: 14px; background: #f6ece0; object-fit: contain; }
+.enc-fila div { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
+.enc-fila b { font-weight: 900; font-size: 15px; }
+.enc-fila small { font-size: 12px; color: var(--suave); font-weight: 700; }
+.enc-fila i { font-style: normal; font-size: 11px; letter-spacing: 1px; }
+.enc-fila.activo { background: #fff4dc; box-shadow: 0 2px 0 #f2d7a0; }
+.enc-fila em { font-style: normal; width: 24px; height: 24px; border-radius: 50%; background: #ffb320; color: #fff; font-weight: 900; display: grid; place-items: center; }
+.enc-fila b span { font-weight: 700; font-size: 12px; color: var(--suave); margin-left: 6px; }
+.enc-fila b span::before { content: '· '; }
