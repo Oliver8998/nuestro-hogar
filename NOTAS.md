@@ -560,3 +560,11 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - `revisarFechas(true)` y `revisarRachaPareja(true)` devuelven datos sin abrir diálogos. `mas.postalDelDia(true)` (respaldo cada 5 s) guarda la foto sin diálogo.
 - Actividad de pareja: `registrar()` anota en `estado.actividad` (`{de, e, t, n}`, últimas 60, agrupa repeticiones en 30 min) los eventos de `ACTIVIDAD` (regar, bañar, comer, cocinar, limpiar, trabajar, favores, obras…). En la bienvenida se ve lo nuevo del otro desde tu última visita (`hogar-actividad-vista` en localStorage). Al llegar un cambio remoto con actividad reciente (menos de 3 min) salen avisos en directo: «💧 Lucía ha regado las plantas».
 - El calendario de racha muestra las monedas ya ajustadas con `paga()`.
+
+## Menú ordenado y castigos más suaves (v85)
+- Más (`mas.abrir`) agrupado: 💑 Vosotros, 🏠 La casa, 🏘️ El barrio, ⭐ Progreso, ⚙️ Otros. Colecciones van dentro del álbum (pestaña «colecciones», `htmlColecciones`). La ruleta pasa a Objetivos (ya no está en Trabajar ni cuenta en su globo). Fuera los juegos de dos en el mismo móvil (ya están los de dúo en directo).
+- Racha diaria: un día de gracia por semana (`racha.perdon` = semana usada). Si faltáis un solo día se mantiene y la bienvenida lo avisa.
+- Suciedad: `TOPE_SUCIEDAD = 7`. Sin jugar se generan como mucho 3 cosas nuevas; las mascotas fuera de línea hacen como mucho 1 caca; en juego, tope de 3 cacas y 2 pises.
+- Las plantas mustias ya no quitan puntos de «acogedor».
+- Vecinos: decir que no a una visita ya no resta corazones; «Hacerse el sordo» con el ruido resta 2 y el evento sale la mitad de veces.
+- Dúo: las 3 primeras partidas del día pagan completo, las siguientes el 30 % (`estado.duoHoy`).
