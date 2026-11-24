@@ -277,49 +277,87 @@ export class Juegos {
   }
 
   cocina() {
-    const lista = barajar(RECETAS.slice()).slice(0, 4);
-    let ronda = 0;
-    let hechas = 0;
-    let paso = 0;
-    const total = 36;
+    const OBJETIVO = 6;
+    const total = 40;
     let quedan = total;
+    let hechas = 0;
+    let perfectas = 0;
+    let paso = 0;
+    let fallosReceta = 0;
+    let anterior = null;
+    let r = null;
+    const nueva = () => {
+      const posibles = RECETAS.filter(x => x !== anterior);
+      r = posibles[Math.floor(Math.random() * posibles.length)];
+      anterior = r;
+      paso = 0;
+      fallosReceta = 0;
+    };
     const pintar = () => {
-      const r = lista[ronda];
-      const opciones = barajar([...new Set([...r.pasos, ...barajar(INGREDIENTES.slice()).slice(0, 8)])]).slice(0, 9);
-      for (const p of r.pasos) if (!opciones.includes(p)) opciones[Math.floor(Math.random() * opciones.length)] = p;
-      this.info(`Receta ${ronda + 1} de ${lista.length} · Toca los ingredientes en orden`);
+      if (!this.reloj && hechas) return;
+      const extra = Math.min(8, 5 + hechas);
+      const opciones = barajar([...new Set([...r.pasos, ...barajar(INGREDIENTES.filter(x => !r.pasos.includes(x))).slice(0, extra)])]).slice(0, 9);
+      this.info(`${hechas} de ${OBJETIVO} platos${perfectas ? ` · ${perfectas} ⭐` : ''} · Toca los ingredientes en orden`);
       this.cuerpo.innerHTML = `
         <div class="jg-receta"><b>${r.nombre}</b><div class="pasos">${r.pasos.map((p, i) => `<span class="${i < paso ? 'hecho' : ''}">${p}</span>`).join('<i>›</i>')}</div></div>
-        <div class="jg-sarten">🍳</div>
+        <div class="jg-sarten"><span class="js-sarten">🍳</span><div class="js-dentro"></div></div>
         <div class="jg-ingredientes">${opciones.map(o => `<button>${o}</button>`).join('')}</div>`;
+      const sarten = this.cuerpo.querySelector('.jg-sarten');
       this.cuerpo.querySelectorAll('.jg-ingredientes button').forEach(b => b.addEventListener('click', () => {
+        if (quedan <= 0) return;
         if (b.textContent === r.pasos[paso]) {
           paso++;
           this.sonido.pop();
           b.classList.add('bien');
+          const a = b.getBoundingClientRect();
+          const d = sarten.getBoundingClientRect();
+          const vuela = document.createElement('span');
+          vuela.className = 'js-vuela';
+          vuela.textContent = b.textContent;
+          vuela.style.left = `${a.left + a.width / 2}px`;
+          vuela.style.top = `${a.top + a.height / 2}px`;
+          vuela.style.setProperty('--dx', `${d.left + d.width / 2 - (a.left + a.width / 2)}px`);
+          vuela.style.setProperty('--dy', `${d.top + d.height / 2 - (a.top + a.height / 2)}px`);
+          document.body.appendChild(vuela);
+          setTimeout(() => {
+            vuela.remove();
+            const dentro = sarten.querySelector('.js-dentro');
+            if (dentro) dentro.insertAdjacentHTML('beforeend', `<i>${b.textContent}</i>`);
+            sarten.classList.remove('salta');
+            void sarten.offsetWidth;
+            sarten.classList.add('salta');
+            this.sonido.ruido(0.25, { volumen: 0.05, freq: 3500, q: 0.7 });
+          }, 280);
+          const spans = this.cuerpo.querySelectorAll('.pasos span');
+          if (spans[paso - 1]) spans[paso - 1].classList.add('hecho');
           if (paso >= r.pasos.length) {
             hechas++;
+            const perfecta = fallosReceta === 0;
+            if (perfecta) perfectas++;
+            quedan = Math.min(total, quedan + (perfecta ? 6 : 4));
             this.sonido.arreglo();
-            ronda++;
-            paso = 0;
-            if (ronda >= lista.length) return this.final(`¡${hechas} de ${lista.length} recetas!`, hechas / lista.length);
-            setTimeout(pintar, 350);
-          } else {
-            this.cuerpo.querySelectorAll('.pasos span')[paso - 1].classList.add('hecho');
+            setTimeout(() => {
+              sarten.insertAdjacentHTML('beforeend', `<div class="js-listo">${perfecta ? '⭐ ¡Perfecto!' : '¡Listo!'} +${perfecta ? 6 : 4} s</div>`);
+            }, 300);
+            if (hechas >= OBJETIVO) return setTimeout(() => this.final(`¡${hechas} platos${perfectas ? `, ${perfectas} perfectos` : ''}!`, perfectas >= 4 ? 1 : 0.85), 700);
+            nueva();
+            setTimeout(pintar, 900);
           }
         } else {
           this.sonido.error();
           b.classList.add('mal');
+          fallosReceta++;
           quedan -= 2;
           setTimeout(() => b.classList.remove('mal'), 300);
         }
       }));
     };
+    nueva();
     pintar();
     this.reloj = setInterval(() => {
       quedan -= 0.1;
       this.tiempo(quedan / total);
-      if (quedan <= 0) this.final(`Se acabó el tiempo: ${hechas} de ${lista.length} recetas`, hechas / lista.length);
+      if (quedan <= 0) this.final(`Se acabó el tiempo: ${hechas} de ${OBJETIVO} platos`, Math.min(1, hechas / OBJETIVO));
     }, 100);
   }
 
@@ -330,12 +368,20 @@ export class Juegos {
     let abiertas = [];
     let parejas = 0;
     let fallos = 0;
-    this.info('Toca dos cartas para darles la vuelta');
+    let racha = 0;
+    let mirando = true;
+    this.info('👀 ¡Memorizad dónde está cada cosa!');
     this.cuerpo.innerHTML = `<div class="jg-memory">${cartas.map((id, i) => `
       <button class="carta" data-i="${i}"><div class="dorso">🏠</div><div class="frente"><img src="${this.mini.item(id, 0)}" alt=""></div></button>`).join('')}</div>`;
     const botones = [...this.cuerpo.querySelectorAll('.carta')];
+    setTimeout(() => botones.forEach(b => b.classList.add('vuelta')), 250);
+    setTimeout(() => {
+      botones.forEach(b => b.classList.remove('vuelta'));
+      mirando = false;
+      this.info('Toca dos cartas para darles la vuelta');
+    }, 1900);
     botones.forEach(b => b.addEventListener('click', () => {
-      if (abiertas.length >= 2 || b.classList.contains('vuelta')) return;
+      if (mirando || abiertas.length >= 2 || b.classList.contains('vuelta')) return;
       b.classList.add('vuelta');
       this.sonido.tocar();
       abiertas.push(b);
@@ -343,14 +389,16 @@ export class Juegos {
       const [a, c] = abiertas;
       if (cartas[a.dataset.i] === cartas[c.dataset.i]) {
         parejas++;
+        racha++;
         abiertas = [];
         this.sonido.arreglo();
         a.classList.add('hecha');
         c.classList.add('hecha');
-        this.info(`${parejas} de 8 parejas · ${fallos} fallos`);
+        this.info(`${parejas} de 8 parejas · ${fallos} fallos${racha >= 2 ? ` · 🔥 ${racha} seguidas` : ''}`);
         if (parejas === 8) setTimeout(() => this.final(`¡Todas las parejas con ${fallos} fallos!`, fallos <= 5 ? 1 : fallos <= 10 ? 0.66 : 0.35), 500);
       } else {
         fallos++;
+        racha = 0;
         this.info(`${parejas} de 8 parejas · ${fallos} fallos`);
         setTimeout(() => {
           a.classList.remove('vuelta');
@@ -369,13 +417,32 @@ export class Juegos {
     let movimientos = 0;
     const total = 70;
     let quedan = total;
+    let pistas = 2;
     this.info('Toca dos piezas para cambiarlas de sitio');
     const pintar = () => {
       this.cuerpo.innerHTML = `<div class="jg-puzzle">${orden.map((p, i) => {
         const x = (p % n) * 50;
         const y = Math.floor(p / n) * 50;
         return `<button data-i="${i}" class="${sel === i ? 'sel' : ''}${p === i ? ' ok' : ''}" style="background-image:url(${imagen});background-position:${x}% ${y}%"></button>`;
-      }).join('')}</div><div class="jg-modelo"><img src="${imagen}" alt=""><small>Así tiene que quedar</small></div>`;
+      }).join('')}</div><div class="jg-modelo"><img src="${imagen}" alt=""><small>Así tiene que quedar</small><button class="jg-pista"${pistas ? '' : ' disabled'}>💡 Pista (${pistas})</button></div>`;
+      this.cuerpo.querySelector('.jg-pista').addEventListener('click', () => {
+        if (!pistas) return;
+        const i = orden.findIndex((v, k) => v !== k);
+        if (i < 0) return;
+        const j = orden.indexOf(i);
+        [orden[i], orden[j]] = [orden[j], orden[i]];
+        pistas--;
+        quedan -= 6;
+        sel = null;
+        this.sonido.arreglo();
+        if (orden.every((v, k) => v === k)) {
+          pintar();
+          return setTimeout(() => this.final(`¡Puzzle completo en ${movimientos} movimientos!`, 0.66), 400);
+        }
+        pintar();
+        const pieza = this.cuerpo.querySelector(`.jg-puzzle button[data-i="${i}"]`);
+        if (pieza) pieza.classList.add('pista');
+      });
       this.cuerpo.querySelectorAll('.jg-puzzle button').forEach(b => b.addEventListener('click', () => {
         const i = Number(b.dataset.i);
         if (sel === null) {

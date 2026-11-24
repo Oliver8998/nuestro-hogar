@@ -182,15 +182,15 @@ export const INTROS = {
  },
  "jue:cocina": {
   "que": "Cocina rápida: preparad las recetas antes de que se acabe el tiempo.",
-  "como": "Sale una receta: toca sus ingredientes en el orden correcto. Cuantas más recetas completéis, mejor."
+  "como": "Sale una receta: toca sus ingredientes en el orden correcto y vuelan a la sartén. Cada plato suma tiempo (más si no fallas ninguno). ¡Sacad 6 platos!"
  },
  "jue:memory": {
   "que": "El clásico juego de parejas, con muebles de la casa.",
-  "como": "Toca dos cartas para darles la vuelta. Si son iguales se quedan boca arriba. ¡Encuentra las 8 parejas con los menos fallos posibles!"
+  "como": "Al empezar verás todas las cartas un momento: ¡memorízalas! Luego toca dos para darles la vuelta. Si son iguales se quedan boca arriba. Encuentra las 8 parejas con los menos fallos posibles."
  },
  "jue:puzzle": {
   "que": "Una de vuestras fotos (o la casa) hecha pedazos.",
-  "como": "Toca dos piezas para cambiarlas de sitio hasta recomponer la imagen."
+  "como": "Toca dos piezas para cambiarlas de sitio hasta recomponer la imagen. Si te atascas, la 💡 pista coloca una pieza (pero quita un poco de tiempo)."
  },
  "jue:gotera": {
   "que": "La tubería pierde agua. ¡Hay que apretarla antes de que se inunde!",
