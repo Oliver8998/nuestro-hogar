@@ -476,3 +476,18 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
   - saludo: la visita de siempre.
   - Las respuestas suben o bajan la confianza del encargo de esa persona (`CLIENTE_DE`).
 - vida.js: Don Ramón también visita. Las visitas pueden llegar cada 5 h (antes 18 h), de 10 a 22 h, duran 6 min y no repiten visitante seguido. `forzarVisita(quien, ev)` para pruebas (`__h.vida.forzarVisita('ramon','cartas')`) y `terminarVisita()`. main pasa `encargos` al ctx de Vida.
+
+## Escaparate del inicio rehecho (v77)
+- `escaparate.js` tiene 8 salas de tamaños distintos (`ancho`/`fondo` en metros): estudio 5×5, salón alargado 8×5, dormitorio 6×6, cocina 7×6, gamer 6×5, jardín 8×6, mansión 8×8 y Navidad 6×6.
+- Cada sala tiene su lista de `ventanas` (`['f'|'i', posición, ancho]`, en el fondo o en la pared izquierda). Algunas tienen 2 o 3 ventanas.
+- Los muebles están colocados con sentido: sofá mirando a la tele o a la chimenea, sillas alrededor de la mesa, mesitas a los lados de la cama, cosas encima de cómodas y estanterías. Se comprobó que no hay solapes ni piezas fuera de la sala.
+- Robi (el robot de Kenney) limpia en el estudio y en la mansión: recorre `robi` (puntos en metros), anda con `walk` y limpia con `interact-right` echando burbujas. En el salón alargado y en la cocina, la aspiradora (`aspiradora: {base, ruta}`) sale de su base, recorre la ruta tragándose las bolas de polvo y vuelve; el polvo reaparece después.
+- La cámara ajusta el zoom al tamaño de cada sala, con transición suave.
+- Fluidez:
+  - La sala siguiente se construye por trozos durante la actual (un generador `pasosConstruir` con unos 5 ms por fotograma) y se precompilan sus shaders con `compileAsync` antes de cambiar.
+  - Las luces de las lámparas salen de los muebles y usan un grupo fijo de 8 PointLights. Así el número de luces no cambia y no se recompila todo al aparecer una lámpara.
+  - Los muebles aparecen con escala, no con `visible`.
+  - La sala vieja se libera poco a poco (`basura`, 2 ms por fotograma). No se liberan las geometrías ni los materiales compartidos de Kenney.
+- main.js: mientras se ve el menú de inicio (`enMenu()`), el bucle del juego no renderiza (antes había dos escenas 3D a la vez). Solo sigue la sincronización.
+- CSS: quitado `filter: drop-shadow` del canvas, que era carísimo en móvil. Ahora la sombra es un degradado debajo (`.esc-lienzo::before`).
+- Medido en pruebas: la mediana de fotograma pasó de 167 a 83 ms y el pico de 350 a 150 ms (en el renderizado por software de las pruebas, que es mucho más lento que un móvil).
