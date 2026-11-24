@@ -213,19 +213,28 @@ export class Controles {
       const distMueble = hit ? hit.punto.distanceTo(this.cam.camara.position) : Infinity;
       const distCuadro = this.eventos.distCuadro ? this.eventos.distCuadro(rayo) : Infinity;
       if (this.capturaToque || distCuadro < Math.min(distMueble, distMascota)) {
+        this.paredMovido = false;
+        if (!this.capturaToque && this.eventos.paredSeleccionada && this.eventos.paredSeleccionada(rayo) && this.eventos.agarrarPared(rayo)) {
+          this.paredToque = true;
+          this.modo = 'pared';
+          return;
+        }
         this.modo = 'rotar';
         this.cam.agarrar();
-        if (!this.capturaToque && this.eventos.mantenerPared) {
+        if (!this.capturaToque && this.eventos.agarrarPared) {
           const x0 = e.clientX;
           const y0 = e.clientY;
           const id = e.pointerId;
           this.esperar(() => {
             const p = this.punteros.get(id);
             if (this.modo !== 'rotar' || !p || Math.hypot(p.x - x0, p.y - y0) > 10) return;
-            if (this.eventos.mantenerPared(this.rayo(x0, y0))) {
+            if (this.eventos.agarrarPared(this.rayo(x0, y0))) {
               this.vibrar();
               this.cam.soltar(false);
-              this.modo = 'hecho';
+              this.paredToque = false;
+              p.xIni = p.x;
+              p.yIni = p.y;
+              this.modo = 'pared';
             }
           });
         }
@@ -269,6 +278,7 @@ export class Controles {
       this.cam.agarrar();
     } else if (this.punteros.size === 2) {
       this.cancelarEspera();
+      if (this.modo === 'pared' && this.eventos.cancelarPared) this.eventos.cancelarPared();
       if (this.modo === 'arrastrar') {
         this.gestor.cancelar(this.seleccionado);
         this.gestor.mostrarRejilla(false);
@@ -292,6 +302,9 @@ export class Controles {
       this.gestor.mostrarRejilla(true);
       const s = this.puntoColocacion(e.clientX, e.clientY, this.seleccionado);
       if (s) this.gestor.arrastrar(this.seleccionado, s.x + this.offset.x, s.z + this.offset.y);
+    } else if (this.modo === 'pared') {
+      if (lejos) this.paredMovido = true;
+      if (this.paredMovido) this.eventos.moverPared(this.rayo(e.clientX, e.clientY));
     } else if (this.modo === 'bloqueado') {
       if (lejos && !this.avisado) {
         this.avisado = true;
@@ -338,6 +351,12 @@ export class Controles {
         this.eventos.alInteractuar(m);
       }
     } else if (this.modo === 'hecho') {
+      this.modo = 'nada';
+    } else if (this.modo === 'pared') {
+      this.eventos.soltarPared();
+      if (esToque && this.paredToque && !this.paredMovido && this.eventos.tocarCuadro) this.eventos.tocarCuadro(this.rayo(e.clientX, e.clientY));
+      this.paredToque = false;
+      this.paredMovido = false;
       this.modo = 'nada';
     } else if (this.modo === 'arrastrar') {
       this.gestor.mostrarRejilla(false);

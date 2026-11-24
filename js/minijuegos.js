@@ -8,11 +8,14 @@ const INFO = {
 
 function suelo(ctx, w, h) {
   const tonos = ['#8a6a4a', '#7d5f42', '#93724f', '#75583c'];
-  const ancho = Math.max(60, w / 7);
+  const ancho = Math.max(60, Math.round(w / 7));
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = '#5c4430';
+  ctx.fillRect(0, 0, w, h);
   for (let i = 0; i * ancho < w + ancho; i++) {
     ctx.fillStyle = tonos[i % tonos.length];
     ctx.fillRect(i * ancho, 0, ancho - 2, h);
-    ctx.fillStyle = 'rgba(0,0,0,.08)';
+    ctx.fillStyle = '#6a5038';
     ctx.fillRect(i * ancho, (i * 137) % h, ancho - 2, 2);
   }
   ctx.fillStyle = '#000';
@@ -190,19 +193,28 @@ export class Minijuegos {
     }
     this.capaPolvo = capa;
     this.muestra = document.createElement('canvas');
-    this.muestra.width = 48;
-    this.muestra.height = 48;
+    this.muestra.width = 96;
+    this.muestra.height = 96;
+    this.restos = [];
+    this.tPista = 0;
     this.inicialPolvo = this.contarPolvo();
     this.tMuestra = 0;
   }
 
   contarPolvo() {
     const m = this.muestra.getContext('2d', { willReadFrequently: true });
-    m.clearRect(0, 0, 48, 48);
-    m.drawImage(this.capaPolvo, 0, 0, 48, 48);
-    const datos = m.getImageData(0, 0, 48, 48).data;
+    m.clearRect(0, 0, 96, 96);
+    m.drawImage(this.capaPolvo, 0, 0, 96, 96);
+    const datos = m.getImageData(0, 0, 96, 96).data;
     let n = 0;
-    for (let i = 3; i < datos.length; i += 4) if (datos[i] > 60) n++;
+    this.restos = [];
+    for (let i = 3; i < datos.length; i += 4) {
+      if (datos[i] > 18) {
+        n++;
+        const k = (i - 3) / 4;
+        if (this.restos.length < 400) this.restos.push({ x: ((k % 96) + 0.5) * this.w / 96, y: (Math.floor(k / 96) + 0.5) * this.h / 96 });
+      }
+    }
     return n;
   }
 
@@ -230,8 +242,15 @@ export class Minijuegos {
     this.tMuestra += dt;
     if (this.tMuestra > 0.25) {
       this.tMuestra = 0;
-      const resto = this.contarPolvo() / Math.max(1, this.inicialPolvo);
-      this.progreso = Math.min(1, (1 - resto) / 0.93);
+      const n = this.contarPolvo();
+      const resto = n / Math.max(1, this.inicialPolvo);
+      this.progreso = n === 0 ? 1 : Math.min(0.99, 1 - resto);
+    }
+    this.tPista += dt;
+    if (this.progreso > 0.9 && this.progreso < 1 && this.restos.length && this.tPista > 0.7) {
+      this.tPista = 0;
+      const r = this.restos[Math.floor(Math.random() * this.restos.length)];
+      this.chispa(r.x, r.y, '✨', 40);
     }
   }
 
@@ -279,7 +298,8 @@ export class Minijuegos {
       }
     }
     ctx.globalAlpha = 1;
-    this.progreso = 1 - this.manchas.reduce((s, m) => s + m.sucio, 0) / this.manchas.length;
+    const quedan = this.manchas.some(m => m.sucio > 0);
+    this.progreso = quedan ? Math.min(0.99, 1 - this.manchas.reduce((s, m) => s + m.sucio, 0) / this.manchas.length) : 1;
   }
 
   iniciar_telarana() {
@@ -371,7 +391,7 @@ export class Minijuegos {
     suelo(ctx, this.w, this.h);
     this.tAparecer -= dt;
     const vivas = this.hormigas.filter(h => h.viva).length;
-    if (this.tAparecer <= 0 && vivas < 7 && this.muertas + vivas < this.meta + 3) {
+    if (this.tAparecer <= 0 && vivas < 7 && this.muertas + vivas < this.meta) {
       this.tAparecer = 0.45;
       const lado = Math.random() < 0.5 ? -1 : 1;
       const y = this.h * (0.2 + Math.random() * 0.65);
@@ -418,7 +438,8 @@ export class Minijuegos {
     }
     ctx.globalAlpha = 1;
     this.nubes = this.nubes.filter(n => n.t < 0.9);
-    this.progreso = this.muertas / this.meta;
+    const quedan = this.hormigas.some(h => h.viva);
+    this.progreso = quedan ? Math.min(0.99, this.muertas / this.meta) : this.muertas / this.meta;
   }
 
   iniciar_caca() {

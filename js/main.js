@@ -694,6 +694,7 @@ function elegirAccesorio(m) {
 }
 
 function seleccionarMascota(m) {
+  if (m && paredObjs) paredObjs.deseleccionar();
   mascotaSel = m;
   refrescarMenu();
 }
@@ -701,6 +702,7 @@ function seleccionarMascota(m) {
 function refrescarMenu() {
   if (mascotaSel) ui.abrirMenu(opcionesMascota(mascotaSel), cabeceraMascota(mascotaSel));
   else if (controles && controles.seleccionado) ui.abrirMenu(opcionesMueble(controles.seleccionado));
+  else if (paredObjs && paredObjs.sel) ui.abrirMenu(paredObjs.opcionesMenu());
   else ui.cerrarMenu();
 }
 
@@ -957,7 +959,11 @@ controles = new Controles(canvas, camaraIso, gestor, sala, mascotas, entregas, {
     if (paredObjs && paredObjs.tocar(r)) return true;
     return mas && !visitando ? mas.cuadros.tocar(r) : false;
   },
-  mantenerPared: r => !!(paredObjs && paredObjs.mantener(r)),
+  paredSeleccionada: r => !!(paredObjs && paredObjs.esSeleccionado(r)),
+  agarrarPared: r => !!(paredObjs && paredObjs.agarrar(r)),
+  moverPared: r => paredObjs && paredObjs.arrastrar(r),
+  soltarPared: () => paredObjs && paredObjs.soltar(),
+  cancelarPared: () => paredObjs && paredObjs.cancelarArrastre(),
   alAbrirPaquete(p) {
     abrirPaquete(p);
   },
@@ -976,6 +982,7 @@ controles = new Controles(canvas, camaraIso, gestor, sala, mascotas, entregas, {
     interacciones.parar(m);
   },
   alSeleccionar(m) {
+    if (paredObjs) paredObjs.deseleccionar();
     if (m) {
       mascotaSel = null;
       sonido.tocar();
@@ -2034,6 +2041,11 @@ paredObjs = new ObjetosPared({
   cuadros: () => mas.cuadros,
   pantalla: v => pantalla(v),
   abrirTelefono: () => abrirTelefono(),
+  limpiarSeleccion: () => {
+    if (controles) controles.seleccionar(null);
+    seleccionarMascota(null);
+  },
+  refrescarMenu: () => refrescarMenu(),
   ventanaGrande: () => !!(casa2 && casa2.ventanaGrande),
   refrescarHud: () => refrescarHud(),
   registrar: e => registrar(e),
@@ -2611,12 +2623,13 @@ function colocarMenu(dt) {
     }
     const p = mascotaSel.grupo.position;
     puntoMenu.set(p.x, 0.5 * mascotaSel.e.tam, p.z);
-  } else {
+  } else if (controles.seleccionado) {
     const m = controles.seleccionado;
-    if (!m) return;
     puntoMenu.set(m.position.x, m.userData.base + m.userData.alto + 0.15, m.position.z);
-  }
-  if (controles.modo === 'arrastrar' || controles.modo === 'gesto' || controles.modo === 'colocar') {
+  } else if (paredObjs && paredObjs.sel) {
+    if (!paredObjs.puntoMenu(puntoMenu)) return;
+  } else return;
+  if (controles.modo === 'arrastrar' || controles.modo === 'gesto' || controles.modo === 'colocar' || controles.modo === 'pared') {
     ui.posicionarMenu(null);
     return;
   }

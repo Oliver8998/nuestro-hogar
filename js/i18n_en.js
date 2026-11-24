@@ -2066,5 +2066,15 @@ export default {
 "💨 ¡Abrir el agua ya!":"💨 Turn the water on now!",
 "¡{0} averías arregladas!{1}":"{0} leaks fixed!{1}",
 " ({0} fugas)":" ({0} leaks)",
-"{0} de 8 parejas · {1} fallos":"{0} of 8 pairs · {1} misses"
+"{0} de 8 parejas · {1} fallos":"{0} of 8 pairs · {1} misses",
+"Mensajes":"Messages",
+"Otra 🪙600":"Another 🪙600",
+"Retocar":"Touch up",
+"Descolgar":"Take down",
+"Polaroid":"Polaroid",
+"No hay hueco para cambiarle el tamaño. Movedla primero":"There's no room to resize it. Move it first",
+"No hay hueco para cambiarle el tamaño. Movedlo primero":"There's no room to resize it. Move it first",
+"No queda hueco en las paredes que se ven. Girad la cámara o quitad algo":"No room left on the visible walls. Turn the camera or remove something",
+"🪟 ¡Ventana nueva! Mantenla pulsada y arrástrala donde queráis":"🪟 New window! Hold it and drag it wherever you like",
+"Mantenlo pulsado para moverlo o cambiarle el marco":"Hold it to move it or change the frame"
 };

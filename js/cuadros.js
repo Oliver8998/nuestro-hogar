@@ -209,21 +209,63 @@ export class Cuadros {
     ui.dialogo({
       html: foto ? `<img class="foto-grande" src="${foto.data}" alt="">` : '',
       titulo: foto && foto.pintura ? '🎨 Vuestro cuadro' : '🖼️ Cuadro',
+      texto: 'Mantenlo pulsado para moverlo o cambiarle el marco',
       botones: [
-        { texto: '↔️ Mover o cambiar el marco', tipo: 'primario', accion: () => setTimeout(() => this.colocar(c.foto, c), 250) },
         ...(foto && foto.pintura ? [{ texto: '🖌️ Retocar el cuadro', tipo: 'secundario', accion: () => setTimeout(() => this.mas.retocar(foto), 250) }] : []),
-        {
-          texto: '📤 Descolgar', tipo: 'secundario', accion: () => {
-            this.estado.cuadros = this.lista().filter(x => x !== c);
-            sonido.pop();
-            this.pintar();
-            this.ctx.guardar();
-          }
-        },
-        { texto: 'Cerrar', tipo: 'secundario' }
+        { texto: 'Cerrar', tipo: 'primario' }
       ],
       columna: true
     });
+  }
+
+  opcionesMenu(c, tras) {
+    const { ui, sonido } = this.ctx;
+    const po = this.ctx.paredObjs;
+    const foto = this.mas.fotos.find(f => f.id === c.foto);
+    const cabe = prueba => {
+      this.ajustar(prueba);
+      const [w, h] = this.medidas(prueba);
+      return !po || !po.choca({ x: prueba.x, y: prueba.y, w: w + 0.1, h: h + 0.1 }, prueba.pared, c.id, true);
+    };
+    const op = [{
+      icono: '📏', texto: (TAMANOS[c.tam] || TAMANOS.m).nombre, accion: () => {
+        const orden = Object.keys(TAMANOS);
+        const i0 = Math.max(0, orden.indexOf(c.tam));
+        for (let k = 1; k < orden.length; k++) {
+          const prueba = { ...c, tam: orden[(i0 + k) % orden.length] };
+          if (!cabe(prueba)) continue;
+          Object.assign(c, { tam: prueba.tam, x: +prueba.x.toFixed(3), y: +prueba.y.toFixed(3) });
+          sonido.tic();
+          this.pintar();
+          this.ctx.guardar();
+          tras();
+          return;
+        }
+        sonido.error();
+        ui.aviso('No hay hueco para cambiarle el tamaño. Movedlo primero', true);
+      }
+    }, {
+      icono: '🖼️', texto: (MARCOS[c.marco] || MARCOS.madera).nombre, accion: () => {
+        const orden = Object.keys(MARCOS);
+        c.marco = orden[(Math.max(0, orden.indexOf(c.marco)) + 1) % orden.length];
+        sonido.tic();
+        this.pintar();
+        this.ctx.guardar();
+        tras();
+      }
+    }];
+    if (foto && foto.pintura) op.push({ icono: '🖌️', texto: 'Retocar', accion: () => this.mas.retocar(foto) });
+    op.push({
+      icono: '📤', texto: 'Descolgar', accion: () => {
+        if (po) po.deseleccionar();
+        this.estado.cuadros = this.lista().filter(x => x !== c);
+        sonido.pop();
+        this.pintar();
+        this.ctx.guardar();
+        tras();
+      }
+    });
+    return op;
   }
 
   colocar(fotoId, existente = null) {

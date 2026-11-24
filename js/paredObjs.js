@@ -108,6 +108,10 @@ export class ObjetosPared {
 
   pintar() {
     const { sala, telefono } = this.ctx;
+    if (this.sel && (this.ctx.visitando() || sala.esExterior() || this.sel.ref.hab !== this.ctx.claveHab())) {
+      this.deseleccionar();
+      this.ctx.refrescarMenu && this.ctx.refrescarMenu();
+    }
     this.quitarExtras();
     if (this.ctx.visitando()) {
       sala.paredes[0].add(sala.ventana);
@@ -140,13 +144,21 @@ export class ObjetosPared {
       this.colocarEn(g, o);
       this.extras.push(g);
     }
+    if (this.sel) this.resaltar(this.modoResalte || 'sel');
   }
 
   actualizar(dt) {
     this.t += dt;
     if (this.t < 0.5) return;
     this.t = 0;
-    if (this.colocando || this.ctx.visitando()) return;
+    if (this.colocando || this.ctx.visitando() || this.arrastrando) return;
+    if (this.sel) {
+      const existe = this.sel.tipo === 'cuadro' ? this.ctx.cuadros().lista().includes(this.sel.ref) : this.lista().includes(this.sel.ref);
+      if (!existe) {
+        this.deseleccionar();
+        this.ctx.refrescarMenu && this.ctx.refrescarMenu();
+      } else if (this.objeto3D(this.sel) !== this.grupoResaltado) this.resaltar(this.modoResalte || 'sel');
+    }
     if (JSON.stringify(this.deHab()) !== this.firma) this.pintar();
   }
 
@@ -163,7 +175,7 @@ export class ObjetosPared {
     if (conCuadros) {
       const cuadros = this.ctx.cuadros();
       for (const c of cuadros.enEstaHab()) {
-        if (c.pared !== pared) continue;
+        if (c.pared !== pared || c.id === excluir) continue;
         const [w, h] = cuadros.medidas(c);
         r.push({ x: c.x, y: c.y, w: w + 0.12, h: h + 0.12 });
       }
@@ -227,16 +239,6 @@ export class ObjetosPared {
     return true;
   }
 
-  mantener(rayo) {
-    if (this.colocando || this.ctx.visitando() || this.ctx.sala.esExterior()) return false;
-    const h = this.intersectar(rayo);
-    if (!h || !h.id) return false;
-    const o = this.lista().find(x => x.id === h.id);
-    if (!o) return false;
-    this.opciones(o);
-    return true;
-  }
-
   reaccionVentana(g) {
     const { sonido, ui, ambiente } = this.ctx;
     const noche = ambiente.esNoche();
@@ -265,29 +267,6 @@ export class ObjetosPared {
     requestAnimationFrame(paso);
   }
 
-  opciones(o) {
-    const { ui } = this.ctx;
-    const ventana = o.tipo === 'ventana';
-    ui.dialogo({
-      titulo: ventana ? '🪟 Ventana' : '☎️ Teléfono',
-      texto: ventana ? 'Podéis moverla a otra pared, cambiarle el tamaño o poner más ventanas.' : 'Colgadlo en la pared que más os guste.',
-      botones: [
-        { texto: ventana ? '↔️ Mover o cambiar tamaño' : '↔️ Mover', tipo: 'primario', accion: () => setTimeout(() => this.colocar(o), 250) },
-        ...(ventana ? [{ texto: `➕ Poner otra ventana · 🪙 ${PRECIO_VENTANA}`, tipo: 'secundario', accion: () => setTimeout(() => this.comprarVentana(), 250) }] : []),
-        ...(ventana && !o.principal ? [{
-          texto: '📤 Quitar esta ventana', tipo: 'secundario', accion: () => {
-            this.estado.paredObjs = this.lista().filter(x => x !== o);
-            this.ctx.sonido.pop();
-            this.pintar();
-            this.ctx.guardar();
-          }
-        }] : []),
-        { texto: 'Cerrar', tipo: 'secundario' }
-      ],
-      columna: true
-    });
-  }
-
   comprarVentana() {
     const { ui, sonido } = this.ctx;
     if (this.ctx.sala.esExterior()) {
@@ -299,11 +278,281 @@ export class ObjetosPared {
       ui.aviso(`Os faltan ${PRECIO_VENTANA - this.estado.monedas} monedas`, true);
       return;
     }
+    const base = { id: `v${Date.now()}`, tipo: 'ventana', hab: this.ctx.claveHab(), pared: 0, x: 0, y: 1.5, tam: 'm' };
+    const o = this.huecoLibre(base) || this.huecoLibre({ ...base, tam: 's' });
+    if (!o) {
+      sonido.error();
+      ui.aviso('No queda hueco en las paredes que se ven. Girad la cámara o quitad algo', true);
+      return;
+    }
+    ui.cerrarHojas();
     this.estado.monedas -= PRECIO_VENTANA;
     sonido.comprar();
     this.ctx.refrescarHud();
-    const o = { id: `v${Date.now()}`, tipo: 'ventana', hab: this.ctx.claveHab(), pared: 0, x: 0, y: 1.5, tam: 'm' };
-    this.colocar(o, true);
+    this.lista().push(o);
+    this.pintar();
+    this.ctx.guardar();
+    this.ctx.registrar && this.ctx.registrar('reformar');
+    this.seleccionar({ tipo: 'obj', ref: o });
+    ui.aviso('🪟 ¡Ventana nueva! Mantenla pulsada y arrástrala donde queráis');
+  }
+
+  huecoLibre(o) {
+    const { sala } = this.ctx;
+    const paredes = [0, 2, 3, 1].filter(i => sala.paredes[i] && sala.paredes[i].visible);
+    for (const i of paredes) {
+      for (const y of [1.5, 1.35, 1.65]) {
+        for (let x = 0; x <= 2.5; x += 0.25) {
+          for (const sx of x ? [x, -x] : [0]) {
+            const p = { ...o, pared: i, x: sx, y };
+            this.ajustar(p);
+            const [w, h] = this.medidas(p);
+            if (!this.choca({ x: p.x, y: p.y, w, h }, i, o.id)) return { ...p, x: +p.x.toFixed(3), y: +p.y.toFixed(3) };
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  // ---- Selección y arrastre directo (igual que los muebles) ----
+
+  puedeMover() {
+    const cs = this.ctx.cuadros();
+    return this.activo && !this.colocando && !this.ctx.visitando() && !this.ctx.sala.esExterior() && !(cs && cs.colocando);
+  }
+
+  buscar(rayo) {
+    const a = this.intersectar(rayo);
+    const cs = this.ctx.cuadros();
+    const b = cs ? cs.intersectar(rayo) : null;
+    if (b && (!a || b.distancia < a.distancia)) {
+      const c = cs.lista().find(x => x.id === b.id);
+      return c ? { tipo: 'cuadro', ref: c } : null;
+    }
+    if (a && a.id) {
+      const o = this.lista().find(x => x.id === a.id);
+      return o ? { tipo: 'obj', ref: o } : null;
+    }
+    return null;
+  }
+
+  objeto3D(sel) {
+    if (!sel) return null;
+    if (sel.tipo === 'cuadro') {
+      const cs = this.ctx.cuadros();
+      return cs ? cs.grupos.find(g => g.userData.cuadro === sel.ref.id) || null : null;
+    }
+    const o = sel.ref;
+    if (o.tipo === 'telefono') return this.ctx.telefono.grupo;
+    if (o.principal) return this.ctx.sala.ventana;
+    return this.extras.find(g => g.userData.paredObj === o.id) || null;
+  }
+
+  resaltar(modo) {
+    for (const mat of this.matsResalte || []) {
+      if (!mat.userData.emPrev) continue;
+      mat.emissive.setHex(mat.userData.emPrev[0]);
+      mat.emissiveIntensity = mat.userData.emPrev[1];
+      delete mat.userData.emPrev;
+    }
+    this.matsResalte = [];
+    this.grupoResaltado = null;
+    this.modoResalte = modo;
+    if (!this.sel || !modo) return;
+    const g = this.objeto3D(this.sel);
+    if (!g) return;
+    this.grupoResaltado = g;
+    g.traverse(m => {
+      if (!m.isMesh) return;
+      for (const mat of Array.isArray(m.material) ? m.material : [m.material]) {
+        if (!mat.emissive || mat.userData.emPrev) continue;
+        mat.userData.emPrev = [mat.emissive.getHex(), mat.emissiveIntensity];
+        mat.emissive.setHex(modo === 'mal' ? 0xff3030 : 0xffc860);
+        mat.emissiveIntensity = modo === 'mal' ? 0.5 : 0.35;
+        this.matsResalte.push(mat);
+      }
+    });
+  }
+
+  seleccionar(h) {
+    if (this.ctx.limpiarSeleccion) this.ctx.limpiarSeleccion();
+    this.resaltar(null);
+    this.sel = h ? { tipo: h.tipo, ref: h.ref } : null;
+    this.arrastrando = false;
+    if (this.sel) {
+      this.resaltar('sel');
+      if (this.ctx.sonido.tocar) this.ctx.sonido.tocar();
+    }
+    if (this.ctx.refrescarMenu) this.ctx.refrescarMenu();
+  }
+
+  deseleccionar() {
+    if (!this.sel) return;
+    if (this.arrastrando) this.cancelarArrastre();
+    this.resaltar(null);
+    this.sel = null;
+    this.arrastrando = false;
+  }
+
+  esSeleccionado(rayo) {
+    if (!this.sel || !this.puedeMover()) return false;
+    const h = this.buscar(rayo);
+    return !!h && h.ref === this.sel.ref;
+  }
+
+  puntoPared(rayo) {
+    const { sala } = this.ctx;
+    const muros = [];
+    sala.paredes.forEach(p => { if (p.visible) muros.push(...p.userData.piezas); });
+    const hit = rayo.intersectObjects(muros, false)[0];
+    if (!hit) return null;
+    const i = hit.object.userData.pared;
+    const local = sala.paredes[i].worldToLocal(hit.point.clone());
+    return { pared: i, x: local.x, y: local.y };
+  }
+
+  agarrar(rayo) {
+    if (!this.puedeMover()) return false;
+    const h = this.buscar(rayo);
+    if (!h) return false;
+    if (!this.sel || this.sel.ref !== h.ref) this.seleccionar(h);
+    const r = this.sel.ref;
+    const p = this.puntoPared(rayo);
+    this.sel.orig = { pared: r.pared, x: r.x, y: r.y };
+    this.sel.off = p && p.pared === r.pared ? { x: r.x - p.x, y: r.y - p.y } : { x: 0, y: 0 };
+    this.sel.movido = false;
+    this.arrastrando = true;
+    return true;
+  }
+
+  arrastrar(rayo) {
+    const s = this.sel;
+    if (!s || !this.arrastrando) return;
+    const p = this.puntoPared(rayo);
+    if (!p) return;
+    const r = s.ref;
+    const off = p.pared === s.orig.pared ? s.off : { x: 0, y: 0 };
+    const prueba = { ...r, pared: p.pared, x: p.x + off.x, y: p.y + off.y };
+    let ok;
+    if (s.tipo === 'cuadro') {
+      const cs = this.ctx.cuadros();
+      cs.ajustar(prueba);
+      const [w, h] = cs.medidas(prueba);
+      ok = !this.choca({ x: prueba.x, y: prueba.y, w: w + 0.1, h: h + 0.1 }, prueba.pared, r.id, true);
+    } else {
+      this.ajustar(prueba);
+      const [w, h] = this.medidas(prueba);
+      ok = !this.choca({ x: prueba.x, y: prueba.y, w, h }, prueba.pared, r.id);
+    }
+    if (ok && (r.pared !== prueba.pared || Math.abs(r.x - prueba.x) > 0.001 || Math.abs(r.y - prueba.y) > 0.001)) {
+      Object.assign(r, { pared: prueba.pared, x: +prueba.x.toFixed(3), y: +prueba.y.toFixed(3) });
+      s.movido = true;
+      this.mover3D();
+    }
+    const modo = ok ? 'sel' : 'mal';
+    if (modo !== this.modoResalte) this.resaltar(modo);
+  }
+
+  mover3D() {
+    const s = this.sel;
+    if (!s) return;
+    const r = s.ref;
+    const { sala } = this.ctx;
+    if (s.tipo === 'obj' && r.tipo === 'telefono') {
+      this.ctx.telefono.fijar(r.pared, r.x, r.y);
+      return;
+    }
+    const g = this.objeto3D(s);
+    if (!g) return;
+    if (s.tipo === 'cuadro') {
+      const pw = sala.paredes[r.pared];
+      if (g.parent !== pw) pw.add(g);
+      g.position.set(r.x, r.y, sala.cara + 0.02);
+    } else this.colocarEn(g, r);
+  }
+
+  soltar() {
+    const s = this.sel;
+    if (!s || !this.arrastrando) return;
+    this.arrastrando = false;
+    if (this.modoResalte !== 'sel') this.resaltar('sel');
+    if (!s.movido) return;
+    s.movido = false;
+    this.ctx.sonido.colocar();
+    if (s.tipo === 'obj' && this.ctx.registrar) this.ctx.registrar('reformar');
+    this.ctx.guardar();
+  }
+
+  cancelarArrastre() {
+    const s = this.sel;
+    if (!s || !this.arrastrando) return;
+    Object.assign(s.ref, s.orig);
+    s.movido = false;
+    this.arrastrando = false;
+    this.mover3D();
+    this.resaltar('sel');
+  }
+
+  puntoMenu(v) {
+    const g = this.objeto3D(this.sel);
+    if (!g) return false;
+    g.getWorldPosition(v);
+    const r = this.sel.ref;
+    const alto = this.sel.tipo === 'cuadro' ? this.ctx.cuadros().medidas(r)[1] : this.medidas(r)[1];
+    v.y += alto / 2 + 0.12;
+    return true;
+  }
+
+  opcionesMenu() {
+    const s = this.sel;
+    if (!s) return [];
+    const r = s.ref;
+    if (s.tipo === 'cuadro') return this.ctx.cuadros().opcionesMenu(r, () => this.tras());
+    const { ui, sonido } = this.ctx;
+    if (r.tipo === 'telefono') {
+      return [{ icono: '☎️', texto: 'Mensajes', accion: () => { this.ctx.telefono.descolgado = 1.4; this.ctx.abrirTelefono(); } }];
+    }
+    const op = [{
+      icono: '📏', texto: TAM_VENTANA[this.tamDe(r)].nombre, accion: () => {
+        const orden = Object.keys(TAM_VENTANA);
+        const i0 = orden.indexOf(this.tamDe(r));
+        for (let k = 1; k < orden.length; k++) {
+          const prueba = { ...r, tam: orden[(i0 + k) % orden.length] };
+          this.ajustar(prueba);
+          const [w, h] = this.medidas(prueba);
+          if (this.choca({ x: prueba.x, y: prueba.y, w, h }, prueba.pared, r.id)) continue;
+          Object.assign(r, { tam: prueba.tam, x: +prueba.x.toFixed(3), y: +prueba.y.toFixed(3) });
+          sonido.tic();
+          this.pintar();
+          this.ctx.guardar();
+          this.tras();
+          return;
+        }
+        sonido.error();
+        ui.aviso('No hay hueco para cambiarle el tamaño. Movedla primero', true);
+      }
+    }, {
+      icono: '➕', texto: `Otra 🪙${PRECIO_VENTANA}`, desactivado: this.estado.monedas < PRECIO_VENTANA, accion: () => this.comprarVentana()
+    }];
+    if (!r.principal) {
+      op.push({
+        icono: '📤', texto: 'Quitar', accion: () => {
+          this.deseleccionar();
+          this.estado.paredObjs = this.lista().filter(x => x !== r);
+          sonido.pop();
+          this.pintar();
+          this.ctx.guardar();
+          this.tras();
+        }
+      });
+    }
+    return op;
+  }
+
+  tras() {
+    if (this.sel) this.resaltar('sel');
+    if (this.ctx.refrescarMenu) this.ctx.refrescarMenu();
   }
 
   colocar(o, nueva = false) {
