@@ -29,10 +29,10 @@ function crearVentana(colorMarco, cieloTex) {
   repisa.position.set(0, -0.66, 0.05);
   g.add(repisa);
   const cristal = new THREE.Mesh(new THREE.PlaneGeometry(1.14, 1.12), new THREE.MeshStandardMaterial({ color: 0xa9d4e8, emissive: 0x8fc3dd, emissiveIntensity: 0.4, transparent: true, opacity: 0.32 }));
-  cristal.position.z = 0.001;
+  cristal.position.z = 0.012;
   g.add(cristal);
   const cielo = new THREE.Mesh(new THREE.PlaneGeometry(1.14, 1.2), new THREE.MeshBasicMaterial({ map: cieloTex || null, color: cieloTex ? 0xffffff : 0xbfe3f5, toneMapped: false }));
-  cielo.position.z = -0.002;
+  cielo.position.z = 0.001;
   g.add(cielo);
   g.userData.mat = mat;
   return g;

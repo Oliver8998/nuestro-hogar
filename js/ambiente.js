@@ -83,7 +83,7 @@ export class Ambiente {
     this.textura = new THREE.CanvasTexture(this.lienzo);
     this.textura.colorSpace = THREE.SRGBColorSpace;
     const cielo = new THREE.Mesh(new THREE.PlaneGeometry(1.14, 1.2), new THREE.MeshBasicMaterial({ map: this.textura, toneMapped: false }));
-    cielo.position.z = -0.002;
+    cielo.position.z = 0.001;
     sala.ventana.add(cielo);
     sala.matCristal.opacity = 0.32;
     this.gotas = Array.from({ length: 40 }, () => ({ x: Math.random() * 128, y: Math.random() * 256, v: 0.7 + Math.random() * 0.6 }));

@@ -255,21 +255,21 @@ export function crearSala(escena) {
 
   const matCristal = new THREE.MeshStandardMaterial({ color: 0xa9d4e8, emissive: 0x8fc3dd, emissiveIntensity: 0.4, transparent: true, opacity: 0.85 });
   const cristal = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 1.12), matCristal);
-  cristal.position.set(-0.3, 0, 0.001);
+  cristal.position.set(-0.3, 0, 0.012);
   ventana.add(cristal);
 
   const grietasVentana = [];
   [[-0.35, 0.2, 0.5, 0.6], [-0.22, 0.05, 0.35, -0.9], [-0.4, -0.15, 0.3, 0.3]].forEach(([x, y, largo, ang]) => {
     const grieta = caja(largo, 0.012, 0.005, 0x2f3b40);
     grieta.castShadow = false;
-    grieta.position.set(x, y, 0.004);
+    grieta.position.set(x, y, 0.016);
     grieta.rotation.z = ang;
     ventana.add(grieta);
     grietasVentana.push(grieta);
   });
 
   const carton = caja(0.55, 1.1, 0.02, 0xb8875a);
-  carton.position.set(0.3, 0, 0.01);
+  carton.position.set(0.3, 0, 0.024);
   carton.rotation.z = 0.04;
   ventana.add(carton);
   [0.7, -0.7].forEach(ang => {
@@ -285,7 +285,7 @@ export function crearSala(escena) {
     { id: 'ventana', descripcion: 'El cristal está roto y alguien lo tapó con un cartón.', mensaje: '¡Cristal nuevo!', nombre: 'Ventana rota', material: 'cristal', pared: 0 },
     [ventana],
     p => {
-      carton.position.z = 0.01 + p * 0.25;
+      carton.position.z = 0.024 + p * 0.25;
       carton.position.y = -p * 0.6;
       carton.rotation.z = 0.04 + p * 0.6;
     },
@@ -293,7 +293,7 @@ export function crearSala(escena) {
       ventana.remove(carton);
       grietasVentana.forEach(g => ventana.remove(g));
       const nuevo = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 1.12), matCristal);
-      nuevo.position.set(0.3, 0, 0.001);
+      nuevo.position.set(0.3, 0, 0.012);
       ventana.add(nuevo);
     }
   ));

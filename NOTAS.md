@@ -513,3 +513,8 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
     - Si no, se hace la animación y aparece la caca o el charco detrás. El perro lo hace junto a una planta o un mueble.
   - Temporizadores: `tCaca` cada 6–12 min y `tPis` cada 5–11 min (las aves no hacen pis). Si la mascota está ocupada se reintenta a los 15 s.
 - El escaparate del inicio también usa todo esto: el gato se sube al sofá y el loro vuela.
+
+## Parpadeo de la ventana (v79)
+- Era z-fighting: el cielo de la ventana estaba a solo 4 mm de la pared, y la cámara tenía near 0,1 / far 100. Con el búfer de profundidad de 16 bits de muchos móviles no alcanza la precisión.
+- camara.js: near 4 y far 44, ajustados a la escena porque la cámara está a 20 del objetivo. La precisión de profundidad es más del doble.
+- Capas de la ventana separadas de la pared (`cara` ya está 6 mm por fuera): cielo +1 mm, cristal +12 mm, grietas +16 mm y cartón +24 mm. Se aplicó en sala.js (ventana principal), paredObjs.js (ventanas extra) y ambiente.js (el cielo).

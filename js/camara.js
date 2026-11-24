@@ -6,7 +6,7 @@ const ANGULO_INICIAL = Math.PI / 4;
 export class CamaraIso {
   constructor(aspecto) {
     this.tamano = 10;
-    this.camara = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100);
+    this.camara = new THREE.OrthographicCamera(-1, 1, 1, -1, 4, 44);
     this.camara.layers.enable(1);
     this.altura = THREE.MathUtils.degToRad(32);
     this.distancia = 20;
