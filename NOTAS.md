@@ -453,3 +453,26 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - Biblioteca (trabajos.js): ya no se pulsa. Los libros salen desordenados en un carrito y hay que arrastrarlos (pointer events + fantasma `.bb-arrastrado`) a la estantería de abajo en orden, de menor a mayor. Si sueltas el que no toca, rebota y cuenta como fallo. Las estanterías tienen 6 libros o más, y desde la 3.ª llevan códigos letra+número (se ordenan por letra y luego por número). Dura 55 s y la nota es (colocados − fallos·2)/26.
 - DJ: tocar un carril sin nota cuenta como fallo (nota = (aciertos − fallos·0,5)/total). Además lleva chispas al acertar, notas con brillo, anillos en los carriles y 🔥 con la racha.
 - CSS de pulido visual: cielo con nubes (globos), techo y tuberías (gotas), noche con hoguera, pastelería (tartaletas), calle con edificios (bici), mesa (bandeja), mostrador (cola), escalera, cocina (hamburguesería) y sombras en los canvas de DJ y fachada.
+
+## Más juegos y eventos de vecinos (v76)
+- `js/trabajos2.js`: 6 trabajos nuevos que se suman a `TRABAJOS` (ahora 20; el del día rota entre todos):
+  - 🎣 Pescador: mantener pulsado para subir la red y que el pez quede dentro (estilo Stardew). Peces con distinta dificultad (carpa, payaso, globo, tiburón raro).
+  - ✉️ Cartero: arrastrar cartas al buzón de su piso. Las ⚡ urgentes dan extra si van en menos de 4 s, la 📰 publicidad va a la papelera. Los buzones cambian cada 6 cartas.
+  - 🛟 Socorrista: tocar a los que se hunden 🆘 antes de que se les acabe la burbuja. Los que saludan 👋 son trampa.
+  - 🔐 Cerrajero: tocar cuando la ganzúa pasa por la franja verde; cada fallo tira un pin. Más pines y franjas más estrechas en cada cerradura.
+  - 🍣 Sushi: arrastrar los platos de la cinta al cliente que los pidió, antes de que se le acabe la paciencia.
+  - 🍦 Heladería: mover el cucurucho y coger las bolas en el orden del pedido. Una equivocada lo estropea.
+- `JUEGOS_FAVOR3` (también en trabajos2.js): cartas (mayor o menor con Don Ramón), karaoke (tipo Simón), calcetines (emparejar color + dibujo) y toby (pillar al perro cuando asoma; el gato es trampa). También incluye los 6 trabajos para usarlos como favores.
+- encargos.js: 10 encargos nuevos: partida y pesca (Ramón), colada y toby-escapa (Sol), karaoke y piscina (amigos), llaves y japonés (mamá), correo y helados (Pilar).
+- `js/vecinos.js`: eventos de vecinos. Cada visita lleva un `ev` (elegido con `elegirEvento`) y al tocar al visitante se abre `atenderEvento`:
+  - sal: piden un ingrediente; se da de la despensa o se compra.
+  - cartas, toby y karaoke: se juega el minijuego y paga según la nota.
+  - pelis: preparar algo con 2 ingredientes o pedir pizza.
+  - tupper: mamá trae ingredientes.
+  - muestras y esquejes: elegir un objeto gratis.
+  - ruido: pedir perdón, invitar a café o hacerse el sordo.
+  - cita: elegir la ropa que pega con su plan.
+  - consejo: pregunta con una respuesta buena.
+  - saludo: la visita de siempre.
+  - Las respuestas suben o bajan la confianza del encargo de esa persona (`CLIENTE_DE`).
+- vida.js: Don Ramón también visita. Las visitas pueden llegar cada 5 h (antes 18 h), de 10 a 22 h, duran 6 min y no repiten visitante seguido. `forzarVisita(quien, ev)` para pruebas (`__h.vida.forzarVisita('ramon','cartas')`) y `terminarVisita()`. main pasa `encargos` al ctx de Vida.

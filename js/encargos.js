@@ -2,8 +2,9 @@ import { paga } from './balance.js';
 import { RECETAS, INGREDIENTES } from './casa2.js';
 import { JUEGOS_FAVOR as JF1 } from './favores.js';
 import { JUEGOS_FAVOR2 } from './favores2.js';
+import { JUEGOS_FAVOR3 } from './trabajos2.js';
 
-const JUEGOS_FAVOR = { ...JF1, ...JUEGOS_FAVOR2 };
+const JUEGOS_FAVOR = { ...JF1, ...JUEGOS_FAVOR2, ...JUEGOS_FAVOR3 };
 
 const HORA = 3600000;
 const MAX_ACTIVOS = 2;
@@ -42,7 +43,17 @@ const TIPOS = [
   { id: 'caja', quien: 'pilar', min: 0, favor: 'cola', titulo: () => 'Atender la tienda', texto: () => 'Tengo que ir al médico un rato. ¿Me atendéis a los clientes? Que no se me enfade nadie.', pago: () => 90 },
   { id: 'etiquetas', quien: 'pilar', min: 30, juego: 'memory', titulo: () => 'Emparejar etiquetas', texto: () => 'Se me han mezclado las etiquetas del almacén. ¿Me ayudáis a emparejarlas?', pago: () => 75 },
   { id: 'reparto', quien: 'pilar', min: 55, favor: 'bici', titulo: () => 'Repartir en bici', texto: () => 'Hoy tengo muchos pedidos y la furgoneta está en el taller. ¿Los repartís en bici?', pago: () => 115 },
-  { id: 'cafe', quien: 'pilar', min: 70, favor: 'bandeja', titulo: () => 'Llevar las bandejas', texto: () => 'Mi prima se ha quedado sin camarero en su cafetería. ¿Le lleváis las bandejas sin tirar nada?', pago: () => 125 }
+  { id: 'cafe', quien: 'pilar', min: 70, favor: 'bandeja', titulo: () => 'Llevar las bandejas', texto: () => 'Mi prima se ha quedado sin camarero en su cafetería. ¿Le lleváis las bandejas sin tirar nada?', pago: () => 125 },
+  { id: 'partida', quien: 'ramon', min: 10, favor: 'cartas', titulo: () => 'Echar una partida de cartas', texto: () => 'Los del hogar del jubilado se han ido de excursión y me aburro como una ostra. ¿Una partidita a mayor o menor? Que conste que yo no pierdo nunca.', pago: () => 80 },
+  { id: 'pesca', quien: 'ramon', min: 35, favor: 'pescador', titulo: () => 'Ir de pesca al pantano', texto: () => 'Mañana me voy de pesca al pantano y ya no tengo el pulso de antes. ¿Me acompañáis a sacar alguno? Lo que pesquemos, a medias.', pago: () => 120 },
+  { id: 'colada', quien: 'sol', min: 10, favor: 'calcetines', titulo: () => 'Emparejar sus calcetines', texto: () => 'He puesto tres lavadoras y tengo un montón de calcetines desparejados que da miedo. ¿Me echáis una mano a doblarlos?', pago: () => 80 },
+  { id: 'toby-escapa', quien: 'sol', min: 40, favor: 'toby', titulo: () => 'Encontrar a Toby', texto: () => '¡Toby se ha escapado y se ha metido en el piso de Don Ramón! Se esconde detrás de todo. ¿Me ayudáis a pillarlo antes de que se coma algo?', pago: () => 105 },
+  { id: 'karaoke', quien: 'amigos', min: 15, favor: 'karaoke', titulo: () => 'Noche de karaoke', texto: () => 'Esta noche hay karaoke en el bar de abajo y nos hemos apuntado sin saber cantar. ¿Venís a salvarnos?', pago: () => 95 },
+  { id: 'piscina', quien: 'amigos', min: 45, favor: 'socorrista', titulo: () => 'Vigilar la piscina', texto: () => 'Hacemos fiesta en la piscina de la urbanización y hay muchos críos. ¿Hacéis de socorristas un rato?', pago: () => 125 },
+  { id: 'llaves', quien: 'mama', min: 25, favor: 'cerrajero', titulo: () => 'Abrirle la puerta', texto: () => '¡Me he dejado las llaves dentro y el cerrajero me pide un dineral! Vosotros que sois mañosos… ¿me abrís?', pago: () => 110 },
+  { id: 'japones', quien: 'mama', min: 55, favor: 'sushi', titulo: () => 'Ayudar en el japonés', texto: () => 'Mi amiga Keiko tiene un restaurante de sushi y hoy le falta gente. Le he dicho que mis hijos le echan una mano. ¡No me dejéis mal!', pago: () => 130 },
+  { id: 'correo', quien: 'pilar', min: 15, favor: 'cartero', titulo: () => 'Repartir el correo del bloque', texto: () => 'El cartero ha dejado todas las cartas del bloque en la tienda. ¿Las metéis cada una en su buzón? Y la publicidad, a la basura, ¿eh?', pago: () => 95 },
+  { id: 'helados', quien: 'pilar', min: 45, favor: 'heladeria', titulo: () => 'Puesto de helados en la feria', texto: () => 'Este finde monto un puesto de helados en la feria del barrio. ¿Me ayudáis a servir? ¡Y que no se caiga ninguna bola!', pago: () => 125 }
 ];
 
 const REACCION = {

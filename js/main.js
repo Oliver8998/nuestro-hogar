@@ -2090,6 +2090,7 @@ const vida = new Vida({
   acogedor: () => acogedor().total,
   recordar: (...a) => pareja.recordar(...a),
   abrirMas: () => mas.abrir(),
+  encargos: () => encargos,
   chip: () => pintarChipsVida()
 });
 

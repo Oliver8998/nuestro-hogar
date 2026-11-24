@@ -3,13 +3,15 @@ import * as THREE from 'three';
 import { crearPersonaje } from './personajes.js';
 import { crearExclamacion } from './telefono.js';
 import { CATALOGO } from './catalogo.js';
+import { EVENTOS, elegirEvento, atenderEvento } from './vecinos.js';
 
 const VISITANTES = {
   mama: { nombre: 'Mamá', saludo: '¡Hola, cariños! Pasaba por aquí…' },
   mateo: { nombre: 'Mateo, el vecino', saludo: 'Buenas… ¿me prestáis un poco de sal?' },
   sol: { nombre: 'Sol, vuestra amiga', saludo: '¡Sorpresaaa! Venía a cotillear la casa 👀' },
   amigos: { nombre: 'Dani, un colega', saludo: '¡Ey! ¿Qué tal la casita?' },
-  lola: { nombre: 'Pilar', saludo: '¡Hola! Os traigo una cosita de la tienda.' }
+  lola: { nombre: 'Pilar', saludo: '¡Hola! Os traigo una cosita de la tienda.' },
+  ramon: { nombre: 'Don Ramón', saludo: 'Buenas, chavales. Subía a ver qué tal os va…' }
 };
 
 const FRASES_LORO = ['¡Hola guapa!', '¡Te quiero!', '¿Qué hay de cena?', '¡Limpia, limpia!', '¡Pilar! ¡Pilar!', '¡Qué bonita casa!', '¡A dormir!', '¡Galletita!', '¡Cuchi cuchi!'];
@@ -134,16 +136,31 @@ export class Vida {
     if (v) return;
     const ultima = this.estado.ultimaVisita || 0;
     const h = this.ctx.ambiente.hora;
-    if (h < 10 || h > 21 || Date.now() - ultima < 18 * 3600000) return;
-    if (Math.random() > 0.08) return;
-    const ids = Object.keys(VISITANTES);
-    const quien = ids[Math.floor(Math.random() * ids.length)];
-    this.estado.visita = { quien, hasta: Date.now() + 4 * 60000 };
+    if (h < 10 || h > 22 || Date.now() - ultima < 5 * 3600000) return;
+    if (Math.random() > 0.06) return;
+    const ids = Object.keys(VISITANTES).filter(q => q !== this.estado.ultimoVisitante);
+    this.forzarVisita(ids[Math.floor(Math.random() * ids.length)]);
+  }
+
+  forzarVisita(quien, ev = null) {
+    if (!VISITANTES[quien]) return;
+    ev = ev && EVENTOS[ev] ? ev : elegirEvento(quien);
+    this.estado.visita = { quien, ev, hasta: Date.now() + 6 * 60000 };
     this.estado.ultimaVisita = Date.now();
+    this.estado.ultimoVisitante = quien;
     this.ctx.guardar();
-    this.ponerVisitante(quien);
+    if ((this.estado.habActual || 0) === 0) this.ponerVisitante(quien);
     this.ctx.sonido.mascota();
-    this.ctx.ui.aviso(`🚪 ¡Ha venido ${VISITANTES[quien].nombre}! Tocadle para saludar`);
+    this.ctx.ui.aviso(`${EVENTOS[ev].aviso(VISITANTES[quien].nombre)}${ev === 'saludo' ? '' : ' · Tocadle'}`);
+    this.ctx.chip();
+  }
+
+  terminarVisita() {
+    this.estado.visita = null;
+    this.quitarVisitante();
+    this.ctx.registrar('visita');
+    this.ctx.refrescarHud();
+    this.ctx.guardar();
     this.ctx.chip();
   }
 
@@ -172,6 +189,11 @@ export class Vida {
     const v = this.estado.visita;
     if (!v) return;
     const info = VISITANTES[v.quien];
+    if (v.ev && v.ev !== 'saludo' && EVENTOS[v.ev]) {
+      v.hasta = Math.max(v.hasta, Date.now() + 5 * 60000);
+      atenderEvento(this, v, info.nombre);
+      return;
+    }
     const a = this.ctx.acogedor();
     const opinion = a >= 75 ? '¡Madre mía, qué casa más bonita! Se nota que la cuidáis.' : a >= 50 ? 'Está quedando muy apañada. ¡Un par de plantas más y perfecta!' : 'Bueno… le falta cariño, pero vais por buen camino.';
     const monedas = paga(30 + Math.round(a / 2));
