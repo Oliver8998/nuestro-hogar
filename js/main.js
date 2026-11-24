@@ -1419,15 +1419,19 @@ function abrirLogros() {
     <div class="logros">${secretos.map(fila).join('')}</div>`, () => abrirObjetivos());
 }
 
-function abrirColecciones() {
+function htmlColecciones() {
   const ids = idsEnCasa();
   const hechas = estado.colecciones || [];
-  ui.abrirGen('Colecciones', `
-    <p class="gen-intro">Colocad en casa todas las piezas de una colección para ganar el premio.</p>
+  return `<p class="gen-intro">Colocad en casa todas las piezas de una colección para ganar el premio.</p>
     ${COLECCIONES.map(c => `<div class="coleccion ${hechas.includes(c.id) ? 'hecha' : ''}">
       <div class="col-cab"><b>${c.icono} ${c.nombre}</b><em>${hechas.includes(c.id) ? '✅ Completa' : `🪙 ${paga(c.premio.monedas)} · 🎟️ ${c.premio.tickets}`}</em></div>
       <div class="col-items">${c.items.map(id => `<div class="${ids.includes(id) ? 'tiene' : ''}"><img src="${miniaturas.item(id, 0)}" alt=""><small>${infoItem(id).nombre}</small></div>`).join('')}</div>
-    </div>`).join('')}`, () => abrirObjetivos());
+    </div>`).join('')}`;
+}
+
+function abrirColecciones() {
+  album.pagina = 'colecciones';
+  album.abrir(() => abrirObjetivos());
 }
 
 function revisarProgreso() {
@@ -1713,6 +1717,7 @@ const usos = new Usos({
 
 const album = new Album({
   estado, inventario, mascotas, miniaturas, ui, sonido,
+  htmlColecciones: () => htmlColecciones(),
   guardar: () => guardar(),
   refrescarHud: () => refrescarHud(),
   idsEnCasa: () => idsEnCasa()
@@ -2059,11 +2064,9 @@ function abrirTrabajar() {
     </div>
     <h4 class="gen-sub">Más formas de ganar</h4>
     <div class="tr-otros">
-      <button data-a="ruleta" class="${gratis ? 'destacado' : ''}"><span>🎡</span><b>Ruleta diaria</b><small>${gratis ? '¡Tirada gratis hoy!' : 'Ya tirada · vuelve mañana'}</small></button>
       <button data-a="encargos" class="${pendientes ? 'destacado' : ''}"><span>📞</span><b>Encargos</b><small>${pendientes ? `${pendientes} ${pendientes === 1 ? 'favor pendiente' : 'favores pendientes'}` : 'Os llamarán para pedir favores'}</small></button>
     </div>`);
   cuerpo.querySelector('#tr-ir').addEventListener('click', () => trabajos.trabajar(t));
-  cuerpo.querySelector('[data-a="ruleta"]').addEventListener('click', () => { ui.cerrarHojas(); setTimeout(() => ui.abrirRuleta(), 200); });
   cuerpo.querySelector('[data-a="encargos"]').addEventListener('click', () => abrirEncargos());
 }
 
@@ -2092,18 +2095,18 @@ function refrescarTrabajar() {
   if (firma === firmaTrabajar) return;
   firmaTrabajar = firma;
   const ins = b.querySelector('.contador-trab');
-  const texto = quedan ? String(quedan) : gratis ? '🎡' : '';
+  const texto = quedan ? String(quedan) : '';
   ins.textContent = texto;
   ins.classList.toggle('oculto', !texto);
-  b.classList.toggle('pendiente', quedan > 0 || gratis);
+  b.classList.toggle('pendiente', quedan > 0);
 }
 
 function abrirObjetivos() {
   abrirHub('Objetivos', [
     { id: 'pase', icono: '🗓️', texto: 'Pase del mes', sub: `${economia.pase().reclamados.length} de 10 tareas`, insignia: economia.pendientesPase() || null, accion: () => economia.abrirPase() },
     { id: 'logros', icono: '🏆', texto: 'Logros', sub: `${(estado.logros || []).length} de ${LOGROS.length}`, accion: abrirLogros },
-    { id: 'colecciones', icono: '📚', texto: 'Colecciones', sub: `${(estado.colecciones || []).length} de ${COLECCIONES.length} completas`, accion: abrirColecciones },
-    { id: 'album', icono: '📒', texto: 'Álbum de pegatinas', sub: `${album.cuantas()} de ${album.total()} pegatinas`, insignia: album.pendientes() || ((estado.album && estado.album.nuevas.length) ? '!' : null), accion: () => album.abrir(() => abrirObjetivos()) }
+    { id: 'ruleta', icono: '🎡', texto: 'Ruleta', sub: ui.ruletaGratis ? '¡Tirada gratis hoy!' : `${estado.tickets || 0} tickets`, insignia: ui.ruletaGratis ? '!' : null, accion: () => { ui.cerrarHojas(); setTimeout(() => ui.abrirRuleta(), 200); } },
+    { id: 'album', icono: '📒', texto: 'Álbum y colecciones', sub: `${album.cuantas()} de ${album.total()} pegatinas · ${(estado.colecciones || []).length}/${COLECCIONES.length} colecciones`, insignia: album.pendientes() || ((estado.album && estado.album.nuevas.length) ? '!' : null), accion: () => album.abrir(() => abrirObjetivos()) }
   ]);
 }
 

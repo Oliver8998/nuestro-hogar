@@ -3546,7 +3546,7 @@ body.colgando #lateral, body.colgando #chips-vida, body.colgando #menu-objeto, b
 .al-hito small { font-size: 10px; font-weight: 800; color: var(--suave); white-space: nowrap; }
 .al-hito.listo { background: #fff3d6; box-shadow: inset 0 0 0 2px #f2a03c, 0 0 12px rgba(242,160,60,.5); animation: latido 1s infinite; }
 .al-hito.cobrado { opacity: .55; }
-.al-pestanas { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+.al-pestanas { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
 .al-pestanas button { position: relative; border: none; border-radius: 12px 12px 0 0; padding: 6px 2px; background: #f1e6d8; font-size: 20px; display: flex; flex-direction: column; align-items: center; font-family: inherit; }
 .al-pestanas button small { font-size: 10px; font-weight: 800; color: var(--suave); }
 .al-pestanas button.activo { background: #fffaf2; box-shadow: 0 -2px 0 #f2a03c inset; }
@@ -3693,3 +3693,5 @@ body.colgando #lateral, body.colgando #chips-vida, body.colgando #menu-objeto, b
 .bv-lista small { color: var(--suave); font-weight: 700; }
 .bv-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .bv-chips span { background: #f6ecdd; border-radius: 12px; padding: 4px 9px; font-weight: 800; font-size: 13px; }
+.mas-grupo { margin: 14px 2px 6px; font-size: 14px; text-transform: uppercase; letter-spacing: .5px; color: #c98a2b; }
+.mas-grupo:first-child { margin-top: 2px; }

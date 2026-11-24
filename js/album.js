@@ -8,7 +8,8 @@ const PAGINAS = [
   { id: 'exterior', icono: '🌳', nombre: 'Exterior', filtro: d => d.categoria === 'exterior' },
   { id: 'mascotas', icono: '🐾', nombre: 'Mascotas', mascotas: true },
   { id: 'cosas', icono: '🦴', nombre: 'Para mascotas', filtro: d => d.categoria === 'mascotas' || d.categoria === 'limpieza' },
-  { id: 'temporada', icono: '🎃', nombre: 'Temporada', filtro: d => d.categoria === 'temporada' }
+  { id: 'temporada', icono: '🎃', nombre: 'Temporada', filtro: d => d.categoria === 'temporada' },
+  { id: 'colecciones', icono: '📚', nombre: 'Colecciones', especial: true }
 ];
 
 const HITOS = [
@@ -35,6 +36,7 @@ export const PREMIOS_RACHA = [
 function todas() {
   const lista = [];
   for (const p of PAGINAS) {
+    if (p.especial) continue;
     if (p.mascotas) for (const id of Object.keys(ESPECIES)) lista.push({ pagina: p.id, clave: `p:${id}`, id, mascota: true });
     else for (const d of CATALOGO.filter(p.filtro)) lista.push({ pagina: p.id, clave: `m:${d.id}`, id: d.id, raro: !!d.rareza });
   }
@@ -127,20 +129,24 @@ export class Album {
         ${sig && n < this.meta(sig) ? `<small class="nota">Te faltan ${this.meta(sig) - n} para el siguiente premio</small>` : ''}
       </div>
       <div class="al-pestanas">${PAGINAS.map(p => {
+        if (p.especial) {
+          const n = (this.ctx.estado.colecciones || []).length;
+          return `<button data-p="${p.id}" class="${p.id === pag.id ? 'activo' : ''}">${p.icono}<small>${n} hechas</small></button>`;
+        }
         const its = this.lista.filter(x => x.pagina === p.id);
         const c = its.filter(x => tiene.has(x.clave)).length;
         const nueva = its.some(x => nuevas.has(x.clave));
         return `<button data-p="${p.id}" class="${p.id === pag.id ? 'activo' : ''}">${p.icono}<small>${c}/${its.length}</small>${nueva ? '<i class="al-punto"></i>' : ''}</button>`;
       }).join('')}</div>
       <h4 class="al-titulo">${pag.icono} ${pag.nombre}</h4>
-      <div class="al-pagina">${items.map((x, i) => {
+      ${pag.especial ? (this.ctx.htmlColecciones ? this.ctx.htmlColecciones() : '') : `<div class="al-pagina">${items.map((x, i) => {
         const si = tiene.has(x.clave);
         return `<div class="al-pegatina ${si ? 'tiene' : 'falta'} ${x.raro ? 'rara' : ''} ${nuevas.has(x.clave) ? 'nueva' : ''}" style="--r:${((i * 37) % 9) - 4}deg" data-i="${i}">
           <img data-src="${i}" alt="">
           <small>${si ? this.nombre(x) : '???'}</small>
           ${nuevas.has(x.clave) ? '<em>¡Nueva!</em>' : ''}
         </div>`;
-      }).join('')}</div>`;
+      }).join('')}</div>`}`;
     const cuerpo = ui.abrirGen('Álbum de pegatinas', html, volver);
     const imgs = [...cuerpo.querySelectorAll('.al-pegatina img')];
     let k = 0;

@@ -83,7 +83,19 @@ export class Mas {
       { id: 'ajustes', icono: '⚙️', texto: 'Ajustes', sub: 'Nombres, fechas, sonido y copia' }
     ];
     const tile = t => `<button class="mas-tile${t.bloqueo ? ' bloqueado' : ''}" data-id="${t.id}"><span>${t.bloqueo ? '🔒' : t.icono}</span><b>${t.texto}</b><small>${t.bloqueo || t.sub}</small>${!t.bloqueo && t.insignia ? `<i class="insignia">${t.insignia}</i>` : ''}</button>`;
-    const cuerpo = ui.abrirGen('Más cosas', `<div class="mas-rejilla">${tiles.map(tile).join('')}</div>`);
+    const GRUPOS = [
+      ['💑 Vosotros', ['juntos', 'nosotros', 'mascotas', 'fotos']],
+      ['🏠 La casa', ['casas', 'reformas', 'cocina', 'taller', 'inmobiliaria']],
+      ['🏘️ El barrio', ['amigos', 'reto']],
+      ['⭐ Progreso', ['nivel', 'objetivos']]
+    ];
+    const usados = new Set(GRUPOS.flatMap(g => g[1]));
+    const secciones = GRUPOS.map(([titulo, ids]) => {
+      const lista = ids.map(id => tiles.find(t => t.id === id)).filter(Boolean);
+      return lista.length ? `<h4 class="mas-grupo">${titulo}</h4><div class="mas-rejilla">${lista.map(tile).join('')}</div>` : '';
+    }).join('');
+    const resto = tiles.filter(t => !usados.has(t.id));
+    const cuerpo = ui.abrirGen('Más cosas', `${secciones}${resto.length ? `<h4 class="mas-grupo">⚙️ Otros</h4><div class="mas-rejilla">${resto.map(tile).join('')}</div>` : ''}`);
     cuerpo.querySelectorAll('.mas-tile').forEach(b => b.addEventListener('click', () => {
       const id = b.dataset.id;
       const extra = extras.find(t => t.id === id);
