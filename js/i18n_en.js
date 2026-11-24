@@ -1820,5 +1820,20 @@ export default {
 "de la izquierda":"left",
 "de la derecha":"right",
 "➕ Añadir otra ventana · 🪙 200":"➕ Add another window · 🪙 200",
-"Mantened pulsada una ventana para moverla o cambiarle el tamaño":"Press and hold a window to move or resize it"
+"Mantened pulsada una ventana para moverla o cambiarle el tamaño":"Press and hold a window to move or resize it",
+"💼 Trabajar":"💼 Work",
+"Trabajo de hoy":"Today's job",
+"Te queda 1 turno con paga entera":"1 full-pay shift left",
+"Te quedan {0} turnos con paga entera":"{0} full-pay shifts left",
+"Turnos de hoy hechos: ahora son horas extra al 30%":"Today's shifts done: now it's overtime at 30%",
+"Hacer horas extra":"Work overtime",
+"hasta 🪙 {0}":"up to 🪙 {0}",
+"Ver todos los trabajos ›":"See all jobs ›",
+"Más formas de ganar":"More ways to earn",
+"Ruleta diaria":"Daily wheel",
+"¡Tirada gratis hoy!":"Free spin today!",
+"Ya tirada · vuelve mañana":"Already spun · come back tomorrow",
+"Para sacar un extra":"For a little extra",
+"💡 Mañana habrá otro trabajo distinto. Con lo que ganéis, pasad por la tienda de Pilar.":"💡 Tomorrow there'll be a different job. Spend what you earn at Pilar's shop.",
+"Y lo más importante: en Trabajar ganáis monedas cada día para comprar cosas. ¡Ya sabéis lo básico!":"And most importantly: in Work you earn coins every day to buy things. You know the basics!"
 };

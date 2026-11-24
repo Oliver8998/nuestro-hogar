@@ -769,6 +769,12 @@ const ui = new UI(miniaturas, {
   alAlternarSonido() {
     sonido.alternar();
   },
+  alTrabajar() {
+    abrirTrabajar();
+  },
+  alCambioTrabajo() {
+    refrescarTrabajar();
+  },
   alMas() {
     mas.abrir();
   },
@@ -1884,11 +1890,49 @@ function bloqueoSi(cond, texto) {
   return cond ? null : texto;
 }
 
+function abrirTrabajar() {
+  const t = trabajos.delDia();
+  const hechos = trabajos.turnosHoy();
+  const quedan = Math.max(0, 3 - hechos);
+  const gratis = !!ui.ruletaGratis;
+  const cuerpo = ui.abrirGen('💼 Trabajar', `
+    <div class="tr-hero">
+      <div class="tr-cabecera"><span class="tr-ico">${t.icono}</span><div><small>Trabajo de hoy</small><b>${t.nombre}</b></div></div>
+      <p>${t.texto}</p>
+      <div class="tr-turnos">${[0, 1, 2].map(i => `<i class="${i < hechos ? 'hecho' : ''}">${i < hechos ? '✓' : i + 1}</i>`).join('')}<em>${quedan ? `Te ${quedan === 1 ? 'queda 1 turno' : `quedan ${quedan} turnos`} con paga entera` : 'Turnos de hoy hechos: ahora son horas extra al 30%'}</em></div>
+      <button class="primario tr-ir" id="tr-ir">${quedan ? '¡A trabajar!' : 'Hacer horas extra'}<small>hasta 🪙 ${quedan ? t.pago : Math.round(t.pago * 0.3)}</small></button>
+      <button class="tr-todos" id="tr-todos">Ver todos los trabajos ›</button>
+    </div>
+    <h4 class="gen-sub">Más formas de ganar</h4>
+    <div class="tr-otros">
+      <button data-a="ruleta" class="${gratis ? 'destacado' : ''}"><span>🎡</span><b>Ruleta diaria</b><small>${gratis ? '¡Tirada gratis hoy!' : 'Ya tirada · vuelve mañana'}</small></button>
+      <button data-a="juegos"><span>🎮</span><b>Minijuegos</b><small>Para sacar un extra</small></button>
+    </div>
+    <p class="gen-intro tr-nota">💡 Mañana habrá otro trabajo distinto. Con lo que ganéis, pasad por la tienda de Pilar.</p>`);
+  cuerpo.querySelector('#tr-ir').addEventListener('click', () => trabajos.trabajar(t));
+  cuerpo.querySelector('#tr-todos').addEventListener('click', () => trabajos.abrir());
+  cuerpo.querySelector('[data-a="ruleta"]').addEventListener('click', () => { ui.cerrarHojas(); setTimeout(() => ui.abrirRuleta(), 200); });
+  cuerpo.querySelector('[data-a="juegos"]').addEventListener('click', () => abrirJuegos());
+}
+
 function abrirGanar() {
-  abrirHub('Ganar monedas', [
-    { id: 'trabajos', icono: '💼', texto: 'Trabajo del día', sub: `${trabajos.delDia().icono} ${trabajos.delDia().nombre} · ${Math.max(0, 3 - trabajos.turnosHoy())} turnos`, insignia: trabajos.turnosHoy() < 3 ? '!' : null, accion: () => trabajos.abrir() },
-    { id: 'juegos', icono: '🎮', texto: 'Minijuegos', sub: 'Cocina rápida, parejas, puzzle y duelos', accion: abrirJuegos }
-  ]);
+  abrirTrabajar();
+}
+
+let firmaTrabajar = '';
+function refrescarTrabajar() {
+  const b = document.getElementById('btn-trabajar');
+  if (!b || !trabajos) return;
+  const quedan = Math.max(0, 3 - trabajos.turnosHoy());
+  const gratis = !!ui.ruletaGratis;
+  const firma = `${quedan}|${gratis}`;
+  if (firma === firmaTrabajar) return;
+  firmaTrabajar = firma;
+  const ins = b.querySelector('.contador-trab');
+  const texto = quedan ? String(quedan) : gratis ? '🎡' : '';
+  ins.textContent = texto;
+  ins.classList.toggle('oculto', !texto);
+  b.classList.toggle('pendiente', quedan > 0 || gratis);
 }
 
 function abrirObjetivos() {
@@ -1911,7 +1955,6 @@ window.extrasMenu = () => {
     { id: 'buzon', icono: '📬', texto: 'Buzón', sub: vida.noLeidas() ? `${vida.noLeidas()} carta${vida.noLeidas() > 1 ? 's' : ''} sin leer` : 'Cartas, postales y ofertas', insignia: vida.noLeidas() || null, accion: () => vida.abrirCorreo() },
     { id: 'nosotros', icono: '💕', texto: 'Nosotros', sub: 'Notas, regalos, preguntas, viajes y recuerdos', insignia: pareja2.pendientePregunta() ? '!' : null, accion: abrirNosotros },
     { id: 'mascotas', icono: '🐾', texto: 'Vuestras mascotas', sub: mascotas.lista.length ? `${mascotas.lista.length} en casa · cómo están` : 'Adoptad una en el mostrador de Pilar', accion: () => ui.abrirRefugio() },
-    { id: 'ganar', icono: '💼', texto: 'Ganar monedas', sub: `Hoy: ${trabajos.delDia().icono} ${trabajos.delDia().nombre} · minijuegos`, insignia: trabajos.turnosHoy() < 3 ? '!' : null, accion: abrirGanar },
     { id: 'objetivos', icono: '🏆', texto: 'Objetivos', sub: 'Pase del mes, logros y colecciones', insignia: economia.pendientesPase() || null, accion: abrirObjetivos },
     { id: 'casas', icono: CASAS[nivel].icono, texto: 'Casas', sub: nivel < CASAS.length - 1 ? `Siguiente: ${CASAS[nivel + 1].nombre}` : 'Lo más alto', accion: abrirCasas },
     { id: 'reformas', icono: '🪵', texto: 'Reformas', sub: 'Suelos, papel pintado, ventanas y luces LED', bloqueo: bloqueoSi(nivel >= 1 || h >= 4, 'Arreglad las grietas y la humedad'), accion: () => casa2.abrirReformas() },
@@ -2287,6 +2330,7 @@ function abrirTelefono() {
 }
 
 function ordenarHud() {
+  refrescarTrabajar();
   const prog = estado.reforma || sala.progreso();
   const enReforma = nivelCasa() === 0 && prog.hechos < prog.total;
   document.querySelector('#hud .pastilla.casa').classList.toggle('oculto', !enReforma);

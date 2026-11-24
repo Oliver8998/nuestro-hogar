@@ -68,9 +68,9 @@ const PASOS = [
     saltaSi: c => c.ui.hojaAbierta !== 'misiones'
   },
   {
-    id: 'mas', objetivo: () => '#btn-mas',
-    texto: 'Y en <b>Más</b> está el trabajo del día para ganar monedas. ¡Ya sabéis lo básico!',
-    avanza: ['clic:#btn-mas']
+    id: 'trabajar', objetivo: () => '#btn-trabajar',
+    texto: 'Y lo más importante: en <b>Trabajar</b> ganáis monedas cada día para comprar cosas. ¡Ya sabéis lo básico!',
+    avanza: ['clic:#btn-trabajar']
   }
 ];
 

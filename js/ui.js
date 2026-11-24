@@ -147,7 +147,7 @@ export class UI {
       pista.addEventListener('pointerup', fin);
       pista.addEventListener('pointercancel', fin);
     });
-    $('btn-ruleta').addEventListener('click', () => this.abrirRuleta());
+    $('btn-trabajar').addEventListener('click', () => this.ev.alTrabajar());
     $('btn-mas').addEventListener('click', () => this.ev.alMas());
     $('pill-clima').addEventListener('click', () => this.ev.alClima());
     $('pill-hab').addEventListener('click', () => this.ev.alHabitaciones());
@@ -654,7 +654,8 @@ export class UI {
   }
 
   tiradaGratis(disponible) {
-    this.$('btn-ruleta').querySelector('.insignia').classList.toggle('oculto', !disponible);
+    this.ruletaGratis = !!disponible;
+    if (this.ev.alCambioTrabajo) this.ev.alCambioTrabajo();
   }
 
   monedas(n) {
