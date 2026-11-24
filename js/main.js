@@ -16,6 +16,8 @@ import { HISTORIA, EVENTOS, puntuacion, nuevasDiarias, infoDiaria, textoPremio }
 import { poolDe } from './ruleta.js';
 import { Minijuegos } from './minijuegos.js';
 import { cargarModelos } from './modelos.js';
+import { cargarMascotasKenney } from './modeloMascota.js';
+import { cargarPersonajesKenney, actualizarPersonajes } from './personajes.js';
 import { Ambiente, temporada, NOMBRE_TEMPORADA } from './ambiente.js';
 import { Mas } from './mas.js';
 import { Juegos, JUEGOS, PARTIDAS_PREMIADAS } from './juegos.js';
@@ -49,6 +51,7 @@ import { Inmobiliaria, INV, NIVEL_INMOBILIARIA } from './inmobiliaria.js';
 
 activarTraduccion();
 await cargarModelos();
+await Promise.all([cargarMascotasKenney(ESPECIES), cargarPersonajesKenney()]);
 
 const CLAVE = 'hogar-estado';
 const NOMBRES = ['Michi', 'Coco', 'Luna', 'Toby', 'Nube', 'Canela', 'Pipo', 'Kiwi', 'Lola', 'Bimba', 'Churro', 'Galleta', 'Mochi', 'Rufo', 'Trufa', 'Pelusa'];
@@ -2780,6 +2783,7 @@ renderer.setAnimationLoop(() => {
   telefono.actualizar(dt);
   if (paredObjs) paredObjs.actualizar(dt);
   if (inmobiliaria && !visitando) inmobiliaria.actualizar(dt);
+  actualizarPersonajes(dt);
   if (encargos) encargos.actualizar(dt);
   ambiente.actualizar(dt);
   usos.actualizar(dt);

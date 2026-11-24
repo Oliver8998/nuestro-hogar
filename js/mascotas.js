@@ -1,21 +1,22 @@
 import { caro } from './balance.js';
 import * as THREE from 'three';
 import { liberar } from './modelos.js';
-import { crearModeloMascota as crearModelo } from './modeloMascota.js';
+import { crearModeloMascota as crearModelo, ponerClip } from './modeloMascota.js';
 
 export const ESPECIES = {
-  hamster: { nombre: 'Hámster', precio: 120, texto: 'Pequeñito y siempre comiendo', color: 0xe8b878, secundario: 0xfff3e0, orejas: 'redondas', cola: null, tam: 0.6, velocidad: 0.45, redondo: true, mofletes: true, bigotes: true, patasCortas: true },
-  conejo: { nombre: 'Conejo', precio: 180, texto: 'Tranquilo y suave como una nube', color: 0xf2ede6, secundario: 0xf6c9d0, orejas: 'largas', cola: 'bola', tam: 0.85, velocidad: 0.6, salta: true, dientes: true, bigotes: true, pies: 0.12 },
-  pato: { nombre: 'Pato', precio: 220, texto: 'Un poco ruidoso, muy divertido', ave: true, color: 0xf7d84a, secundario: 0xf7d84a, pico: 0xf08c2a, tam: 0.9, velocidad: 0.5 },
-  gato: { nombre: 'Gato', precio: 250, texto: 'Independiente y mimoso a ratos', color: 0xf0a860, secundario: 0xfff3e0, orejas: 'punta', cola: 'larga', tam: 1, velocidad: 0.7, gato: true, rayas: true, calcetines: 0xfff3e0 },
-  perro: { nombre: 'Perro', precio: 350, texto: 'Leal, juguetón y siempre contento', color: 0xc9925a, secundario: 0xf5e6d0, orejas: 'caidas', cola: 'corta', tam: 1.15, velocidad: 0.85, perro: true, hocico: 'largo', parche: true },
-  pinguino: { nombre: 'Pingüino', exclusivo: 'epico', texto: 'Elegante, aunque se resbala', ave: true, pinguino: true, color: 0x2b2b33, secundario: 0xffffff, pico: 0xf0a020, tam: 0.95, velocidad: 0.4 },
-  cobaya: { nombre: 'Cobaya', precio: 160, texto: 'Hace ruiditos cuando está contenta', color: 0xe0a86a, secundario: 0xf8f2ea, orejas: 'redondas', cola: null, tam: 0.75, velocidad: 0.4, redondo: true, largo: 1.2, manchas: 0x6b4a33, patasCortas: true },
-  tortuga: { nombre: 'Tortuga', precio: 200, texto: 'Lenta pero segura, vive muchísimo', color: 0x9cc46a, secundario: 0xd9e8b0, orejas: 'ninguna', cola: null, tam: 0.8, velocidad: 0.18, tortuga: true, caparazon: 0x7a5a3a },
-  loro: { nombre: 'Loro', precio: 380, texto: 'Repite todo lo que oye por casa', ave: true, loro: true, color: 0x4caf50, secundario: 0xf2d06b, pico: 0x3d3d3d, tam: 0.85, velocidad: 0.5 },
-  dragon: { nombre: 'Dragoncito', exclusivo: 'legendario', texto: 'Escupe fueguitos cuando se emociona', color: 0x8e6fd8, secundario: 0xf2c6e0, orejas: 'ninguna', cola: 'larga', tam: 1, velocidad: 0.65, dragon: true, cabezaGrande: 1.05 },
-  zorro: { nombre: 'Zorrito', exclusivo: 'legendario', texto: 'Curioso y con una cola enorme', color: 0xe87a3a, secundario: 0xfff6ee, orejas: 'punta-grande', cola: 'esponjosa', tam: 1, velocidad: 0.8, hocico: 'zorro', calcetines: 0x3b2a22, bigotes: true }
+  conejo: { nombre: 'Conejo', kenney: 'animal-bunny', precio: 180, texto: 'Tranquilo y suave como una nube', color: 0xf2ede6, secundario: 0xf6c9d0, orejas: 'largas', cola: 'bola', tam: 0.85, velocidad: 0.6, salta: true, dientes: true, bigotes: true, pies: 0.12 },
+  pato: { nombre: 'Pollito', kenney: 'animal-chick', precio: 160, texto: 'Pequeñito, amarillo y muy curioso', ave: true, color: 0xf7d84a, secundario: 0xf7d84a, pico: 0xf08c2a, tam: 0.8, velocidad: 0.5 },
+  cerdito: { nombre: 'Cerdito', kenney: 'animal-pig', precio: 200, texto: 'Glotón, rosita y muy cariñoso', color: 0xf4a6b8, secundario: 0xf8c8d4, orejas: 'redondas', cola: 'corta', tam: 0.95, velocidad: 0.5 },
+  gato: { nombre: 'Gato', kenney: 'animal-cat', precio: 250, texto: 'Independiente y mimoso a ratos', color: 0xf0a860, secundario: 0xfff3e0, orejas: 'punta', cola: 'larga', tam: 1, velocidad: 0.7, gato: true, rayas: true, calcetines: 0xfff3e0 },
+  koala: { nombre: 'Koala', kenney: 'animal-koala', precio: 300, texto: 'Dormilón y abrazable', color: 0x9a9aa6, secundario: 0xe0e0e6, orejas: 'redondas', cola: null, tam: 0.95, velocidad: 0.4 },
+  perro: { nombre: 'Perro', kenney: 'animal-dog', precio: 350, texto: 'Leal, juguetón y siempre contento', color: 0xc9925a, secundario: 0xf5e6d0, orejas: 'caidas', cola: 'corta', tam: 1.15, velocidad: 0.85, perro: true, hocico: 'largo', parche: true },
+  loro: { nombre: 'Loro', kenney: 'animal-parrot', precio: 380, texto: 'Repite todo lo que oye por casa', ave: true, loro: true, color: 0x4caf50, secundario: 0xf2d06b, pico: 0x3d3d3d, tam: 0.85, velocidad: 0.5 },
+  pinguino: { nombre: 'Pingüino', kenney: 'animal-penguin', exclusivo: 'epico', texto: 'Elegante, aunque se resbala', ave: true, pinguino: true, color: 0x2b2b33, secundario: 0xffffff, pico: 0xf0a020, tam: 0.95, velocidad: 0.4 },
+  zorro: { nombre: 'Zorrito', kenney: 'animal-fox', exclusivo: 'legendario', texto: 'Curioso y con una cola enorme', color: 0xe87a3a, secundario: 0xfff6ee, orejas: 'punta-grande', cola: 'esponjosa', tam: 1, velocidad: 0.8, hocico: 'zorro', calcetines: 0x3b2a22, bigotes: true },
+  panda: { nombre: 'Panda', kenney: 'animal-panda', exclusivo: 'legendario', texto: 'Tranquilo, redondito y adorable', color: 0xf4f4f4, secundario: 0x2b2b33, orejas: 'redondas', cola: null, tam: 1.05, velocidad: 0.45 }
 };
+
+export const ESPECIE_ANTIGUA = { hamster: 'conejo', cobaya: 'cerdito', tortuga: 'koala', dragon: 'panda' };
 
 for (const e of Object.values(ESPECIES)) if (typeof e.precio === 'number') e.precio = caro(e.precio);
 
@@ -310,6 +311,7 @@ export class GestorMascotas {
 
   cargar(lista, segundosFuera = 0) {
     for (const d of lista || []) {
+      if (ESPECIE_ANTIGUA[d.especie]) d.especie = ESPECIE_ANTIGUA[d.especie];
       if (!ESPECIES[d.especie]) continue;
       const m = new Mascota(d);
       const horas = Math.min(segundosFuera / 3600, 48);
@@ -923,6 +925,17 @@ export class GestorMascotas {
         const rebote = andando ? Math.sin((m.fasePaso || 0) * 2) * 0.12 : 0;
         o.rotation.x = o.userData.rx + tic + rebote + (m.estado === 'dormir' ? 0.3 : 0);
       });
+    }
+    if (p.mixer) {
+      const est = m.estado;
+      let clip = 'idle';
+      if (andando) clip = est === 'correr' ? 'run' : 'walk';
+      else if (est === 'comer' || est === 'olfatear' || est === 'rascar') clip = 'eat';
+      else if (est === 'saludo') clip = 'gesture-positive';
+      else if (est === 'feliz' || est === 'jugar' || est === 'vueltas' || est === 'cola' || est === 'truco' || est === 'saltito' || est === 'aletear') clip = 'dance';
+      else if (est === 'dormir' || est === 'sofa' || est === 'tumbado') clip = 'static';
+      ponerClip(p, clip);
+      p.mixer.update(dt);
     }
     if (p.boca) {
       const sy = 1 + bocaAbierta * 3;

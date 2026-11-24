@@ -116,8 +116,9 @@ export class EscenaTienda {
     escena.add(letrero);
 
     const lola = crearPersonaje('lola');
-    lola.scale.setScalar(1.9);
-    lola.position.set(0, 0.98, -0.75);
+    lola.scale.setScalar(lola.userData.kenney ? 1.35 : 1.9);
+    this.lolaY = lola.userData.kenney ? 1.18 : 0.98;
+    lola.position.set(0, this.lolaY, -0.75);
     lola.traverse(o => { if (o.isMesh) o.castShadow = true; });
     escena.add(lola);
     this.lola = lola;
@@ -372,6 +373,7 @@ export class EscenaTienda {
           const salto = Math.max(0, Math.sin(t * 3 + h.fase)) * (sel ? 0.05 : 0.015);
           h.mascotaGrupo.position.y = 0.08 + salto;
           h.mascotaGrupo.rotation.y = Math.sin(t * 0.8 + h.fase) * 0.5 + (sel ? t * 1.2 : 0);
+          if (p.mixer) p.mixer.update(dt);
           if (p.cabeza) p.cabeza.rotation.z = Math.sin(t * 1.7 + h.fase) * 0.15;
           if (p.cola) p.cola.rotation.y = Math.sin(t * 9) * 0.4;
           p.alas.forEach((a, k) => { a.rotation.z = (k ? -1 : 1) * Math.abs(Math.sin(t * 7)) * 0.4; });
@@ -408,7 +410,7 @@ export class EscenaTienda {
     }
 
     const cabeza = this.lola.userData.cabeza;
-    this.lola.position.y = 0.98 + Math.sin(t * 2.2) * 0.012;
+    this.lola.position.y = this.lolaY + Math.sin(t * 2.2) * 0.012;
     if (cabeza) {
       cabeza.rotation.z = Math.sin(t * 1.3) * 0.06;
       cabeza.rotation.y = Math.sin(t * 0.7) * 0.12;
@@ -417,7 +419,7 @@ export class EscenaTienda {
       this.tReaccion += dt;
       const k = this.tReaccion;
       if (this.reaccion === 'feliz') {
-        this.lola.position.y = 0.98 + Math.abs(Math.sin(k * 12)) * 0.12;
+        this.lola.position.y = this.lolaY + Math.abs(Math.sin(k * 12)) * 0.12;
       } else if (cabeza) {
         cabeza.rotation.y = Math.sin(k * 22) * 0.3 * Math.max(0, 1 - k);
       }

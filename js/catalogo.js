@@ -640,7 +640,7 @@ export const MATERIALES = [
     [0.04, 0.04, 0.04, 0, 0.05, 0.12, 0xe05070, 'esfera']
   ]},
   { id: 'vale-zorro', categoria: 'mascotas', nombre: 'Zorrito', enTienda: false, rareza: 'legendario', mascota: 'zorro', pista: 'Tócalo para darle la bienvenida a casa' },
-  { id: 'vale-dragon', categoria: 'mascotas', nombre: 'Dragoncito', enTienda: false, rareza: 'legendario', mascota: 'dragon', pista: 'Tócalo para darle la bienvenida a casa' },
+  { id: 'vale-dragon', categoria: 'mascotas', nombre: 'Panda', enTienda: false, rareza: 'legendario', mascota: 'panda', pista: 'Tócalo para darle la bienvenida a casa' },
   { id: 'vale-pinguino', categoria: 'mascotas', nombre: 'Pingüino', enTienda: false, rareza: 'epico', mascota: 'pinguino', pista: 'Tócalo para darle la bienvenida a casa' }
 ];
 

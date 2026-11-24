@@ -371,8 +371,58 @@ function ave(raiz, cuerpo, e, partes) {
   }
 }
 
+const KENNEY = new Map();
+
+export async function cargarMascotasKenney(especies) {
+  const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
+  const loader = new GLTFLoader();
+  const ids = [...new Set(Object.values(especies).map(e => e.kenney).filter(Boolean))];
+  await Promise.all(ids.map(id => loader.loadAsync(`./assets/kenney/mascotas/${id}.glb?v=1`).then(g => KENNEY.set(id, g)).catch(() => {})));
+}
+
+export function ponerClip(p, nombre, fundido = 0.25) {
+  if (!p.mixer || p.clip === nombre) return;
+  const nueva = p.acciones[nombre] || p.acciones.idle;
+  if (!nueva) return;
+  const vieja = p.clip ? p.acciones[p.clip] : null;
+  nueva.reset();
+  nueva.setEffectiveWeight(1);
+  nueva.play();
+  if (vieja && vieja !== nueva) vieja.crossFadeTo(nueva, fundido, false);
+  p.clip = nombre;
+}
+
+function modeloKenney(e) {
+  const g = KENNEY.get(e.kenney);
+  if (!g) return null;
+  const raiz = new THREE.Group();
+  const cuerpo = new THREE.Group();
+  raiz.add(cuerpo);
+  const escena = g.scene.clone(true);
+  escena.traverse(o => {
+    if (o.isMesh) {
+      o.castShadow = true;
+      o.receiveShadow = false;
+    }
+  });
+  escena.scale.setScalar(0.27);
+  cuerpo.add(escena);
+  const mixer = new THREE.AnimationMixer(escena);
+  const acciones = {};
+  for (const clip of g.animations) acciones[clip.name] = mixer.clipAction(clip);
+  const partes = { raiz, cuerpoGrupo: cuerpo, patas: [], ojos: [], alas: [], orejas: [], cola: null, colaPunta: null, cabeza: null, boca: null, lengua: null, mixer, acciones, clip: null, kenney: true };
+  ponerClip(partes, 'idle', 0);
+  mixer.update(0.01);
+  raiz.scale.setScalar(e.tam * 1.5);
+  return partes;
+}
+
 export function crearModeloMascota(especie, ESPECIES) {
   const e = ESPECIES[especie];
+  if (e.kenney) {
+    const k = modeloKenney(e);
+    if (k) return k;
+  }
   const raiz = new THREE.Group();
   const cuerpo = new THREE.Group();
   raiz.add(cuerpo);

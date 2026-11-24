@@ -135,7 +135,7 @@ export class Sorpresas {
     const partes = crearModeloMascota('gato');
     partes.raiz.position.set(-1.0, 0, 2.55);
     partes.raiz.rotation.y = Math.PI;
-    partes.raiz.scale.setScalar(1);
+    partes.raiz.scale.multiplyScalar(0.67);
     this.ctx.escena.add(partes.raiz);
     this.gato = partes;
   }
@@ -312,6 +312,7 @@ export class Sorpresas {
   }
 
   actualizar(dt) {
+    if (this.gato && this.gato.mixer) this.gato.mixer.update(dt);
     this.t += dt;
     if (this.nieve) {
       const pos = this.nieve.geometry.attributes.position;

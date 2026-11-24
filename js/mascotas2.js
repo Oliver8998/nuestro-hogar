@@ -17,7 +17,7 @@ const RIVALES = [
   ['Rocky', '🐕‍🦺'], ['Nala', '🦊'], ['Cuac', '🦆'], ['Lola', '🐩'], ['Simba', '🐈‍⬛'], ['Chispa', '🐿️']
 ];
 
-const EMOJI = { hamster: '🐹', conejo: '🐰', pato: '🦆', gato: '🐱', perro: '🐶', pinguino: '🐧', cobaya: '🐹', tortuga: '🐢', loro: '🦜', dragon: '🐲', zorro: '🦊' };
+const EMOJI = { conejo: '🐰', pato: '🐥', cerdito: '🐷', gato: '🐱', koala: '🐨', perro: '🐶', pinguino: '🐧', loro: '🦜', zorro: '🦊', panda: '🐼' };
 const PREMIOS = [150, 80, 40];
 const DIA = 86400000;
 

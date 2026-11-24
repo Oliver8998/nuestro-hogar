@@ -70,8 +70,71 @@ function crearRobi() {
   return g;
 }
 
+const KENNEY_PERSONAJE = { lola: 'character-female-b', mateo: 'character-male-d', sol: 'character-female-c', mama: 'character-female-d', ramon: 'character-male-b', amigos: 'character-male-f' };
+const GLB = new Map();
+const VIVOS = new Set();
+let clonar = null;
+
+export async function cargarPersonajesKenney() {
+  const [{ GLTFLoader }, utils] = await Promise.all([import('three/addons/loaders/GLTFLoader.js'), import('three/addons/utils/SkeletonUtils.js')]);
+  clonar = utils.clone;
+  const loader = new GLTFLoader();
+  await Promise.all([...new Set(Object.values(KENNEY_PERSONAJE))].map(n => loader.loadAsync(`./assets/kenney/personajes/${n}.glb?v=1`).then(g => GLB.set(n, g)).catch(() => {})));
+}
+
+export function actualizarPersonajes(dt) {
+  for (const v of VIVOS) {
+    if (!v.obj.parent) {
+      if (v.huerfano++ > 600) VIVOS.delete(v);
+      continue;
+    }
+    v.huerfano = 0;
+    v.mixer.update(dt);
+  }
+}
+
+export function animarPersonaje(g, nombre) {
+  const d = g.userData.kenney;
+  if (!d || d.clip === nombre) return;
+  const nueva = d.acciones[nombre] || d.acciones.idle;
+  if (!nueva) return;
+  const vieja = d.clip ? d.acciones[d.clip] : null;
+  nueva.reset().play();
+  if (vieja && vieja !== nueva) vieja.crossFadeTo(nueva, 0.25, false);
+  d.clip = nombre;
+}
+
+function personajeKenney(id) {
+  const g = clonar && GLB.get(KENNEY_PERSONAJE[id]);
+  if (!g) return null;
+  const grupo = new THREE.Group();
+  const modelo = clonar(g.scene);
+  modelo.scale.setScalar(1.45);
+  modelo.traverse(o => {
+    if (o.isMesh) {
+      o.castShadow = true;
+      o.frustumCulled = false;
+    }
+  });
+  grupo.add(modelo);
+  const mixer = new THREE.AnimationMixer(modelo);
+  const acciones = {};
+  for (const clip of g.animations) acciones[clip.name] = mixer.clipAction(clip);
+  grupo.userData.kenney = { mixer, acciones, clip: null };
+  grupo.userData.cabeza = modelo.getObjectByName('head') || null;
+  animarPersonaje(grupo, 'idle');
+  acciones.idle && (acciones.idle.time = Math.random() * 2);
+  mixer.update(0.01);
+  VIVOS.add({ obj: grupo, mixer, huerfano: 0 });
+  return grupo;
+}
+
 export function crearPersonaje(id) {
   if (id === 'robi') return crearRobi();
+  if (KENNEY_PERSONAJE[id]) {
+    const k = personajeKenney(id);
+    if (k) return k;
+  }
   const p = PERSONAJES[id];
   const g = new THREE.Group();
 

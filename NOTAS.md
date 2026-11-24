@@ -424,3 +424,12 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 ## Salón ampliable también hacia el fondo (v67)
 - 6 obras de ampliación en orden (`filas` = paso, `estado.salonFilas` 0–6): 6×7 (nivel 4, 2500), 7×7 (7, 3500), 7×8 (11, 4500), 8×8 (14, 6000), 8×9 (18, 7500), 9×9 (22, 9000). `TAM_SALON` en main da [ancho X, fondo Z] por paso; `tamHab(i)` sustituye a `anchoHab`.
 - `sala.redimensionar(ancho, fondo)`: mueve las 4 paredes, reconstruye los tramos de todas y escala las tablas y la base en Z; `sala.fondo()`. Los paquetes y la furgoneta de entregas van en un grupo raíz que se desplaza con la puerta (`entregas.desplazarZ`).
+
+## Mascotas y personajes de Kenney (v68)
+- Oliver eligió los packs CC0 de Kenney: **Cube Pets** (mascotas) y **Mini Characters 1** (personajes). Copias en `assets/kenney/mascotas/` y `assets/kenney/personajes/`, cada una con su `Textures/colormap.png`, y las licencias en `assets/kenney/`. Los zips originales están en Descargas del PC.
+- Especies ahora (`ESPECIES`, campo `kenney`):
+  - conejo (bunny), pato → "Pollito" (chick), cerdito (pig, nueva), gato, koala (nueva), perro, loro;
+  - pingüino (épico) y zorro y panda (legendarios; panda nueva, sustituye al dragón; `vale-dragon` ahora da un panda).
+  - Fuera: hámster, cobaya, tortuga y dragón. Las mascotas guardadas se convierten con `ESPECIE_ANTIGUA` (hámster→conejo, cobaya→cerdito, tortuga→koala, dragón→panda).
+- `modeloMascota.js`: `cargarMascotasKenney` (se espera al arrancar, en main) y `modeloKenney`: clona la escena del GLB a escala 0.27 dentro de `cuerpoGrupo` (la raíz sigue a tam × 1,5 × crecimiento) con `AnimationMixer`. Las piezas sueltas (patas, cola…) quedan vacías y el modelo procedural sigue como respaldo. En `GestorMascotas.animar` el estado elige la animación (`ponerClip`): idle, walk, run, eat, dance, gesture-positive y static (para dormir). La tienda 3D y el gato callejero actualizan su mixer.
+- `personajes.js`: lola→female-b (Pilar), mateo→male-d, sol→female-c, mama→female-d, ramon→male-b, amigos→male-f. Se clonan con SkeletonUtils a escala 1.45, con animación idle (`actualizarPersonajes(dt)` en el bucle de main, `animarPersonaje(g, clip)`) y `userData.cabeza` = el hueso `head`. Robi sigue siendo procedural. Pilar en la tienda: escala 1.35, y 1.18.

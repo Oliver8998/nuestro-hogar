@@ -2222,5 +2222,13 @@ export default {
 "Ahora también hacia el fondo":"Now towards the back too",
 "Un salón de los grandes":"A really big living room",
 "Casi un loft":"Almost a loft",
-"Ya tenéis un salón de {0}×{1}. Hay más sitio para muebles, mascotas y lo que queráis.":"You now have a {0}×{1} living room. More room for furniture, pets and whatever you like."
+"Ya tenéis un salón de {0}×{1}. Hay más sitio para muebles, mascotas y lo que queráis.":"You now have a {0}×{1} living room. More room for furniture, pets and whatever you like.",
+"Pollito":"Chick",
+"Cerdito":"Piglet",
+"Koala":"Koala",
+"Panda":"Panda",
+"Pequeñito, amarillo y muy curioso":"Tiny, yellow and very curious",
+"Glotón, rosita y muy cariñoso":"Greedy, pink and very cuddly",
+"Dormilón y abrazable":"Sleepy and huggable",
+"Tranquilo, redondito y adorable":"Calm, chubby and adorable"
 };

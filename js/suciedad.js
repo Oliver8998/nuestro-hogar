@@ -10,7 +10,7 @@ export const TIPOS = {
   caca: { nombre: 'Caca', producto: 'bolsitas', descripcion: 'Alguien no ha llegado a tiempo…', peso: 15 }
 };
 
-const AL_ARENERO = ['gato', 'conejo', 'hamster'];
+const AL_ARENERO = ['gato', 'conejo', 'koala'];
 const AL_JARDIN = ['perro', 'pato', 'pinguino', 'zorro'];
 
 const HUECOS_TELARANA = [
