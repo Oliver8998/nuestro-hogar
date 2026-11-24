@@ -3245,3 +3245,57 @@ body.colgando #lateral, body.colgando #chips-vida, body.colgando #menu-objeto, b
 .ranura .durabilidad { position: absolute; left: 8px; right: 8px; bottom: 5px; height: 6px; border-radius: 3px; background: #eadfd2; overflow: hidden; pointer-events: none; }
 .ranura .durabilidad i { display: block; height: 100%; border-radius: 3px; transition: width .6s ease, background-color .6s ease; }
 #inventario .ranura:has(.durabilidad) .nombre-ranura { -webkit-line-clamp: 1; display: block; white-space: nowrap; text-overflow: ellipsis; max-width: 100%; }
+
+/* Biblioteca: arrastrar libros a la estantería */
+.tb-biblio { touch-action: none; user-select: none; -webkit-user-select: none; }
+.bb-regla { font-weight: 800; font-size: 13px; color: #7a5640; background: #fff4e4; border-radius: 999px; padding: 5px 12px; }
+.bb-carrito { position: relative; width: 100%; padding: 14px 10px 18px; border-radius: 18px; background: linear-gradient(180deg, #c99a6b, #a8794f); box-shadow: inset 0 -8px 0 #8a5f3c, 0 6px 14px rgba(59,47,38,.18); }
+.bb-libros { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: center; gap: 5px; min-height: 120px; }
+.bb-ruedas { position: absolute; left: 22px; right: 22px; bottom: -12px; display: flex; justify-content: space-between; }
+.bb-ruedas i { width: 22px; height: 22px; border-radius: 50%; background: #4b3a30; box-shadow: inset 0 0 0 6px #6b574a; }
+.bb-libro { position: relative; border-radius: 4px 4px 3px 3px; background: linear-gradient(90deg, var(--lomo) 0 18%, var(--fondo) 18% 82%, var(--lomo) 82%); box-shadow: inset 0 6px 0 rgba(255,255,255,.18), inset 0 -10px 0 rgba(0,0,0,.12), 0 3px 4px rgba(0,0,0,.18); display: flex; align-items: center; justify-content: center; cursor: grab; touch-action: none; transition: transform .15s, opacity .15s; }
+.bb-libro::before, .bb-libro::after { content: ''; position: absolute; left: 4px; right: 4px; height: 3px; background: rgba(255,240,200,.75); border-radius: 2px; }
+.bb-libro::before { top: 10px; }
+.bb-libro::after { bottom: 12px; }
+.bb-libro b { background: #fffaf0; color: #3b2f26; border-radius: 5px; padding: 2px 3px; font-size: 12px; font-weight: 900; line-height: 1; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+.bb-libro.levantado { opacity: .25; transform: translateY(-6px); }
+.bb-libro.mal { animation: temblor .3s; }
+.bb-arrastrado { position: fixed; z-index: 400; pointer-events: none; transform: rotate(-8deg) scale(1.12); box-shadow: 0 14px 22px rgba(0,0,0,.3); transition: none; }
+.bb-arrastrado.rebota { animation: bb-rebota .38s ease-out forwards; }
+@keyframes bb-rebota { 0% { transform: rotate(-8deg) scale(1.12); } 30% { transform: rotate(10deg) scale(1.05); background: #e5626a; } 100% { transform: translateY(-60px) rotate(0) scale(.6); opacity: 0; } }
+.bb-flecha { font-weight: 900; font-size: 13px; color: #a0806a; animation: latido 1.4s ease-in-out infinite; }
+.bb-estanteria { position: relative; width: 100%; min-height: 132px; border-radius: 12px; padding: 10px 10px 0; background: linear-gradient(180deg, #6b4a33, #5a3d2a); box-shadow: inset 0 0 0 6px #8a5f3c, inset 0 -16px 0 #8a5f3c; display: flex; align-items: flex-end; transition: box-shadow .2s, transform .2s; }
+.bb-estanteria.encima { box-shadow: inset 0 0 0 6px #6cc08a, inset 0 -16px 0 #6cc08a, 0 0 0 4px rgba(108,192,138,.35); transform: scale(1.02); }
+.bb-colocados { display: flex; align-items: flex-end; gap: 3px; padding-bottom: 16px; flex-wrap: nowrap; overflow: hidden; }
+.bb-colocados .bb-libro { cursor: default; animation: bb-entra .3s cubic-bezier(.3,1.6,.5,1); }
+@keyframes bb-entra { from { transform: translateY(-30px) scale(1.15); } }
+.tb-biblio.completa .bb-estanteria { animation: bb-brilla .6s; }
+@keyframes bb-brilla { 50% { box-shadow: inset 0 0 0 6px #f2c15b, inset 0 -16px 0 #f2c15b, 0 0 24px rgba(242,193,91,.8); } }
+
+/* Pulido visual de minijuegos */
+.fv-aire { background: linear-gradient(180deg, #8ecdf0 0%, #cbe9f8 70%, #e8f6ec 100%); box-shadow: inset 0 -18px 0 #9fd17f; }
+.fv-aire::before, .fv-aire::after { content: '☁️'; position: absolute; font-size: 46px; opacity: .9; animation: fv-nube 9s linear infinite; }
+.fv-aire::before { top: 18px; left: -60px; }
+.fv-aire::after { top: 70px; left: -60px; font-size: 32px; animation-duration: 14s; animation-delay: -6s; }
+@keyframes fv-nube { to { transform: translateX(460px); } }
+.fv-aire .globo { filter: drop-shadow(0 6px 4px rgba(0,0,0,.15)); }
+.fv-gotas .fv-techo { background: linear-gradient(180deg, #8a6a52, #6b4f3b); border-radius: 14px 14px 4px 4px; padding: 6px 0 4px; box-shadow: inset 0 -6px 0 rgba(0,0,0,.15); }
+.fv-zona { background: repeating-linear-gradient(90deg, #f4ebe0 0 46px, #efe3d4 46px 48px), #f4ebe0 !important; box-shadow: inset 0 -26px 0 #c8a27a; }
+.fv-cubo { filter: drop-shadow(0 6px 4px rgba(0,0,0,.2)); }
+.fv-hoguera { background: radial-gradient(circle at 50% 30%, #3b3466 0%, #1e1a3a 70%); border-radius: 22px; padding: 14px; color: #fff; }
+.fv-hoguera .fv-marcador { color: #ffe0a0; }
+.fv-hoguera .fv-fuego { position: relative; filter: drop-shadow(0 0 18px rgba(255,170,60,.45)); }
+.fv-hoguera .fv-fuego::after { content: ''; position: absolute; bottom: 4px; left: 50%; width: 150px; height: 26px; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(ellipse, #8a8f99 0 35%, #6b707a 36% 60%, transparent 61%); z-index: -1; }
+.fv-hoguera .fv-frotar { background-color: #a5784e; box-shadow: inset 0 -8px 0 rgba(0,0,0,.18); }
+.fv-tarta { background: linear-gradient(180deg, #fff1f4, #ffe4ea); border-radius: 22px; padding: 16px 10px; box-shadow: inset 0 -30px 0 #f7cfd8; }
+.fv-tartaleta { box-shadow: inset 0 -10px 0 #b98049, 0 10px 0 -2px #f2f2f2, 0 12px 16px rgba(0,0,0,.15) !important; }
+.fv-calle { background: linear-gradient(#bfe3f5 0 40%, transparent 40%), repeating-linear-gradient(90deg, #f3c79b 0 50px, #e9b285 50px 54px, #f6d5a8 54px 104px, #d7a07a 104px 108px) 0 0 / 100% 62% no-repeat, linear-gradient(#cfe8f7 0 62%, #707070 62% 100%) !important; }
+.fv-calle::after { content: ''; position: absolute; left: 0; right: 0; top: 80%; height: 4px; background: repeating-linear-gradient(90deg, #fff 0 24px, transparent 24px 48px); opacity: .8; }
+.fv-mesa { background: radial-gradient(ellipse at 50% 120%, #c98b5a 0 45%, #b5794a 46% 60%, transparent 61%), linear-gradient(#fbeedd, #f3e3d1) !important; }
+.fv-cola .fv-clientes { background: linear-gradient(180deg, #e8f3f7 0 70%, #d7c2a6 70%); border-radius: 18px; padding: 0 8px; }
+.fv-escalera .fv-persona { background: repeating-linear-gradient(160deg, #f4e9dc 0 34px, #d9c2a3 34px 42px) !important; border-radius: 18px; }
+.tb-burger .tb-zona { border-radius: 22px; background: linear-gradient(180deg, #fff6e8 0 72%, #c99a6b 72% 76%, #b5844f 76%); box-shadow: inset 0 0 0 6px #f2dcc0; }
+.tb-burger .tb-zona::before { content: '🍟 🥤 🧂'; position: absolute; top: 12px; right: 14px; font-size: 22px; opacity: .55; letter-spacing: 4px; }
+.tb-burger .tb-plato { background: radial-gradient(ellipse, #ffffff 0 55%, #e6e9ec 56%) !important; }
+.tb-dj canvas { border-radius: 18px; box-shadow: 0 0 0 4px #3a3060, 0 10px 24px rgba(43,36,69,.35); }
+.tb-fachada canvas { border-radius: 14px; box-shadow: 0 8px 18px rgba(0,0,0,.15); }

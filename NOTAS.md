@@ -448,3 +448,8 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 
 ## Confianza de los encargos más lenta (v74)
 - `terminar`: confianza += round((nota − 0,6) × 12) (antes (nota − 0,55) × 30). Un encargo perfecto da +5 y uno malo hasta −7. Corazones = floor(confianza/20) (antes redondeaba), así que hacen falta unos 4–5 encargos bien hechos por corazón.
+
+## Biblioteca de arrastrar y pulido de minijuegos (v75)
+- Biblioteca (trabajos.js): ya no se pulsa. Los libros salen desordenados en un carrito y hay que arrastrarlos (pointer events + fantasma `.bb-arrastrado`) a la estantería de abajo en orden, de menor a mayor. Si sueltas el que no toca, rebota y cuenta como fallo. Las estanterías tienen 6 libros o más, y desde la 3.ª llevan códigos letra+número (se ordenan por letra y luego por número). Dura 55 s y la nota es (colocados − fallos·2)/26.
+- DJ: tocar un carril sin nota cuenta como fallo (nota = (aciertos − fallos·0,5)/total). Además lleva chispas al acertar, notas con brillo, anillos en los carriles y 🔥 con la racha.
+- CSS de pulido visual: cielo con nubes (globos), techo y tuberías (gotas), noche con hoguera, pastelería (tartaletas), calle con edificios (bici), mesa (bandeja), mostrador (cola), escalera, cocina (hamburguesería) y sombras en los canvas de DJ y fachada.

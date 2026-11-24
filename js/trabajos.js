@@ -470,6 +470,8 @@ export const TRABAJOS = [
       let aciertos = 0;
       let total = 0;
       let racha = 0;
+      let fallos = 0;
+      const chispas = [];
       const LINEA = 330;
       const vel = 170;
       const golpe = l => {
@@ -478,9 +480,11 @@ export const TRABAJOS = [
           n.hecha = true;
           aciertos++;
           racha++;
+          for (let k = 0; k < 8; k++) chispas.push({ x: l * 100 + 50, y: LINEA, vx: (Math.random() - 0.5) * 220, vy: -60 - Math.random() * 160, t: 0.5, c: ['#e05050', '#f2d06b', '#5a9fd6'][l] });
           s.sonido.tono(tonos[l][racha % 3], 0, 0.25, { tipo: 'triangle', volumen: 0.06 });
         } else {
           racha = 0;
+          fallos++;
           s.sonido.tono(150, 0, 0.12, { tipo: 'square', volumen: 0.03 });
         }
       };
@@ -503,24 +507,52 @@ export const TRABAJOS = [
           g.fillStyle = `hsla(${(t * 60 + k * 120) % 360},70%,60%,.08)`;
           g.fillRect(k * 100, 0, 100, 380);
         }
+        for (let k = 0; k < 3; k++) {
+          g.fillStyle = 'rgba(255,255,255,.06)';
+          g.fillRect(k * 100 + 48, 0, 4, 380);
+          g.strokeStyle = 'rgba(255,255,255,.35)';
+          g.lineWidth = 3;
+          g.beginPath();
+          g.arc(k * 100 + 50, LINEA, 26, 0, Math.PI * 2);
+          g.stroke();
+        }
         g.fillStyle = '#fff';
-        g.fillRect(0, LINEA - 2, 300, 4);
+        g.fillRect(0, LINEA - 1, 300, 2);
         const cols = ['#e05050', '#f2d06b', '#5a9fd6'];
         for (const n of notas) {
           n.y += vel * dt;
           if (n.hecha) continue;
+          g.shadowColor = cols[n.l];
+          g.shadowBlur = 16;
           g.fillStyle = cols[n.l];
           g.beginPath();
           g.arc(n.l * 100 + 50, n.y, 22, 0, Math.PI * 2);
+          g.fill();
+          g.shadowBlur = 0;
+          g.fillStyle = 'rgba(255,255,255,.55)';
+          g.beginPath();
+          g.arc(n.l * 100 + 43, n.y - 7, 7, 0, Math.PI * 2);
           g.fill();
           if (n.y > LINEA + 40 && !n.perdida) {
             n.perdida = true;
             racha = 0;
           }
         }
-        marcador(j, `🎵 ${aciertos}/${total} · racha ${racha}`);
+        for (let k = chispas.length - 1; k >= 0; k--) {
+          const c = chispas[k];
+          c.t -= dt;
+          c.x += c.vx * dt;
+          c.y += c.vy * dt;
+          c.vy += 400 * dt;
+          if (c.t <= 0) { chispas.splice(k, 1); continue; }
+          g.globalAlpha = c.t * 2;
+          g.fillStyle = c.c;
+          g.fillRect(c.x - 3, c.y - 3, 6, 6);
+          g.globalAlpha = 1;
+        }
+        marcador(j, `🎵 ${aciertos}/${total} · racha ${racha}${racha >= 5 ? ' 🔥' : ''} · ❌ ${fallos}`);
         if (t > 31) {
-          j.final(`¡La pista no se ha vaciado! ${aciertos} de ${total} notas`, total ? aciertos / total : 0);
+          j.final(`¡La pista no se ha vaciado! ${aciertos} de ${total} notas · ${fallos} fallos`, total ? Math.max(0, (aciertos - fallos * 0.5) / total) : 0);
           return false;
         }
         j.tiempo(Math.max(0, 1 - t / 31));
@@ -766,43 +798,122 @@ export const TRABAJOS = [
     }
   },
   {
-    id: 'biblioteca', icono: '📚', nombre: 'Biblioteca', texto: 'Ordenad los libros por número de menor a mayor', pago: 110,
+    id: 'biblioteca', icono: '📚', nombre: 'Biblioteca', texto: 'Colocad los libros devueltos en la estantería, en orden', pago: 110,
     jugar(j, s) {
-      let hechos = 0;
+      let colocados = 0;
+      let fallos = 0;
       let estanterias = 0;
-      let orden = [];
-      j.info('Toca los libros de menor a mayor número. ¡Cada estantería, más difícil!');
-      const colores = ['#e58f9e', '#5a9fd6', '#6cc08a', '#f2d06b', '#a070d8', '#f08c2a', '#9c6b45', '#5ac8d8'];
+      let pendientes = [];
+      let modoLetras = false;
+      const colores = [['#e58f9e', '#c9707f'], ['#5a9fd6', '#3f7fb5'], ['#6cc08a', '#4e9d6b'], ['#f2c15b', '#d29f3a'], ['#a070d8', '#7d52b5'], ['#f08c2a', '#c96d18'], ['#9c6b45', '#7a5034'], ['#5ac8d8', '#3ea5b4'], ['#e06b5a', '#b94e40']];
+      j.info('Arrastra los libros del carrito a la estantería en orden, de menor a mayor. ¡Si te equivocas pierdes puntos!');
+      j.cuerpo.innerHTML = `<div class="tb-biblio">
+        <div class="tb-marcador"></div>
+        <div class="bb-regla"></div>
+        <div class="bb-carrito"><div class="bb-libros"></div><div class="bb-ruedas"><i></i><i></i></div></div>
+        <div class="bb-flecha">⬇️ Arrastra aquí, en orden</div>
+        <div class="bb-estanteria"><div class="bb-hueco"></div><div class="bb-colocados"></div></div>
+      </div>`;
+      const caja = j.cuerpo.querySelector('.tb-biblio');
+      const carrito = caja.querySelector('.bb-libros');
+      const estanteria = caja.querySelector('.bb-estanteria');
+      const colocadosEl = caja.querySelector('.bb-colocados');
+      const regla = caja.querySelector('.bb-regla');
+      const valor = c => (modoLetras ? c.charCodeAt(0) * 1000 + Number(c.slice(1)) : Number(c));
+      const pintarMarcador = () => marcador(j, `📚 ${estanterias} estanterías · ✅ ${colocados} · ❌ ${fallos}`);
       const nueva = () => {
-        const n = 8 + Math.min(4, estanterias);
-        const nums = new Set();
-        while (nums.size < n) nums.add(1 + azar(estanterias > 1 ? 199 : 60));
-        orden = [...nums].sort((a, b) => a - b);
-        const lista = barajar([...nums]);
-        j.cuerpo.querySelector('.tb-estante').innerHTML = lista.map(v => `<button data-v="${v}" style="background:${colores[v % colores.length]};height:${70 + (v % 4) * 10}px"><b>${v}</b></button>`).join('');
-        j.cuerpo.querySelectorAll('[data-v]').forEach(b => b.addEventListener('click', () => {
-          if (Number(b.dataset.v) === orden[0]) {
-            orden.shift();
-            hechos++;
-            b.classList.add('hecho');
-            s.sonido.tic();
-            if (!orden.length) {
-              estanterias++;
-              s.sonido.arreglo();
-              marcador(j, `📚 ${estanterias} estanterías ordenadas`);
-              setTimeout(nueva, 350);
-            }
-          } else {
-            s.sonido.error();
-            b.classList.add('mal');
-            setTimeout(() => b.classList.remove('mal'), 300);
-          }
-        }));
+        modoLetras = estanterias >= 2;
+        const n = 6 + Math.min(3, estanterias);
+        const set = new Set();
+        while (set.size < n) {
+          if (modoLetras) set.add(`${'ABCD'[azar(estanterias >= 4 ? 4 : 3)]}${1 + azar(30)}`);
+          else set.add(String(1 + azar(estanterias ? 99 : 40)));
+        }
+        pendientes = [...set].sort((a, b) => valor(a) - valor(b));
+        regla.textContent = modoLetras ? '🔤 Primero por letra (A, B, C…) y luego por número' : '🔢 Del número más pequeño al más grande';
+        colocadosEl.innerHTML = '';
+        carrito.innerHTML = barajar([...set]).map(c => {
+          const [fondo, lomo] = colores[hash(c) % colores.length];
+          return `<div class="bb-libro" data-c="${c}" style="--fondo:${fondo};--lomo:${lomo};height:${78 + hash(c + 'h') % 34}px;width:${34 + hash(c + 'w') % 10}px"><b>${c}</b></div>`;
+        }).join('');
+        carrito.querySelectorAll('.bb-libro').forEach(arrastrable);
+        pintarMarcador();
       };
-      j.cuerpo.innerHTML = '<div class="tb-biblio"><div class="tb-marcador"></div><div class="tb-estante"></div><div class="tb-balda"></div></div>';
-      marcador(j, '📚 0 estanterías ordenadas');
+      const arrastrable = libro => {
+        libro.addEventListener('pointerdown', e => {
+          if (libro.classList.contains('volando')) return;
+          e.preventDefault();
+          libro.setPointerCapture(e.pointerId);
+          const r = libro.getBoundingClientRect();
+          const dx = e.clientX - r.left;
+          const dy = e.clientY - r.top;
+          const fantasma = libro.cloneNode(true);
+          fantasma.classList.add('bb-arrastrado');
+          fantasma.style.width = `${r.width}px`;
+          fantasma.style.height = `${r.height}px`;
+          document.body.appendChild(fantasma);
+          libro.classList.add('levantado');
+          s.sonido.tic();
+          const mover = ev => {
+            fantasma.style.left = `${ev.clientX - dx}px`;
+            fantasma.style.top = `${ev.clientY - dy}px`;
+            const re = estanteria.getBoundingClientRect();
+            estanteria.classList.toggle('encima', ev.clientY > re.top - 20 && ev.clientY < re.bottom + 20);
+          };
+          mover(e);
+          const soltar = ev => {
+            libro.removeEventListener('pointermove', mover);
+            libro.removeEventListener('pointerup', soltar);
+            libro.removeEventListener('pointercancel', soltar);
+            const re = estanteria.getBoundingClientRect();
+            const dentro = ev.clientY > re.top - 20 && ev.clientY < re.bottom + 20 && ev.type !== 'pointercancel';
+            estanteria.classList.remove('encima');
+            if (!dentro) {
+              fantasma.remove();
+              libro.classList.remove('levantado');
+              return;
+            }
+            const c = libro.dataset.c;
+            if (c === pendientes[0]) {
+              pendientes.shift();
+              colocados++;
+              fantasma.remove();
+              libro.remove();
+              const puesto = libro.cloneNode(true);
+              puesto.classList.remove('levantado');
+              puesto.classList.add('puesto');
+              colocadosEl.appendChild(puesto);
+              s.sonido.tono(520 + colocados % 8 * 60, 0, 0.12, { tipo: 'triangle', volumen: 0.06 });
+              if (!pendientes.length) {
+                estanterias++;
+                s.sonido.arreglo();
+                caja.classList.add('completa');
+                setTimeout(() => { caja.classList.remove('completa'); nueva(); }, 650);
+              }
+            } else {
+              fallos++;
+              s.sonido.error();
+              fantasma.classList.add('rebota');
+              libro.classList.remove('levantado');
+              libro.classList.add('mal');
+              setTimeout(() => { fantasma.remove(); libro.classList.remove('mal'); }, 380);
+              j.info(modoLetras ? '¡Ese no toca todavía! Busca la letra más baja y, dentro de ella, el número más pequeño' : '¡Ese no toca todavía! Busca el número más pequeño');
+            }
+            pintarMarcador();
+          };
+          libro.addEventListener('pointermove', mover);
+          libro.addEventListener('pointerup', soltar);
+          libro.addEventListener('pointercancel', soltar);
+        });
+      };
       nueva();
-      cronometro(j, 45, () => j.final(`${estanterias} estanterías y ${hechos} libros colocados`, Math.min(1, hechos / 45)));
+      const limpiar = () => document.querySelectorAll('.bb-arrastrado').forEach(x => x.remove());
+      const previo = j.alTerminar;
+      j.alTerminar = () => { limpiar(); if (previo) previo(); };
+      cronometro(j, 55, () => {
+        limpiar();
+        j.final(`${estanterias} estanterías ordenadas · ${colocados} libros · ${fallos} fallos`, Math.max(0, Math.min(1, (colocados - fallos * 2) / 26)));
+      });
     }
   },
   {
