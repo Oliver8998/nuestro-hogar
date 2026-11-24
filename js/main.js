@@ -51,7 +51,7 @@ import { abrirBano } from './bano.js';
 import { Album } from './album.js';
 import { Duo } from './duo.js';
 import { Sueno } from './sueno.js';
-import { anotarActividad, actividadNueva, marcarActividadVista, textoActividad, mostrarBienvenida } from './bienvenida.js';
+import { anotarActividad, actividadNueva, marcarActividadVista, textoActividad, mostrarBienvenida, mostrarGuiaTarde } from './bienvenida.js';
 import { Inmobiliaria, INV, NIVEL_INMOBILIARIA } from './inmobiliaria.js';
 aplicarTamTexto();
 
@@ -2017,6 +2017,11 @@ const inicio = new Inicio({
       const datos = await sync.unirse(codigo, yo);
       if (!datos) throw new Error('sin casa');
       aplicarRemoto(datos, false, true);
+      if (nivelXp() >= 3 || (estado.recuerdos || []).length >= 3 || (estado.diasJugados || 0) >= 3 || nivelCasa() >= 1) {
+        try {
+          localStorage.setItem('hogar-guia-tarde', '1');
+        } catch (e) {}
+      }
     } else {
       sync.conf.yo = yo;
       sync.guardarConf();
@@ -2816,7 +2821,27 @@ function pendientesCasa() {
 setTimeout(function alEntrar() {
   if (enMenu()) return setTimeout(alEntrar, 500);
   aplicarTam();
-  guia.empezar((estado.historia || 0) >= 3 || nivelCasa() >= 1);
+  let guiaTarde = false;
+  try {
+    guiaTarde = localStorage.getItem('hogar-guia-tarde') === '1';
+    if (guiaTarde) localStorage.removeItem('hogar-guia-tarde');
+  } catch (e) {}
+  guia.empezar(guiaTarde || (estado.historia || 0) >= 3 || nivelCasa() >= 1);
+  if (guiaTarde) {
+    const yo = sync && sync.activo ? sync.yo : 0;
+    const nombres = (estado.pareja && estado.pareja.nombres) || [];
+    const chips = [`⭐ Nivel ${nivelXp()}`, `${CASAS[nivelCasa()].icono} ${CASAS[nivelCasa()].nombre}`];
+    const obras = OBRAS.filter(o => obraHecha(o)).length;
+    if (obras) chips.push(`🏗️ ${obras} ${obras === 1 ? 'obra' : 'obras'}`);
+    mascotas.lista.forEach(m => chips.push(`🐾 ${m.nombre}`));
+    if ((estado.recuerdos || []).length) chips.push(`🌳 ${estado.recuerdos.length} recuerdos`);
+    chips.push(`🪙 ${estado.monedas || 0}`);
+    chips.push(`🏡 Sueño al ${sueno.porcentaje()} %`);
+    const dias = Math.max(1, estado.diasJugados || Math.round((Date.now() - (estado.inicio || Date.now())) / 86400000) || 1);
+    marcarActividadVista();
+    mostrarGuiaTarde(ui, { yo: nombres[yo] || '', otro: nombres[1 - yo] || '' }, { dias, chips });
+    return;
+  }
   if (!estado.bienvenida) {
     estado.bienvenida = true;
     estado.tickets += 1;

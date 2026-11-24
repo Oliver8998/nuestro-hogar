@@ -3776,3 +3776,6 @@ body.texto-grande .hoja, body.texto-grande .dialogo-caja, body.texto-grande .in-
 body.texto-muy .hoja, body.texto-muy .dialogo-caja, body.texto-muy .in-caja, body.texto-muy .lb-libro, body.texto-muy #aviso, body.texto-muy .bv-caja { zoom: 1.25; }
 body.texto-grande .hoja { height: calc(80vh / 1.12); }
 body.texto-muy .hoja { height: calc(80vh / 1.25); }
+.guia-tarde p { margin: 0 0 8px; }
+.gt-chips { justify-content: center; }
+.gt-lista { text-align: left; margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-weight: 700; }

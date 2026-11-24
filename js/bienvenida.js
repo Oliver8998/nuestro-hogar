@@ -108,3 +108,57 @@ export function mostrarBienvenida(ui, d) {
   });
   return true;
 }
+
+const PASOS_TARDE = [
+  {
+    icono: '👋',
+    titulo: n => `¡Bienvenido/a a casa${n.yo ? `, ${n.yo}` : ''}!`,
+    html: (n, d) => `<p>${n.otro.charAt(0).toUpperCase() + n.otro.slice(1)} lleva ${d.dias === 1 ? 'ya un día' : `${d.dias} días`} cuidando de este piso. Esto es lo que ya tenéis:</p>
+      <div class="bv-chips gt-chips">${d.chips.map(c => `<span>${c}</span>`).join('')}</div>`
+  },
+  {
+    icono: '👆',
+    titulo: () => 'Aquí no hay muñecos: sois vosotros',
+    html: n => `<ul class="gt-lista">
+      <li><b>Toca</b> un mueble para usarlo (regar, cocinar, encender…).</li>
+      <li><b>Mantén pulsado y arrastra</b> para moverlo de sitio.</li>
+      <li><b>Toca las mascotas</b> para darles de comer, jugar o bañarlas.</li>
+      <li>Todo lo que hagas lo ve ${n.otro} al momento.</li></ul>`
+  },
+  {
+    icono: '🪙',
+    titulo: () => 'Cómo se avanza',
+    html: () => `<ul class="gt-lista">
+      <li><b>💼 Trabajar</b>: minijuegos para ganar monedas.</li>
+      <li><b>📋 Misiones</b>: tareas del día con premio.</li>
+      <li><b>🛒 Tienda</b>: muebles, comida y cosas para la casa.</li>
+      <li><b>✨ Más → Objetivos → 🏡</b>: la casa de vuestros sueños, la meta de los dos.</li></ul>`
+  },
+  {
+    icono: '💕',
+    titulo: () => 'Y sobre todo, juntos',
+    html: n => `<ul class="gt-lista">
+      <li><b>✨ Más → Jugar juntos</b>: minijuegos a dúo, cada uno con su móvil.</li>
+      <li><b>💕 Nosotros</b>: notas, regalos, preguntas y el libro de recuerdos.</li>
+      <li>El <b>💗</b> de arriba le manda un beso a ${n.otro}.</li></ul>`
+  }
+];
+
+export function mostrarGuiaTarde(ui, n, d, alTerminar) {
+  n = { ...n, otro: n.otro || 'tu pareja' };
+  let k = 0;
+  const paso = () => {
+    const p = PASOS_TARDE[k];
+    const ultimo = k === PASOS_TARDE.length - 1;
+    ui.dialogo({
+      titulo: `${p.icono} ${p.titulo(n)}`,
+      etiqueta: { texto: `${k + 1} / ${PASOS_TARDE.length}`, color: '#c98a2b' },
+      html: `<div class="guia-tarde">${p.html(n, d)}</div>`,
+      confeti: k === 0,
+      botones: ultimo
+        ? [{ texto: '¡A por ello!', tipo: 'primario', accion: () => alTerminar && alTerminar() }]
+        : [{ texto: 'Siguiente', tipo: 'primario', accion: () => { k++; setTimeout(paso, 280); } }]
+    });
+  };
+  paso();
+}
