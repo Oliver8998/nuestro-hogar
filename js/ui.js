@@ -701,7 +701,7 @@ export class UI {
       const ranura = document.createElement('div');
       ranura.className = 'ranura' + (info.rareza ? ` rareza-${info.rareza}` : '');
       const usos = info.usos > 1 ? `<span class="usos">${item.usos ?? info.usos}/${info.usos}</span>` : '';
-      ranura.innerHTML = `${this.img(this.mini.item(item.id, item.color))}${item.cantidad > 1 ? `<span class="cuenta">${item.cantidad}</span>` : ''}${usos}`;
+      ranura.innerHTML = `${this.img(this.mini.item(item.id, item.color))}<small class="nombre-ranura">${info.nombre}</small>${item.cantidad > 1 ? `<span class="cuenta">${item.cantidad}</span>` : ''}${usos}`;
       ranura.addEventListener('pointerdown', e => this.tocarRanura(e, item, info, ranura));
       this.elInventario.appendChild(ranura);
     }

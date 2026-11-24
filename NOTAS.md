@@ -438,3 +438,6 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - Visitas, el gatito callejero y las averías de casa ya no tienen pastilla en el HUD. Llevan un "!" encima (`crearExclamacion`, que se balancea) y se atienden tocándolos: el visitante, el gato, el charco de la gotera o el cuadro eléctrico nuevo de la pared del fondo (`vida.cuadroLuz`, x=2.35 y=1.95, solo mientras no hay luz).
 - controles.js: modo `'mundo'` que se mira antes que los paquetes (`eventos.mundo(rayo)` → `vida.tocable(r)` o `sorpresas.tocable(r)`, que devuelven la acción). Los avisos dicen "Tocadle para saludar" o "Tocad el charco / el cuadro eléctrico".
 - Zonas táctiles: tocar una pared ya no abre las grietas o la humedad si no se toca encima de ellas (se quitó el atajo al `requisito` en `sala.tocar`). La zona de las grietas pasa de 1,1×1,3 a 0,8×1,0.
+
+## Inventario con nombres (v71)
+- Cada casilla del inventario lleva el nombre debajo (`.nombre-ranura`, hasta 2 líneas). Filas de 86 px y bandeja de 160 px de alto.
