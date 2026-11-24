@@ -3695,3 +3695,74 @@ body.colgando #lateral, body.colgando #chips-vida, body.colgando #menu-objeto, b
 .bv-chips span { background: #f6ecdd; border-radius: 12px; padding: 4px 9px; font-weight: 800; font-size: 13px; }
 .mas-grupo { margin: 14px 2px 6px; font-size: 14px; text-transform: uppercase; letter-spacing: .5px; color: #c98a2b; }
 .mas-grupo:first-child { margin-top: 2px; }
+
+/* Casa de vuestros sueños */
+.sueno-cabecera { display: flex; align-items: center; gap: 14px; background: linear-gradient(#fff3d6, #ffe7b8); border-radius: 18px; padding: 12px 14px; margin-bottom: 12px; }
+.sueno-cabecera b { display: block; font-size: 19px; }
+.sueno-cabecera small { display: block; color: var(--suave); font-weight: 700; line-height: 1.3; }
+.sueno-anillo { flex: none; width: 74px; height: 74px; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(var(--rosa) calc(var(--p) * 1%), #f1e2cc 0); }
+.sueno-anillo span { width: 58px; height: 58px; border-radius: 50%; background: #fffaf2; display: grid; place-items: center; font-size: 30px; }
+.sueno-metas { display: flex; flex-direction: column; gap: 8px; }
+.sueno-meta { display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 14px; padding: 9px 12px; box-shadow: inset 0 0 0 2px #f1e6d8; }
+.sueno-meta > div { flex: 1; min-width: 0; }
+.sueno-meta b { font-size: 15px; }
+.sueno-meta small { color: var(--suave); font-weight: 800; font-size: 12px; }
+.sueno-meta.hecha { background: #effaf2; box-shadow: inset 0 0 0 2px #c9ebd3; }
+.sm-icono { font-size: 26px; }
+.sm-barra { height: 8px; border-radius: 6px; background: #f1e6d8; overflow: hidden; margin: 4px 0 2px; }
+.sm-barra i { display: block; height: 100%; background: linear-gradient(90deg, var(--rosa-claro), var(--rosa)); border-radius: 6px; }
+.sueno-meta.hecha .sm-barra i { background: var(--verde); }
+.sueno-botones { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+
+body.modo-cine #hud, body.modo-cine .hud, body.modo-cine #barra, body.modo-cine #avisos, body.modo-cine .chips { opacity: 0 !important; pointer-events: none !important; transition: opacity .6s; }
+#final-sueno { position: fixed; inset: 0; z-index: 400; pointer-events: auto; animation: sf-entra .8s ease; }
+#final-sueno.saliendo { opacity: 0; transition: opacity .6s; }
+@keyframes sf-entra { from { opacity: 0; } }
+.sf-franja { position: absolute; left: 0; right: 0; height: 11vh; background: #000; display: flex; align-items: center; justify-content: center; }
+.sf-franja.arriba { top: 0; animation: sf-baja 1s ease; }
+.sf-franja.abajo { bottom: 0; animation: sf-sube 1s ease; }
+.sf-franja small { color: rgba(255,255,255,.45); font-weight: 700; font-size: 12px; }
+@keyframes sf-baja { from { transform: translateY(-100%); } }
+@keyframes sf-sube { from { transform: translateY(100%); } }
+.sf-textos { position: absolute; left: 0; right: 0; top: 14vh; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 0 20px; text-align: center; }
+.sf-textos p { margin: 0; color: #fff; font-weight: 800; font-size: 18px; text-shadow: 0 2px 8px rgba(0,0,0,.6); animation: sf-texto 1.2s ease both; transition: opacity 1s, max-height 1s; max-height: 120px; }
+.sf-textos p.fuera { opacity: 0; max-height: 0; }
+.sf-textos big { display: block; font-size: 30px; font-weight: 900; color: #ffe9a8; line-height: 1.15; }
+.sf-textos .sf-nombres { font-size: 24px; color: #ffd0da; }
+@keyframes sf-texto { from { opacity: 0; transform: translateY(12px); filter: blur(4px); } }
+.sf-fuegos { position: absolute; inset: 0; pointer-events: none; }
+.sf-fuegos i { position: absolute; width: 7px; height: 7px; border-radius: 50%; animation: sf-chispa 1.4s ease-out forwards; box-shadow: 0 0 8px currentColor; }
+@keyframes sf-chispa { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(var(--dx), calc(var(--dy) + 40px)) scale(.3); opacity: 0; } }
+
+#libro-recuerdos { position: fixed; inset: 0; z-index: 320; display: flex; align-items: center; justify-content: center; padding: calc(12px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom)); background: rgba(40, 28, 20, .55); animation: sf-entra .25s ease; }
+#libro-recuerdos.saliendo { opacity: 0; transition: opacity .25s; }
+.lb-libro { position: relative; width: 100%; max-width: 420px; height: min(620px, 100%); display: flex; flex-direction: column; border-radius: 10px 22px 22px 10px; background: #fffaf0; box-shadow: inset 14px 0 0 #c9707f, inset 18px 0 0 #b35f6e, 0 20px 50px rgba(0,0,0,.35); padding: 18px 16px 10px 32px; }
+.lb-cerrar { position: absolute; top: 8px; right: 10px; border: none; background: none; font-size: 20px; color: var(--suave); }
+.lb-pagina { flex: 1; overflow-y: auto; touch-action: pan-y; }
+.lb-pagina.pasa-izq { animation: lb-izq .35s ease; }
+.lb-pagina.pasa-der { animation: lb-der .35s ease; }
+@keyframes lb-izq { from { opacity: 0; transform: translateX(30px) rotateY(-12deg); } }
+@keyframes lb-der { from { opacity: 0; transform: translateX(-30px) rotateY(12deg); } }
+.lb-pagina h3 { margin: 4px 0 12px; color: #c9707f; font-size: 20px; }
+.lb-portada { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 6px; }
+.lb-portada h2 { margin: 0; font-size: 28px; }
+.lb-portada p { margin: 0; font-size: 20px; font-weight: 800; color: #c9707f; }
+.lb-portada small { color: var(--suave); font-weight: 700; }
+.lb-casa { font-size: 72px; }
+.lb-numeros { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-weight: 700; font-size: 16px; }
+.lb-numeros b { color: #c9707f; font-size: 18px; }
+.lb-mascotas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.lb-mascotas span { background: #f6ecdd; border-radius: 12px; padding: 4px 10px; font-weight: 800; }
+.lb-recuerdos { display: flex; flex-direction: column; gap: 10px; }
+.lb-recuerdos div { display: flex; gap: 10px; align-items: flex-start; }
+.lb-recuerdos span { font-size: 24px; }
+.lb-recuerdos p { margin: 0; font-weight: 800; }
+.lb-recuerdos small { display: block; color: var(--suave); font-weight: 700; font-size: 12px; }
+.lb-fotos { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 10px; }
+.lb-fotos figure { margin: 0; background: #fff; padding: 6px 6px 4px; box-shadow: 0 3px 8px rgba(0,0,0,.15); transform: rotate(var(--r)); }
+.lb-fotos img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+.lb-fotos figcaption { text-align: center; font-size: 11px; font-weight: 700; color: var(--suave); padding-top: 3px; }
+.lb-pie { display: flex; align-items: center; justify-content: space-between; padding-top: 8px; }
+.lb-pie button { border: none; width: 44px; height: 44px; border-radius: 50%; background: #f6ecdd; font-size: 24px; font-weight: 900; color: var(--texto); }
+.lb-pie button:disabled { opacity: .3; }
+.lb-num { font-weight: 800; color: var(--suave); }

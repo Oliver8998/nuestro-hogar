@@ -355,6 +355,13 @@ export const CATALOGO = [
     [0.08, 0.58, 0.08, 0, 0.29, -0.35, 0x1a1a1a, 'cil']
   ]},
 
+  { id: 'placa-suenos', categoria: 'deco', nombre: 'Placa de la casa soñada', enTienda: false, rareza: 'legendario', ancho: 1, fondo: 1, piezas: [
+    [0.5, 0.08, 0.34, 0, 0.04, 0, 0x6d4c3d],
+    [0.07, 0.55, 0.07, 0, 0.35, 0, 0x6d4c3d],
+    [0.62, 0.42, 0.05, 0, 0.82, 0, 0xd9b44a, { metal: 0.7, rugosidad: 0.3 }],
+    [0.5, 0.3, 0.02, 0, 0.82, 0.03, 0xf3e3b0],
+    [0.12, 0.12, 0.12, 0, 0.86, 0.05, 0xe05070, 'esfera']
+  ]},
   { id: 'cerezo', categoria: 'deco', nombre: 'Cerezo en flor', enTienda: false, rareza: 'legendario', ancho: 2, fondo: 2, piezas: [
     [0.45, 0.4, 0.45, 0, 0.2, 0, 0xd9b98c, 'cil'],
     [0.1, 0.9, 0.1, 0, 0.85, 0, 0x6b4f36, 'cil'],

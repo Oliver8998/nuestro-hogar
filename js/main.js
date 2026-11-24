@@ -50,6 +50,7 @@ import { Experiencia, NIVEL_OBJETO } from './experiencia.js';
 import { abrirBano } from './bano.js';
 import { Album } from './album.js';
 import { Duo } from './duo.js';
+import { Sueno } from './sueno.js';
 import { anotarActividad, actividadNueva, marcarActividadVista, textoActividad, mostrarBienvenida } from './bienvenida.js';
 import { Inmobiliaria, INV, NIVEL_INMOBILIARIA } from './inmobiliaria.js';
 
@@ -1436,7 +1437,11 @@ function abrirColecciones() {
 
 function revisarProgreso() {
   if (dialogoAbierto() || visitando) return;
-  if (!enPiso()) album.revisar();
+  if (!enPiso()) {
+    album.revisar();
+    estado.acogedorMax = Math.max(estado.acogedorMax || 0, acogedor().total);
+    sueno.revisar();
+  }
   estado.puntuacion = acogedor().total;
   const c = contexto();
   if (!estado.logros) estado.logros = [];
@@ -1714,6 +1719,34 @@ const usos = new Usos({
     ui.particula(emoji, p.x, p.y, n);
   }
 });
+
+const sueno = new Sueno({
+  estado, ui, sonido, camara: camaraIso,
+  guardar: () => guardar(),
+  refrescarHud: () => refrescarHud(),
+  ocupado: () => dialogoAbierto() || juegoTapando() || !!document.getElementById('libro-recuerdos'),
+  recordar: (c, i, t) => pareja && pareja.recordar(c, i, t),
+  darItem: id => { inventario.anadir(id, null); ui.pintarInventario(inventario); },
+  mascotas: () => mascotas.lista.map(m => ({ icono: '🐾', nombre: m.nombre })),
+  fotos: () => mas.postales().concat((mas.fotos || []).filter(f => f && f.data)),
+  valores: () => {
+    const conf = encargos ? Object.values(encargos.datos().conf) : [];
+    return {
+      obras: OBRAS.filter(o => obraHecha(o)).length,
+      totalObras: OBRAS.length,
+      nivel: nivelXp(),
+      acogedor: Math.max(estado.acogedorMax || 0, enPiso() ? 0 : acogedor().total),
+      album: album.cuantas(),
+      albumTotal: album.total(),
+      mascotas: mascotas.lista.length,
+      recuerdos: (estado.recuerdos || []).length,
+      queridos: conf.filter(c => c >= 80).length,
+      dias: estado.diasJugados || 1,
+      muebles: idsEnCasa().filter(id => id !== 'colchon' && id !== 'caja').length
+    };
+  }
+});
+window.abrirSueno = atras => sueno.abrir(atras);
 
 const album = new Album({
   estado, inventario, mascotas, miniaturas, ui, sonido,
@@ -2103,6 +2136,7 @@ function refrescarTrabajar() {
 
 function abrirObjetivos() {
   abrirHub('Objetivos', [
+    { id: 'sueno', icono: '🏡', texto: 'La casa de vuestros sueños', sub: estado.sueno && estado.sueno.final ? '¡Conseguida! Libro de recuerdos' : `${sueno.porcentaje()} % · ${sueno.completas()} de 8 sueños`, accion: () => sueno.abrir(() => abrirObjetivos()) },
     { id: 'pase', icono: '🗓️', texto: 'Pase del mes', sub: `${economia.pase().reclamados.length} de 10 tareas`, insignia: economia.pendientesPase() || null, accion: () => economia.abrirPase() },
     { id: 'logros', icono: '🏆', texto: 'Logros', sub: `${(estado.logros || []).length} de ${LOGROS.length}`, accion: abrirLogros },
     { id: 'ruleta', icono: '🎡', texto: 'Ruleta', sub: ui.ruletaGratis ? '¡Tirada gratis hoy!' : `${estado.tickets || 0} tickets`, insignia: ui.ruletaGratis ? '!' : null, accion: () => { ui.cerrarHojas(); setTimeout(() => ui.abrirRuleta(), 200); } },
@@ -2664,6 +2698,7 @@ function abrirNosotros() {
     { id: 'cuenta', icono: '⏳', texto: 'Cuenta atrás', sub: pareja2.textoFalta() || 'Para la próxima vez que os veis', accion: () => pareja2.abrirCuentaAtras() },
     { id: 'metas', icono: '📌', texto: 'Nuestras metas', sub: `${(estado.metas || []).filter(m => m.hecha).length}/${(estado.metas || []).length} cumplidas`, accion: () => pareja2.abrirMetas() },
     { id: 'recuerdos', icono: '🌳', texto: 'Recuerdos', sub: `${(estado.recuerdos || []).length} momentos`, accion: () => pareja.verRecuerdos() },
+    { id: 'libro', icono: '📖', texto: 'Libro de recuerdos', sub: 'Vuestra historia, página a página', accion: () => sueno.libro(() => abrirNosotros()) },
     { id: 'capsula', icono: '💌', texto: 'Cápsula del tiempo', sub: `${(estado.capsulas || []).length} mensajes`, accion: () => pareja.verCapsulas() },
     { id: 'planes', icono: '📅', texto: 'Planes', sub: 'Cenas, viajes, pelis…', accion: () => pareja.verPlanes() }
   ];
@@ -2733,6 +2768,8 @@ if (nuevoDia) {
   } else estado.racha = { n: 1 };
   estado.gratis = true;
   estado.dia = hoy;
+  estado.diasJugados = (estado.diasJugados || 0) + 1;
+  estado.rachaMax = Math.max(estado.rachaMax || 0, estado.racha.n);
 }
 
 aplicarTemporada();
@@ -2889,7 +2926,7 @@ function colocarMenu(dt) {
   ui.posicionarMenu(s.x, s.y);
 }
 
-if (new URLSearchParams(location.search).has('debug')) window.__h = { minijuegos, encargos, THREE, sala, paredObjs, interacciones, controles, guia, telefono, entregas, trabajos, estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida, experiencia, suciedad, vida, inmobiliaria: () => inmobiliaria, registrar, abrirObras, refrescarHud, inicio, camaraIso, duo, album, usos, renderer, escena, guardar };
+if (new URLSearchParams(location.search).has('debug')) window.__h = { minijuegos, encargos, THREE, sala, paredObjs, interacciones, controles, guia, telefono, entregas, trabajos, estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida, experiencia, suciedad, vida, inmobiliaria: () => inmobiliaria, registrar, abrirObras, refrescarHud, inicio, camaraIso, duo, album, usos, renderer, escena, guardar, sueno };
 
 renderer.setAnimationLoop(() => {
   const dt = Math.min(reloj.getDelta(), 0.1);
