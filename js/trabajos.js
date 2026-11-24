@@ -1,4 +1,5 @@
 import { paga } from './balance.js';
+import { TIEMPO, VELOCIDAD } from './favores2.js';
 const DIA = 86400000;
 const TURNOS = 3;
 
@@ -21,6 +22,7 @@ function hash(t) {
 }
 
 function cronometro(j, seg, alFin, alTick) {
+  seg *= TIEMPO;
   const ini = performance.now();
   let vivo = true;
   const id = setInterval(() => {
@@ -51,7 +53,7 @@ function bucle(j, fn) {
   let ultimo = performance.now();
   const paso = t => {
     if (!vivo) return;
-    const dt = Math.min(0.05, (t - ultimo) / 1000);
+    const dt = Math.min(0.05, (t - ultimo) / 1000) * VELOCIDAD;
     ultimo = t;
     if (fn(dt) === false) return;
     requestAnimationFrame(paso);
@@ -804,109 +806,139 @@ export const TRABAJOS = [
     }
   },
   {
-    id: 'fontanero', icono: '🔧', nombre: 'Fontanería', texto: 'Girad las tuberías para que el agua llegue al grifo', pago: 140,
+    id: 'fontanero', icono: '🔧', nombre: 'Fontanería', texto: 'Girad las tuberías para que el agua llegue al grifo antes de que salga', pago: 140,
     jugar(j, s) {
-      const N = 4;
+      const C = 6;
+      const F = 8;
       const D = [[0, -1, 1], [1, 0, 2], [0, 1, 4], [-1, 0, 8]];
       const opuesto = b => ({ 1: 4, 2: 8, 4: 1, 8: 2 }[b]);
       const rot = m => ((m << 1) | (m >> 3)) & 15;
       let hechos = 0;
+      let fugas = 0;
       let celdas;
+      let llenas;
       let entrada;
       let salida;
-      j.info('Toca las piezas para girarlas y conecta la entrada 💧 con el grifo 🚰');
+      let flujo;
+      let espera;
+      let ritmo;
+      let acabado = false;
+      j.info('Gira las piezas para unir la entrada 💧 con el grifo 🚰. ¡El agua empieza a salir sola!');
       const generar = () => {
-        for (let intento = 0; intento < 200; intento++) {
-          entrada = azar(N);
-          salida = azar(N);
+        for (let intento = 0; intento < 400; intento++) {
+          entrada = azar(F);
+          salida = azar(F);
           const camino = [[0, entrada]];
           const visto = new Set([`0,${entrada}`]);
-          let ok = false;
           const dfs = () => {
             const [x, y] = camino[camino.length - 1];
-            if (x === N - 1 && y === salida) return true;
-            for (const [dx, dy] of barajar([[1, 0], [0, 1], [0, -1], [1, 0], [-1, 0]])) {
+            if (x === C - 1 && y === salida) return camino.length >= C + 6;
+            for (const [dx, dy] of barajar([[1, 0], [0, 1], [0, -1], [1, 0], [0, 1], [0, -1], [-1, 0]])) {
               const nx = x + dx;
               const ny = y + dy;
-              if (nx < 0 || ny < 0 || nx >= N || ny >= N || visto.has(`${nx},${ny}`)) continue;
+              if (nx < 0 || ny < 0 || nx >= C || ny >= F || visto.has(`${nx},${ny}`)) continue;
               visto.add(`${nx},${ny}`);
               camino.push([nx, ny]);
               if (dfs()) return true;
               camino.pop();
+              if (camino.length > 40) return false;
             }
             return false;
           };
-          ok = dfs();
-          if (!ok || camino.length < N + 1) continue;
-          celdas = Array.from({ length: N * N }, () => [3, 5, 7][azar(3)]);
+          if (!dfs()) continue;
+          celdas = Array.from({ length: C * F }, () => [5, 3, 3, 7, 15, 5][azar(6)]);
           camino.forEach(([x, y], k) => {
             let m = 0;
             const prev = k === 0 ? [-1, entrada] : camino[k - 1];
-            const sig = k === camino.length - 1 ? [N, salida] : camino[k + 1];
-            for (const [px, py] of [prev, sig]) {
-              const d = D.find(([dx, dy]) => dx === px - x && dy === py - y);
-              m |= d[2];
-            }
-            celdas[y * N + x] = m;
+            const sig = k === camino.length - 1 ? [C, salida] : camino[k + 1];
+            for (const [px, py] of [prev, sig]) m |= D.find(([dx, dy]) => dx === px - x && dy === py - y)[2];
+            celdas[y * C + x] = m;
           });
           celdas = celdas.map(m => {
             let r = m;
-            for (let k = azar(4); k > 0; k--) r = rot(r);
+            for (let k = 1 + azar(3); k > 0; k--) r = rot(r);
             return r;
           });
-          if (conectado()) continue;
+          llenas = new Set();
+          flujo = { x: 0, y: entrada, desde: 8, activo: false };
+          espera = Math.max(7, 15 - hechos * 2) * 0.8;
+          ritmo = 0;
           return;
         }
       };
-      const recorrido = () => {
-        const llenas = new Set();
-        let x = 0;
-        let y = entrada;
-        let desde = 8;
-        for (let k = 0; k < N * N + 2; k++) {
-          if (x < 0 || y < 0 || x >= N || y >= N) return { llenas, fin: x === N && y === salida && desde === 8 };
-          const m = celdas[y * N + x];
-          if (!(m & desde)) return { llenas, fin: false };
-          llenas.add(y * N + x);
-          const sale = D.find(d => d[2] !== desde && (m & d[2]));
-          if (!sale) return { llenas, fin: false };
-          x += sale[0];
-          y += sale[1];
-          desde = opuesto(sale[2]);
-        }
-        return { llenas, fin: false };
-      };
-      const conectado = () => recorrido().fin;
       const svg = (m, llena) => {
         const c = llena ? '#5aa9ff' : '#9aa0a6';
-        const l = D.filter(d => m & d[2]).map(([dx, dy]) => `<line x1="50" y1="50" x2="${50 + dx * 50}" y2="${50 + dy * 50}" stroke="${c}" stroke-width="22" stroke-linecap="round"/>`).join('');
-        return `<svg viewBox="0 0 100 100">${l}<circle cx="50" cy="50" r="11" fill="${c}"/></svg>`;
+        const borde = llena ? '#2f7fd0' : '#7d838a';
+        const l = D.filter(d => m & d[2]).map(([dx, dy]) => `<line x1="50" y1="50" x2="${50 + dx * 50}" y2="${50 + dy * 50}" stroke="${borde}" stroke-width="30" stroke-linecap="butt"/><line x1="50" y1="50" x2="${50 + dx * 50}" y2="${50 + dy * 50}" stroke="${c}" stroke-width="20" stroke-linecap="butt"/>`).join('');
+        return `<svg viewBox="0 0 100 100">${l}<circle cx="50" cy="50" r="13" fill="${c}"/></svg>`;
       };
+      const tablero = () => j.cuerpo.querySelector('.tb-tablero');
       const pintar = () => {
-        const { llenas } = recorrido();
-        const t = j.cuerpo.querySelector('.tb-tablero');
-        t.innerHTML = Array.from({ length: N * N }, (_, i) => `<button data-i="${i}">${svg(celdas[i], llenas.has(i))}</button>`).join('');
-        j.cuerpo.querySelector('.tb-entra').style.marginTop = `${20 + entrada * 67}px`;
-        j.cuerpo.querySelector('.tb-sale').style.marginTop = `${20 + salida * 67}px`;
-        t.querySelectorAll('[data-i]').forEach(b => b.addEventListener('click', () => {
+        const t = tablero();
+        if (!t) return;
+        t.innerHTML = Array.from({ length: C * F }, (_, i) => `<button data-i="${i}" class="${llenas.has(i) ? 'llena' : ''}">${svg(celdas[i], llenas.has(i))}</button>`).join('');
+        const alto = 100 / F;
+        j.cuerpo.querySelector('.tb-entra').style.top = `${(entrada + 0.5) * alto}%`;
+        j.cuerpo.querySelector('.tb-sale').style.top = `${(salida + 0.5) * alto}%`;
+        t.querySelectorAll('[data-i]').forEach(b => b.addEventListener('pointerdown', e => {
+          e.preventDefault();
           const i = Number(b.dataset.i);
+          if (llenas.has(i) || acabado) return;
           celdas[i] = rot(celdas[i]);
           s.sonido.tic();
-          pintar();
-          if (conectado()) {
-            hechos++;
-            s.sonido.agua();
-            marcador(j, `🚰 ${hechos} averías arregladas`);
-            j.cuerpo.querySelector('.tb-tablero').classList.add('agua');
-            setTimeout(() => { generar(); pintar(); j.cuerpo.querySelector('.tb-tablero') && j.cuerpo.querySelector('.tb-tablero').classList.remove('agua'); }, 800);
-          }
+          b.innerHTML = svg(celdas[i], false);
         }));
       };
-      j.cuerpo.innerHTML = '<div class="tb-fonta"><div class="tb-marcador"></div><div class="tb-marco-tubos"><span class="tb-entra">💧</span><div class="tb-tablero"></div><span class="tb-sale">🚰</span></div></div>';
-      marcador(j, '🚰 0 averías arregladas');
+      const textoEstado = () => marcador(j, `🚰 ${hechos} arregladas${fugas ? ` · 💦 ${fugas} fugas` : ''} · ${flujo.activo ? '💧 ¡Sale el agua!' : espera > 90 ? '' : `💧 en ${Math.ceil(espera)} s`}`);
+      const siguiente = ok => {
+        if (ok) { hechos++; s.sonido.arreglo(); tablero().classList.add('agua'); } else { fugas++; s.sonido.error(); tablero().classList.add('fuga'); }
+        flujo.activo = false;
+        espera = 99;
+        setTimeout(() => {
+          if (acabado) return;
+          generar();
+          pintar();
+          const t = tablero();
+          if (t) t.classList.remove('agua', 'fuga');
+        }, 900);
+      };
+      const avanzar = () => {
+        const { x, y, desde } = flujo;
+        if (x === C && y === salida && desde === 8) return siguiente(true);
+        if (x < 0 || y < 0 || x >= C || y >= F) return siguiente(false);
+        const i = y * C + x;
+        const m = celdas[i];
+        if (!(m & desde) || llenas.has(i)) return siguiente(false);
+        llenas.add(i);
+        s.sonido.tono(300 + llenas.size * 20, 0, 0.08, { hasta: 420 + llenas.size * 20, volumen: 0.04 });
+        const recto = opuesto(desde);
+        const sale = m & recto ? D.find(d => d[2] === recto) : D.find(d => d[2] !== desde && (m & d[2]));
+        if (!sale) return siguiente(false);
+        flujo = { x: x + sale[0], y: y + sale[1], desde: opuesto(sale[2]), activo: true };
+        const b = tablero() && tablero().querySelector(`[data-i="${i}"]`);
+        if (b) { b.classList.add('llena'); b.innerHTML = svg(m, true); }
+      };
+      j.cuerpo.innerHTML = '<div class="tb-fonta grande"><div class="tb-marcador"></div><div class="tb-marco-tubos"><span class="tb-entra">💧</span><div class="tb-tablero" style="grid-template-columns:repeat(6,1fr)"></div><span class="tb-sale">🚰</span></div><button class="tb-abrir">💨 ¡Abrir el agua ya!</button></div>';
+      j.cuerpo.querySelector('.tb-abrir').addEventListener('click', () => { if (!flujo.activo && espera < 90) espera = 0; });
       generar();
       pintar();
-      cronometro(j, 70, () => j.final(`¡${hechos} averías arregladas!`, Math.min(1, hechos / 4)));
+      const parar = bucle(j, dt => {
+        if (acabado) return false;
+        if (!flujo.activo) {
+          espera -= dt;
+          if (espera <= 0 && espera > -1) { flujo.activo = true; ritmo = 0; }
+        } else {
+          ritmo += dt;
+          const paso = Math.max(0.35, 0.85 - hechos * 0.1);
+          if (ritmo >= paso) { ritmo = 0; avanzar(); }
+        }
+        textoEstado();
+      });
+      cronometro(j, 90, () => {
+        acabado = true;
+        parar();
+        j.final(`¡${hechos} averías arregladas!${fugas ? ` (${fugas} fugas)` : ''}`, Math.max(0, Math.min(1, hechos / 3) - fugas * 0.1));
+      });
     }
   }
 ];

@@ -1,6 +1,9 @@
 import { paga } from './balance.js';
 import { RECETAS, INGREDIENTES } from './casa2.js';
-import { JUEGOS_FAVOR } from './favores.js';
+import { JUEGOS_FAVOR as JF1 } from './favores.js';
+import { JUEGOS_FAVOR2 } from './favores2.js';
+
+const JUEGOS_FAVOR = { ...JF1, ...JUEGOS_FAVOR2 };
 
 const HORA = 3600000;
 const MAX_ACTIVOS = 2;
@@ -16,6 +19,12 @@ export const CLIENTES = {
 const RECETAS_MAMA = ['tortilla', 'pizza', 'crema', 'pisto', 'ensalada', 'tarta'];
 
 const TIPOS = [
+  { id: 'medico', quien: 'mama', min: 15, favor: 'conducir', titulo: () => 'Llevarla al médico', texto: () => 'Tengo cita en el médico y vuestro padre se ha llevado el coche. ¿Me lleváis? ¡Que llegamos tarde!', pago: () => 110 },
+  { id: 'pasatiempos', quien: 'mama', min: 45, favor: 'diferencias', titulo: () => 'Encontrar las diferencias', texto: () => 'Me han regalado un libro de pasatiempos y me he atascado con las diferencias. ¿Me echáis una mano?', pago: () => 90 },
+  { id: 'mercado', quien: 'ramon', min: 20, favor: 'cruzar', titulo: () => 'Acompañarle al mercado', texto: () => 'Quiero ir al mercado, pero cruzar esa avenida me da pánico. ¿Me acompañáis? Son tres viajes, que pesa mucho la compra.', pago: () => 100 },
+  { id: 'toby', quien: 'sol', min: 15, favor: 'pasear', titulo: () => 'Pasear a Toby', texto: () => '¿Sacáis a pasear a Toby? Le encanta buscar huesos, pero no dejéis que se enrede con la correa.', pago: () => 90 },
+  { id: 'cometa', quien: 'amigos', min: 20, favor: 'cometa', titulo: () => 'Volar la cometa', texto: () => 'Domingo de parque: ¿quién mantiene la cometa en el aire sin que se enganche en los árboles?', pago: () => 95 },
+  { id: 'almacen-pilar', quien: 'pilar', min: 20, favor: 'almacen', titulo: () => 'Ordenar el almacén', texto: () => 'Me ha llegado un camión de cajas y no caben. ¿Me las empujáis cada una a su sitio?', pago: () => 105 },
   { id: 'receta', quien: 'mama', min: 0, horas: 36, titulo: r => `Cocinar ${r.nombre.toLowerCase()}`, texto: r => `¿Me hacéis ${r.nombre.toLowerCase()}? Es para la comida del domingo y a mí ya no me sale como antes. Usad vuestra cocina, ¿eh?`, pago: r => Math.round(r.valor * 1.6) },
   { id: 'album', quien: 'mama', min: 40, juego: 'puzzle', titulo: () => 'Recomponer una foto', texto: () => 'Se me ha caído el álbum y las fotos se han hecho pedazos. ¿Me ayudáis a recomponer una?', pago: () => 75 },
   { id: 'tarta-tia', quien: 'mama', min: 65, favor: 'tartaletas', titulo: () => 'Rellenar las tartaletas', texto: () => 'Es el cumple de vuestra tía y he hecho tartaletas. ¿Me ayudáis a rellenarlas de crema sin que se desborden?', pago: () => 125 },

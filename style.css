@@ -2164,7 +2164,7 @@ body.noche .pastilla, body.noche #lateral {
 .jg-ingredientes button.mal { background: #fde1e1; animation: temblor .25s; }
 @keyframes temblor { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
 
-.jg-memory { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 360px; }
+.jg-memory { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; max-width: 360px; }
 .carta { aspect-ratio: .85; border: none; padding: 0; background: none; perspective: 600px; position: relative; }
 .carta > div {
   position: absolute; inset: 0; border-radius: 16px; display: flex; align-items: center; justify-content: center;
@@ -3151,3 +3151,37 @@ body.colgando #lateral, body.colgando #chips-vida, body.colgando #menu-objeto, b
 
 .fv-mesa { width: 100%; height: 220px; border-radius: 18px; background: #f3e3d1; display: grid; place-items: center; }
 .fv-plato { width: 220px; height: 26px; border-radius: 13px; background: #d9d0c4; box-shadow: 0 4px 0 #b9ada0; display: flex; justify-content: center; align-items: flex-end; font-size: 34px; line-height: 0; padding-bottom: 26px; letter-spacing: 6px; transform-origin: center; }
+
+/* Fontanería a pantalla completa */
+.tb-fonta.grande { max-width: 420px; }
+.tb-fonta.grande .tb-marco-tubos { position: relative; width: 100%; padding: 0 24px; box-sizing: border-box; display: block; }
+.tb-fonta.grande .tb-tablero { width: 100%; gap: 2px; padding: 4px; box-sizing: border-box; }
+.tb-fonta.grande .tb-tablero button { width: auto; height: auto; aspect-ratio: 1; border-radius: 6px; }
+.tb-fonta.grande .tb-tablero button.llena { background: #e3f1ff; }
+.tb-fonta.grande .tb-tablero.fuga { box-shadow: 0 0 0 4px #e57373; }
+.tb-fonta.grande .tb-entra, .tb-fonta.grande .tb-sale { position: absolute; transform: translateY(-50%); margin: 0; font-size: 22px; }
+.tb-fonta.grande .tb-entra { left: 0; }
+.tb-fonta.grande .tb-sale { right: 0; }
+.tb-abrir { border: none; border-radius: 14px; padding: 10px 16px; font: inherit; font-weight: 900; font-size: 14px; background: #dcebf7; color: #2f6fa8; box-shadow: 0 3px 0 #b7d3ea; }
+
+/* Juegos clásicos de los encargos */
+.fv-lienzo { border-radius: 18px; box-shadow: 0 4px 14px rgba(0,0,0,.12); touch-action: none; display: block; }
+.fv-cruceta { display: grid; grid-template-columns: repeat(3, 58px); grid-template-rows: repeat(2, 50px); gap: 6px; justify-content: center; }
+.fv-cruceta button { border: none; border-radius: 14px; background: #fff; box-shadow: 0 3px 0 var(--borde); font-size: 22px; }
+.fv-cruceta button:active { transform: translateY(2px); }
+.fv-cruceta [data-d="a"] { grid-column: 2; grid-row: 1; }
+.fv-cruceta [data-d="i"] { grid-column: 1; grid-row: 2; }
+.fv-cruceta [data-d="b"] { grid-column: 2; grid-row: 2; }
+.fv-cruceta [data-d="d"] { grid-column: 3; grid-row: 2; }
+.fv-sokoban { display: grid; gap: 2px; width: 100%; max-width: 340px; background: #6b5440; padding: 4px; border-radius: 14px; touch-action: none; }
+.fv-sokoban i { aspect-ratio: 1; display: grid; place-items: center; font-style: normal; font-size: clamp(18px, 6vw, 28px); border-radius: 4px; }
+.fv-sokoban i.muro { background: #8a6a4a; box-shadow: inset 0 -4px 0 rgba(0,0,0,.18); }
+.fv-sokoban i.suelo { background: #e9dccb; }
+.fv-sokoban i.meta { background: #cfe9c8; box-shadow: inset 0 0 0 3px #6cc08a; }
+.fv-sok-botones { display: flex; gap: 8px; }
+.fv-sok-botones button { border: none; border-radius: 12px; padding: 8px 12px; font: inherit; font-weight: 800; font-size: 13px; background: #fff; box-shadow: 0 2px 0 var(--borde); color: var(--texto); }
+.fv-dif { display: grid; gap: 4px; width: 100%; max-width: 340px; background: #fff4ec; border-radius: 16px; padding: 8px; box-shadow: 0 2px 0 var(--borde); }
+.fv-dif button { border: none; background: none; font-size: clamp(22px, 7vw, 32px); aspect-ratio: 1; border-radius: 10px; padding: 0; }
+.fv-dif button.ok { background: rgba(108,192,138,.35); box-shadow: 0 0 0 2px #6cc08a; }
+.fv-dif button.mal { background: rgba(229,115,115,.3); }
+.fv-dif:not(.clic) { opacity: .95; pointer-events: none; }

@@ -2018,7 +2018,7 @@ encargos = new Encargos({
   tieneCocina: () => tieneCocinaEnCasa(),
   cocinar: r => casa2.juegoCoccion(r),
   imagenPuzzle: () => (mas.fotos.length && Math.random() < 0.7 ? mas.fotos[Math.floor(Math.random() * mas.fotos.length)].data : mas.capturar(600).toDataURL('image/jpeg', 0.85)),
-  puedeLlamar: () => soyGenerador() && !visitando && !enMenu() && !(guia && guia.activa()) && !!estado.bienvenida
+  puedeLlamar: () => soyGenerador() && !visitando && !enMenu() && !(guia && guia.activa()) && !!estado.bienvenida && !document.querySelector('#juego.abierto, #minijuego.abierto')
 });
 if (new URLSearchParams(location.search).has('encargo')) encargos.datos().proximo = 0;
 

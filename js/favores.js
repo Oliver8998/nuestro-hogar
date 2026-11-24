@@ -1,7 +1,10 @@
+import { TIEMPO, VELOCIDAD } from './favores2.js';
+
 const azar = n => Math.floor(Math.random() * n);
 const elegir = l => l[azar(l.length)];
 
 function cronometro(j, seg, alFin) {
+  seg *= TIEMPO;
   const ini = performance.now();
   let vivo = true;
   const id = setInterval(() => {
@@ -25,7 +28,7 @@ function bucle(j, fn) {
   let ultimo = performance.now();
   const paso = t => {
     if (!vivo) return;
-    const dt = Math.min(0.05, (t - ultimo) / 1000);
+    const dt = Math.min(0.05, (t - ultimo) / 1000) * VELOCIDAD;
     ultimo = t;
     if (fn(dt) === false) return;
     requestAnimationFrame(paso);

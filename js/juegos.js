@@ -128,8 +128,8 @@ export class Juegos {
 
   gotera() {
     let vueltas = 0;
-    const total = 14;
-    let quedan = 12;
+    const total = 11;
+    let quedan = 10;
     this.info('¡Toca la llave muchas veces para apretar la tubería!');
     this.cuerpo.innerHTML = `<div class="jg-tuberia"><div class="tubo"></div><div class="gotas">💧</div></div><button class="jg-llave">🔧</button><div class="jg-barra"><i></i></div>`;
     const llave = this.cuerpo.querySelector('.jg-llave');
@@ -148,10 +148,10 @@ export class Juegos {
     });
     this.reloj = setInterval(() => {
       quedan -= 0.1;
-      this.tiempo(quedan / 12);
+      this.tiempo(quedan / 10);
       if (quedan <= 0) {
         vueltas = Math.max(0, vueltas - 6);
-        quedan = 12;
+        quedan = 10;
         this.sonido.error();
         this.info('¡Se ha aflojado! Otra vez, más rápido');
       }
@@ -220,7 +220,7 @@ export class Juegos {
     let ronda = 0;
     let paso = 0;
     let hechas = 0;
-    const total = 60;
+    const total = 48;
     let quedan = total;
     const pintar = () => {
       const r = lista[ronda];
@@ -264,7 +264,7 @@ export class Juegos {
     let ronda = 0;
     let hechas = 0;
     let paso = 0;
-    const total = 45;
+    const total = 36;
     let quedan = total;
     const pintar = () => {
       const r = lista[ronda];
@@ -307,7 +307,8 @@ export class Juegos {
   }
 
   memory() {
-    const ids = barajar(CATALOGO.filter(d => d.enTienda !== false && !d.temporada).map(d => d.id)).slice(0, 6);
+    const ids = barajar(CATALOGO.filter(d => d.enTienda !== false && !d.temporada)
+      .map(d => d.id)).slice(0, 8);
     const cartas = barajar([...ids, ...ids]);
     let abiertas = [];
     let parejas = 0;
@@ -329,11 +330,11 @@ export class Juegos {
         this.sonido.arreglo();
         a.classList.add('hecha');
         c.classList.add('hecha');
-        this.info(`${parejas} de 6 parejas · ${fallos} fallos`);
-        if (parejas === 6) setTimeout(() => this.final(`¡Todas las parejas con ${fallos} fallos!`, fallos <= 4 ? 1 : fallos <= 9 ? 0.66 : 0.4), 500);
+        this.info(`${parejas} de 8 parejas · ${fallos} fallos`);
+        if (parejas === 8) setTimeout(() => this.final(`¡Todas las parejas con ${fallos} fallos!`, fallos <= 5 ? 1 : fallos <= 10 ? 0.66 : 0.35), 500);
       } else {
         fallos++;
-        this.info(`${parejas} de 6 parejas · ${fallos} fallos`);
+        this.info(`${parejas} de 8 parejas · ${fallos} fallos`);
         setTimeout(() => {
           a.classList.remove('vuelta');
           c.classList.remove('vuelta');
@@ -349,7 +350,7 @@ export class Juegos {
     if (orden.every((v, i) => v === i)) orden = [1, 0, ...orden.slice(2)];
     let sel = null;
     let movimientos = 0;
-    const total = 90;
+    const total = 70;
     let quedan = total;
     this.info('Toca dos piezas para cambiarlas de sitio');
     const pintar = () => {
