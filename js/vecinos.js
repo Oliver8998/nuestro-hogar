@@ -69,7 +69,7 @@ function darObjeto(ctx, d) {
 async function jugarFavor(vida, v, favor, titulo) {
   const { ctx } = vida;
   const f = JUEGOS_FAVOR3[favor];
-  const p = await ctx.juegos.custom(f.icono, titulo, j => f.jugar(j, { sonido: ctx.sonido }));
+  const p = await ctx.juegos.custom(f.icono, titulo, j => f.jugar(j, { sonido: ctx.sonido }), { clave: `fav:${favor}` });
   if (p === null || p === undefined) return null;
   return p;
 }

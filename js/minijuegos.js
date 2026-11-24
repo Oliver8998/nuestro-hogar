@@ -37,6 +37,8 @@ function cortan(a, b, c, d) {
   return t >= 0 && t <= 1 && u >= 0 && u <= 1;
 }
 
+import { conIntro } from './intro.js';
+
 export class Minijuegos {
   constructor(sonido) {
     this.sonido = sonido;
@@ -63,6 +65,17 @@ export class Minijuegos {
   }
 
   jugar(tipo) {
+    const info = INFO[tipo];
+    let visto = [];
+    try { visto = JSON.parse(localStorage.getItem('hogar-intro-limpieza')) || []; } catch (e) {}
+    if (visto.includes(tipo)) return this.jugarYa(tipo);
+    return conIntro({ clave: `limp:${tipo}`, icono: info.emoji, nombre: info.titulo, como: info.instruccion, sonido: this.sonido }, () => {
+      try { localStorage.setItem('hogar-intro-limpieza', JSON.stringify([...visto, tipo])); } catch (e) {}
+      return this.jugarYa(tipo);
+    }).then(r => r ?? false);
+  }
+
+  jugarYa(tipo) {
     return new Promise(resolve => {
       this.resolver = resolve;
       this.tipo = tipo;

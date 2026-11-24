@@ -1,4 +1,4 @@
-const CACHE = 'hogar-v81';
+const CACHE = 'hogar-v82';
 const ARCHIVOS = [
   './',
   './index.html',
@@ -63,6 +63,8 @@ const ARCHIVOS = [
   './js/duo.js',
   './js/album.js',
   './js/bano.js',
+  './js/intro.js',
+  './js/intros.js',
   './js/escaparate.js',
   './js/sol.js',
   './js/i18n.js',
@@ -82,6 +84,7 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+  if (e.request.url.includes('/assets/videos/')) return;
   e.respondWith(
     fetch(e.request)
       .then(r => {

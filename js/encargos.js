@@ -249,7 +249,7 @@ export class Encargos {
       puntos = await this.ctx.cocinar(r);
     } else if (t.favor) {
       const f = JUEGOS_FAVOR[t.favor];
-      puntos = await juegos.custom(f.icono, t.titulo(), j => f.jugar(j, { sonido }));
+      puntos = await juegos.custom(f.icono, t.titulo(), j => f.jugar(j, { sonido }), { clave: `fav:${t.favor}`, que: t.texto() });
     } else {
       puntos = await juegos.jugar(t.juego, t.juego === 'puzzle' ? { imagen: this.ctx.imagenPuzzle() } : {});
     }

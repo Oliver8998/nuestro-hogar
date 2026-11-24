@@ -538,3 +538,11 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - Racha diaria (`album.js` PREMIOS_RACHA): calendario de 7 días (monedas, ticket, pienso, objeto raro el 7.º). Si se falta un día vuelve al día 1. Cada semana seguida da +10 monedas por día (hasta +30).
 - Álbum de pegatinas (Objetivos → 📒): todos los objetos del catálogo y las especies. Se pegan al tenerlos en casa, en el inventario o al adoptar. 6 pestañas y premios por hitos (5, 12, 20… y todo). `album.revisar()` corre en `revisarProgreso`.
 - main.js: mientras hay un minijuego abierto (`juegoTapando`), la escena 3D no se renderiza.
+
+## Presentación antes de cada juego (v82)
+- `intro.js`: `mostrarIntro()` abre una capa (`#intro-juego`) con el vídeo del juego arriba, el botón «▶ ¡A jugar!» en medio y «¿De qué va?» y «Cómo se juega» debajo. Tiene la casilla «No volver a mostrar» (localStorage `hogar-intro-saltar`). Si se cierra con ✕, el juego no empieza y la llamada devuelve null.
+- `conIntro(op, abrir)` envuelve `juegos.custom(icono, nombre, montar, intro)`, `juegos.jugar(id)` (clave `jue:id`) y `minijuegos.jugar(tipo)` (clave `limp:tipo`; la limpieza solo la enseña la primera vez de cada tipo, guardado en `hogar-intro-limpieza`). Los métodos `customYa`, `jugarYa` y `minijuegos.jugarYa` arrancan sin presentación. `window.__sinIntro = true` la desactiva (para pruebas).
+- Claves: `trab:id` (trabajos; en «qué» va `t.texto` y además el pago), `fav:id` (favores; el encargo pasa su texto), `jue:*`, `limp:*`, `bano`, `copos`, `tender`, `entrenar`, `carrera`, `paseo`, `cocinar`. Las de casa2, sorpresas y mascotas2 se deducen del nombre en `custom`, o con `juegos.siguienteIntro`.
+- `intros.js` (generado): `{ que, como, video }`. El «cómo» sale del primer `j.info()` de cada juego. `video: 'trab-x'` reutiliza el vídeo de un trabajo y `video: false` enseña solo el icono animado.
+- Vídeos en `assets/videos/<clave con - en vez de :>.mp4`: 56 clips H.264 de 320×400, unos 6 s, 1,3 MB en total. Se grabaron jugando con un bot (Playwright `record_video` y recorte con ffmpeg; scripts en /tmp/prueba t80.py y cortar.py). El service worker no los intercepta (por las peticiones Range). Sin vídeo (tender, entrenar, carrera, paseo, cocinar) se ve el icono flotando.
+- Arreglado: en el cajero salía «Paga con: NaN €» cuando el total pasaba de 50 € (faltaba el billete de 100).

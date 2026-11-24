@@ -160,5 +160,5 @@ export function abrirBano(ctx, m) {
     marcador();
     const previo = j.alTerminar;
     j.alTerminar = () => { vivo = false; if (previo) previo(); };
-  });
+  }, { clave: 'bano', que: `${m.nombre} se ha puesto perdido de barro. ¡Toca baño!` });
 }

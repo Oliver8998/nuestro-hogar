@@ -757,6 +757,7 @@ export class Casa2 {
     if (!this.puedeCocinar(r)) return null;
     const d = this.despensa();
     for (const [k, n] of Object.entries(r.ing)) d[k] -= n;
+    juegos.siguienteIntro = { clave: 'cocinar', que: `Vais a cocinar ${r.nombre.toLowerCase()} con lo que hay en la despensa.` };
     const puntos = await juegos.custom(r.icono, r.nombre, j => {
       let ronda = 0;
       let aciertos = 0;

@@ -40,6 +40,8 @@ function barajar(a) {
   return a;
 }
 
+import { conIntro } from './intro.js';
+
 export class Juegos {
   constructor({ sonido, miniaturas }) {
     this.sonido = sonido;
@@ -74,6 +76,11 @@ export class Juegos {
   }
 
   jugar(id, extra = {}) {
+    const def = JUEGOS.find(x => x.id === id) || EXTRA[id];
+    return conIntro({ clave: `jue:${id}`, icono: def.icono, nombre: def.nombre, sonido: this.sonido, ...(extra.intro || {}) }, () => this.jugarYa(id, extra));
+  }
+
+  jugarYa(id, extra = {}) {
     return new Promise(resolve => {
       this.resolver = resolve;
       const j = JUEGOS.find(x => x.id === id) || EXTRA[id];
@@ -91,7 +98,17 @@ export class Juegos {
     });
   }
 
-  custom(icono, nombre, montar) {
+  custom(icono, nombre, montar, intro = null) {
+    if (!intro && this.siguienteIntro) intro = this.siguienteIntro;
+    this.siguienteIntro = null;
+    if (!intro) {
+      const clave = nombre === 'Tender la ropa' ? 'tender' : nombre === 'Atrapa los copos' ? 'copos' : nombre.startsWith('Entrenar:') ? 'entrenar' : nombre === 'Carrera de mascotas' ? 'carrera' : nombre.startsWith('Paseo con') ? 'paseo' : null;
+      if (clave) intro = { clave };
+    }
+    return conIntro(intro ? { icono, nombre, sonido: this.sonido, ...intro } : null, () => this.customYa(icono, nombre, montar));
+  }
+
+  customYa(icono, nombre, montar) {
     return new Promise(resolve => {
       this.resolver = resolve;
       this.capa.querySelector('.jg-titulo').textContent = `${icono} ${nombre}`;

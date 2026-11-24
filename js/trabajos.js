@@ -359,7 +359,7 @@ export const TRABAJOS = [
       j.info('Toca monedas y billetes hasta dar el cambio exacto');
       const nuevo = () => {
         const precio = (50 + azar(1900)) * 5;
-        const pagos = [500, 1000, 2000, 5000].filter(p => p > precio);
+        const pagos = [500, 1000, 2000, 5000, 10000].filter(p => p > precio);
         const paga = pagos[azar(Math.min(2, pagos.length))];
         cambio = paga - precio;
         dado = [];
@@ -1120,7 +1120,7 @@ export class Trabajos {
   async trabajar(t) {
     const { ui, juegos, sonido } = this.ctx;
     ui.cerrarHojas();
-    const puntos = await juegos.custom(t.icono, t.nombre, j => t.jugar(j, { sonido }));
+    const puntos = await juegos.custom(t.icono, t.nombre, j => t.jugar(j, { sonido }), { clave: `trab:${t.id}`, que: t.texto, extra: `🪙 Hasta ${t.pago} monedas según lo bien que lo hagáis` });
     if (puntos === null || puntos === undefined) return;
     const d = this.datos();
     const factor = d.turnos < TURNOS ? 1 : 0.3;
