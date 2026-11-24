@@ -39,6 +39,7 @@ import * as avisos from './avisos.js';
 import { Telefono } from './telefono.js';
 import { Interacciones } from './interacciones.js';
 import { ObjetosPared } from './paredObjs.js';
+import { encarecer, paga } from './balance.js';
 import { Encargos, CLIENTES } from './encargos.js';
 
 let guia = null;
@@ -181,6 +182,7 @@ const AMPLIACIONES = [
   { nombre: 'Salón de baile', icono: '💃', precio: 10000 },
   { nombre: 'Torre del observatorio', icono: '🔭', precio: 14000 }
 ];
+encarecer(AMPLIACIONES);
 
 function habsCasa(e = estado) {
   const n = (e.casa && e.casa.nivel) || 0;
@@ -421,11 +423,11 @@ function refrescarHud() {
       ui.dialogo({
         imagen: miniaturas.personaje('lola'), personaje: true,
         titulo: '¡Habitación reformada!',
-        texto: 'Ha quedado preciosa. Os habéis ganado un regalo: 200 monedas y 2 tickets.',
+        texto: 'Ha quedado preciosa. Os habéis ganado un regalo: 100 monedas y 2 tickets.',
         confeti: true,
         botones: [{ texto: '¡Gracias, Pilar!', tipo: 'primario' }]
       });
-      estado.monedas += 200;
+      estado.monedas += 100;
       estado.tickets += 2;
       refrescarHud();
       guardar();
@@ -1043,7 +1045,7 @@ function tocarSuciedad(d) {
   const prod = infoItem(info.producto);
   const tiene = inventario.cantidad(info.producto);
   const pedido = entregas.cantidadPedida(info.producto);
-  const expres = 40;
+  const expres = 120;
   const soluciones = {
     polvo: 'Un robot friegasuelos lo limpia solo. Robi, el robot de limpieza, también.',
     barro: 'Un robot friegasuelos lo limpia solo. Robi, el robot de limpieza, también.',
@@ -1306,7 +1308,7 @@ function abrirColecciones() {
   ui.abrirGen('Colecciones', `
     <p class="gen-intro">Colocad en casa todas las piezas de una colección para ganar el premio.</p>
     ${COLECCIONES.map(c => `<div class="coleccion ${hechas.includes(c.id) ? 'hecha' : ''}">
-      <div class="col-cab"><b>${c.icono} ${c.nombre}</b><em>${hechas.includes(c.id) ? '✅ Completa' : `🪙 ${c.premio.monedas} · 🎟️ ${c.premio.tickets}`}</em></div>
+      <div class="col-cab"><b>${c.icono} ${c.nombre}</b><em>${hechas.includes(c.id) ? '✅ Completa' : `🪙 ${paga(c.premio.monedas)} · 🎟️ ${c.premio.tickets}`}</em></div>
       <div class="col-items">${c.items.map(id => `<div class="${ids.includes(id) ? 'tiene' : ''}"><img src="${miniaturas.item(id, 0)}" alt=""><small>${infoItem(id).nombre}</small></div>`).join('')}</div>
     </div>`).join('')}`, () => abrirObjetivos());
 }
@@ -1324,9 +1326,9 @@ function revisarProgreso() {
     } catch (e) {}
     if (!ok) continue;
     estado.logros.push(l.id);
-    estado.monedas += l.secreto ? 80 : 30;
+    estado.monedas += l.secreto ? 40 : 15;
     sonido.premio();
-    ui.aviso(l.secreto ? `🤫 ¡Logro secreto! ${l.icono} ${l.nombre} (+80 🪙)` : `🏆 Logro: ${l.nombre} (+30 🪙)`);
+    ui.aviso(l.secreto ? `🤫 ¡Logro secreto! ${l.icono} ${l.nombre} (+40 🪙)` : `🏆 Logro: ${l.nombre} (+15 🪙)`);
     refrescarHud();
     guardar();
     return;
@@ -1336,14 +1338,14 @@ function revisarProgreso() {
     if (estado.colecciones.includes(col.id)) continue;
     estado.colecciones.push(col.id);
     pareja.recordar(null, col.icono, `Completamos la colección ${col.nombre}`);
-    estado.monedas += col.premio.monedas;
+    estado.monedas += paga(col.premio.monedas);
     estado.tickets += col.premio.tickets;
     refrescarHud();
     guardar();
     sonido.premio();
     ui.dialogo({
       titulo: `📚 ¡Colección completa! ${col.icono}`,
-      texto: `${col.nombre}: +${col.premio.monedas} monedas y ${col.premio.tickets} ticket${col.premio.tickets > 1 ? 's' : ''}.`,
+      texto: `${col.nombre}: +${paga(col.premio.monedas)} monedas y ${col.premio.tickets} ticket${col.premio.tickets > 1 ? 's' : ''}.`,
       confeti: true,
       botones: [{ texto: '¡Toma ya!', tipo: 'primario' }]
     });
@@ -1392,7 +1394,7 @@ function registrar(evento, n = 1) {
 }
 
 function darPremio(premio) {
-  if (premio.monedas) estado.monedas = Math.max(0, estado.monedas + premio.monedas);
+  if (premio.monedas) estado.monedas = Math.max(0, estado.monedas + paga(premio.monedas));
   if (premio.tickets) estado.tickets += premio.tickets;
   let item = null;
   if (premio.item) {
@@ -1559,7 +1561,8 @@ mas = new Mas({
 
 const juegos = new Juegos({ sonido, miniaturas });
 
-function ganar(n, m = null, emoji = '🪙') {
+function ganar(n, m = null, emoji = '🪙', exacto = false) {
+  if (!exacto) n = paga(n);
   estado.monedas += n;
   sonido.premio();
   if (m) {
@@ -1906,7 +1909,7 @@ function abrirTrabajar() {
       <div class="tr-cabecera"><span class="tr-ico">${t.icono}</span><div><small>Trabajo de hoy</small><b>${t.nombre}</b></div></div>
       <p>${t.texto}</p>
       <div class="tr-turnos">${[0, 1, 2].map(i => `<i class="${i < hechos ? 'hecho' : ''}">${i < hechos ? '✓' : i + 1}</i>`).join('')}<em>${quedan ? `Te ${quedan === 1 ? 'queda 1 turno' : `quedan ${quedan} turnos`} con paga entera` : 'Turnos de hoy hechos: ahora son horas extra al 30%'}</em></div>
-      <button class="primario tr-ir" id="tr-ir">${quedan ? '¡A trabajar!' : 'Hacer horas extra'}<small>hasta 🪙 ${quedan ? t.pago : Math.round(t.pago * 0.3)}</small></button>
+      <button class="primario tr-ir" id="tr-ir">${quedan ? '¡A trabajar!' : 'Hacer horas extra'}<small>hasta 🪙 ${paga(quedan ? t.pago : Math.round(t.pago * 0.3))}</small></button>
     </div>
     <h4 class="gen-sub">Más formas de ganar</h4>
     <div class="tr-otros">
@@ -2009,7 +2012,7 @@ encargos = new Encargos({
   refrescarHud: () => refrescarHud(),
   registrar: e => registrar(e),
   recordar: (...a) => pareja.recordar(...a),
-  ganar: (n, m, icono) => ganar(n, m, icono),
+  ganar: (n, m, icono, exacto) => ganar(n, m, icono, exacto),
   chip: () => pintarChipsVida(),
   avisarPareja: (t, x) => window.avisarPareja && window.avisarPareja(t, x),
   tieneCocina: () => tieneCocinaEnCasa(),
@@ -2258,10 +2261,10 @@ function revisarRachaPareja() {
     cambio = true;
     const n = estado.rachaPareja.n;
     if (n > 1) {
-      estado.monedas += Math.min(10 * n, 100);
+      estado.monedas += Math.min(5 * n, 50);
       setTimeout(() => {
         sonido.premio();
-        ui.aviso(`🔥 ¡Racha de pareja: ${n} días entrando los dos! +${Math.min(10 * n, 100)} monedas`);
+        ui.aviso(`🔥 ¡Racha de pareja: ${n} días entrando los dos! +${Math.min(5 * n, 50)} monedas`);
       }, 2500);
     }
   }
@@ -2432,13 +2435,13 @@ function puntuarReto() {
   caja.querySelectorAll('.estrellas button').forEach(b => b.addEventListener('click', () => {
     const n = Number(b.dataset.n);
     r.estrellas = n;
-    estado.monedas += n * 20;
+    estado.monedas += n * 10;
     registrar('reto');
     refrescarHud();
     guardar();
     caja.querySelector('.dialogo-botones button').click();
     sonido.premio();
-    ui.aviso(`${'⭐'.repeat(n)} ¡+${n * 20} monedas!`);
+    ui.aviso(`${'⭐'.repeat(n)} ¡+${n * 10} monedas!`);
     if (n === 5) pareja.recordar(null, '🎨', `Decoramos un ${tema.nombre.toLowerCase()} de 5 estrellas`);
   }));
   return true;
@@ -2473,7 +2476,7 @@ function revisarFechas() {
     if (!f.temporada) pareja.recordar(null, f.titulo.includes('aniversario') ? '💍' : '🎂', f.titulo.replace(/!|¡/g, '').trim());
     if (f.temporada) estado.tickets += 1;
     else {
-      estado.monedas += 150;
+      estado.monedas += 75;
       estado.tickets += 2;
     }
     refrescarHud();
@@ -2481,7 +2484,7 @@ function revisarFechas() {
     sonido.premio();
     ui.dialogo({
       imagen: miniaturas.personaje('lola'), personaje: true,
-      titulo: f.titulo, texto: f.texto + (f.temporada ? '' : ' (+150 monedas y 2 tickets)'),
+      titulo: f.titulo, texto: f.texto + (f.temporada ? '' : ' (+75 monedas y 2 tickets)'),
       confeti: true,
       botones: [{ texto: f.temporada ? '¡A la tienda!' : '¡Gracias, Pilar!', tipo: 'primario', accion: f.temporada ? () => ui.abrirTienda('temporada') : null }]
     });
@@ -2556,7 +2559,7 @@ setTimeout(function alEntrar() {
   } else if (revisarFechas()) {
     return;
   } else if (nuevoDia && habiaPartida && diasFuera >= 3) {
-    const monedas = Math.min(300, 60 * diasFuera);
+    const monedas = Math.min(150, 30 * diasFuera);
     estado.monedas += monedas;
     estado.tickets += 2;
     refrescarHud();
@@ -2570,7 +2573,7 @@ setTimeout(function alEntrar() {
     });
   } else if (nuevoDia && habiaPartida) {
     const racha = estado.racha ? estado.racha.n : 1;
-    const bonus = 50 + 10 * (Math.min(racha, 7) - 1);
+    const bonus = 25 + 5 * (Math.min(racha, 7) - 1);
     estado.monedas += bonus;
     refrescarHud();
     guardar();

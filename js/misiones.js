@@ -1,3 +1,4 @@
+import { paga } from './balance.js';
 export const DIARIAS = [
   { id: 'limpiar', texto: 'Limpia 3 cosas sucias', evento: 'limpiar', meta: 3, premio: { monedas: 30 } },
   { id: 'colocar', texto: 'Coloca 2 objetos en casa', evento: 'colocar', meta: 2, premio: { monedas: 20 } },
@@ -30,9 +31,9 @@ export const EVENTOS = [
     texto: 'Dentro de 10 días viene tu madre a ver el piso. Dejad la casa lo mejor posible: reformada, limpia y bonita… o ya sabéis lo que pasará.',
     pesos: { reforma: 40, limpieza: 40, muebles: 20 }, objetivoMuebles: 12,
     resultados: [
-      { min: 80, titulo: '¡Tu madre está encantada!', texto: '"¡Qué casa más bonita y qué limpia! Tomad, para que os deis un capricho." Os deja 300 monedas, 3 tickets y un regalo especial.', premio: { monedas: 300, tickets: 3, item: 'legendario' } },
-      { min: 50, titulo: 'Tu madre dice que no está mal…', texto: '"Bueno… se puede vivir. Pero esas esquinas…" Os deja 100 monedas para productos de limpieza.', premio: { monedas: 100 } },
-      { min: 0, titulo: 'Tu madre se ha remangado', texto: '"¡Pero cómo vivís así!" Se ha pasado la tarde limpiando con vosotros y al final os ha dejado 30 monedas "para lejía". Para la próxima, ¡a por todas!', premio: { monedas: 30 } }
+      { min: 80, titulo: '¡Tu madre está encantada!', texto: '"¡Qué casa más bonita y qué limpia! Tomad, para que os deis un capricho." Os deja 150 monedas, 3 tickets y un regalo especial.', premio: { monedas: 300, tickets: 3, item: 'legendario' } },
+      { min: 50, titulo: 'Tu madre dice que no está mal…', texto: '"Bueno… se puede vivir. Pero esas esquinas…" Os deja 50 monedas para productos de limpieza.', premio: { monedas: 100 } },
+      { min: 0, titulo: 'Tu madre se ha remangado', texto: '"¡Pero cómo vivís así!" Se ha pasado la tarde limpiando con vosotros y al final os ha dejado 15 monedas "para lejía". Para la próxima, ¡a por todas!', premio: { monedas: 30 } }
     ]
   },
   {
@@ -41,8 +42,8 @@ export const EVENTOS = [
     texto: 'Habéis invitado a vuestros amigos dentro de 7 días. ¡Que la casa esté llena de cosas bonitas, limpia y con alguna mascota que les reciba!',
     pesos: { reforma: 20, limpieza: 30, muebles: 40, mascota: 10 }, objetivoMuebles: 16,
     resultados: [
-      { min: 80, titulo: '¡Fiestón!', texto: 'Vuestros amigos no paran de hacer fotos. Os traen regalos: 200 monedas, 2 tickets y algo épico.', premio: { monedas: 200, tickets: 2, item: 'epico' } },
-      { min: 50, titulo: 'Una fiesta maja', texto: 'Lo habéis pasado bien. Os traen 80 monedas de regalo.', premio: { monedas: 80 } },
+      { min: 80, titulo: '¡Fiestón!', texto: 'Vuestros amigos no paran de hacer fotos. Os traen regalos: 100 monedas, 2 tickets y algo épico.', premio: { monedas: 200, tickets: 2, item: 'epico' } },
+      { min: 50, titulo: 'Una fiesta maja', texto: 'Lo habéis pasado bien. Os traen 40 monedas de regalo.', premio: { monedas: 80 } },
       { min: 0, titulo: 'Fiesta un poco triste', texto: 'La casa estaba algo vacía y sucia… se fueron pronto. Al menos os ha sobrado comida.', premio: { monedas: 0 } }
     ]
   }
@@ -78,7 +79,7 @@ export function infoDiaria(id) {
 
 export function textoPremio(premio) {
   const partes = [];
-  if (premio.monedas) partes.push(`🪙 ${premio.monedas}`);
+  if (premio.monedas) partes.push(`🪙 ${paga(premio.monedas)}`);
   if (premio.tickets) partes.push(`🎟️ ${premio.tickets}`);
   if (premio.item) partes.push('🎁');
   return partes.join(' · ');

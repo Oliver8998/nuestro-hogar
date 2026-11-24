@@ -1,3 +1,4 @@
+import { caro } from './balance.js';
 import * as THREE from 'three';
 import { liberar } from './modelos.js';
 import { crearModeloMascota as crearModelo } from './modeloMascota.js';
@@ -15,6 +16,8 @@ export const ESPECIES = {
   dragon: { nombre: 'Dragoncito', exclusivo: 'legendario', texto: 'Escupe fueguitos cuando se emociona', color: 0x8e6fd8, secundario: 0xf2c6e0, orejas: 'ninguna', cola: 'larga', tam: 1, velocidad: 0.65, dragon: true, cabezaGrande: 1.05 },
   zorro: { nombre: 'Zorrito', exclusivo: 'legendario', texto: 'Curioso y con una cola enorme', color: 0xe87a3a, secundario: 0xfff6ee, orejas: 'punta-grande', cola: 'esponjosa', tam: 1, velocidad: 0.8, hocico: 'zorro', calcetines: 0x3b2a22, bigotes: true }
 };
+
+for (const e of Object.values(ESPECIES)) if (typeof e.precio === 'number') e.precio = caro(e.precio);
 
 const CELDA = 0.5;
 const N = 12;

@@ -1,3 +1,4 @@
+import { paga } from './balance.js';
 import { RECETAS, INGREDIENTES } from './casa2.js';
 import { JUEGOS_FAVOR } from './favores.js';
 
@@ -95,7 +96,7 @@ export class Encargos {
       d.ultimasRecetas = [...(d.ultimasRecetas || []), e.receta].slice(-3);
     }
     const r2 = this.receta(e);
-    e.pago = Math.round(t.pago(r2) * (0.8 + d.conf[quien] / 250));
+    e.pago = paga(Math.round(t.pago(r2) * (0.8 + d.conf[quien] / 250)));
     d.activos.push(e);
     d.ultimosTipos = [...ultimos, t.id].slice(-4);
     return e;
@@ -245,7 +246,7 @@ export class Encargos {
     const delta = Math.round((p - 0.55) * 30);
     d.conf[e.quien] = Math.max(0, Math.min(100, antes + delta));
     d.hechos = (d.hechos || 0) + 1;
-    const pago = Math.max(10, Math.round(e.pago * (0.35 + 0.65 * p)));
+    const pago = Math.max(5, Math.round(e.pago * (0.35 + 0.65 * p)));
     const nivel = p >= 0.85 ? 'genial' : p >= 0.6 ? 'bien' : p >= 0.35 ? 'regular' : 'mal';
     const nuevos = TIPOS.filter(t => t.quien === e.quien && t.min > antes && t.min <= d.conf[e.quien]);
     if (delta > 0) d.proximo = Math.min(d.proximo || Infinity, Date.now() + (1 + Math.random()) * HORA);
@@ -258,7 +259,7 @@ export class Encargos {
       texto: azar(REACCION[nivel]),
       html: `<div class="enc-pie"><span>${this.corazones(e.quien)}</span><span>${delta > 0 ? '📈 Os llamará más' : delta < 0 ? '📉 Os llamará menos' : '➖ Igual que antes'}</span></div>${nuevos.length ? `<p class="enc-nuevo">✨ Ahora confía más en vosotros: os pedirá cosas nuevas</p>` : ''}`,
       confeti: p >= 0.85,
-      botones: [{ texto: `Cobrar 🪙 ${pago}`, tipo: 'primario', accion: () => this.ctx.ganar(pago, null, '📞') }]
+      botones: [{ texto: `Cobrar 🪙 ${pago}`, tipo: 'primario', accion: () => this.ctx.ganar(pago, null, '📞', true) }]
     });
     this.ctx.guardar();
     this.ctx.chip();

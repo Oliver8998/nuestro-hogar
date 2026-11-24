@@ -1,3 +1,4 @@
+import { encarecer } from './balance.js';
 export const CASAS = [
   { nombre: 'Piso cutre', icono: '🏚️', precio: 0, acogedor: 0, habitaciones: ['Salón'], suelo: null, pared: 0xb3a78d },
   { nombre: 'Piso reformado', icono: '🏠', precio: 1500, acogedor: 45, habitaciones: ['Salón', 'Dormitorio'], suelo: [0x9c7a55, 0x8f6f4c, 0xa4825c, 0x8a6a48], pared: 0xf3eadb, requisitoReforma: true },
@@ -5,6 +6,7 @@ export const CASAS = [
   { nombre: 'Casa con jardín', icono: '🏡', precio: 9000, acogedor: 72, habitaciones: ['Salón', 'Dormitorio', 'Cocina', 'Estudio', 'Jardín'], suelo: [0xd9b98c, 0xcfae80, 0xe0c296, 0xc8a678], pared: 0xf8f1e7 },
   { nombre: 'Mansión', icono: '🏰', precio: 20000, acogedor: 85, habitaciones: ['Salón', 'Dormitorio', 'Cocina', 'Estudio', 'Baño', 'Sala de juegos', 'Jardín grande'], suelo: [0x6b4a33, 0x5e4130, 0x75523a, 0x664633], pared: 0xf4ece0 }
 ];
+encarecer(CASAS);
 
 export const EXTERIORES = {
   Terraza: { tipo: 'terraza', suelo: [0xc9b8a2, 0xbfae98, 0xd2c1ab, 0xb8a790] },

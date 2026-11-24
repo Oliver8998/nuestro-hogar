@@ -1,3 +1,4 @@
+import { paga } from './balance.js';
 import * as THREE from 'three';
 import { crearPersonaje } from './personajes.js';
 import { CATALOGO } from './catalogo.js';
@@ -168,7 +169,7 @@ export class Vida {
     const info = VISITANTES[v.quien];
     const a = this.ctx.acogedor();
     const opinion = a >= 75 ? '¡Madre mía, qué casa más bonita! Se nota que la cuidáis.' : a >= 50 ? 'Está quedando muy apañada. ¡Un par de plantas más y perfecta!' : 'Bueno… le falta cariño, pero vais por buen camino.';
-    const monedas = 30 + Math.round(a / 2);
+    const monedas = paga(30 + Math.round(a / 2));
     const baratos = CATALOGO.filter(d => d.enTienda !== false && !d.temporada && d.precio <= 120 && d.categoria === 'deco');
     const regalo = Math.random() < 0.4 ? baratos[Math.floor(Math.random() * baratos.length)] : null;
     this.ctx.ui.dialogo({
@@ -244,12 +245,12 @@ export class Vida {
     this.estado.averia = null;
     this.mostrarAveria(null);
     this.ctx.ambiente.calcular();
-    this.estado.monedas += 25;
+    this.estado.monedas += 13;
     this.ctx.registrar('averia');
     this.ctx.refrescarHud();
     this.ctx.guardar();
     this.ctx.chip();
-    this.ctx.ui.aviso(a.tipo === 'gotera' ? '🔧 ¡Tubería arreglada! +25 🪙' : '💡 ¡Ha vuelto la luz! +25 🪙');
+    this.ctx.ui.aviso(a.tipo === 'gotera' ? '🔧 ¡Tubería arreglada! +13 🪙' : '💡 ¡Ha vuelto la luz! +13 🪙');
   }
 
   revisarCumples() {
@@ -261,7 +262,7 @@ export class Vida {
       if (this.estado.cumplesMascotas[m.id] === meses) continue;
       if (this.ctx.dialogoAbierto()) return;
       this.estado.cumplesMascotas[m.id] = meses;
-      this.estado.monedas += 50;
+      this.estado.monedas += 25;
       this.ctx.refrescarHud();
       this.ctx.guardar();
       this.ponerTarta(m);
@@ -269,7 +270,7 @@ export class Vida {
       this.ctx.ui.dialogo({
         imagen: this.ctx.miniaturas.mascota(m.especie),
         titulo: `🎂 ¡${m.nombre} cumple ${meses} ${meses === 1 ? 'mes' : 'meses'}!`,
-        texto: '¡Hay tarta! Pilar os manda 50 monedas para celebrarlo.',
+        texto: '¡Hay tarta! Pilar os manda 25 monedas para celebrarlo.',
         confeti: true,
         botones: [{ texto: '¡Cumpleaños feliz! 🎉', tipo: 'primario' }]
       });
@@ -349,14 +350,14 @@ export class Vida {
     const primera = !c.leida;
     c.leida = true;
     if (primera && c.monedas) {
-      this.estado.monedas += c.monedas;
+      this.estado.monedas += paga(c.monedas);
       this.ctx.refrescarHud();
     }
     this.ctx.guardar();
     this.ctx.chip();
     ui.dialogo({
       titulo: c.titulo,
-      html: `<div class="nota-papel"><b>De ${c.de}</b>${c.texto}${c.ofertas ? `<div class="ofertas-carta">${c.ofertas.map(id => `<img src="${miniaturas.item(id, 0)}" alt="">`).join('')}</div>` : ''}${c.monedas ? `<small>🪙 +${c.monedas} monedas</small>` : ''}</div>`,
+      html: `<div class="nota-papel"><b>De ${c.de}</b>${c.texto}${c.ofertas ? `<div class="ofertas-carta">${c.ofertas.map(id => `<img src="${miniaturas.item(id, 0)}" alt="">`).join('')}</div>` : ''}${c.monedas ? `<small>🪙 +${paga(c.monedas)} monedas</small>` : ''}</div>`,
       botones: c.ofertas && c.dia === hoyClave() ? [{ texto: 'Cerrar', tipo: 'secundario' }, { texto: '🛒 Ir a la tienda', tipo: 'primario', accion: () => ui.abrirTienda('mostrador') }] : [{ texto: 'Cerrar', tipo: 'primario', accion: desdeLista ? () => this.abrirCorreo() : undefined }]
     });
   }

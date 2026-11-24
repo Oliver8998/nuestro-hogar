@@ -1,3 +1,4 @@
+import { paga } from './balance.js';
 import * as THREE from 'three';
 import { crearPersonaje } from './personajes.js';
 
@@ -320,7 +321,7 @@ export class Social {
       const id = Object.keys(casa2.platos())[0];
       if (id) casa2.quitarPlato(id);
     }
-    const monedas = 30 * r.estrellas + f.invitados.length * 10;
+    const monedas = paga(30 * r.estrellas + f.invitados.length * 10);
     this.estado.ultimaFiesta = Date.now();
     this.estado.monedas += monedas;
     this.ctx.registrar(r.estrellas >= 5 ? 'fiesta-perfecta' : 'fiesta');

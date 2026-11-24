@@ -6,7 +6,7 @@ export const TAM_VENTANA = {
   l: { nombre: 'Grande', k: 1.3 },
   xl: { nombre: 'Ventanal', k: 1.6 }
 };
-export const PRECIO_VENTANA = 200;
+export const PRECIO_VENTANA = 600;
 const ALTO = 2.6;
 const NOMBRE_PARED = { 0: 'del fondo', 1: 'de la puerta', 2: 'de la izquierda', 3: 'de la derecha' };
 

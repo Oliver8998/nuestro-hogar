@@ -125,19 +125,19 @@ export class Pareja {
     }
     if (d.visto[0] && d.visto[1] && !d.premioVisto) {
       d.premioVisto = true;
-      this.estado.monedas += 40;
+      this.estado.monedas += 20;
       this.ctx.refrescarHud();
       this.ctx.guardar();
       sonido.premio();
-      ui.aviso('💑 ¡Hoy habéis entrado los dos! +40 monedas');
+      ui.aviso('💑 ¡Hoy habéis entrado los dos! +20 monedas');
     }
     if (d.limpiezas[0] + d.limpiezas[1] >= 5 && d.limpiezas[0] > 0 && d.limpiezas[1] > 0 && !d.premioLimpieza) {
       d.premioLimpieza = true;
-      this.estado.monedas += 60;
+      this.estado.monedas += 30;
       this.ctx.refrescarHud();
       this.ctx.guardar();
       sonido.premio();
-      ui.aviso('🧹💑 ¡Misión de pareja: limpiar juntos! +60 monedas');
+      ui.aviso('🧹💑 ¡Misión de pareja: limpiar juntos! +30 monedas');
     }
     if (this.ctx.dialogoAbierto()) return;
     for (const v of this.estado.votos || []) {
@@ -432,8 +432,8 @@ export class Pareja {
       <div class="pj-codigo"><small>Vuestro código</small><b>${this.sync.codigo}</b><button id="pj-compartir" class="secundario">📤 Mandárselo</button></div>
       <p class="gen-intro centrado">${this.sync.error ? '⚠️ Sin conexión ahora mismo, se sincronizará al volver.' : conectado ? `🟢 ${escapar(this.otro())} ha estado jugando hace poco` : `Eres <b>${escapar(this.nombre(yo))}</b>. Lo que hagáis se guarda en los dos móviles.`}</p>
       <div class="seccion-titulo">Misiones de pareja (hoy)</div>
-      <div class="pj-mision ${d.premioVisto ? 'hecha' : ''}"><span>💑</span><div><b>Entrad los dos hoy</b><small>${d.visto[0] ? '✅' : '⬜'} ${escapar(this.nombre(0))} · ${d.visto[1] ? '✅' : '⬜'} ${escapar(this.nombre(1))}</small></div><em>🪙 40</em></div>
-      <div class="pj-mision ${d.premioLimpieza ? 'hecha' : ''}"><span>🧹</span><div><b>Limpiad 5 cosas entre los dos</b><small>${escapar(this.nombre(0))}: ${d.limpiezas[0]} · ${escapar(this.nombre(1))}: ${d.limpiezas[1]} (los dos tenéis que ayudar)</small></div><em>🪙 60</em></div>
+      <div class="pj-mision ${d.premioVisto ? 'hecha' : ''}"><span>💑</span><div><b>Entrad los dos hoy</b><small>${d.visto[0] ? '✅' : '⬜'} ${escapar(this.nombre(0))} · ${d.visto[1] ? '✅' : '⬜'} ${escapar(this.nombre(1))}</small></div><em>🪙 20</em></div>
+      <div class="pj-mision ${d.premioLimpieza ? 'hecha' : ''}"><span>🧹</span><div><b>Limpiad 5 cosas entre los dos</b><small>${escapar(this.nombre(0))}: ${d.limpiezas[0]} · ${escapar(this.nombre(1))}: ${d.limpiezas[1]} (los dos tenéis que ayudar)</small></div><em>🪙 30</em></div>
       <div class="seccion-titulo">Cosas de pareja</div>
       <button id="pj-nota" class="secundario">📝 Dejar una nota en la nevera</button>
       <button id="pj-notas" class="secundario">📬 Ver notas (${notas.length})</button>

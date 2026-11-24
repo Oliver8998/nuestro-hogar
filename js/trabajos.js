@@ -1,3 +1,4 @@
+import { paga } from './balance.js';
 const DIA = 86400000;
 const TURNOS = 3;
 
@@ -963,7 +964,7 @@ export class Trabajos {
         <span>${t.icono}</span>
         <b>${t.nombre}</b>
         <small>${t.texto}</small>
-        <div class="trabajo-datos"><em>🪙 hasta ${t.pago}</em><em>⏱️ Turnos ${Math.min(d.turnos, TURNOS)}/${TURNOS}</em>${mejor ? `<em>🏅 Mejor ${Math.round(mejor * 100)}%</em>` : ''}</div>
+        <div class="trabajo-datos"><em>🪙 hasta ${paga(t.pago)}</em><em>⏱️ Turnos ${Math.min(d.turnos, TURNOS)}/${TURNOS}</em>${mejor ? `<em>🏅 Mejor ${Math.round(mejor * 100)}%</em>` : ''}</div>
         <button class="primario" id="ir-trabajar">${d.turnos < TURNOS ? '¡A trabajar!' : 'Hacer horas extra (paga reducida)'}</button>
       </div>
 `, () => (window.abrirGanar || this.ctx.abrirMas)());

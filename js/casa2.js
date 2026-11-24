@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { encarecer } from './balance.js';
+import { PRECIO_VENTANA } from './paredObjs.js';
 
 const MIN = 60000;
 const HORA = 3600000;
@@ -322,6 +324,8 @@ export const BOMBILLAS = [
   { id: 'verde', nombre: 'Bombilla verde', precio: 60, color: 0xa8ffc4 }
 ];
 
+for (const l of [SUELOS, PAPELES, CORTINAS, MARCOS, LEDS, BOMBILLAS]) encarecer(l);
+
 const CATS = [
   { id: 'suelo', icono: '🪵', nombre: 'Suelos', lista: SUELOS },
   { id: 'papel', icono: '🧻', nombre: 'Papel pintado', lista: PAPELES },
@@ -345,6 +349,8 @@ export const INGREDIENTES = {
   seta: { icono: '🍄', nombre: 'Setas', paseo: true },
   mora: { icono: '🫐', nombre: 'Moras', paseo: true }
 };
+
+encarecer(Object.values(INGREDIENTES));
 
 export const RECETAS = [
   { id: 'ensalada', nombre: 'Ensalada', icono: '🥗', ing: { lechuga: 1, tomate: 1, zanahoria: 1 }, valor: 45 },
@@ -536,7 +542,7 @@ export class Casa2 {
     const cuerpo = ui.abrirGen('Reformas', `
       <p class="gen-intro">${fuera ? 'Estáis fuera: aquí solo valen las bombillas. Entrad en una habitación para cambiar suelo, papel o ventana.' : `Cambiad el suelo, el papel, la ventana y las luces de <b>${hab}</b>. Lo que compréis se puede poner en todas las habitaciones.`}</p>
       <div class="reforma-tabs">${CATS.map(c => `<button data-cat="${c.id}" class="${c.id === cat ? 'activa' : ''}">${c.icono}<small>${c.nombre}</small></button>`).join('')}</div>
-      ${cat === 'marco' && !fuera ? '<button class="reforma-otra-ventana">➕ Añadir otra ventana · 🪙 200<small>Mantened pulsada una ventana para moverla o cambiarle el tamaño</small></button>' : ''}
+      ${cat === 'marco' && !fuera ? `<button class="reforma-otra-ventana">➕ Añadir otra ventana · 🪙 ${PRECIO_VENTANA}<small>Mantened pulsada una ventana para moverla o cambiarle el tamaño</small></button>` : ''}
       <div class="reforma-grid">
         <button class="reforma-item ${!this.actual()[cat] ? 'puesto' : ''}" data-id=""><span class="muestra-emoji">↩️</span><b>Original</b><small>${!this.actual()[cat] ? '✓ Puesto' : 'Quitar'}</small></button>
         ${info.lista.map(it => {

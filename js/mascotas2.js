@@ -1,3 +1,4 @@
+import { paga } from './balance.js';
 import { ESPECIES } from './mascotas.js';
 import { CATALOGO } from './catalogo.js';
 import { INGREDIENTES } from './casa2.js';
@@ -175,7 +176,7 @@ export class Mascotas2 {
     const { ui } = this.ctx;
     const c = this.concursos();
     c.hechos[`${m.id}-${tipo}`] = puesto;
-    const premio = PREMIOS[puesto - 1] || 15;
+    const premio = paga(PREMIOS[puesto - 1] || 15);
     if (puesto <= 3) {
       if (!this.estado.trofeos) this.estado.trofeos = [];
       const icono = puesto === 1 ? '🥇' : puesto === 2 ? '🥈' : '🥉';

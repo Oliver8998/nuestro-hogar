@@ -1,3 +1,4 @@
+import { paga } from './balance.js';
 import { CATALOGO, MATERIALES, infoItem, PRECIO_RAREZA } from './catalogo.js';
 
 const COSTE_PIEZAS = { raro: 8, epico: 18, legendario: 35 };
@@ -91,13 +92,13 @@ export class Economia {
         const n = Math.min(t.meta, this.progresoTarea(t));
         const reclamada = p.reclamados.includes(t.id);
         const lista = n >= t.meta && !reclamada;
-        const premio = t.premio.monedas ? `🪙 ${t.premio.monedas}` : `🎟️ ${t.premio.tickets}`;
+        const premio = t.premio.monedas ? `🪙 ${paga(t.premio.monedas)}` : `🎟️ ${t.premio.tickets}`;
         return `<div class="pase-tarea ${reclamada ? 'hecha' : ''}"><span>${t.icono}</span><div><b>${t.texto}</b><i><b style="width:${n / t.meta * 100}%"></b></i><small>${n}/${t.meta}</small></div>${lista ? `<button class="primario reclamar" data-id="${t.id}">${premio}</button>` : `<em>${reclamada ? '✅' : premio}</em>`}</div>`;
       }).join('')}</div>`, () => (window.abrirObjetivos || this.ctx.abrirMas)());
     cuerpo.querySelectorAll('.reclamar').forEach(b => b.addEventListener('click', () => {
       const t = TAREAS_PASE.find(x => x.id === b.dataset.id);
       p.reclamados.push(t.id);
-      this.estado.monedas += t.premio.monedas || 0;
+      this.estado.monedas += paga(t.premio.monedas || 0);
       this.estado.tickets += t.premio.tickets || 0;
       if (p.reclamados.length === TAREAS_PASE.length) {
         this.estado.tickets += 3;

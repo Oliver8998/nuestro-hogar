@@ -1,3 +1,4 @@
+import { encarecer, caro } from './balance.js';
 const PI = Math.PI;
 
 export const PRECIO_RAREZA = { raro: 150, epico: 350, legendario: 700 };
@@ -658,5 +659,9 @@ export function infoItem(id) {
 
 export function precioVenta(info) {
   const base = info.precio ?? PRECIO_RAREZA[info.rareza] ?? 0;
-  return Math.floor(base / 2);
+  return Math.floor(base / 12);
 }
+
+encarecer(CATALOGO);
+encarecer(MATERIALES);
+for (const k of Object.keys(PRECIO_RAREZA)) PRECIO_RAREZA[k] = caro(PRECIO_RAREZA[k]);

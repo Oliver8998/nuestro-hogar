@@ -1,3 +1,4 @@
+import { paga } from './balance.js';
 import * as THREE from 'three';
 import { dibujarMapa } from './pareja2.js';
 
@@ -190,9 +191,9 @@ export class Usos {
     }
     if (BLANDOS.includes(def.id)) {
       const d = this.desgaste(m);
-      if (d.desgaste >= 0.3) ops.push({ icono: '🧵', texto: 'Tapizar · 40', accion: () => {
-        if (this.estado.monedas < 40) { sonido.error(); ui.aviso('Necesitáis 40 monedas', true); return; }
-        this.estado.monedas -= 40;
+      if (d.desgaste >= 0.3) ops.push({ icono: '🧵', texto: 'Tapizar · 120', accion: () => {
+        if (this.estado.monedas < 120) { sonido.error(); ui.aviso('Necesitáis 120 monedas', true); return; }
+        this.estado.monedas -= 120;
         d.nuevo = ahora();
         d.desgaste = 0;
         this.ctx.gestor.aplicarApariencia(m);
@@ -235,8 +236,8 @@ export class Usos {
     if (def.ordenador) {
       const { t, trabajando } = this.ordenador(m);
       if (!t) ops.push({ icono: '💻', texto: 'Trabajar', accion: () => this.elegirTrabajo(m) });
-      else if (trabajando) ops.push({ icono: '⏳', texto: this.textoTiempo(t.fin - ahora()), accion: () => ui.aviso(`💻 Trabajando… cobraréis 🪙 ${t.pago} en ${this.textoTiempo(t.fin - ahora())}`) });
-      else ops.push({ icono: '💰', texto: `Cobrar ${t.pago}`, accion: () => { this.estado.trabajo = null; this.ctx.ganar(t.pago, m, '💼'); this.ctx.registrar('trabajar'); this.ordenador(m); guardar(); this.ctx.refrescarMenu(); } });
+      else if (trabajando) ops.push({ icono: '⏳', texto: this.textoTiempo(t.fin - ahora()), accion: () => ui.aviso(`💻 Trabajando… cobraréis 🪙 ${paga(t.pago)} en ${this.textoTiempo(t.fin - ahora())}`) });
+      else ops.push({ icono: '💰', texto: `Cobrar ${paga(t.pago)}`, accion: () => { this.estado.trabajo = null; this.ctx.ganar(t.pago, m, '💼'); this.ctx.registrar('trabajar'); this.ordenador(m); guardar(); this.ctx.refrescarMenu(); } });
     }
     if (def.id === 'nevera' && this.ctx.pareja) {
       const n = (this.estado.notas || []).length;
@@ -271,7 +272,7 @@ export class Usos {
       titulo: 'Teletrabajo',
       texto: 'Elegid cuánto tiempo trabajáis. Podéis cerrar el juego: al volver, a cobrar.',
       botones: [...TRABAJOS.map(t => ({
-        texto: `${t.texto} · 🪙 ${t.pago}`, tipo: 'primario', accion: () => {
+        texto: `${t.texto} · 🪙 ${paga(t.pago)}`, tipo: 'primario', accion: () => {
           this.estado.trabajo = { fin: ahora() + t.min * 60000, pago: t.pago };
           this.ordenador(m);
           sonido.comprar();

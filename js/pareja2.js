@@ -113,10 +113,10 @@ export class Pareja2 {
       dia.r[yo] = t;
       if (!this.ctx.sync.activo) dia.r[otro] = dia.r[otro] || '';
       if (dia.r[0] && dia.r[1]) {
-        this.estado.monedas += 20;
+        this.estado.monedas += 10;
         this.ctx.refrescarHud();
         sonido.premio();
-        ui.aviso('💬 ¡Ya podéis ver las dos respuestas! +20 🪙');
+        ui.aviso('💬 ¡Ya podéis ver las dos respuestas! +10 🪙');
       } else sonido.arreglo();
       this.ctx.guardar();
       this.abrirPregunta();
@@ -184,11 +184,11 @@ export class Pareja2 {
         const n = aciertos + (bien ? 1 : 0);
         if (i + 1 < q.preguntas.length) return this.jugarQuiz(i + 1, n);
         q.resultado = { aciertos: n, t: Date.now() };
-        this.estado.monedas += n * 15;
+        this.estado.monedas += n * 8;
         this.ctx.refrescarHud();
         this.ctx.guardar();
         this.ctx.sonido.premio();
-        this.ctx.ui.aviso(`🎯 ${n}/${q.preguntas.length} aciertos · +${n * 15} 🪙`);
+        this.ctx.ui.aviso(`🎯 ${n}/${q.preguntas.length} aciertos · +${n * 8} 🪙`);
         if (n === q.preguntas.length) this.p.recordar(null, '💯', `${this.p.nombre(this.yo())} acertó todo el quiz de ${this.p.nombre(q.de)}`);
         this.abrirQuiz();
       }, 700);
@@ -271,11 +271,11 @@ export class Pareja2 {
     const f = this.estado.proximaVez;
     if (!f || this.estado.proximaVezCelebrada || Date.now() < f || this.ctx.dialogoAbierto()) return;
     this.estado.proximaVezCelebrada = true;
-    this.estado.monedas += 50;
+    this.estado.monedas += 25;
     this.ctx.refrescarHud();
     this.ctx.guardar();
     this.ctx.sonido.premio();
-    this.ctx.ui.dialogo({ titulo: '💑 ¡Por fin os veis!', texto: 'Disfrutad muchísimo. Pilar os deja 50 monedas para celebrarlo.', confeti: true, botones: [{ texto: '💕💕💕', tipo: 'primario' }] });
+    this.ctx.ui.dialogo({ titulo: '💑 ¡Por fin os veis!', texto: 'Disfrutad muchísimo. Pilar os deja 25 monedas para celebrarlo.', confeti: true, botones: [{ texto: '💕💕💕', tipo: 'primario' }] });
     this.p.recordar(null, '💑', '¡Nos volvimos a ver!');
   }
 
@@ -319,7 +319,7 @@ export class Pareja2 {
         titulo: `📌 ${m.texto}`,
         botones: [
           { texto: '🗑️ Quitar', tipo: 'secundario', accion: () => { this.estado.metas.splice(Number(b.dataset.k), 1); this.ctx.guardar(); this.abrirMetas(); } },
-          { texto: '🎉 ¡Cumplida!', tipo: 'primario', accion: () => { m.hecha = Date.now(); this.estado.monedas += 60; this.ctx.refrescarHud(); this.p.recordar(null, '🎯', `Cumplimos una meta: ${m.texto}`); this.ctx.guardar(); this.ctx.sonido.premio(); this.abrirMetas(); } }
+          { texto: '🎉 ¡Cumplida!', tipo: 'primario', accion: () => { m.hecha = Date.now(); this.estado.monedas += 30; this.ctx.refrescarHud(); this.p.recordar(null, '🎯', `Cumplimos una meta: ${m.texto}`); this.ctx.guardar(); this.ctx.sonido.premio(); this.abrirMetas(); } }
         ]
       });
     }));

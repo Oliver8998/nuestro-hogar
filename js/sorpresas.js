@@ -280,7 +280,7 @@ export class Sorpresas {
       const it = raros[Math.floor(Math.random() * raros.length)];
       inventario.anadir(it.id, it.colores ? 0 : null);
       ui.pintarInventario(inventario);
-      this.estado.monedas += 100;
+      this.estado.monedas += 50;
       this.ctx.registrar('tesoro');
       this.ctx.recordar('tesoro', '🗺️', `Encontramos un tesoro escondido en ${m.userData.def.nombre.toLowerCase()}`);
       this.ctx.refrescarHud();
@@ -290,7 +290,7 @@ export class Sorpresas {
       ui.dialogo({
         imagen: this.ctx.miniaturas.item(it.id, it.colores ? 0 : null),
         titulo: '💰 ¡Tesoro encontrado!',
-        texto: `Estaba en ${m.userData.def.nombre.toLowerCase()}: 100 monedas y ${it.nombre.toLowerCase()}. ¡Está en el inventario!`,
+        texto: `Estaba en ${m.userData.def.nombre.toLowerCase()}: 50 monedas y ${it.nombre.toLowerCase()}. ¡Está en el inventario!`,
         confeti: true,
         botones: [{ texto: '¡Toma ya!', tipo: 'primario' }]
       });
