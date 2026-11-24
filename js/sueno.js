@@ -1,4 +1,7 @@
 import { paga } from './balance.js';
+import { idioma } from './i18n.js';
+
+const LOCAL = () => (idioma() === 'en' ? 'en-GB' : 'es-ES');
 
 export const METAS = [
   { id: 'obras', icono: '🏗️', texto: 'Todas las obras hechas', meta: v => v.totalObras, valor: v => v.obras },
@@ -19,7 +22,7 @@ function escapar(t) {
 }
 
 function fecha(t, conAno = true) {
-  return new Date(t).toLocaleDateString('es-ES', conAno ? { day: 'numeric', month: 'long', year: 'numeric' } : { day: 'numeric', month: 'long' });
+  return new Date(t).toLocaleDateString(LOCAL(), conAno ? { day: 'numeric', month: 'long', year: 'numeric' } : { day: 'numeric', month: 'long' });
 }
 
 export class Sueno {
@@ -251,8 +254,8 @@ export class Sueno {
     const rec = (e.recuerdos || []).slice().sort((a, b) => a.t - b.t);
     for (let i = 0; i < rec.length; i += 6) {
       const trozo = rec.slice(i, i + 6);
-      const m1 = new Date(trozo[0].t).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
-      const m2 = new Date(trozo[trozo.length - 1].t).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+      const m1 = new Date(trozo[0].t).toLocaleDateString(LOCAL(), { month: 'long', year: 'numeric' });
+      const m2 = new Date(trozo[trozo.length - 1].t).toLocaleDateString(LOCAL(), { month: 'long', year: 'numeric' });
       const txt = m1 === m2 ? m1 : m1.slice(-4) === m2.slice(-4) ? `${m1.split(' de ')[0]} – ${m2}` : `${m1} – ${m2}`;
       const mes = txt.charAt(0).toUpperCase() + txt.slice(1);
       pags.push(`<h3>${mes}</h3><div class="lb-recuerdos">${trozo.map(r => `<div><span>${r.icono}</span><p>${escapar(r.texto)}<small>${fecha(r.t, false)}</small></p></div>`).join('')}</div>`);
