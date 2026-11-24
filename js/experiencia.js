@@ -19,7 +19,7 @@ export function nivelDe(xp) {
 export const XP_EVENTO = {
   trabajar: 40, 'trabajo-perfecto': 20, encargo: 35, minijuego: 10, reformar: 25, pintar: 12, mudanza: 0,
   limpiar: 4, 'limpiar-caca': 4, colocar: 3, pedido: 6, paquete: 3, ruleta: 5, cocinar: 15, comer: 5, 'comer-juntos': 8,
-  regar: 3, cosechar: 6, mimos: 2, pasear: 8, jugar: 3, 'colgar-cuadro': 8, reto: 30, visita: 10, cria: 30,
+  regar: 3, cosechar: 6, mimos: 2, banar: 8, duo: 25, pasear: 8, jugar: 3, 'colgar-cuadro': 8, reto: 30, visita: 10, cria: 30,
   'aprender-truco': 10, truco: 3, reciclar: 5, averia: 15, tender: 4, piano: 3, cancion: 5, 'foto-editada': 5,
   relax: 3, peces: 3, 'gato-comida': 3, 'gato-callejero': 5, nieve: 5, tesoro: 10, 'like-recibido': 10,
   'ranking-primero': 25, fiesta: 30, 'fiesta-perfecta': 40, alquiler: 20, obra: 150, 'compra-piso': 60, 'cobrar-alquiler': 5, venta: 0

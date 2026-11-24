@@ -332,16 +332,17 @@ export class GestorMuebles {
   actualizar(dt) {
     for (const m of this.muebles) {
       const d = m.userData;
+      const e = d.escalaVis || 1;
       if (d.rebote > 0) {
         d.rebote = Math.max(0, d.rebote - dt * 3.5);
         const s = Math.sin(d.rebote * Math.PI) * 0.12 * d.rebote;
-        m.scale.set(1 + s * 0.5, 1 - s, 1 + s * 0.5);
-      } else if (m.scale.y !== 1) {
-        m.scale.set(1, 1, 1);
+        m.scale.set(e * (1 + s * 0.5), e * (1 - s), e * (1 + s * 0.5));
+      } else if (m.scale.y !== e) {
+        m.scale.setScalar(e);
       }
       const tirado = d.datos && d.datos.tirado;
       const objetivo = tirado ? 1.4 : 0;
-      if (Math.abs(m.rotation.z - objetivo) > 0.001) {
+      if ((tirado || !d.balanceo) && Math.abs(m.rotation.z - objetivo) > 0.001) {
         m.rotation.z += (objetivo - m.rotation.z) * Math.min(1, dt * 8);
         m.position.y = d.base + Math.sin(m.rotation.z) * 0.1;
       }

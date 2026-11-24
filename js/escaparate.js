@@ -320,6 +320,7 @@ export class Escaparate {
     }
     const mas = new GestorMascotas(g, gestor, { particula: () => {} });
     mas.trastadas = false;
+    mas.ensucian = false;
     sala.mas = mas;
     const personalidades = ['juguetona', 'carinosa', 'traviesa', 'juguetona'];
     sala.mascotas = [];

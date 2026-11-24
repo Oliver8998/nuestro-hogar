@@ -162,6 +162,10 @@ function camino(bloqueadas, desde, hasta) {
   return ruta;
 }
 
+const GEO_MANCHA = new THREE.SphereGeometry(1, 10, 6);
+GEO_MANCHA.userData.compartida = true;
+const MAT_MANCHA = new THREE.MeshStandardMaterial({ color: 0x6b4a2b, roughness: 1 });
+
 class Mascota {
   constructor(datos) {
     this.id = datos.id;
@@ -176,6 +180,7 @@ class Mascota {
     this.accesorio = datos.accesorio || null;
     this.trucos = datos.trucos || {};
     this.ultimaCria = datos.ultimaCria || 0;
+    this.sucia = datos.sucia || 0;
     this.e = ESPECIES[this.especie];
     this.partes = crearModeloMascota(this.especie);
     this.grupo = this.partes.raiz;
@@ -198,8 +203,45 @@ class Mascota {
       hambre: Math.round(this.hambre), felicidad: Math.round(this.felicidad), energia: Math.round(this.energia),
       x: +p.x.toFixed(2), z: +p.z.toFixed(2),
       personalidad: this.personalidad, nacida: this.nacida, accesorio: this.accesorio,
-      trucos: this.trucos, ultimaCria: this.ultimaCria
+      trucos: this.trucos, ultimaCria: this.ultimaCria, sucia: +this.sucia.toFixed(2)
     };
+  }
+
+  pintarManchas() {
+    const n = Math.round(Math.min(1, this.sucia) * 8);
+    if (this.manchasVistas === n) return;
+    this.manchasVistas = n;
+    const c = this.partes.cuerpoGrupo;
+    if (!this.manchas) {
+      this.manchas = new THREE.Group();
+      c.add(this.manchas);
+      const escala = this.grupo.scale.clone();
+      this.grupo.scale.setScalar(1);
+      this.grupo.updateMatrixWorld(true);
+      const caja = new THREE.Box3();
+      c.traverse(o => { if (o.isMesh && !o.userData.mancha) caja.expandByObject(o); });
+      const centro = caja.getCenter(new THREE.Vector3());
+      const tam = caja.getSize(new THREE.Vector3());
+      c.worldToLocal(centro);
+      const s = new THREE.Vector3();
+      c.getWorldScale(s);
+      tam.divide(s);
+      this.cajaCuerpo = { centro, tam };
+      this.grupo.scale.copy(escala);
+      this.semillaManchas = Array.from({ length: 8 }, () => [Math.random() * Math.PI * 2, 0.25 + Math.random() * 1.0, 0.7 + Math.random() * 0.6]);
+    }
+    while (this.manchas.children.length) this.manchas.remove(this.manchas.children[0]);
+    const { centro, tam } = this.cajaCuerpo;
+    for (let i = 0; i < n; i++) {
+      const [a, b, k] = this.semillaManchas[i];
+      const m = new THREE.Mesh(GEO_MANCHA, MAT_MANCHA);
+      m.userData.mancha = true;
+      const r = Math.min(tam.x, tam.z) * 0.13 * k;
+      m.scale.set(r, r * 0.45, r);
+      m.position.set(centro.x + Math.cos(a) * Math.sin(b) * tam.x * 0.47, centro.y + Math.cos(b) * tam.y * 0.47, centro.z + Math.sin(a) * Math.sin(b) * tam.z * 0.47);
+      m.lookAt(centro.clone().multiplyScalar(2).sub(m.position));
+      this.manchas.add(m);
+    }
   }
 
   edadDias() {
@@ -629,6 +671,106 @@ export class GestorMascotas {
     }, 'correr');
   }
 
+  otrasLibres(m) {
+    return this.lista.filter(x => x !== m && !x.encima && !['dormir', 'sofa', 'truco', 'saltar', 'caca', 'pis', 'comer', 'banar'].includes(x.estado));
+  }
+
+  junto(o, lejos = false) {
+    const [ci, cj] = celdaDe(o.grupo.position.x, o.grupo.position.z);
+    const bloq = this.bloqueadas();
+    const ops = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([a, b]) => [ci + a, cj + b]).filter(([i, j]) => i >= 0 && j >= 0 && i < NX && j < NZ && !bloq.has(i * NZ + j));
+    return ops.length ? ops[Math.floor(Math.random() * ops.length)] : null;
+  }
+
+  perseguir(m) {
+    const otras = this.otrasLibres(m).filter(x => !x.e.tortuga);
+    if (!otras.length) return false;
+    const o = otras[Math.floor(Math.random() * otras.length)];
+    const bloq = this.bloqueadas();
+    let lejos = null;
+    for (let k = 0; k < 8; k++) {
+      const c = this.celdaLibreAlAzar(bloq);
+      if (c && centroCelda(c[0], c[1]).distanceTo(o.grupo.position) > 1.6) { lejos = c; break; }
+    }
+    if (!lejos) return false;
+    this.eventos.particula('❗', o);
+    this.accion(o, 'agacharse', 0.3, {
+      alAcabar: () => {
+        if (!this.ir(o, lejos, () => {
+          this.accion(o, 'feliz', 1.4);
+          this.eventos.particula('😆', o);
+        }, 'correr')) this.accion(o, 'feliz', 1);
+      }
+    });
+    this.accion(m, 'agacharse', 0.6, {
+      alAcabar: () => {
+        const destino = this.junto({ grupo: { position: centroCelda(lejos[0], lejos[1]) } });
+        if (!destino || !this.ir(m, destino, () => {
+          this.accion(m, 'saludo', 1.8, { objetivoMirar: o.grupo.position.clone() });
+          this.eventos.particula(Math.random() < 0.5 ? '💕' : '😝', m);
+        }, 'correr')) this.accion(m, 'cola', 1.5);
+        this.eventos.particula('💨', m);
+      }
+    });
+    return true;
+  }
+
+  jugarJuntas(m) {
+    const otras = this.otrasLibres(m);
+    if (!otras.length) return false;
+    const o = otras[Math.floor(Math.random() * otras.length)];
+    const destino = this.junto(o);
+    if (!destino) return false;
+    this.accion(o, 'mirar', 3, { objetivoMirar: m.grupo.position.clone(), mirarA: 0 });
+    return this.ir(m, destino, () => {
+      const juego = (x, y, n) => {
+        if (n <= 0) {
+          this.accion(x, 'feliz', 1.2);
+          return;
+        }
+        const est = x.e.ave ? 'aletear' : x.e.salta || x.e.mofletes ? 'saltito' : Math.random() < 0.5 ? 'saltito' : 'cola';
+        this.accion(x, est, 0.9, { objetivoMirar: y.grupo.position.clone(), alAcabar: () => juego(x, y, n - 1) });
+      };
+      juego(m, o, 3);
+      if (!['dormir', 'sofa', 'saltar', 'truco'].includes(o.estado)) juego(o, m, 3);
+      this.eventos.particula(['🎾', '✨', '💕', '😄'][Math.floor(Math.random() * 4)], m);
+    }, 'correr');
+  }
+
+  acurrucarse(m) {
+    const dormidas = this.lista.filter(x => x !== m && x.estado === 'dormir' && !x.encima && !x.alturaCama);
+    if (!dormidas.length) return false;
+    const o = dormidas[Math.floor(Math.random() * dormidas.length)];
+    const destino = this.junto(o);
+    if (!destino) return false;
+    return this.ir(m, destino, () => {
+      this.dormir(m, null);
+      m.objetivoAngulo = Math.atan2(o.grupo.position.x - m.grupo.position.x, o.grupo.position.z - m.grupo.position.z) + Math.PI / 2;
+      this.eventos.particula('💞', m);
+    });
+  }
+
+  celos(m, comedero) {
+    const comiendo = this.lista.find(x => x !== m && x.estado === 'comer' && x.grupo.position.distanceTo(comedero.position) < 0.9);
+    if (!comiendo) return false;
+    const destino = this.junto(comiendo);
+    if (!destino) return false;
+    return this.ir(m, destino, () => {
+      this.accion(m, 'enfado', 1.6, { objetivoMirar: comiendo.grupo.position.clone() });
+      this.eventos.particula('💢', m);
+      if (comiendo.estado === 'comer') {
+        this.eventos.particula('😤', comiendo);
+        setTimeout(() => {
+          if (!this.lista.includes(m) || m.estado !== 'enfado') return;
+          if (Math.random() < 0.5) {
+            this.accion(comiendo, 'enfado', 1.2, { objetivoMirar: m.grupo.position.clone() });
+            this.eventos.particula('💢', comiendo);
+          }
+        }, 500);
+      }
+    }, 'correr');
+  }
+
   decidir(m) {
     if (m.encima) {
       const e = m.encima;
@@ -677,6 +819,7 @@ export class GestorMascotas {
       }],
       [m.hambre < 50 ? (pers === 'glotona' ? 0.3 : 0.18) : 0, () => {
         const comedero = this.buscarMueble(d => d.comedero);
+        if (comedero && Math.random() < 0.7 && this.celos(m, comedero)) return true;
         return comedero && this.ir(m, this.celdaDeMueble(comedero), () => {
           this.accion(m, 'comer', 2.5);
           m.hambre = Math.min(100, m.hambre + 10);
@@ -685,6 +828,9 @@ export class GestorMascotas {
       [0.3, () => this.paseo(m)],
       [0.13, () => this.curiosear(m)],
       [this.lista.length > 1 ? (pers === 'carinosa' ? 0.14 : 0.08) : 0, () => this.saludar(m)],
+      [this.lista.length > 1 && m.energia > 40 ? (pers === 'juguetona' || pers === 'traviesa' ? 0.13 : 0.06) : 0, () => this.perseguir(m)],
+      [this.lista.length > 1 && m.energia > 30 ? (pers === 'juguetona' ? 0.12 : 0.06) : 0, () => this.jugarJuntas(m)],
+      [this.lista.length > 1 && m.energia < 45 ? (pers === 'carinosa' || pers === 'dormilona' ? 0.35 : 0.2) : 0, () => this.acurrucarse(m)],
       [cuadrupedo ? 0.1 : 0.04, () => this.accion(m, 'sentado', 3 + Math.random() * 3)],
       [pers === 'dormilona' ? 0.14 : 0.07, () => this.accion(m, 'tumbado', 4 + Math.random() * 5)],
       [cuadrupedo ? 0.05 : 0, () => this.accion(m, 'estirarse', 1.8)],
@@ -732,7 +878,14 @@ export class GestorMascotas {
     this.eventos.particula('✨', m, 2);
   }
 
+  sacudirse(m) {
+    this.accion(m, 'sacudirse', 1.4);
+    this.eventos.particula('💦', m, 3);
+    setTimeout(() => this.lista.includes(m) && this.eventos.particula('✨', m, 3), 900);
+  }
+
   jugarCon(m, pelota) {
+    m.sucia = Math.min(1, (m.sucia || 0) + 0.03);
     m.estado = 'jugar';
     m.tEstado = 2;
     m.felicidad = Math.min(100, m.felicidad + 5);
@@ -831,7 +984,16 @@ export class GestorMascotas {
       m.t += dt;
       const pers = m.personalidad;
       m.hambre = Math.max(0, m.hambre - dt * (pers === 'glotona' ? 5.6 : 4) / 3600);
-      m.felicidad = Math.max(0, m.felicidad - dt * (pers === 'carinosa' ? 1.5 : 3) / 3600);
+      m.felicidad = Math.max(0, m.felicidad - dt * (pers === 'carinosa' ? 1.5 : 3) / 3600 * (m.sucia > 0.6 ? 1.6 : 1));
+      if (this.ensucian !== false) m.sucia = Math.min(1, m.sucia + dt * (m.e.ave ? 0.2 : 0.33) / 86400);
+      m.pintarManchas();
+      if (m.sucia > 0.7 && m.estado !== 'dormir') {
+        m.tMosca = (m.tMosca ?? 4) - dt;
+        if (m.tMosca <= 0) {
+          m.tMosca = 7 + Math.random() * 8;
+          this.eventos.particula(Math.random() < 0.6 ? '🪰' : '💨', m);
+        }
+      }
       if (m.estado === 'dormir') m.energia = Math.min(100, m.energia + dt * 4);
       else m.energia = Math.max(0, m.energia - dt / (pers === 'dormilona' ? 16 : 25));
       const traviesa = pers === 'traviesa' || m.felicidad < 35;
@@ -965,6 +1127,23 @@ export class GestorMascotas {
         objCab.x = -0.15 * e2;
         objCab.y = Math.sin(m.t * 1.5) * 0.4;
         ojosCerrados = est === 'caca' && e2 > 0.6 && Math.sin(m.t * 3) > -0.3;
+      } else if (est === 'enfado') {
+        const e2 = Math.min(1, (m.dur - m.tEstado) * 5, m.tEstado * 5);
+        c.position.x = Math.sin(m.t * 38) * 0.012 * e2;
+        c.scale.set(1.04, 1 - 0.08 * e2, 1.04);
+        c.rotation.x = 0.1 * e2;
+        objCab.x = 0.2 * e2;
+        colaAmp = 0.5;
+        colaVel = 22;
+        if (p.orejas) p.orejas.forEach(o => { o.rotation.x = -0.6 * e2; });
+      } else if (est === 'sacudirse') {
+        const e2 = Math.min(1, (m.dur - m.tEstado) * 4, m.tEstado * 3);
+        c.rotation.z = Math.sin(m.t * 42) * 0.32 * e2;
+        c.rotation.y = Math.sin(m.t * 42 + 1) * 0.15 * e2;
+        objCab.y = Math.sin(m.t * 42) * 0.6 * e2;
+        colaAmp = 0.8;
+        colaVel = 30;
+        ojosCerrados = e2 > 0.5;
       } else if (est === 'dormir') {
         c.scale.set(1.06, 0.8, 1.04);
         c.rotation.z = m.e.ave ? 0 : 0.18;
@@ -1205,6 +1384,8 @@ export class GestorMascotas {
       else if (est === 'feliz' || est === 'jugar' || est === 'vueltas' || est === 'cola' || est === 'truco' || est === 'saltito' || est === 'aletear') clip = 'dance';
       else if (est === 'dormir' || est === 'sofa' || est === 'tumbado') clip = 'static';
       if (est === 'saltar' || est === 'caca' || est === 'pis' || est === 'agacharse') clip = vuelo ? 'idle' : 'static';
+      if (est === 'enfado') clip = 'gesture-negative';
+      if (est === 'sacudirse') clip = 'idle';
       ponerClip(p, clip);
       const n = p.nodos || {};
       for (const k in n) n[k].obj.quaternion.copy(n[k].q0);

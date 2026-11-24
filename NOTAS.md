@@ -518,3 +518,23 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - Era z-fighting: el cielo de la ventana estaba a solo 4 mm de la pared, y la cámara tenía near 0,1 / far 100. Con el búfer de profundidad de 16 bits de muchos móviles no alcanza la precisión.
 - camara.js: near 4 y far 44, ajustados a la escena porque la cámara está a 20 del objetivo. La precisión de profundidad es más del doble.
 - Capas de la ventana separadas de la pared (`cara` ya está 6 mm por fuera): cielo +1 mm, cristal +12 mm, grietas +16 mm y cartón +24 mm. Se aplicó en sala.js (ventana principal), paredObjs.js (ventanas extra) y ambiente.js (el cielo).
+
+## Jugar juntos, mascotas sociales, plantas que crecen, racha semanal y álbum (v80)
+- `duo.js` (Más → 🎮 Jugar juntos): minijuegos a dúo en directo por el canal broadcast de Supabase (`sync.emitir('duo', …)`). La invitación también va por `sync.mandar` y por aviso push.
+  - Protocolo: `invita` → `acepta` → `empieza` (con semilla) → `j` (datos de juego) → `fin`, o `sale`. Quien invita es el anfitrión: decide el resultado y cobra las monedas (van al estado compartido). XP `duo` 25.
+  - ✏️ Adivina el dibujo: 4 rondas por turnos. Los trazos se envían cada 90 ms. El que adivina elige entre 6 opciones y cada fallo resta 4 s.
+  - 🍳 Cocina a dúo: el chef (anfitrión) ve la comanda y «grita» ingredientes. El pinche tiene la despensa, que se baraja en cada plato. El anfitrión lleva el plato y lo reenvía.
+  - 🛋️ Subir el sofá: cada uno mantiene pulsado para levantar su punta. Si hay desnivel o se pasa por una viga con el sofá alto, golpe. El anfitrión simula y envía el estado a unos 12 Hz.
+- Mascotas (mascotas.js):
+  - `perseguir` (una huye y la otra la sigue corriendo), `jugarJuntas` (saltitos y cola mirándose), `acurrucarse` (con poca energía duerme al lado de otra que duerme) y `celos` (si otra está comiendo en el comedero, se enfadan: estado `enfado` con el clip gesture-negative).
+  - Suciedad: `m.sucia` sube un 33% al día (y al jugar con la pelota). Se ven manchas de barro en el cuerpo (`pintarManchas`), salen moscas si pasa de 0,7 y pierden felicidad más rápido.
+  - Menú 🛁 Bañar (`bano.js`): frotar las manchas con la esponja y aclarar la espuma con la ducha. Después la mascota se sacude (`sacudirse`). XP `banar`.
+- Plantas (usos.js):
+  - `crece` va de 0,25 (brote) a 1 (adulta): +0,25 por cada día regado y el tamaño va del 50% al 100%. Las plantas antiguas pasan a adultas.
+  - Burbuja 💧 encima cuando tienen sed (más de 20 h sin regar).
+  - Se mueven con la brisa (más en el exterior). Las mustias se inclinan.
+  - La lluvia riega las plantas del exterior. Añadida la maceta grande (olivo).
+  - muebles.js respeta `escalaVis` y `balanceo`.
+- Racha diaria (`album.js` PREMIOS_RACHA): calendario de 7 días (monedas, ticket, pienso, objeto raro el 7.º). Si se falta un día vuelve al día 1. Cada semana seguida da +10 monedas por día (hasta +30).
+- Álbum de pegatinas (Objetivos → 📒): todos los objetos del catálogo y las especies. Se pegan al tenerlos en casa, en el inventario o al adoptar. 6 pestañas y premios por hitos (5, 12, 20… y todo). `album.revisar()` corre en `revisarProgreso`.
+- main.js: mientras hay un minijuego abierto (`juegoTapando`), la escena 3D no se renderiza.

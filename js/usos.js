@@ -2,7 +2,33 @@ import { paga } from './balance.js';
 import * as THREE from 'three';
 import { dibujarMapa } from './pareja2.js';
 
-const PLANTAS = ['planta', 'cactus', 'jarron', 'cerezo', 'rosas'];
+const PLANTAS = ['planta', 'cactus', 'jarron', 'cerezo', 'rosas', 'maceta-grande'];
+const FASES_PLANTA = [[0, '🌱 Brote'], [0.25, '🌿 Pequeña'], [0.5, '🪴 Creciendo'], [0.75, '🌳 Casi adulta'], [1, '🌸 Adulta']];
+let texturaSed = null;
+function spriteSed() {
+  if (!texturaSed) {
+    const c = document.createElement('canvas');
+    c.width = c.height = 96;
+    const g = c.getContext('2d');
+    g.fillStyle = '#ffffff';
+    g.beginPath();
+    g.arc(48, 48, 40, 0, Math.PI * 2);
+    g.fill();
+    g.strokeStyle = '#5a9fd6';
+    g.lineWidth = 6;
+    g.stroke();
+    g.font = '50px sans-serif';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillText('💧', 48, 52);
+    texturaSed = new THREE.CanvasTexture(c);
+    texturaSed.colorSpace = THREE.SRGBColorSpace;
+  }
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: texturaSed, depthTest: false, transparent: true }));
+  sp.scale.setScalar(0.3);
+  sp.renderOrder = 20;
+  return sp;
+}
 const BLANDOS = ['sofa', 'silla', 'cama', 'puff', 'puff-corazon', 'sillon-huevo'];
 const DIA = 86400000;
 
@@ -74,15 +100,18 @@ export class Usos {
       d.agua = ahora();
       d.ultimoDia = diaDe(ahora());
       d.racha = 1;
+      d.crece = 0.25;
     }
+    if (d.crece === undefined) d.crece = 1;
     d.mustia = ahora() - d.agua > 2 * DIA;
+    d.sed = d.ultimoDia !== diaDe(ahora()) && ahora() - d.agua > 20 * 3600000;
     d.florecida = !d.mustia && (d.racha || 0) >= 3;
     return d;
   }
 
   aplicarPlanta(m) {
     const d = this.planta(m);
-    const estadoVis = d.mustia ? 'mustia' : d.florecida ? 'flor' : 'normal';
+    const estadoVis = `${d.mustia ? 'mustia' : d.florecida ? 'flor' : 'normal'}|${d.crece}`;
     if (m.userData.estadoPlanta === estadoVis) return;
     m.userData.estadoPlanta = estadoVis;
     const marron = new THREE.Color(0x8a6a3a);
@@ -91,12 +120,13 @@ export class Usos {
       malla.material.color.setHex(base);
       if (d.mustia && i > 0) malla.material.color.lerp(marron, 0.55);
     });
-    m.userData.escalaPlanta = d.mustia ? 0.86 : d.florecida ? 1.12 : 1;
+    m.userData.escalaPlanta = (0.5 + 0.5 * d.crece) * (d.mustia ? 0.86 : d.florecida ? 1.12 : 1);
+    m.userData.mustia = d.mustia;
     if (m.userData.flores) {
       m.remove(m.userData.flores);
       m.userData.flores = null;
     }
-    if (d.florecida) {
+    if (d.florecida && d.crece >= 1) {
       const g = new THREE.Group();
       const caja = new THREE.Box3().setFromObject(m);
       const alto = (caja.max.y - m.userData.base) / (m.scale.y || 1);
@@ -110,6 +140,60 @@ export class Usos {
       m.add(g);
       m.userData.flores = g;
     }
+  }
+
+  regarPlanta(m, lluvia = false) {
+    const { ui, sonido } = this.ctx;
+    const d = this.planta(m);
+    if (d.ultimoDia === diaDe(ahora())) return false;
+    const ayer = diaDe(ahora() - DIA);
+    const antes = this.fasePlanta(d.crece);
+    d.racha = d.ultimoDia === ayer ? (d.racha || 0) + 1 : 1;
+    d.ultimoDia = diaDe(ahora());
+    d.agua = ahora();
+    d.crece = Math.min(1, (d.crece ?? 1) + 0.25);
+    const ahoraFase = this.fasePlanta(d.crece);
+    if (!lluvia) {
+      sonido.arreglo();
+      this.ctx.particulaEn(m, '💧', 5);
+      m.userData.regando = 1.2;
+      m.userData.rebote = 0.6;
+      if (ahoraFase !== antes) {
+        setTimeout(() => { this.ctx.particulaEn(m, '🌿', 3); sonido.premio(); }, 700);
+        ui.aviso(`${ahoraFase} · ¡Ha crecido!${d.crece < 1 ? ' Regadla mañana para que siga creciendo' : ''}`);
+      } else ui.aviso(d.racha >= 3 ? '🌸 ¡Está preciosa! Sigue regándola' : `💧 Regada (${d.racha}/3 días seguidos para que florezca)`);
+      this.ctx.registrar('regar');
+    }
+    this.aplicarPlanta(m);
+    return true;
+  }
+
+  fasePlanta(c) {
+    let f = FASES_PLANTA[0][1];
+    for (const [min, txt] of FASES_PLANTA) if (c >= min) f = txt;
+    return f;
+  }
+
+  marcarSed(m, d) {
+    const quiere = !!d.sed && m.visible !== false;
+    if (quiere && !m.userData.sedSprite) {
+      const sp = spriteSed();
+      sp.userData.mueble = m;
+      this.ctx.escena.add(sp);
+      m.userData.sedSprite = sp;
+    } else if (!quiere && m.userData.sedSprite) {
+      this.quitarSed(m);
+    }
+    const sp = m.userData.sedSprite;
+    if (sp) sp.position.set(m.position.x, m.userData.base + (m.userData.alto || 0.8) * (m.userData.escalaPlanta || 1) + 0.3 + Math.sin(this.t * 3) * 0.04, m.position.z);
+  }
+
+  quitarSed(m) {
+    const sp = m.userData.sedSprite;
+    if (!sp) return;
+    sp.parent && sp.parent.remove(sp);
+    sp.material.dispose();
+    m.userData.sedSprite = null;
   }
 
   desgaste(m) {
@@ -175,15 +259,7 @@ export class Usos {
       const d = this.planta(m);
       if (d.ultimoDia !== diaDe(ahora())) {
         ops.push({ icono: '💧', texto: 'Regar', accion: () => {
-          const ayer = diaDe(ahora() - DIA);
-          d.racha = d.ultimoDia === ayer ? (d.racha || 0) + 1 : 1;
-          d.ultimoDia = diaDe(ahora());
-          d.agua = ahora();
-          sonido.arreglo();
-          this.ctx.particulaEn(m, '💧', 4);
-          ui.aviso(d.racha >= 3 ? '🌸 ¡Está preciosa! Sigue regándola' : `💧 Regada (${d.racha}/3 días seguidos para que florezca)`);
-          this.ctx.registrar('regar');
-          this.aplicarPlanta(m);
+          this.regarPlanta(m);
           guardar();
           this.ctx.refrescarMenu();
         } });
@@ -529,6 +605,10 @@ export class Usos {
     this.tLento = (this.tLento || 0) + dt;
     const lento = this.tLento > 2;
     if (lento) this.tLento = 0;
+    let llovio = false;
+    for (const sp of this.ctx.escena.children.filter(o => o.isSprite && o.userData.mueble)) {
+      if (!this.ctx.gestor.muebles.includes(sp.userData.mueble)) this.quitarSed(sp.userData.mueble);
+    }
     for (const m of this.ctx.gestor.muebles) {
       const def = m.userData.def;
       if (def.id === 'tele' && dibujar) this.dibujarTele(m);
@@ -536,8 +616,26 @@ export class Usos {
       if (lento && def.ordenador) this.ordenador(m);
       if (lento && def.id === 'arbol-recuerdos') this.hojasRecuerdo(m);
       if (lento && def.id === 'mapa-mundi') this.pintarMapa(m);
-      if (lento && PLANTAS.includes(def.id)) this.aplicarPlanta(m);
-      if (PLANTAS.includes(def.id) && m.userData.escalaPlanta && Math.abs(m.scale.y - m.userData.escalaPlanta) > 0.001 && !m.userData.rebote) m.scale.setScalar(m.userData.escalaPlanta);
+      if (PLANTAS.includes(def.id)) {
+        if (lento) {
+          this.aplicarPlanta(m);
+          if (this.ctx.lloviendo && this.ctx.lloviendo() && this.regarPlanta(m, true)) llovio = true;
+        }
+        this.marcarSed(m, m.userData.datos || {});
+        const obj = m.userData.escalaPlanta || 1;
+        const vis = m.userData.escalaVis ?? obj;
+        m.userData.escalaVis = Math.abs(vis - obj) < 0.002 ? obj : vis + (obj - vis) * Math.min(1, dt * 2.5);
+        const tirado = m.userData.datos && m.userData.datos.tirado;
+        m.userData.balanceo = !tirado;
+        if (!tirado) {
+          const mustia = m.userData.mustia;
+          const viento = this.ctx.exterior && this.ctx.exterior() ? 0.035 : 0.012;
+          const fase = (m.position.x * 1.7 + m.position.z) || 0;
+          m.rotation.z = (mustia ? 0.09 : 0) + Math.sin(this.t * 1.3 + fase) * viento;
+          m.rotation.x = Math.sin(this.t * 0.9 + fase * 1.3) * viento * 0.6;
+          m.position.y = m.userData.base;
+        }
+      }
       if (lento && BLANDOS.includes(def.id)) {
         const nivel = this.desgaste(m).desgaste;
         if (m.userData.desgasteVisto !== nivel) {
@@ -546,6 +644,10 @@ export class Usos {
         }
       }
       if (def.id === 'acuario') this.animarAcuario(m, dt);
+    }
+    if (llovio) {
+      this.ctx.ui.aviso('🌧️ La lluvia ha regado las plantas');
+      this.ctx.guardar();
     }
     if (this.musica && !this.ctx.gestor.muebles.includes(this.musica.m)) this.alternarMusica();
     if (lento) this.propsPlanes();
