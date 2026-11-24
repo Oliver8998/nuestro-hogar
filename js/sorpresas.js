@@ -259,7 +259,7 @@ export class Sorpresas {
     for (let k = 1; k <= s.intentos; k++) pistas.push(pista(objetivo.nombre, k));
     ui.dialogo({
       titulo: '🗺️ Mapa del tesoro',
-      texto: `«El tesoro está escondido en ${hab === this.ctx.nombreHab(this.estado.habActual || 0) ? 'esta habitación' : `el ${hab.toLowerCase()}`}, dentro o debajo de un mueble.» Tocad un mueble y pulsad 🔍 Buscar. Tenéis ${Math.max(0, 5 - s.intentos)} intentos.`,
+      texto: `«El tesoro está escondido en ${hab === this.ctx.nombreHab(this.estado.habActual || 0) ? 'esta habitación' : `el ${hab.toLowerCase()}`}, dentro o debajo de un mueble.» Mantened pulsado un mueble y pulsad 🔍 Buscar. Tenéis ${Math.max(0, 5 - s.intentos)} intentos.`,
       html: pistas.length ? `<div class="pistas">${pistas.map(p => `<div>🔎 ${p}</div>`).join('')}</div>` : '',
       botones: [{ texto: '¡A buscar!', tipo: 'primario' }]
     });

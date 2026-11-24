@@ -334,3 +334,8 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 ## v46
 - Barra de abajo: la insignia verde ("¡Gratis!") va centrada encima de su botón y los contadores rosas pegados a la esquina (right:-3px), así no se pisan entre botones vecinos.
 - Guía: nuevo paso `cerrarMis` (cerrar la hoja de Misiones con su ✕) antes del paso de Más. Ahora son 11 pasos. Clave `hogar-guia4` (migra guia3 +1 desde 9, guia2 +1 desde 7 y +2 desde 8).
+
+## Tocar vs mantener (v47)
+- `js/controles.js`: tocar un mueble = interactuar (`eventos.alInteractuar`); mantener 380 ms (vibra) = seleccionar → arrastrar/minimenú. Si arrastras sin esperar, gira la cámara. Si el mueble ya está seleccionado se puede arrastrar directo, y un toque sobre él también interactúa. Mascotas igual: toque = reacción (`alInteractuarMascota`), mantener = ficha.
+- `js/interacciones.js`: `Interacciones` con una reacción (o varias que se van alternando) para cada uno de los 65 objetos del catálogo: animaciones (salto, meneo, temblor, giro, latido, aplastar, balanceo, flotar), sonidos sintetizados, partículas y bocadillos de texto (`ui.bocadillo`). Las lámparas parpadean y cambian, la tele se enciende, la radio pone música, la pelota rueda y viene una mascota a jugar, el comedero llama a una mascota, el piano improvisa una melodía, etc. Un objeto tirado se levanta con un toque. Con algo encima solo hay efectos (sin mover). Mascotas: reacción según especie; dormidas sueltan 💤 y al tercer toque bostezan.
+- Pistas la primera vez (3 veces) "Mantén pulsado…" en localStorage `hogar-pista-mantener`.

@@ -145,6 +145,39 @@ export class Controles {
     return { ok: true, objetivo: obj };
   }
 
+  esperar(fn) {
+    this.cancelarEspera();
+    this.tEspera = setTimeout(() => {
+      this.tEspera = null;
+      fn();
+    }, 380);
+  }
+
+  cancelarEspera() {
+    if (this.tEspera) clearTimeout(this.tEspera);
+    this.tEspera = null;
+  }
+
+  vibrar() {
+    try {
+      if (navigator.vibrate) navigator.vibrate(18);
+    } catch (e) {}
+  }
+
+  agarrarMueble(mueble, x, y) {
+    if (this.eventos.alAgarrar) this.eventos.alAgarrar(mueble);
+    this.seleccionar(mueble);
+    this.eventos.alSeleccionarMascota(null);
+    this.avisado = false;
+    if (this.gestor.tieneEncima(mueble)) {
+      this.modo = 'bloqueado';
+      return;
+    }
+    const p = this.puntoColocacion(x, y, mueble) || mueble.position;
+    this.offset.set(mueble.position.x - p.x, mueble.position.z - p.z);
+    this.modo = 'arrastrar';
+  }
+
   medirGesto() {
     const [a, b] = [...this.punteros.values()];
     return {
@@ -188,25 +221,40 @@ export class Controles {
       if (mascota && distMascota <= distMueble + 0.3) {
         this.mascotaTocada = mascota;
         this.modo = 'mascota';
+        this.esperar(() => {
+          if (this.modo !== 'mascota') return;
+          this.vibrar();
+          this.seleccionar(null);
+          this.eventos.alSeleccionarMascota(this.mascotaTocada);
+          this.mascotaTocada = null;
+          this.modo = 'hecho';
+        });
         return;
       }
       if (hit) {
         const mueble = hit.mueble;
-        this.seleccionar(mueble);
-        this.eventos.alSeleccionarMascota(null);
-        this.avisado = false;
-        if (this.gestor.tieneEncima(mueble)) {
-          this.modo = 'bloqueado';
+        this.tocarAlSoltar = null;
+        if (mueble === this.seleccionado) {
+          this.tocarAlSoltar = mueble;
+          this.agarrarMueble(mueble, e.clientX, e.clientY);
           return;
         }
-        const p = this.puntoColocacion(e.clientX, e.clientY, mueble) || mueble.position;
-        this.offset.set(mueble.position.x - p.x, mueble.position.z - p.z);
-        this.modo = 'arrastrar';
+        this.muebleTocado = mueble;
+        this.modo = 'espera';
+        const x = e.clientX;
+        const y = e.clientY;
+        this.esperar(() => {
+          if (this.modo !== 'espera') return;
+          this.vibrar();
+          mueble.userData.rebote = 0.5;
+          this.agarrarMueble(mueble, x, y);
+        });
         return;
       }
       this.modo = 'rotar';
       this.cam.agarrar();
     } else if (this.punteros.size === 2) {
+      this.cancelarEspera();
       if (this.modo === 'arrastrar') {
         this.gestor.cancelar(this.seleccionado);
         this.gestor.mostrarRejilla(false);
@@ -235,8 +283,10 @@ export class Controles {
         this.avisado = true;
         this.eventos.alAviso('Quita primero lo que tiene encima', true);
       }
-    } else if (this.modo === 'mascota' || this.modo === 'paquete') {
+    } else if (this.modo === 'mascota' || this.modo === 'paquete' || this.modo === 'espera') {
       if (lejos) {
+        this.cancelarEspera();
+        this.muebleTocado = null;
         this.modo = 'rotar';
         this.cam.agarrar();
       }
@@ -263,19 +313,35 @@ export class Controles {
     this.punteros.delete(e.pointerId);
     const esToque = Math.hypot(e.clientX - p.xIni, e.clientY - p.yIni) < 8;
 
-    if (this.modo === 'arrastrar') {
+    this.cancelarEspera();
+    if (this.modo === 'espera') {
+      const m = this.muebleTocado;
+      this.muebleTocado = null;
+      this.modo = 'nada';
+      if (esToque && m) {
+        this.seleccionar(null);
+        this.eventos.alSeleccionarMascota(null);
+        this.eventos.alInteractuar(m);
+      }
+    } else if (this.modo === 'hecho') {
+      this.modo = 'nada';
+    } else if (this.modo === 'arrastrar') {
       this.gestor.mostrarRejilla(false);
-      if (this.gestor.soltar(this.seleccionado)) this.eventos.alCambiar(this.seleccionado);
+      const movido = this.gestor.soltar(this.seleccionado);
+      if (movido) this.eventos.alCambiar(this.seleccionado);
+      else if (esToque && this.tocarAlSoltar === this.seleccionado) this.eventos.alInteractuar(this.seleccionado);
+      this.tocarAlSoltar = null;
       this.modo = 'nada';
     } else if (this.modo === 'bloqueado') {
+      if (esToque && this.tocarAlSoltar === this.seleccionado) this.eventos.alInteractuar(this.seleccionado);
+      this.tocarAlSoltar = null;
       this.modo = 'nada';
     } else if (this.modo === 'paquete') {
       this.eventos.alAbrirPaquete(this.paqueteTocado);
       this.paqueteTocado = null;
       this.modo = 'nada';
     } else if (this.modo === 'mascota') {
-      this.seleccionar(null);
-      this.eventos.alSeleccionarMascota(this.mascotaTocada);
+      if (this.mascotaTocada) this.eventos.alInteractuarMascota(this.mascotaTocada);
       this.mascotaTocada = null;
       this.modo = 'nada';
     } else if (this.modo === 'rotar') {

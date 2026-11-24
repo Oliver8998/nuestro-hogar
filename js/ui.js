@@ -883,6 +883,16 @@ export class UI {
     }
   }
 
+  bocadillo(texto, x, y) {
+    const el = document.createElement('span');
+    el.className = 'bocadillo-obj';
+    el.textContent = texto;
+    el.style.left = `${Math.max(70, Math.min(innerWidth - 70, x))}px`;
+    el.style.top = `${y}px`;
+    this.elParticulas.appendChild(el);
+    setTimeout(() => el.remove(), 2200);
+  }
+
   confeti() {
     const colores = ['#e58f9e', '#f2d06b', '#6cc08a', '#5a9fd6', '#a35ee0'];
     for (let i = 0; i < 60; i++) {

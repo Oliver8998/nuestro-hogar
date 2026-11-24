@@ -2948,3 +2948,7 @@ body.colgando #lateral, body.colgando #chips-vida, body.colgando #menu-objeto, b
 .tel-vacio { text-align: center; opacity: 0.75; margin: 10px 0; }
 .tel-fila b { font-weight: 800; }
 .tel-fila small { font-size: 13px; opacity: 0.75; font-weight: 700; }
+
+.bocadillo-obj { position: absolute; transform: translate(-50%, -100%); background: #fff; color: #4a3b35; font-weight: 800; font-size: 13px; padding: 6px 11px; border-radius: 14px; box-shadow: 0 4px 14px rgba(60,40,30,.18); white-space: nowrap; pointer-events: none; animation: bocadilloObj 2.2s ease forwards; }
+.bocadillo-obj::after { content: ''; position: absolute; left: 50%; bottom: -5px; width: 10px; height: 10px; background: #fff; transform: translateX(-50%) rotate(45deg); }
+@keyframes bocadilloObj { 0% { opacity: 0; transform: translate(-50%, -80%) scale(.6); } 12% { opacity: 1; transform: translate(-50%, -100%) scale(1.05); } 20% { transform: translate(-50%, -100%) scale(1); } 80% { opacity: 1; transform: translate(-50%, -112%); } 100% { opacity: 0; transform: translate(-50%, -125%); } }

@@ -37,6 +37,7 @@ import { activarTraduccion } from './i18n.js';
 import { Guia } from './guia.js';
 import * as avisos from './avisos.js';
 import { Telefono } from './telefono.js';
+import { Interacciones } from './interacciones.js';
 
 let guia = null;
 import { CASAS, COLECCIONES, LOGROS, EXTERIORES, calcularAcogedor, coleccionesCompletas } from './progreso.js';
@@ -79,6 +80,7 @@ const estado = {
 
 let mascotaSel = null;
 let controles = null;
+let interacciones = null;
 let mas = null;
 let arrastre = null;
 let tRefrescoMenu = 0;
@@ -934,6 +936,17 @@ controles = new Controles(canvas, camaraIso, gestor, sala, mascotas, entregas, {
   alPrimerToque() {
     sonido.desbloquear();
   },
+  alInteractuar(m) {
+    interacciones.tocar(m);
+    pistaMantener('💡 Mantén pulsado un objeto para moverlo o ver sus opciones');
+  },
+  alInteractuarMascota(m) {
+    interacciones.tocarMascota(m);
+    pistaMantener('💡 Mantén pulsada una mascota para ver su ficha y cuidarla');
+  },
+  alAgarrar(m) {
+    interacciones.parar(m);
+  },
   alSeleccionar(m) {
     if (m) {
       mascotaSel = null;
@@ -1544,6 +1557,29 @@ const usos = new Usos({
     ui.particula(emoji, p.x, p.y, n);
   }
 });
+
+interacciones = new Interacciones({
+  sonido, ui, gestor, usos, mascotas,
+  guardar: () => guardar(),
+  pantalla: (x, y, z) => pantalla(new THREE.Vector3(x, y, z)),
+  particulaMascota: (emoji, m) => mascotas.eventos.particula(emoji, m),
+  llamarMascota(mueble, tipo) {
+    const libres = mascotas.lista.filter(m => !['dormir', 'sofa', 'truco'].includes(m.estado));
+    if (!libres.length) return;
+    libres.sort((a, b) => a.grupo.position.distanceTo(mueble.position) - b.grupo.position.distanceTo(mueble.position));
+    const m = libres[0];
+    if (tipo === 'pelota') mascotas.ir(m, mascotas.celdaDeMueble(mueble), () => mascotas.jugarCon(m, mueble), 'correr');
+    else mascotas.ir(m, mascotas.celdaDeMueble(mueble), () => { mascotas.accion(m, 'comer', 2.5); mascotas.eventos.particula('😋', m); }, 'correr');
+  }
+});
+
+function pistaMantener(texto) {
+  let n = 0;
+  try { n = Number(localStorage.getItem('hogar-pista-mantener') || 0); } catch (e) {}
+  if (n >= 3) return;
+  try { localStorage.setItem('hogar-pista-mantener', String(n + 1)); } catch (e) {}
+  setTimeout(() => ui.aviso(texto), 900);
+}
 
 function partidasHoy() {
   const hoy = new Date().toDateString();
@@ -2468,7 +2504,7 @@ function colocarMenu(dt) {
   ui.posicionarMenu(s.x, s.y);
 }
 
-if (new URLSearchParams(location.search).has('debug')) window.__h = { guia, telefono, entregas, trabajos, estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida };
+if (new URLSearchParams(location.search).has('debug')) window.__h = { interacciones, controles, guia, telefono, entregas, trabajos, estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida };
 
 renderer.setAnimationLoop(() => {
   const dt = Math.min(reloj.getDelta(), 0.1);
@@ -2487,6 +2523,7 @@ renderer.setAnimationLoop(() => {
   sorpresas.actualizar(dt);
   lofi.actualizar(ambiente.hora, !!usos.musica || !!social.fiesta);
   gestor.actualizar(dt);
+  interacciones.actualizar(dt);
   mascotas.actualizar(dt);
   entregas.actualizar(dt);
   suciedad.visibilidadParedes(sala.visibles());

@@ -818,7 +818,7 @@ export class Casa2 {
   chips() {
     const lista = [];
     if (this.estado.ropa && this.estado.ropa.n >= 4 && this.ctx.idsEnCasa().includes('lavadora')) {
-      lista.push({ id: 'ropa', texto: `🧺 ${this.estado.ropa.n}`, accion: () => this.ctx.ui.aviso(`🧺 Hay ${this.estado.ropa.n} prendas sucias. Tocad la lavadora para ponerla`) });
+      lista.push({ id: 'ropa', texto: `🧺 ${this.estado.ropa.n}`, accion: () => this.ctx.ui.aviso(`🧺 Hay ${this.estado.ropa.n} prendas sucias. Mantened pulsada la lavadora para ponerla`) });
     }
     return lista;
   }
