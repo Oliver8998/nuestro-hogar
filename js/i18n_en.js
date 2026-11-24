@@ -2213,5 +2213,14 @@ export default {
 "Antes haced la ampliación anterior":"Do the previous extension first",
 "¡Salón ampliado!":"Living room extended!",
 "Ya tenéis un salón de 6×{0}. Hay más sitio para muebles, mascotas y lo que queráis.":"You now have a 6×{0} living room. More room for furniture, pets and whatever you like.",
-"Piso":"Flat"
+"Piso":"Flat",
+"Ampliar el salón (7×7)":"Extend the living room (7×7)",
+"Ampliar el salón (7×8)":"Extend the living room (7×8)",
+"Ampliar el salón (8×8)":"Extend the living room (8×8)",
+"Ampliar el salón (8×9)":"Extend the living room (8×9)",
+"Ampliar el salón (9×9)":"Extend the living room (9×9)",
+"Ahora también hacia el fondo":"Now towards the back too",
+"Un salón de los grandes":"A really big living room",
+"Casi un loft":"Almost a loft",
+"Ya tenéis un salón de {0}×{1}. Hay más sitio para muebles, mascotas y lo que queráis.":"You now have a {0}×{1} living room. More room for furniture, pets and whatever you like."
 };

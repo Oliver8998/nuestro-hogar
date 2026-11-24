@@ -215,16 +215,19 @@ function tieneExterior() {
   return habsCasa().some(h => EXTERIORES[h]);
 }
 
-function anchoHab(i = estado.habActual || 0, e = estado) {
-  return i === 0 ? 6 + Math.min(3, e.salonFilas || 0) : 6;
+const TAM_SALON = [[6, 6], [7, 6], [7, 7], [8, 7], [8, 8], [9, 8], [9, 9]];
+
+function tamHab(i = estado.habActual || 0, e = estado) {
+  return i === 0 ? TAM_SALON[Math.min(TAM_SALON.length - 1, e.salonFilas || 0)] : [6, 6];
 }
 
 let anchoVisita = null;
 function aplicarTam() {
-  const ancho = visitando && anchoVisita ? anchoVisita : anchoHab();
-  sala.redimensionar(ancho);
-  gestor.ajustarTam(ancho, 6);
-  camaraIso.ajustar(ancho, 6);
+  const [ancho, fondo] = visitando && anchoVisita ? anchoVisita : tamHab();
+  sala.redimensionar(ancho, fondo);
+  gestor.ajustarTam(ancho, fondo);
+  camaraIso.ajustar(ancho, fondo);
+  entregas.desplazarZ(fondo / 2 - 3);
   if (casa2) casa2.tiras.forEach((t, i) => { t.scale.x = (sala.largoPared(i) + 0.2) / 6.2; });
   if (jardinMalla) jardinMalla.position.x = ancho / 2 - 3;
 }
@@ -317,7 +320,7 @@ function aplicarRemoto(datos, conflicto = false, inicial = false) {
     aplicarTam();
   }
   const habR = enPiso() ? estado.inversion.hab : datos.estado.habs && datos.estado.habs[estado.habActual || 0];
-  if (anchoHab() !== sala.ancho()) aplicarTam();
+  if (tamHab()[0] !== sala.ancho() || tamHab()[1] !== sala.fondo()) aplicarTam();
   const cambios = sincronizarMuebles(habR ? habR.muebles : (datos.muebles || []));
   if (habR && (estado.habActual || 0) !== 0) sala.pintarParedes(habR.paredes, enPiso() ? null : CASAS[nivelCasa()].pared);
   if (nivelAntes !== nivelCasa()) aplicarEstiloCasa();
@@ -1344,7 +1347,7 @@ function hacerObra(id) {
     if ((estado.habActual || 0) === 0) aplicarTam();
     else cambiarHabitacion(0);
     for (let k = 0; k < 3; k++) setTimeout(() => {
-      if ((estado.habActual || 0) === 0) suciedad.anadir('polvo', { x: sala.ancho() / 2 - 0.4, z: -2 + k * 1.8 });
+      if ((estado.habActual || 0) === 0) suciedad.anadir('polvo', { x: sala.ancho() / 2 - 0.4 - k * 0.9, z: sala.fondo() / 2 - 0.4 - k * 0.6 });
       if (k === 2) guardar();
     }, 600 + k * 200);
   }
@@ -1363,7 +1366,7 @@ function hacerObra(id) {
     ui.dialogo({
       imagen: miniaturas.personaje('lola'), personaje: true,
       titulo: o.filas ? `${o.icono} ¡Salón ampliado!` : `${o.icono} ¡${o.nombre} terminado!`,
-      texto: o.filas ? `Ya tenéis un salón de 6×${6 + o.filas}. Hay más sitio para muebles, mascotas y lo que queráis.` : o.exterior ? 'Los obreros ya han acabado, pero lo han dejado todo perdido. Limpiadlo y decoradlo a vuestro gusto.' : 'Los obreros ya han acabado, pero la han dejado sin pintar y llena de polvo. ¡A dejarla bonita! Cambiad de habitación con el botón de arriba.',
+      texto: o.filas ? `Ya tenéis un salón de ${TAM_SALON[o.filas][1]}×${TAM_SALON[o.filas][0]}. Hay más sitio para muebles, mascotas y lo que queráis.` : o.exterior ? 'Los obreros ya han acabado, pero lo han dejado todo perdido. Limpiadlo y decoradlo a vuestro gusto.' : 'Los obreros ya han acabado, pero la han dejado sin pintar y llena de polvo. ¡A dejarla bonita! Cambiad de habitación con el botón de arriba.',
       confeti: true,
       botones: [{ texto: '¡A estrenarla!', tipo: 'primario' }]
     });
@@ -2283,7 +2286,7 @@ function verHabitacionVisita(i) {
   const casa = CASAS[n];
   for (const m of [...gestor.muebles]) gestor.quitar(m);
   suciedad.sincronizar([]);
-  anchoVisita = anchoHab(i, e);
+  anchoVisita = tamHab(i, e);
   aplicarTam();
   const vacia = { muebles: [], suciedad: [], paredes: [null, null, null, null] };
   const h = (e.habs && e.habs[i]) || (i === 0 ? { muebles: datos.muebles || [], suciedad: (datos.suciedad && datos.suciedad.lista) || [], paredes: (datos.sala && datos.sala.paredes) || vacia.paredes } : vacia);

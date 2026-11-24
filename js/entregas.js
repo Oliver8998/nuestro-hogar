@@ -46,12 +46,18 @@ function suavizar(t) {
 
 export class Entregas {
   constructor(escena, eventos) {
-    this.escena = escena;
+    this.raiz = new THREE.Group();
+    escena.add(this.raiz);
+    this.escena = this.raiz;
     this.eventos = eventos;
     this.pedidos = [];
     this.anim = null;
     this.t = 0;
   }
+  desplazarZ(dz) {
+    this.raiz.position.z = dz;
+  }
+
 
   pedir(items, segundos) {
     const p = { id: `p${Date.now()}${Math.floor(Math.random() * 1000)}`, items, llega: Date.now() + segundos * 1000, estado: 'camino' };

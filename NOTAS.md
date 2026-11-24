@@ -420,3 +420,7 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
   - Vender: precio × (0,8 + 0,8 × acogedor/100); los muebles se quedan en el piso. Alquilar: 3 candidatos (`INQUILINOS`: estudiante, pareja, señora con gato, teletrabajo, familia) con muebles que quieren; tarifa/h = precio × 0,0016 × (0,5 + acogedor/100) × mult × (×1,4 si tiene todo, −15% por cada cosa que falte). La hucha llena 24 h y se cobra en la ficha (al cobrar, la tarifa se acerca a la actual).
   - Averías (gotera o luz, con los minijuegos de juegos.js) cada 36–60 h. Si pasan 24 h sin arreglar, −40 de satisfacción; a 0 el inquilino se va. Llegan como mensajes del teléfono (`chips()`): llamada de Mateo al desbloquear, avería, hucha llena e inquilino que se ha ido.
   - XP: comprar piso 60, alquilar 20, cobrar 5, vender: beneficio/10 (mínimo 60).
+
+## Salón ampliable también hacia el fondo (v67)
+- 6 obras de ampliación en orden (`filas` = paso, `estado.salonFilas` 0–6): 6×7 (nivel 4, 2500), 7×7 (7, 3500), 7×8 (11, 4500), 8×8 (14, 6000), 8×9 (18, 7500), 9×9 (22, 9000). `TAM_SALON` en main da [ancho X, fondo Z] por paso; `tamHab(i)` sustituye a `anchoHab`.
+- `sala.redimensionar(ancho, fondo)`: mueve las 4 paredes, reconstruye los tramos de todas y escala las tablas y la base en Z; `sala.fondo()`. Los paquetes y la furgoneta de entregas van en un grupo raíz que se desplaza con la puerta (`entregas.desplazarZ`).

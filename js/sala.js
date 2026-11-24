@@ -85,6 +85,7 @@ export function crearSala(escena) {
     tablas.push(tabla);
   }
   let anchoActual = TAM;
+  let fondoActual = TAM;
 
   const paredes = [];
   const defs = [
@@ -126,7 +127,7 @@ export function crearSala(escena) {
         m.geometry.dispose();
       }
       piezas.length = 0;
-      const largo = (i < 2 ? anchoActual : TAM) + GROSOR * 2;
+      const largo = (i < 2 ? anchoActual : fondoActual) + GROSOR * 2;
       const marcar = m => { m.userData.tramo = true; return m; };
       if (i === 1) {
         const a = PUERTA_X - PUERTA_ANCHO / 2;
@@ -628,15 +629,21 @@ export function crearSala(escena) {
     }
   }
 
-  function redimensionar(ancho) {
-    if (ancho === anchoActual) return;
+  function redimensionar(ancho, fondo = TAM) {
+    if (ancho === anchoActual && fondo === fondoActual) return;
     anchoActual = ancho;
+    fondoActual = fondo;
     const mx = ancho / 2;
+    const mz = fondo / 2;
     for (const [i, sx] of [[2, -1], [3, 1]]) {
       paredes[i].position.x = sx * (mx + GROSOR / 2);
       paredes[i].userData.bajo.position.x = sx * (mx + GROSOR / 2);
     }
-    for (const i of [0, 1]) {
+    for (const [i, sz] of [[0, -1], [1, 1]]) {
+      paredes[i].position.z = sz * (mz + GROSOR / 2);
+      paredes[i].userData.bajo.position.z = sz * (mz + GROSOR / 2);
+    }
+    for (const i of [0, 1, 2, 3]) {
       const p = paredes[i];
       const pintura = p.userData.muro.material;
       p.userData.construirTramos();
@@ -645,12 +652,14 @@ export function crearSala(escena) {
     tablas.forEach((t, i) => {
       t.visible = i < Math.round(ancho / 0.5);
       t.position.x = -mx + 0.25 + i * 0.5;
+      t.scale.z = fondo / TAM;
     });
     base.scale.x = (ancho + GROSOR * 2 + 0.2) / (TAM + GROSOR * 2 + 0.2);
+    base.scale.z = (fondo + GROSOR * 2 + 0.2) / (TAM + GROSOR * 2 + 0.2);
   }
 
   function largoPared(i) {
-    return i < 2 ? anchoActual : TAM;
+    return i < 2 ? anchoActual : fondoActual;
   }
 
   let ultimoDefecto = null;
@@ -681,5 +690,5 @@ export function crearSala(escena) {
     });
   }
 
-  return { paredes, cara, redimensionar, largoPared, ancho: () => anchoActual, modoVisita, ponerPapel, decorSuelo, tablas, modoExterior, esExterior: () => exterior, pintarSuelo, mostrarDesperfectos, completarTodo, pintarParedes, conDesperfectos: () => conDesperfectos, ventana, matCristal, hemi, sol, visibles: () => paredes.map(p => p.visible), actualizarParedes, actualizar, buscar, tocar, puedeAplicar, aplicar, resaltar, estado, restaurar, progreso };
+  return { paredes, cara, redimensionar, largoPared, ancho: () => anchoActual, fondo: () => fondoActual, modoVisita, ponerPapel, decorSuelo, tablas, modoExterior, esExterior: () => exterior, pintarSuelo, mostrarDesperfectos, completarTodo, pintarParedes, conDesperfectos: () => conDesperfectos, ventana, matCristal, hemi, sol, visibles: () => paredes.map(p => p.visible), actualizarParedes, actualizar, buscar, tocar, puedeAplicar, aplicar, resaltar, estado, restaurar, progreso };
 }
