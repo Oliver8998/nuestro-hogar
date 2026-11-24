@@ -1,5 +1,5 @@
 import { RECETAS, INGREDIENTES } from './casa2.js';
-import { TRABAJOS } from './trabajos.js';
+import { JUEGOS_FAVOR } from './favores.js';
 
 const HORA = 3600000;
 const MAX_ACTIVOS = 2;
@@ -17,22 +17,22 @@ const RECETAS_MAMA = ['tortilla', 'pizza', 'crema', 'pisto', 'ensalada', 'tarta'
 const TIPOS = [
   { id: 'receta', quien: 'mama', min: 0, horas: 36, titulo: r => `Cocinar ${r.nombre.toLowerCase()}`, texto: r => `¿Me hacéis ${r.nombre.toLowerCase()}? Es para la comida del domingo y a mí ya no me sale como antes. Usad vuestra cocina, ¿eh?`, pago: r => Math.round(r.valor * 1.6) },
   { id: 'album', quien: 'mama', min: 40, juego: 'puzzle', titulo: () => 'Recomponer una foto', texto: () => 'Se me ha caído el álbum y las fotos se han hecho pedazos. ¿Me ayudáis a recomponer una?', pago: () => 75 },
-  { id: 'tarta-tia', quien: 'mama', min: 65, trabajo: 'pastelero', titulo: () => 'Decorar la tarta de la tía', texto: () => 'Es el cumple de vuestra tía. Os mando cómo quiero la tarta: ¡igualita, eh!', pago: () => 125 },
-  { id: 'cesped', quien: 'ramon', min: 0, trabajo: 'jardinero', titulo: () => 'Limpiar el jardín', texto: () => 'Se me ha llenado el césped de malas hierbas y caracoles. Mi espalda ya no está para estas cosas…', pago: () => 85 },
-  { id: 'grifo', quien: 'ramon', min: 40, trabajo: 'fontanero', titulo: () => 'Arreglar las tuberías', texto: () => 'Me gotea la cocina y el fontanero no viene hasta el mes que viene. Vosotros sois mañosos, ¿no?', pago: () => 115 },
-  { id: 'libros', quien: 'ramon', min: 65, trabajo: 'biblioteca', titulo: () => 'Ordenar su biblioteca', texto: () => 'Voy a donar mis libros a la biblioteca del barrio. ¿Me los ordenáis por número?', pago: () => 120 },
-  { id: 'mudanza', quien: 'sol', min: 0, trabajo: 'almacen', titulo: () => 'Ayudar con la mudanza', texto: () => '¡Me mudo al tercero! ¿Me ayudáis a separar las cajas según a qué habitación van?', pago: () => 85 },
+  { id: 'tarta-tia', quien: 'mama', min: 65, favor: 'tartaletas', titulo: () => 'Rellenar las tartaletas', texto: () => 'Es el cumple de vuestra tía y he hecho tartaletas. ¿Me ayudáis a rellenarlas de crema sin que se desborden?', pago: () => 125 },
+  { id: 'cesped', quien: 'ramon', min: 0, favor: 'cesped', titulo: () => 'Cortar el césped', texto: () => 'Se me ha puesto el césped como una selva. ¿Me lo cortáis? Y cuidado con mis margaritas, que les tengo cariño.', pago: () => 85 },
+  { id: 'grifo', quien: 'ramon', min: 40, favor: 'gotas', titulo: () => 'Recoger las goteras', texto: () => 'Se me ha roto una tubería y gotea por todas partes hasta que venga el fontanero. ¿Me ayudáis con los cubos?', pago: () => 115 },
+  { id: 'libros', quien: 'ramon', min: 65, favor: 'buscar', titulo: () => 'Buscar sus cosas en el trastero', texto: () => 'He perdido las gafas, las llaves… ¡todo! Está en el trastero, pero yo ya no veo nada. ¿Me ayudáis?', pago: () => 120 },
+  { id: 'mudanza', quien: 'sol', min: 0, favor: 'escalera', titulo: () => 'Subir las cajas de la mudanza', texto: () => '¡Me mudo al tercero y no hay ascensor! ¿Me ayudáis a subir las cajas por la escalera?', pago: () => 85 },
   { id: 'limpieza', quien: 'sol', min: 30, juego: 'duelo', titulo: () => 'Limpiar antes de la visita', texto: () => 'Viene mi suegra en una hora y tengo el piso hecho un desastre. ¿Una carrera limpiando?', pago: () => 95 },
-  { id: 'ramo', quien: 'sol', min: 55, trabajo: 'florista', titulo: () => 'Montar un ramo', texto: () => 'Quiero sorprender a mi novio. ¿Me montáis el ramo tal cual os lo pido?', pago: () => 110 },
-  { id: 'pintar', quien: 'sol', min: 75, trabajo: 'fachada', titulo: () => 'Pintar su salón', texto: () => '¿Me pintáis el salón? Os invito a pizza, prometido.', pago: () => 140 },
+  { id: 'ramo', quien: 'sol', min: 55, favor: 'regar', titulo: () => 'Cuidarle las plantas', texto: () => 'Me voy el finde de viaje con mi novio. ¿Me cuidáis las plantas? Ni mucha agua ni poca, que son muy delicadas.', pago: () => 110 },
+  { id: 'pintar', quien: 'sol', min: 75, favor: 'cuadros', titulo: () => 'Colgar sus cuadros', texto: () => 'Ya tengo el piso nuevo pintado, pero no sé colgar cuadros rectos. ¿Os animáis? Os invito a pizza.', pago: () => 140 },
   { id: 'cena', quien: 'amigos', min: 0, juego: 'equipo', titulo: () => 'Cena a medias', texto: () => 'Cena en casa: cada uno tiene la mitad de los ingredientes. ¡Coordinaos!', pago: () => 90 },
-  { id: 'barbacoa', quien: 'amigos', min: 30, trabajo: 'hamburguesa', titulo: () => 'Hamburguesas de la barbacoa', texto: () => 'Barbacoa el sábado. ¿Os encargáis de montar las hamburguesas?', pago: () => 105 },
-  { id: 'cumple', quien: 'amigos', min: 60, trabajo: 'dj', titulo: () => 'Pinchar en el cumple', texto: () => '¡Es mi cumple! ¿Pincháis vosotros? Que no pare la fiesta.', pago: () => 130 },
-  { id: 'excursion', quien: 'amigos', min: 75, trabajo: 'fotografo', titulo: () => 'Fotos de la excursión', texto: () => 'Nos vamos al monte. ¿Hacéis vosotros las fotos de los animales?', pago: () => 130 },
-  { id: 'caja', quien: 'pilar', min: 0, trabajo: 'cajero', titulo: () => 'Cubrirla en la caja', texto: () => 'Tengo que ir al médico un rato. ¿Me cubrís en la caja? Ojo con las vueltas.', pago: () => 90 },
+  { id: 'barbacoa', quien: 'amigos', min: 30, favor: 'parrilla', titulo: () => 'Hacer la carne de la barbacoa', texto: () => 'Barbacoa el sábado. ¿Os ponéis vosotros a la parrilla? Que no se nos queme nada.', pago: () => 105 },
+  { id: 'cumple', quien: 'amigos', min: 60, favor: 'globos', titulo: () => 'Inflar los globos del cumple', texto: () => '¡Es mi cumple y quiero la casa llena de globos! ¿Me ayudáis a inflarlos?', pago: () => 130 },
+  { id: 'excursion', quien: 'amigos', min: 75, favor: 'hoguera', titulo: () => 'Encender la hoguera', texto: () => 'Nos vamos de acampada y ninguno sabe encender un fuego. ¿Venís y nos salváis?', pago: () => 130 },
+  { id: 'caja', quien: 'pilar', min: 0, favor: 'cola', titulo: () => 'Atender la tienda', texto: () => 'Tengo que ir al médico un rato. ¿Me atendéis a los clientes? Que no se me enfade nadie.', pago: () => 90 },
   { id: 'etiquetas', quien: 'pilar', min: 30, juego: 'memory', titulo: () => 'Emparejar etiquetas', texto: () => 'Se me han mezclado las etiquetas del almacén. ¿Me ayudáis a emparejarlas?', pago: () => 75 },
-  { id: 'reparto', quien: 'pilar', min: 55, trabajo: 'pizza', titulo: () => 'Repartir pedidos', texto: () => 'Hoy tengo muchos pedidos y no me da la vida. ¿Los repartís por el barrio?', pago: () => 115 },
-  { id: 'cafe', quien: 'pilar', min: 70, trabajo: 'barista', titulo: () => 'Echar una mano en la cafetería', texto: () => 'Mi prima se ha quedado sola en su cafetería. ¿Le hacéis los cafés como los piden?', pago: () => 125 }
+  { id: 'reparto', quien: 'pilar', min: 55, favor: 'bici', titulo: () => 'Repartir en bici', texto: () => 'Hoy tengo muchos pedidos y la furgoneta está en el taller. ¿Los repartís en bici?', pago: () => 115 },
+  { id: 'cafe', quien: 'pilar', min: 70, favor: 'bandeja', titulo: () => 'Llevar las bandejas', texto: () => 'Mi prima se ha quedado sin camarero en su cafetería. ¿Le lleváis las bandejas sin tirar nada?', pago: () => 125 }
 ];
 
 const REACCION = {
@@ -226,9 +226,9 @@ export class Encargos {
     let puntos;
     if (r) {
       puntos = await this.ctx.cocinar(r);
-    } else if (t.trabajo) {
-      const tr = TRABAJOS.find(x => x.id === t.trabajo);
-      puntos = await juegos.custom(tr.icono, t.titulo(), j => tr.jugar(j, { sonido }));
+    } else if (t.favor) {
+      const f = JUEGOS_FAVOR[t.favor];
+      puntos = await juegos.custom(f.icono, t.titulo(), j => f.jugar(j, { sonido }));
     } else {
       puntos = await juegos.jugar(t.juego, t.juego === 'puzzle' ? { imagen: this.ctx.imagenPuzzle() } : {});
     }

@@ -3067,3 +3067,87 @@ body.colgando #lateral, body.colgando #chips-vida, body.colgando #menu-objeto, b
 .enc-fila em { font-style: normal; width: 24px; height: 24px; border-radius: 50%; background: #ffb320; color: #fff; font-weight: 900; display: grid; place-items: center; }
 .enc-fila b span { font-weight: 700; font-size: 12px; color: var(--suave); margin-left: 6px; }
 .enc-fila b span::before { content: '· '; }
+
+/* Minijuegos de los encargos */
+.fv { width: 100%; max-width: 380px; display: flex; flex-direction: column; align-items: center; gap: 12px; user-select: none; -webkit-user-select: none; touch-action: none; }
+.fv-marcador { font-weight: 900; font-size: 16px; text-align: center; min-height: 22px; }
+.fv-boton { border: none; border-radius: 18px; padding: 16px 30px; font: inherit; font-weight: 900; font-size: 18px; background: var(--verde); color: #fff; box-shadow: 0 4px 0 var(--verde-oscuro); }
+.fv-boton:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--verde-oscuro); }
+
+.fv-tartaleta { position: relative; width: 170px; height: 150px; border-radius: 0 0 70px 70px; background: #d9a066; box-shadow: inset 0 -10px 0 #b98049, 0 6px 14px rgba(0,0,0,.12); overflow: hidden; border: 8px solid #e8b97f; border-top: none; }
+.fv-tartaleta .crema { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: linear-gradient(#fff8e6, #f7e2a8); }
+.fv-tartaleta .raya { position: absolute; left: -4px; right: -4px; height: 3px; background: #e57373; z-index: 1; box-shadow: 0 0 0 2px rgba(255,255,255,.6); }
+
+.fv-prado { display: grid; gap: 2px; width: 100%; background: #4e8f3a; padding: 6px; border-radius: 18px; touch-action: none; }
+.fv-prado i { aspect-ratio: 1; border-radius: 5px; background: #3e9b3a; background-image: radial-gradient(circle at 30% 30%, #5cc04d 18%, transparent 20%), radial-gradient(circle at 70% 60%, #5cc04d 15%, transparent 17%); font-style: normal; display: grid; place-items: center; font-size: 20px; transition: background .15s; }
+.fv-prado i.cortado { background: #8ed36f; background-image: repeating-linear-gradient(90deg, #8ed36f 0 6px, #9be07c 6px 12px); }
+.fv-prado i.flor { background: #3e9b3a; }
+
+.fv-techo { width: 100%; text-align: center; font-size: 28px; letter-spacing: 18px; }
+.fv-zona { position: relative; width: 100%; height: 52vh; max-height: 420px; background: linear-gradient(#eef6fb, #d7e9f3); border-radius: 18px; overflow: hidden; touch-action: none; }
+.fv-cubo { position: absolute; bottom: 4%; transform: translateX(-50%); font-size: 46px; }
+.fv-gota { position: absolute; transform: translateX(-50%); font-size: 22px; }
+
+.fv-pide { background: #fff; border-radius: 16px; padding: 8px 16px; font-weight: 900; font-size: 18px; box-shadow: var(--sombra); }
+.fv-pide b { font-size: 32px; vertical-align: middle; }
+.fv-trastero { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; width: 100%; background: #c9a77c; padding: 10px; border-radius: 18px; }
+.fv-trastero button { border: none; background: rgba(255,255,255,.35); border-radius: 12px; font-size: 30px; aspect-ratio: 1; }
+.fv-trastero button.mal { opacity: .3; }
+
+.fv-equilibrio { position: relative; width: 80%; height: 14px; border-radius: 8px; background: linear-gradient(90deg, #e57373, #f2d06b 30%, #6cc08a 45% 55%, #f2d06b 70%, #e57373); }
+.fv-equilibrio i { position: absolute; top: -5px; width: 8px; height: 24px; border-radius: 4px; background: var(--texto); transform: translateX(-50%); }
+.fv-persona { font-size: 64px; height: 200px; display: flex; align-items: flex-end; justify-content: center; width: 100%; background: repeating-linear-gradient(170deg, transparent 0 34px, #d9c2a3 34px 40px); border-radius: 18px; transform-origin: bottom center; transition: transform .1s; }
+.fv-pies { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+.fv-pies button { border: none; border-radius: 18px; padding: 22px 8px; font: inherit; font-weight: 900; font-size: 17px; background: #fff; box-shadow: 0 4px 0 var(--borde); color: var(--texto); }
+.fv-pies button:active { transform: translateY(2px); background: #f7efe5; }
+
+.fv-macetas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; }
+.fv-macetas button { position: relative; border: none; border-radius: 18px; padding: 10px 6px 12px; background: #fff; box-shadow: 0 3px 0 var(--borde); display: flex; flex-direction: column; align-items: center; gap: 6px; transition: background .2s; }
+.fv-macetas button span { font-size: 38px; transition: transform .2s; }
+.fv-macetas .nivel { position: relative; width: 16px; height: 70px; border-radius: 8px; background: #f1e6d8; overflow: hidden; }
+.fv-macetas .nivel b { position: absolute; left: 0; right: 0; bottom: 35%; height: 45%; background: rgba(108,192,138,.35); }
+.fv-macetas .nivel i { position: absolute; left: 0; right: 0; bottom: 0; background: #6fb6e0; }
+.fv-macetas button.seca { background: #fdf0cf; }
+.fv-macetas button.seca span { transform: rotate(-12deg) scale(.9); filter: saturate(.4); }
+.fv-macetas button.ahogada { background: #dcebf7; }
+
+.fv-pared { position: relative; width: 100%; height: 260px; border-radius: 18px; background: #f3e3d1; display: flex; justify-content: center; padding-top: 30px; }
+.fv-nivel { position: absolute; top: 12px; font-size: 12px; font-weight: 900; color: var(--suave); }
+.fv-marco { width: 140px; height: 110px; border: 10px solid #8a5a3c; background: #fff; display: grid; place-items: center; font-size: 56px; transform-origin: 50% -30px; box-shadow: 0 8px 16px rgba(0,0,0,.15); }
+.fv-marco.clavado { border-color: #6cc08a; }
+
+.fv-grill { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; padding: 12px; border-radius: 18px; background: #3b2f26; background-image: repeating-linear-gradient(90deg, #3b2f26 0 10px, #55463a 10px 13px); }
+.fv-grill button { border: none; border-radius: 14px; background: rgba(255,255,255,.06); aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+.fv-grill button span { font-size: 40px; transition: transform .2s; }
+.fv-grill button.vuelta span { transform: scaleX(-1); }
+.fv-grill button.dorado { background: rgba(242,160,60,.35); box-shadow: 0 0 0 3px #f2a03c; }
+.fv-grill .punto { width: 70%; height: 6px; border-radius: 3px; background: rgba(255,255,255,.2); overflow: hidden; }
+.fv-grill .punto i { display: block; height: 100%; background: linear-gradient(90deg, #f2d06b, #f2a03c 55%, #e57373 75%); }
+
+.fv-aire { position: relative; width: 100%; height: 300px; border-radius: 18px; background: #eaf3fb; display: grid; place-items: center; overflow: hidden; }
+.fv-aire .marca { position: absolute; border: 3px dashed #e58f9e; border-radius: 50%; }
+.fv-aire .globo { transition: font-size .08s; line-height: 1; }
+
+.fv-fuego { font-size: 90px; height: 120px; display: grid; place-items: center; }
+.fv-calor { width: 80%; height: 16px; border-radius: 8px; background: #f1e6d8; overflow: hidden; }
+.fv-calor i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #f2d06b, #f2a03c, #e57373); }
+.fv-frotar { width: 100%; height: 140px; border-radius: 18px; background: #c9a77c; display: grid; place-items: center; font-weight: 900; font-size: 18px; color: #fff; touch-action: none; background-image: repeating-linear-gradient(0deg, #c9a77c 0 12px, #b8956a 12px 14px); }
+
+.fv-clientes { display: flex; gap: 8px; width: 100%; min-height: 110px; align-items: flex-end; }
+.fv-clientes div { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding-bottom: 8px; flex: 0 0 auto; width: 64px; }
+.fv-clientes div span { font-size: 36px; }
+.fv-clientes div.primero span { font-size: 52px; }
+.fv-clientes div b { position: absolute; top: -34px; background: #fff; border-radius: 14px; padding: 2px 8px; font-size: 26px; box-shadow: var(--sombra); }
+.fv-clientes div i { position: absolute; bottom: 0; left: 6px; height: 5px; border-radius: 3px; background: var(--verde); max-width: 52px; }
+.fv-productos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; }
+.fv-productos button { border: none; border-radius: 16px; background: #fff; box-shadow: 0 3px 0 var(--borde); font-size: 34px; padding: 12px; }
+.fv-productos button:active { transform: translateY(2px); }
+
+.fv-calle { position: relative; width: 100%; height: 220px; border-radius: 18px; overflow: hidden; background: linear-gradient(#cfe8f7 0 62%, #8a8a8a 62% 100%); touch-action: none; }
+.fv-ciclista { position: absolute; left: 12%; font-size: 46px; transform: scaleX(-1); }
+.fv-ciclista.golpe { animation: tiemblaBici .4s; }
+@keyframes tiemblaBici { 25% { translate: -4px 0; } 75% { translate: 4px 0; } }
+.fv-obst { position: absolute; bottom: 14px; font-size: 32px; transform: translateX(-50%); }
+
+.fv-mesa { width: 100%; height: 220px; border-radius: 18px; background: #f3e3d1; display: grid; place-items: center; }
+.fv-plato { width: 220px; height: 26px; border-radius: 13px; background: #d9d0c4; box-shadow: 0 4px 0 #b9ada0; display: flex; justify-content: center; align-items: flex-end; font-size: 34px; line-height: 0; padding-bottom: 26px; letter-spacing: 6px; transform-origin: center; }
