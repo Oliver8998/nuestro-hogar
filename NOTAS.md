@@ -578,3 +578,11 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - Guía para quien se une tarde (`mostrarGuiaTarde` en bienvenida.js): si al unirte la casa ya tiene progreso (nivel 3+, 3 recuerdos, 3 días o nivel de casa), al entrar salen 4 tarjetas: lo que ya tenéis, «aquí no hay muñecos: sois vosotros», cómo se avanza y qué hacer juntos. Marca con `hogar-guia-tarde`.
 - Minijuegos clásicos: Cocina rápida (los ingredientes vuelan a la sartén, cada plato suma tiempo, ⭐ si sale sin fallos, objetivo 6 platos); Parejas (vistazo de 1,6 s al empezar y racha); Puzzle (2 pistas que colocan una pieza a cambio de 6 s).
 - Inglés: ~450 entradas nuevas en `i18n_en.js`. Para buscar lo que falte: script con acorn que saca literales y plantillas (los `${}` pasan a `{n}`), los parte por etiquetas HTML y prueba `traducirTexto` (en /tmp/i18n/faltan.mjs durante la sesión). Lo que queda marcado son nombres propios (Don Ramón → Mr Ramón, etc.).
+
+## Modo foto (v87)
+- Más → Fotos → 📸 Modo foto (`mas.modoFoto()`): se esconde todo el HUD (`body.modo-foto`) y queda un marco cuadrado con rejilla de tercios (botón # para quitarla). La cámara se mueve con los gestos de siempre.
+- Botón de luz: Ahora / Mañana (9 h) / Atardecer (19:24) / Noche (22:30). Cambia `ambiente.horaFija` y llama a `calcular()`; al salir se restaura.
+- 🐾 ¡Posad!: las mascotas despiertas miran a cámara 7 s (`ctx.posar` en main.js, estado `mirar` con `objetivoMirar`).
+- Disparo: flash y sonido de obturador. `capturarZona(rect)` recorta justo lo que hay dentro del marco, sin los sprites (avisos «!», burbujas de sed) y lo pasa al editor de siempre (filtros, pegatinas y marcos) → compartir, álbum o diario (`editarYCompartir`).
+- Mientras está abierto cuenta como `dialogoAbierto()`, así no saltan visitas ni eventos encima.
+- Meshy queda cerrado: se usan los modelos de cubo descargados.

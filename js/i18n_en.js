@@ -2850,5 +2850,14 @@ export default {
 "{0} ha puesto":"{0} placed",
 "{0} ha puesto (×{1})":"{0} placed (×{1})",
 "{0} ha quitado":"{0} removed",
-"{0} ha quitado (×{1})":"{0} removed (×{1})"
+"{0} ha quitado (×{1})":"{0} removed (×{1})",
+"Modo foto":"Photo mode",
+"📸 Modo foto":"📸 Photo mode",
+"Encuadrad, elegid la luz, que posen las mascotas y ¡clic!":"Frame it, pick the light, get the pets to pose and click!",
+"Mueve la cámara con el dedo y pellizca para acercar":"Move the camera with your finger and pinch to zoom",
+"¡Posad!":"Pose!",
+"Mañana":"Morning",
+"Atardecer":"Sunset",
+"Noche":"Night",
+"🐾 No hay mascotas despiertas para posar":"🐾 There are no pets awake to pose"
 };

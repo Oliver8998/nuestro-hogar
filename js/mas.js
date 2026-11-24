@@ -223,7 +223,7 @@ export class Mas {
   abrirFotos() {
     const { ui, sonido } = this.ctx;
     const tiles = [
-      { id: 'foto', icono: '📸', texto: 'Foto de la casa', sub: 'Hazle una foto bonita y compártela' },
+      { id: 'foto', icono: '📸', texto: 'Modo foto', sub: 'Encuadrad, elegid la luz, que posen las mascotas y ¡clic!' },
       { id: 'album', icono: '🖼️', texto: 'Fotos y cuadros', sub: 'Colgad fotos de la galería o pintad un cuadro' },
       { id: 'diario', icono: '📔', texto: 'Diario del hogar', sub: 'El antes y el después de vuestra casa' },
       { id: 'postales', icono: '🎞️', texto: 'Fotos del día', sub: `${this.postales().length} fotos guardadas` }
@@ -232,7 +232,7 @@ export class Mas {
     cuerpo.querySelectorAll('.mas-tile').forEach(b => b.addEventListener('click', () => {
       sonido.tocar();
       const id = b.dataset.id;
-      if (id === 'foto') this.hacerFoto();
+      if (id === 'foto') this.modoFoto();
       else if (id === 'album') this.abrirAlbum();
       else if (id === 'postales') this.abrirPostales();
       else this.abrirDiario();
@@ -643,12 +643,124 @@ export class Mas {
     return c;
   }
 
-  hacerFoto() {
+  modoFoto() {
     const { ui, sonido, ambiente } = this.ctx;
     ui.cerrarHojas();
-    setTimeout(async () => {
-      const foto = this.capturar(900);
-      sonido.premio();
+    if (document.getElementById('modo-foto')) return;
+    const LUCES = [
+      { id: null, icono: '🕒', texto: 'Ahora' },
+      { id: 9, icono: '🌤️', texto: 'Mañana' },
+      { id: 19.4, icono: '🌅', texto: 'Atardecer' },
+      { id: 22.5, icono: '🌙', texto: 'Noche' }
+    ];
+    const horaAntes = ambiente ? ambiente.horaFija : null;
+    let luz = 0;
+    let rejilla = true;
+    const capa = document.createElement('div');
+    capa.id = 'modo-foto';
+    capa.innerHTML = `
+      <div class="mf-arriba">
+        <button class="mf-btn mf-cerrar" aria-label="Salir">✕</button>
+        <span class="mf-titulo">📸 Modo foto</span>
+        <button class="mf-btn mf-rejilla" aria-label="Rejilla">#</button>
+      </div>
+      <div class="mf-marco"><i></i><i></i><i></i><i></i></div>
+      <small class="mf-ayuda">Mueve la cámara con el dedo y pellizca para acercar</small>
+      <div class="mf-abajo">
+        <button class="mf-opcion mf-luz"><span>🕒</span><small>Ahora</small></button>
+        <button class="mf-disparo" aria-label="Hacer la foto"></button>
+        <button class="mf-opcion mf-posar"><span>🐾</span><small>¡Posad!</small></button>
+      </div>
+      <div class="mf-flash"></div>`;
+    document.body.appendChild(capa);
+    document.body.classList.add('modo-foto');
+    setTimeout(() => capa.querySelector('.mf-ayuda') && capa.querySelector('.mf-ayuda').classList.add('fuera'), 3500);
+    const ponerLuz = () => {
+      const l = LUCES[luz];
+      capa.querySelector('.mf-luz span').textContent = l.icono;
+      capa.querySelector('.mf-luz small').textContent = l.texto;
+      if (!ambiente) return;
+      ambiente.horaFija = l.id === null ? horaAntes : l.id;
+      ambiente.calcular();
+      ambiente.dibujar && ambiente.dibujar();
+    };
+    const salir = () => {
+      capa.remove();
+      document.body.classList.remove('modo-foto');
+      if (ambiente && luz !== 0) {
+        ambiente.horaFija = horaAntes;
+        ambiente.calcular();
+      }
+    };
+    capa.querySelector('.mf-cerrar').addEventListener('click', () => { sonido.tocar(); salir(); });
+    capa.querySelector('.mf-rejilla').addEventListener('click', () => {
+      rejilla = !rejilla;
+      capa.querySelector('.mf-marco').classList.toggle('sin-rejilla', !rejilla);
+      sonido.tocar();
+    });
+    capa.querySelector('.mf-luz').addEventListener('click', () => {
+      luz = (luz + 1) % LUCES.length;
+      sonido.pop();
+      ponerLuz();
+    });
+    capa.querySelector('.mf-posar').addEventListener('click', () => {
+      const n = this.ctx.posar ? this.ctx.posar() : 0;
+      if (n) sonido.mascota ? sonido.mascota() : sonido.pop();
+      else ui.aviso('🐾 No hay mascotas despiertas para posar', true);
+    });
+    capa.querySelector('.mf-disparo').addEventListener('click', () => {
+      const marco = capa.querySelector('.mf-marco').getBoundingClientRect();
+      const foto = this.capturarZona(marco, 900);
+      const flash = capa.querySelector('.mf-flash');
+      flash.classList.remove('activo');
+      void flash.offsetWidth;
+      flash.classList.add('activo');
+      sonido.ruido(0.08, { volumen: 0.12, freq: 2500, q: 0.6 });
+      setTimeout(() => sonido.ruido(0.06, { volumen: 0.08, freq: 1800, q: 0.6 }), 90);
+      setTimeout(() => {
+        salir();
+        this.editarYCompartir(foto);
+      }, 380);
+    });
+  }
+
+  capturarZona(rect, ancho = 900) {
+    const { renderer, escena, camara } = this.ctx;
+    const ocultos = [];
+    escena.traverse(o => {
+      if (o.isSprite && o.visible) {
+        o.visible = false;
+        ocultos.push(o);
+      }
+    });
+    renderer.render(escena, camara);
+    const fuente = renderer.domElement;
+    const caja = fuente.getBoundingClientRect();
+    const kx = fuente.width / caja.width;
+    const ky = fuente.height / caja.height;
+    const c = document.createElement('canvas');
+    c.width = ancho;
+    c.height = ancho;
+    const g = c.getContext('2d');
+    g.fillStyle = document.body.classList.contains('noche') ? '#2b2b45' : '#f6ead9';
+    g.fillRect(0, 0, ancho, ancho);
+    g.drawImage(fuente, (rect.left - caja.left) * kx, (rect.top - caja.top) * ky, rect.width * kx, rect.height * ky, 0, 0, ancho, ancho);
+    ocultos.forEach(o => { o.visible = true; });
+    return c;
+  }
+
+  hacerFoto() {
+    const { ui } = this.ctx;
+    ui.cerrarHojas();
+    setTimeout(() => {
+      this.ctx.sonido.premio();
+      this.editarYCompartir(this.capturar(900));
+    }, 380);
+  }
+
+  async editarYCompartir(foto) {
+    const { ui, sonido, ambiente } = this.ctx;
+    {
       const fecha = new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
       const nombres = this.nombresTexto();
       const res = await editarFoto(foto, {
@@ -670,7 +782,7 @@ export class Mas {
         columna: true
       });
       this.ctx.alFoto && this.ctx.alFoto();
-    }, 380);
+    }
   }
 
   guardarEnAlbum(lienzo) {

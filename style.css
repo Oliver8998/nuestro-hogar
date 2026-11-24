@@ -3796,3 +3796,29 @@ body.texto-muy .hoja { height: calc(80vh / 1.25); }
 .jg-pista:disabled { opacity: .4; }
 .jg-puzzle button.pista { animation: jg-pista .8s ease; }
 @keyframes jg-pista { 30% { box-shadow: 0 0 0 4px #f2d06b; transform: scale(1.06); } }
+
+/* Modo foto */
+body.modo-foto #hud, body.modo-foto #lateral, body.modo-foto #aviso, body.modo-foto #barra, body.modo-foto #menu-objeto, body.modo-foto .chips, body.modo-foto #capa-particulas .bocadillo-obj { opacity: 0 !important; pointer-events: none !important; }
+#modo-foto { position: fixed; inset: 0; z-index: 250; pointer-events: none; }
+#modo-foto button { pointer-events: auto; }
+.mf-arriba { position: absolute; top: calc(10px + env(safe-area-inset-top)); left: 12px; right: 12px; display: flex; align-items: center; justify-content: space-between; }
+.mf-titulo { background: rgba(0,0,0,.45); color: #fff; font-weight: 900; padding: 6px 14px; border-radius: 16px; font-size: 15px; }
+.mf-btn { width: 42px; height: 42px; border: none; border-radius: 50%; background: rgba(0,0,0,.45); color: #fff; font-size: 18px; font-weight: 900; }
+.mf-marco { position: absolute; left: 50%; top: 45%; width: min(92vw, 57vh); aspect-ratio: 1; transform: translate(-50%, -50%); border: 2px solid rgba(255,255,255,.9); border-radius: 4px; box-shadow: 0 0 0 100vmax rgba(0,0,0,.28); }
+.mf-marco i { position: absolute; background: rgba(255,255,255,.45); }
+.mf-marco i:nth-child(1) { left: 33.33%; top: 0; bottom: 0; width: 1px; }
+.mf-marco i:nth-child(2) { left: 66.66%; top: 0; bottom: 0; width: 1px; }
+.mf-marco i:nth-child(3) { top: 33.33%; left: 0; right: 0; height: 1px; }
+.mf-marco i:nth-child(4) { top: 66.66%; left: 0; right: 0; height: 1px; }
+.mf-marco.sin-rejilla i { display: none; }
+.mf-ayuda { position: absolute; left: 50%; bottom: calc(130px + env(safe-area-inset-bottom)); transform: translateX(-50%); white-space: nowrap; background: rgba(0,0,0,.5); color: #fff; font-weight: 800; font-size: 13px; padding: 5px 12px; border-radius: 12px; transition: opacity .6s; }
+.mf-ayuda.fuera { opacity: 0; }
+.mf-abajo { position: absolute; left: 0; right: 0; bottom: calc(22px + env(safe-area-inset-bottom)); display: flex; align-items: center; justify-content: space-evenly; }
+.mf-disparo { width: 78px; height: 78px; border-radius: 50%; border: 5px solid #fff; background: rgba(255,255,255,.35); box-shadow: 0 4px 14px rgba(0,0,0,.3); }
+.mf-disparo:active { transform: scale(.92); background: rgba(255,255,255,.7); }
+.mf-opcion { width: 72px; border: none; border-radius: 18px; padding: 6px 0; background: rgba(0,0,0,.45); color: #fff; display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.mf-opcion span { font-size: 24px; }
+.mf-opcion small { font-weight: 800; font-size: 12px; }
+.mf-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+.mf-flash.activo { animation: mf-flash .4s ease-out; }
+@keyframes mf-flash { 0% { opacity: .95; } 100% { opacity: 0; } }

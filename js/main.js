@@ -1575,7 +1575,7 @@ function enMenu() {
 }
 
 function dialogoAbierto() {
-  return enMenu() || document.getElementById('dialogo').classList.contains('abierto') || !document.getElementById('juego').classList.contains('oculto') || !!document.getElementById('foto-editor') || visitando;
+  return enMenu() || document.body.classList.contains('modo-foto') || document.getElementById('dialogo').classList.contains('abierto') || !document.getElementById('juego').classList.contains('oculto') || !!document.getElementById('foto-editor') || visitando;
 }
 
 function comprobarEvento() {
@@ -1687,6 +1687,15 @@ mas = new Mas({
   instantanea: () => instantanea(),
   aplicarRemoto: (d, c, i) => aplicarRemoto(d, c, i),
   mascotas: () => mascotas.lista,
+  posar: () => {
+    const cam = camaraIso.camara.position;
+    const libres = mascotas.lista.filter(m => !['dormir', 'banar', 'caca', 'pis', 'comer', 'truco', 'saltar'].includes(m.estado));
+    libres.forEach((m, i) => setTimeout(() => {
+      mascotas.accion(m, 'mirar', 7, { objetivoMirar: new THREE.Vector3(cam.x, 0, cam.z), mirarA: 0 });
+      mascotas.eventos.particula('📸', m);
+    }, i * 120));
+    return libres.length;
+  },
   datosPareja: () => ({ activo: !!(sync && sync.activo), codigo: sync && sync.codigo, yo: sync ? sync.yo : 0 }),
   extrasMenu: () => (window.extrasMenu ? window.extrasMenu() : [])
 });
