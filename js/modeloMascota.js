@@ -403,6 +403,7 @@ function modeloKenney(e) {
     if (o.isMesh) {
       o.castShadow = true;
       o.receiveShadow = false;
+      o.geometry.userData.compartida = true;
     }
   });
   escena.scale.setScalar(0.27);

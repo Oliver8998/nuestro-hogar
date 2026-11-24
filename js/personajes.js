@@ -70,7 +70,7 @@ function crearRobi() {
   return g;
 }
 
-const KENNEY_PERSONAJE = { lola: 'character-female-b', mateo: 'character-male-d', sol: 'character-female-c', mama: 'character-female-d', ramon: 'character-male-b', amigos: 'character-male-f' };
+const KENNEY_PERSONAJE = { lola: 'character-female-b', mateo: 'character-male-d', sol: 'character-female-c', mama: 'character-female-d', ramon: 'character-male-b', amigos: 'character-male-f', robi: 'character-robot' };
 const GLB = new Map();
 const VIVOS = new Set();
 let clonar = null;
@@ -114,6 +114,7 @@ function personajeKenney(id) {
     if (o.isMesh) {
       o.castShadow = true;
       o.frustumCulled = false;
+      o.geometry.userData.compartida = true;
     }
   });
   grupo.add(modelo);
@@ -130,11 +131,11 @@ function personajeKenney(id) {
 }
 
 export function crearPersonaje(id) {
-  if (id === 'robi') return crearRobi();
   if (KENNEY_PERSONAJE[id]) {
     const k = personajeKenney(id);
     if (k) return k;
   }
+  if (id === 'robi') return crearRobi();
   const p = PERSONAJES[id];
   const g = new THREE.Group();
 

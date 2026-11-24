@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { crearPersonaje } from './personajes.js';
+import { crearPersonaje, animarPersonaje } from './personajes.js';
 import { liberar, modeloSuelto } from './modelos.js';
 
 export const TIPOS = {
@@ -531,6 +531,7 @@ export class Suciedad {
         if (v.t > 0.6) {
           v.fase = 'limpiar';
           v.t = 0;
+          animarPersonaje(v.malla, 'interact-right');
         }
       } else if (v.fase === 'limpiar') {
         v.malla.rotation.y += dt * 4;
@@ -542,6 +543,7 @@ export class Suciedad {
             this.limpiar(d, 'limpiadora');
           } else {
             v.fase = 'salir';
+            animarPersonaje(v.malla, 'emote-yes');
             this.eventos.alVisitaLimpiadora();
           }
         }
