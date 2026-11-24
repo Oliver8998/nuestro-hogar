@@ -219,8 +219,11 @@ input {
 
 .insignia {
   position: absolute;
-  top: -8px;
-  left: -10px;
+  top: -9px;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: max-content;
   background: var(--verde);
   color: #fff;
   font-size: 10px;
@@ -505,7 +508,8 @@ input {
 .contador-inv {
   background: var(--rosa);
   left: auto;
-  right: -8px;
+  right: -3px;
+  margin: 0;
   animation: none;
 }
 

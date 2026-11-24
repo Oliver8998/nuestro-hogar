@@ -1,6 +1,6 @@
 import { idioma, traducirTexto } from './i18n.js';
 
-const CLAVE = 'hogar-guia3';
+const CLAVE = 'hogar-guia4';
 
 function traducir(html) {
   if (idioma() !== 'en') return html;
@@ -62,6 +62,12 @@ const PASOS = [
     avanza: ['clic:#btn-misiones']
   },
   {
+    id: 'cerrarMis', objetivo: () => '#misiones .cerrar',
+    texto: 'Aquí tenéis las misiones. Ciérralas con la ✕ para seguir',
+    avanza: ['clic:#misiones .cerrar'],
+    saltaSi: c => c.ui.hojaAbierta !== 'misiones'
+  },
+  {
     id: 'mas', objetivo: () => '#btn-mas',
     texto: 'Y en <b>Más</b> está el trabajo del día para ganar monedas. ¡Ya sabéis lo básico!',
     avanza: ['clic:#btn-mas']
@@ -93,8 +99,10 @@ export class Guia {
     try {
       const v = localStorage.getItem(CLAVE);
       if (v !== null) return Number(v);
+      const v3 = localStorage.getItem('hogar-guia3');
+      if (v3 !== null) return Number(v3) >= 9 ? Number(v3) + 1 : Number(v3);
       const v2 = localStorage.getItem('hogar-guia2');
-      if (v2 !== null) return Number(v2) >= 7 ? Number(v2) + 1 : Number(v2);
+      if (v2 !== null) return Number(v2) >= 8 ? Number(v2) + 2 : Number(v2) >= 7 ? Number(v2) + 1 : Number(v2);
       const vieja = localStorage.getItem('hogar-guia');
       return vieja !== null && Number(vieja) >= 5 ? PASOS.length : null;
     } catch (e) {

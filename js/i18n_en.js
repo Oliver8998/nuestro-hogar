@@ -1696,5 +1696,6 @@ export default {
 "Ropa para lavar":"Laundry to wash",
 "Vuestra cría":"Your baby pet",
 "Ahora cierra el {0} con la ✕ para ver bien la casa":"Now close the {0} with the ✕ to see the house properly",
-"inventario":"inventory"
+"inventario":"inventory",
+"Aquí tenéis las misiones. Ciérralas con la ✕ para seguir":"Here are your missions. Close them with the ✕ to carry on"
 };

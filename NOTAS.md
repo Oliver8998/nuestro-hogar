@@ -330,3 +330,7 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 
 ## Guía: paso "cerrar inventario" — v45
 - Nuevo paso 8/10 en `js/guia.js` (`cerrarInv`, apunta a `#cerrar-inv`) entre "Reforma" y "Misiones"; se salta solo si el inventario ya está cerrado. Clave nueva `hogar-guia3` (migra `hogar-guia2`: valores >=7 se suman 1). `guia` expuesta en `?debug` (`__h.guia`).
+
+## v46
+- Barra de abajo: la insignia verde ("¡Gratis!") va centrada encima de su botón y los contadores rosas pegados a la esquina (right:-3px), así no se pisan entre botones vecinos.
+- Guía: nuevo paso `cerrarMis` (cerrar la hoja de Misiones con su ✕) antes del paso de Más. Ahora son 11 pasos. Clave `hogar-guia4` (migra guia3 +1 desde 9, guia2 +1 desde 7 y +2 desde 8).
