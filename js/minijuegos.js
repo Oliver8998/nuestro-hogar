@@ -15,6 +15,7 @@ function suelo(ctx, w, h) {
     ctx.fillStyle = 'rgba(0,0,0,.08)';
     ctx.fillRect(i * ancho, (i * 137) % h, ancho - 2, 2);
   }
+  ctx.fillStyle = '#000';
 }
 
 function pared(ctx, w, h) {
@@ -22,6 +23,7 @@ function pared(ctx, w, h) {
   ctx.fillRect(0, 0, w, h);
   ctx.fillStyle = 'rgba(255,255,255,.12)';
   for (let x = 0; x < w; x += 46) ctx.fillRect(x, 0, 2, h);
+  ctx.fillStyle = '#000';
 }
 
 function cortan(a, b, c, d) {
@@ -92,6 +94,7 @@ export class Minijuegos {
           this.ctx.font = '44px serif';
           this.ctx.textAlign = 'center';
           this.ctx.textBaseline = 'middle';
+          this.ctx.fillStyle = '#000';
           this.ctx.fillText(this.emojiPuntero ?? info.emoji, this.puntero.x + 18, this.puntero.y - 30);
         }
         this.capa.querySelector('.mj-barra i').style.width = `${Math.round(Math.min(1, this.progreso) * 100)}%`;
@@ -152,6 +155,7 @@ export class Minijuegos {
       p.vy += 300 * dt;
       ctx.globalAlpha = Math.max(0, p.vida);
       if (p.emoji) {
+        ctx.fillStyle = '#000';
         ctx.font = '22px serif';
         ctx.fillText(p.emoji, p.x, p.y);
       } else {
@@ -375,6 +379,9 @@ export class Minijuegos {
     }
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#000';
+    ctx.shadowColor = 'rgba(255, 246, 220, .9)';
+    ctx.shadowBlur = 8;
     for (const h of this.hormigas) {
       if (h.viva) {
         h.x += h.vx * dt;
@@ -383,7 +390,7 @@ export class Minijuegos {
         ctx.save();
         ctx.translate(h.x, h.y);
         ctx.scale(h.vx > 0 ? -1 : 1, 1);
-        ctx.font = '34px serif';
+        ctx.font = '40px serif';
         ctx.fillText('🐜', 0, 0);
         ctx.restore();
       } else {
@@ -398,6 +405,8 @@ export class Minijuegos {
         ctx.globalAlpha = 1;
       }
     }
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = 'transparent';
     this.hormigas = this.hormigas.filter(h => !h.fuera && (h.viva || h.t < 1));
     for (const n of this.nubes) {
       n.t += dt;
