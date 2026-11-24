@@ -391,3 +391,7 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - `js/favores2.js` → `JUEGOS_FAVOR2` (canvas + cruceta/deslizar): conducir (vista desde arriba, 3 carriles, esquivar coches/conos/baches, charcos frenan; nota por tiempo en llegar, mamá al médico), cruzar (tipo Frogger, Don Ramón al mercado, 3 viajes), pasear (tipo Snake con Toby y la correa, empieza al deslizar), almacen (Sokoban, 4 niveles verificados con BFS, deshacer/reiniciar), cometa (tipo Flappy, 3 vidas, empieza al tocar), diferencias (2 láminas de 5 diferencias). Encargos nuevos en `TIPOS`: medico, pasatiempos (mamá), mercado (Ramón), toby (Sol), cometa (amigos), almacen-pilar (Pilar).
 - Trabajo de fontanería rehecho tipo Pipe Mania: tablero 6×8 lleno de piezas giradas (rectas, codos, T y cruces), el agua sale sola tras una cuenta atrás (o con "¡Abrir el agua ya!") y avanza; si llega a un hueco es fuga. Nota = tableros resueltos/3 − fugas.
 - Las llamadas de encargos no entran mientras hay un minijuego abierto.
+
+## Objetos de corazón con forma real (v63)
+- Nueva forma de pieza `'corazon'` en `construirPiezas` (js/modelos.js): `THREE.Shape` de corazón extruida con bisel (aspecto mullido), normalizada a 1×1×1 y escalada a w×h×d; geometría compartida (`userData.compartida`). Si un objeto tiene alguna pieza `'corazon'` se ignora su versión del GLB (la del GLB eran 3 bultos).
+- cojin-corazon, lampara-corazon (base + corazón, `encendible.piezas: [1]`) y puff-corazon (tumbado con `rx: -PI/2`) usan ahora una sola pieza de corazón.

@@ -310,10 +310,8 @@ export const CATALOGO = [
   ]},
 
   { id: 'puff-corazon', categoria: 'deco', nombre: 'Puf corazón', enTienda: false, rareza: 'raro', ancho: 2, fondo: 2, piezas: [
-    [0.46, 0.36, 0.46, -0.15, 0.18, -0.08, 0xe0505f, 'esfera'],
-    [0.46, 0.36, 0.46, 0.15, 0.18, -0.08, 0xe0505f, 'esfera'],
-    [0.42, 0.34, 0.42, 0, 0.17, 0.1, 0xe0505f, { ry: PI / 4 }]
-  ], colores: { grupos: [[0, 1, 2]], paleta: [[0xe0505f], [0xf4b3be], [0xb39ddb]] }},
+    [0.86, 0.78, 0.34, 0, 0.17, 0, 0xe0505f, 'corazon', { rx: -PI / 2 }]
+  ], colores: { grupos: [[0]], paleta: [[0xe0505f], [0xf4b3be], [0xb39ddb]] }},
 
   { id: 'acuario', categoria: 'deco', nombre: 'Acuario', enTienda: false, rareza: 'epico', ancho: 2, fondo: 1, soporte: 1.0, piezas: [
     [0.96, 0.45, 0.42, 0, 0.225, 0, 0x3d3d3d],
@@ -501,10 +499,8 @@ export const CATALOGO = [
 
   { id: 'lampara-corazon', categoria: 'temporada', temporada: 'sanvalentin', enTienda: false, nombre: 'Lámpara corazón', precio: 140, ancho: 1, fondo: 1, piezas: [
     [0.2, 0.04, 0.2, 0, 0.02, 0, 0xf2efe9, 'cil'],
-    [0.18, 0.18, 0.08, -0.06, 0.3, 0, 0xf06080, 'esfera'],
-    [0.18, 0.18, 0.08, 0.06, 0.3, 0, 0xf06080, 'esfera'],
-    [0.18, 0.18, 0.08, 0, 0.21, 0, 0xf06080, { rz: Math.PI / 4 }]
-  ], encendible: { piezas: [1, 2, 3], luz: 0.3, intensidad: 1.0, colorLuz: 0xff7090, inicial: true }},
+    [0.3, 0.27, 0.11, 0, 0.165, 0, 0xf06080, 'corazon']
+  ], encendible: { piezas: [1], luz: 0.3, intensidad: 1.0, colorLuz: 0xff7090, inicial: true }},
 
   { id: 'rosas', categoria: 'temporada', temporada: 'sanvalentin', enTienda: false, nombre: 'Ramo de rosas', precio: 90, ancho: 1, fondo: 1, piezas: [
     [0.14, 0.24, 0.14, 0, 0.12, 0, 0xe8f4f8, 'cil', { transparente: 0.6 }],
@@ -513,10 +509,8 @@ export const CATALOGO = [
   ]},
 
   { id: 'cojin-corazon', categoria: 'temporada', temporada: 'sanvalentin', enTienda: false, nombre: 'Cojín corazón', precio: 70, ancho: 1, fondo: 1, piezas: [
-    [0.22, 0.2, 0.12, -0.08, 0.26, 0, 0xf06080, 'esfera'],
-    [0.22, 0.2, 0.12, 0.08, 0.26, 0, 0xf06080, 'esfera'],
-    [0.24, 0.24, 0.12, 0, 0.14, 0, 0xf06080, { rz: Math.PI / 4 }]
-  ], colores: { grupos: [[0, 1, 2]], paleta: [[0xf06080], [0xe0505f], [0xf4b3be], [0xb39ddb]] }}
+    [0.36, 0.32, 0.14, 0, 0.17, 0.02, 0xf06080, 'corazon', { rx: -0.18 }]
+  ], colores: { grupos: [[0]], paleta: [[0xf06080], [0xe0505f], [0xf4b3be], [0xb39ddb]] }}
 ];
 
 function pintura(id, nombre, color) {

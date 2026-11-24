@@ -123,8 +123,34 @@ function construirConModelo(m, piezas, sombras) {
   return { grupo, mallas, todas };
 }
 
+let geoCorazon = null;
+function corazonUnidad() {
+  if (geoCorazon) return geoCorazon;
+  const f = new THREE.Shape();
+  f.moveTo(0, -0.42);
+  f.bezierCurveTo(-0.12, -0.3, -0.5, -0.05, -0.5, 0.18);
+  f.bezierCurveTo(-0.5, 0.4, -0.32, 0.5, -0.22, 0.5);
+  f.bezierCurveTo(-0.1, 0.5, -0.02, 0.42, 0, 0.32);
+  f.bezierCurveTo(0.02, 0.42, 0.1, 0.5, 0.22, 0.5);
+  f.bezierCurveTo(0.32, 0.5, 0.5, 0.4, 0.5, 0.18);
+  f.bezierCurveTo(0.5, -0.05, 0.12, -0.3, 0, -0.42);
+  const g = new THREE.ExtrudeGeometry(f, {
+    depth: 0.3, curveSegments: 28, bevelEnabled: true,
+    bevelThickness: 0.35, bevelSize: 0.12, bevelSegments: 10
+  });
+  g.computeBoundingBox();
+  const b = g.boundingBox, c = new THREE.Vector3(), t = new THREE.Vector3();
+  b.getCenter(c); b.getSize(t);
+  g.translate(-c.x, -c.y, -c.z);
+  g.scale(1 / t.x, 1 / t.y, 1 / t.z);
+  g.computeVertexNormals();
+  g.userData.compartida = true;
+  geoCorazon = g;
+  return g;
+}
+
 export function construirPiezas(piezas, { sombras = true, id = null } = {}) {
-  if (id && MODELOS.has(id)) return construirConModelo(MODELOS.get(id), piezas, sombras);
+  if (id && MODELOS.has(id) && !piezas.some(p => p[7] === 'corazon')) return construirConModelo(MODELOS.get(id), piezas, sombras);
 
   const grupo = new THREE.Group();
   const mallas = [];
@@ -137,11 +163,12 @@ export function construirPiezas(piezas, { sombras = true, id = null } = {}) {
     if (forma === 'cil') geo = new THREE.CylinderGeometry(w / 2, w / 2, h, 20);
     else if (forma === 'cono') geo = new THREE.ConeGeometry(w / 2, h, 20);
     else if (forma === 'esfera') geo = new THREE.SphereGeometry(0.5, 20, 16);
+    else if (forma === 'corazon') geo = corazonUnidad();
     else geo = new THREE.BoxGeometry(w, h, d);
 
     const { mat, op } = materialPieza(pieza);
     const malla = new THREE.Mesh(geo, mat);
-    if (forma === 'esfera') malla.scale.set(w, h, d);
+    if (forma === 'esfera' || forma === 'corazon') malla.scale.set(w, h, d);
     malla.position.set(x, y, z);
     malla.rotation.set(op.rx || 0, op.ry || 0, op.rz || 0);
     malla.castShadow = sombras && !op.transparente;
