@@ -606,8 +606,10 @@ export class Usos {
     const lento = this.tLento > 2;
     if (lento) this.tLento = 0;
     let llovio = false;
-    for (const sp of this.ctx.escena.children.filter(o => o.isSprite && o.userData.mueble)) {
-      if (!this.ctx.gestor.muebles.includes(sp.userData.mueble)) this.quitarSed(sp.userData.mueble);
+    if (lento) {
+      for (const sp of this.ctx.escena.children.filter(o => o.isSprite && o.userData.mueble)) {
+        if (!this.ctx.gestor.muebles.includes(sp.userData.mueble)) this.quitarSed(sp.userData.mueble);
+      }
     }
     for (const m of this.ctx.gestor.muebles) {
       const def = m.userData.def;

@@ -103,7 +103,13 @@ export class Sync {
       const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
       this.cliente = createClient(URL_BASE.replace('/rest/v1', ''), CLAVE);
       this.canal = this.cliente.channel(`hogar-${this.codigo}`, { config: { broadcast: { self: false } } });
-      this.canal.on('broadcast', { event: '*' }, m => this.ev.directo && this.ev.directo(m.event, m.payload));
+      this.canal.on('broadcast', { event: '*' }, m => {
+        if (m.event === 'cambio') {
+          if (!this.enviando) this.traer();
+          return;
+        }
+        if (this.ev.directo) this.ev.directo(m.event, m.payload);
+      });
       this.canal.subscribe(estado => {
         this.enDirecto = estado === 'SUBSCRIBED';
       });
@@ -152,6 +158,7 @@ export class Sync {
       if (filas && filas.length) {
         this.version = nueva;
         this.guardarConf();
+        if (this.enDirecto && this.canal) this.canal.send({ type: 'broadcast', event: 'cambio', payload: { v: nueva, de: this.yo } });
       } else {
         await this.traer(true);
         this.pendiente = true;
@@ -280,7 +287,7 @@ export class Sync {
     this.tPoll += dt;
     this.tEnvio += dt;
     if (this.pendiente && this.tEnvio > 1.2) this.enviar();
-    if (this.tPoll > (document.hidden ? 20 : 3)) {
+    if (this.tPoll > (document.hidden ? 20 : this.enDirecto ? 10 : 3)) {
       this.tPoll = 0;
       if (!this.enviando) this.traer();
       this.mensajesNuevos();

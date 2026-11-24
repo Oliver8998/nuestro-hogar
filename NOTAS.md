@@ -546,3 +546,11 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - `intros.js` (generado): `{ que, como, video }`. El «cómo» sale del primer `j.info()` de cada juego. `video: 'trab-x'` reutiliza el vídeo de un trabajo y `video: false` enseña solo el icono animado.
 - Vídeos en `assets/videos/<clave con - en vez de :>.mp4`: 56 clips H.264 de 320×400, unos 6 s, 1,3 MB en total. Se grabaron jugando con un bot (Playwright `record_video` y recorte con ffmpeg; scripts en /tmp/prueba t80.py y cortar.py). El service worker no los intercepta (por las peticiones Range). Sin vídeo (tender, entrenar, carrera, paseo, cocinar) se ve el icono flotando.
 - Arreglado: en el cajero salía «Paga con: NaN €» cuando el total pasaba de 50 € (faltaba el billete de 100).
+
+## Optimizaciones sin perder calidad (v83)
+- Arranque: `cargarModelos()`, las mascotas Kenney y los personajes se cargan a la vez (`Promise.all`); antes se esperaba primero a `modelos.glb`.
+- Service worker: los recursos pesados que no cambian (assets/ menos los vídeos, CDN de jsdelivr con three, fuentes e iconos) se sirven de la caché `hogar-recursos-1` al instante y se actualizan por detrás. Esta caché no se borra al subir de versión. JS, CSS y HTML siguen siendo red-primero. **Si se cambia un asset sin cambiar su URL (`?v=`), hay que subir `RECURSOS` a `hogar-recursos-2`.**
+- Luces: `estabilizarLuces()` corre antes de cada render y mantiene fijo el número de PointLights visibles, rellenando con luces apagadas (`userData.relleno`) en escalones de 4 que solo suben. Así añadir, quitar o encender lámparas, o cambiar de habitación, ya no recompila todos los shaders (era el tirón al colocar una lámpara). Comprobado: los programas se quedan en 20 al añadir y quitar lámparas.
+- Sync: tras guardar con éxito se emite `cambio` por el canal en directo y la pareja descarga al momento. Con el directo conectado, el sondeo baja de cada 3 s a cada 10 s (menos batería y datos, y los cambios llegan antes).
+- usos.js: la limpieza de las burbujas de sed se hace cada 2 s, no en cada fotograma.
+- (Ya estaba en v80: no se renderiza la escena 3D con un minijuego abierto. Y en v77: no se renderiza en el menú de inicio.)

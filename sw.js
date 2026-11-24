@@ -1,4 +1,4 @@
-const CACHE = 'hogar-v82';
+const CACHE = 'hogar-v83';
 const ARCHIVOS = [
   './',
   './index.html',
@@ -77,14 +77,27 @@ self.addEventListener('install', e => {
   self.skipWaiting();
 });
 
+const RECURSOS = 'hogar-recursos-1';
+const ES_RECURSO = /\/assets\/(?!videos\/)|cdn\.jsdelivr\.net|fonts\.(googleapis|gstatic)\.com|\/icons\//;
+
 self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(claves => Promise.all(claves.filter(k => k !== CACHE).map(k => caches.delete(k)))));
+  e.waitUntil(caches.keys().then(claves => Promise.all(claves.filter(k => k !== CACHE && k !== RECURSOS).map(k => caches.delete(k)))));
   self.clients.claim();
 });
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   if (e.request.url.includes('/assets/videos/')) return;
+  if (ES_RECURSO.test(e.request.url)) {
+    e.respondWith(caches.open(RECURSOS).then(c => c.match(e.request).then(guardado => {
+      const red = fetch(e.request).then(r => {
+        if (r.ok && r.status === 200) c.put(e.request, r.clone());
+        return r;
+      }).catch(() => guardado || caches.match(e.request));
+      return guardado || red;
+    })));
+    return;
+  }
   e.respondWith(
     fetch(e.request)
       .then(r => {

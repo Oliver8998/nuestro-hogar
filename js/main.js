@@ -53,8 +53,7 @@ import { Duo } from './duo.js';
 import { Inmobiliaria, INV, NIVEL_INMOBILIARIA } from './inmobiliaria.js';
 
 activarTraduccion();
-await cargarModelos();
-await Promise.all([cargarMascotasKenney(ESPECIES), cargarPersonajesKenney()]);
+await Promise.all([cargarModelos(), cargarMascotasKenney(ESPECIES), cargarPersonajesKenney()]);
 
 const CLAVE = 'hogar-estado';
 const NOMBRES = ['Michi', 'Coco', 'Luna', 'Toby', 'Nube', 'Canela', 'Pipo', 'Kiwi', 'Lola', 'Bimba', 'Churro', 'Galleta', 'Mochi', 'Rufo', 'Trufa', 'Pelusa'];
@@ -2794,6 +2793,24 @@ let tChip = 0;
 let tMisiones = 0;
 let tFotos = 25;
 let tProgreso = 0;
+const lucesRelleno = [];
+let lucesObjetivo = 0;
+
+function estabilizarLuces() {
+  let n = 0;
+  escena.traverseVisible(o => { if (o.isPointLight && !o.userData.relleno) n++; });
+  const objetivo = Math.max(lucesObjetivo, Math.ceil((n + 1) / 4) * 4);
+  lucesObjetivo = objetivo;
+  const faltan = Math.max(0, objetivo - n);
+  while (lucesRelleno.length < faltan) {
+    const l = new THREE.PointLight(0x000000, 0, 0.01);
+    l.userData.relleno = true;
+    l.position.set(0, -50, 0);
+    escena.add(l);
+    lucesRelleno.push(l);
+  }
+  lucesRelleno.forEach((l, i) => { l.visible = i < faltan; });
+}
 
 function colocarMenu(dt) {
   if (mascotaSel) {
@@ -2823,7 +2840,7 @@ function colocarMenu(dt) {
   ui.posicionarMenu(s.x, s.y);
 }
 
-if (new URLSearchParams(location.search).has('debug')) window.__h = { minijuegos, encargos, THREE, sala, paredObjs, interacciones, controles, guia, telefono, entregas, trabajos, estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida, experiencia, suciedad, vida, inmobiliaria: () => inmobiliaria, registrar, abrirObras, refrescarHud, inicio, camaraIso, duo, album, usos };
+if (new URLSearchParams(location.search).has('debug')) window.__h = { minijuegos, encargos, THREE, sala, paredObjs, interacciones, controles, guia, telefono, entregas, trabajos, estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida, experiencia, suciedad, vida, inmobiliaria: () => inmobiliaria, registrar, abrirObras, refrescarHud, inicio, camaraIso, duo, album, usos, renderer, escena };
 
 renderer.setAnimationLoop(() => {
   const dt = Math.min(reloj.getDelta(), 0.1);
@@ -2889,6 +2906,7 @@ renderer.setAnimationLoop(() => {
     if (s !== null) ui.chipReparto(`🚚 ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`, false);
     else ui.chipReparto(null);
   }
+  estabilizarLuces();
   renderer.render(escena, camaraIso.camara);
   tGuardado += dt;
   if (tGuardado > 20) {
