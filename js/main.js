@@ -820,6 +820,21 @@ const ui = new UI(miniaturas, {
   alAdoptar(especie) {
     adoptar(especie);
   },
+  alAdoptarMostrador(especie, periodo) {
+    adoptar(especie).then(ok => {
+      if (!ok) return;
+      estado.mostradorAdoptado = periodo;
+      guardar();
+    });
+  },
+  alMascotaVendida(periodo) {
+    return estado.mostradorAdoptado === periodo;
+  },
+  alImprescindibles() {
+    const h = estado.historia || 0;
+    const pide = { 4: 'cama', 7: 'robot' }[h];
+    return pide && !gestor.muebles.some(m => m.userData.def.id === pide) ? [pide] : [];
+  },
   alVerMascota(m) {
     ui.cerrarHojas();
     setTimeout(() => seleccionarMascota(m), 250);
@@ -1420,7 +1435,7 @@ function dialogoAbierto() {
 }
 
 function comprobarEvento() {
-  if (!estado.bienvenida || dialogoAbierto()) return;
+  if (!estado.bienvenida || dialogoAbierto() || ui.hojaAbierta) return;
   if (!estado.evento && guia && guia.activa()) return;
   if (!estado.evento) {
     iniciarEvento(0, true);
@@ -1894,6 +1909,7 @@ window.extrasMenu = () => {
   return [
     { id: 'buzon', icono: '📬', texto: 'Buzón', sub: vida.noLeidas() ? `${vida.noLeidas()} carta${vida.noLeidas() > 1 ? 's' : ''} sin leer` : 'Cartas, postales y ofertas', insignia: vida.noLeidas() || null, accion: () => vida.abrirCorreo() },
     { id: 'nosotros', icono: '💕', texto: 'Nosotros', sub: 'Notas, regalos, preguntas, viajes y recuerdos', insignia: pareja2.pendientePregunta() ? '!' : null, accion: abrirNosotros },
+    { id: 'mascotas', icono: '🐾', texto: 'Vuestras mascotas', sub: mascotas.lista.length ? `${mascotas.lista.length} en casa · cómo están` : 'Adoptad una en el mostrador de Pilar', accion: () => ui.abrirRefugio() },
     { id: 'ganar', icono: '💼', texto: 'Ganar monedas', sub: `Hoy: ${trabajos.delDia().icono} ${trabajos.delDia().nombre} · minijuegos`, insignia: trabajos.turnosHoy() < 3 ? '!' : null, accion: abrirGanar },
     { id: 'objetivos', icono: '🏆', texto: 'Objetivos', sub: 'Pase del mes, logros y colecciones', insignia: economia.pendientesPase() || null, accion: abrirObjetivos },
     { id: 'casas', icono: CASAS[nivel].icono, texto: 'Casas', sub: nivel < CASAS.length - 1 ? `Siguiente: ${CASAS[nivel + 1].nombre}` : 'Lo más alto', accion: abrirCasas },

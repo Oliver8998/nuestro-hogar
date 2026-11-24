@@ -2,6 +2,7 @@ import { CATALOGO, MATERIALES, RAREZAS, infoItem } from './catalogo.js';
 import { ESPECIES } from './mascotas.js';
 import { SEGMENTOS, PIEZAS_PREMIO, COLOR_REGALO, COSTE_TIRADA, poolDe } from './ruleta.js';
 import { EscenaTienda } from './tienda3d.js';
+import { mostradorActual } from './mostrador.js';
 import * as THREE from 'three';
 
 const escapar = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -9,14 +10,18 @@ const escapar = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '
 const DESPLAZAMIENTO = 70;
 
 const CATEGORIAS = [
-  { id: 'muebles', nombre: 'Muebles', icono: '🛋️' },
-  { id: 'deco', nombre: 'Deco', icono: '🪴' },
-  { id: 'mascotas', nombre: 'Mascotas', icono: '🐾' },
-  { id: 'limpieza', nombre: 'Limpieza', icono: '🧹' },
+  { id: 'mostrador', nombre: 'Mostrador', icono: '🏪' },
   { id: 'reparar', nombre: 'Reparar', icono: '🧰' },
+  { id: 'basicos', nombre: 'Básicos', icono: '🧴' },
   { id: 'temporada', nombre: 'Temporada', icono: '🎁' },
-  { id: 'mercadillo', nombre: 'Mercadillo', icono: '🧺' },
-  { id: 'exterior', nombre: 'Exterior', icono: '🌳' }
+  { id: 'mercadillo', nombre: 'Mercadillo', icono: '🧺' }
+];
+const ALIAS_CATEGORIA = { muebles: 'mostrador', deco: 'mostrador', exterior: 'mostrador', limpieza: 'basicos', mascotas: 'basicos' };
+
+const FRASES_MASCOTA = [
+  '¡Mirad qué carita! Busca una familia.',
+  'Este pequeñín lleva días esperando a alguien como vosotros.',
+  'Se porta genial, os lo prometo.'
 ];
 
 const FRASES_PRODUCTO = [
@@ -30,6 +35,8 @@ const FRASES_PRODUCTO = [
 const FRASES_LOLA = [
   '¡Hola, pareja! ¿Qué os llevo hoy?',
   'Todo recién llegado, ¡mirad, mirad!',
+  'Cada dos días cambio lo del mostrador. ¡Si os gusta algo, no lo dejéis escapar!',
+  'Hoy tengo una mascota buscando casa en el mostrador…',
   'Si tenéis algo roto, aquí está la solución.',
   'Ese sofá quedaría precioso en vuestra casa.',
   '¿Ya habéis probado la ruleta? Dicen que da cosas únicas…'
@@ -69,7 +76,7 @@ export class UI {
     this.elFantasma = $('fantasma');
     this.elParticulas = $('capa-particulas');
     this.elDialogo = $('dialogo');
-    this.categoria = 'muebles';
+    this.categoria = 'mostrador';
     this.monedasActual = 0;
     this.ticketsActual = 0;
     this.inventario = null;
@@ -88,7 +95,7 @@ export class UI {
       b.dataset.cat = c.id;
       b.title = c.nombre;
       b.innerHTML = `<span>${c.icono}</span>${c.nombre}`;
-      if (c.id === 'temporada' || c.id === 'mercadillo' || c.id === 'exterior') b.classList.add('oculto');
+      if (c.id === 'temporada' || c.id === 'mercadillo') b.classList.add('oculto');
       b.addEventListener('click', () => {
         if (this.categoria === c.id) return;
         this.categoria = c.id;
@@ -97,6 +104,11 @@ export class UI {
       });
       pestanas.appendChild(b);
     }
+    this.escena3d.alTocarHueco = i => {
+      if (this.categoria !== 'mostrador' || !this.entradas[i]) return;
+      this.ev.alSonido('tocar');
+      this.seleccionarProducto(i);
+    };
     $('det-comprar').addEventListener('click', () => this.comprarSeleccion());
     $('det-regalar').addEventListener('click', () => this.sel && this.ev.alRegalar(this.sel.info, this.sel.color, this.sel.precio));
     $('det-desear').addEventListener('click', () => {
@@ -136,7 +148,6 @@ export class UI {
       pista.addEventListener('pointercancel', fin);
     });
     $('btn-ruleta').addEventListener('click', () => this.abrirRuleta());
-    $('btn-refugio').addEventListener('click', () => this.abrirRefugio());
     $('btn-mas').addEventListener('click', () => this.ev.alMas());
     $('pill-clima').addEventListener('click', () => this.ev.alClima());
     $('pill-hab').addEventListener('click', () => this.ev.alHabitaciones());
@@ -170,14 +181,12 @@ export class UI {
 
   ponerNivelCasa(n) {
     this.nivelCasa = n;
-    const b = document.querySelector('#tienda .pestanas-v button[data-cat="exterior"]');
-    if (b) b.classList.toggle('oculto', n < 2);
   }
 
   ponerMercadillo(si) {
     const b = document.querySelector('#tienda .pestanas-v button[data-cat="mercadillo"]');
     if (b) b.classList.toggle('oculto', !si);
-    if (!si && this.categoria === 'mercadillo') this.categoria = 'muebles';
+    if (!si && this.categoria === 'mercadillo') this.categoria = 'mostrador';
   }
 
   ponerTemporada(t, nombre) {
@@ -187,7 +196,7 @@ export class UI {
       b.classList.toggle('oculto', !t);
       if (t) b.innerHTML = `<span>${nombre.split(' ')[0]}</span>${nombre.split(' ').slice(1).join(' ')}`;
     }
-    if (!t && this.categoria === 'temporada') this.categoria = 'muebles';
+    if (!t && this.categoria === 'temporada') this.categoria = 'mostrador';
   }
 
   abrirGen(titulo, html, atras = null) {
@@ -211,7 +220,7 @@ export class UI {
   }
 
   abrirTienda(categoria) {
-    if (categoria) this.categoria = categoria;
+    if (categoria) this.categoria = ALIAS_CATEGORIA[categoria] || categoria;
     this.decirLola(FRASES_LOLA[Math.floor(Math.random() * FRASES_LOLA.length)]);
     this.abrirHoja('tienda');
     this.escena3d.abrir();
@@ -220,13 +229,18 @@ export class UI {
 
   entradasTienda() {
     const entradas = [];
-    if (this.categoria === 'muebles') {
-      const oferta = ofertaDelDia();
-      entradas.push({ info: infoItem(oferta.id), precio: oferta.precio, oferta: true });
+    if (this.categoria === 'mostrador') {
+      const m = mostradorActual({ nivelCasa: this.nivelCasa || 0, imprescindibles: this.ev.alImprescindibles ? this.ev.alImprescindibles() : [] });
+      this.mostradorInfo = m;
+      for (const x of m.items) entradas.push({ info: infoItem(x.id), precio: x.precio, oferta: x.oferta });
+      const e = ESPECIES[m.mascota];
+      const vendida = this.ev.alMascotaVendida ? this.ev.alMascotaVendida(m.periodo) : false;
+      entradas.splice(5, 0, { mascota: m.mascota, vendida, info: { id: `mascota:${m.mascota}`, nombre: e.nombre, tipo: 'mascota' }, precio: e.precio, oferta: false });
       for (const id of (this.ev.alOfertasExtra ? this.ev.alOfertasExtra() : [])) {
-        if (id === oferta.id || !infoItem(id)) continue;
-        entradas.push({ info: infoItem(id), precio: Math.round(infoItem(id).precio * 0.75), oferta: true });
+        if (!infoItem(id) || entradas.some(x => x.info.id === id)) continue;
+        entradas.push({ info: infoItem(id), precio: Math.round(infoItem(id).precio * 0.75), oferta: true, carta: true });
       }
+      return entradas;
     }
     if (this.categoria === 'mercadillo') {
       for (const x of (this.ev.alMercadillo ? this.ev.alMercadillo() : [])) entradas.push({ info: infoItem(x.id), precio: x.precio, oferta: false, mercadillo: true });
@@ -237,8 +251,9 @@ export class UI {
         if (d.temporada && d.temporada === this.temporada) entradas.push({ info: infoItem(d.id), precio: d.precio, oferta: false });
         continue;
       }
-      if (d.enTienda === false || d.categoria !== this.categoria) continue;
-      if (d.nivel && d.nivel > (this.nivelCasa || 0)) continue;
+      if (d.enTienda === false) continue;
+      if (this.categoria === 'reparar' && d.categoria !== 'reparar') continue;
+      if (this.categoria === 'basicos' && !(MATERIALES.includes(d) && (d.categoria === 'limpieza' || d.categoria === 'mascotas'))) continue;
       entradas.push({ info: infoItem(d.id), precio: d.precio, oferta: false });
     }
     return entradas;
@@ -248,12 +263,20 @@ export class UI {
     for (const b of document.querySelectorAll('#tienda .pestanas-v button')) b.classList.toggle('activa', b.dataset.cat === this.categoria);
     const lista = document.querySelector('#tienda .lista-items');
     lista.innerHTML = '';
-    lista.scrollTop = 0;
+    lista.scrollLeft = 0;
     this.entradas = this.entradasTienda();
+    const mostrador = this.categoria === 'mostrador';
+    this.escena3d.modoMostrador(mostrador);
+    if (mostrador) this.escena3d.ponerMostrador(this.entradas);
+    const rot = this.$('tienda-rotacion');
+    rot.classList.toggle('oculto', !mostrador);
+    if (mostrador) rot.textContent = `🔄 Productos nuevos en ${this.mostradorInfo.cambia}`;
     this.entradas.forEach((entrada, i) => {
       const b = document.createElement('button');
-      b.className = 'item-lista';
-      b.innerHTML = `${entrada.oferta ? '<span class="etq-oferta">-30%</span>' : ''}${this.img(this.mini.item(entrada.info.id, entrada.info.colores ? 0 : null))}<span class="nombre-item">${entrada.info.nombre}</span><span>🪙 ${entrada.precio}</span>`;
+      b.className = `item-lista${entrada.mascota ? ' es-mascota' : ''}${entrada.vendida ? ' vendida' : ''}`;
+      const imagen = entrada.mascota ? this.mini.mascota(entrada.mascota) : this.mini.item(entrada.info.id, entrada.info.colores ? 0 : null);
+      const etiqueta = entrada.mascota ? '<span class="etq-oferta etq-mascota">🐾</span>' : entrada.oferta ? `<span class="etq-oferta">${entrada.carta ? '✉️' : ''}-${entrada.carta ? 25 : 30}%</span>` : '';
+      b.innerHTML = `${etiqueta}${this.img(imagen)}<span class="nombre-item">${entrada.info.nombre}</span><span>${entrada.vendida ? '💕' : `🪙 ${entrada.precio}`}</span>`;
       b.addEventListener('click', () => {
         this.ev.alSonido('tocar');
         this.seleccionarProducto(i);
@@ -280,17 +303,31 @@ export class UI {
         encendido: info.encendible ? true : false,
         cantidad: 1
       };
+    } else {
+      Object.assign(this.sel, { vendida: entrada.vendida, precio: entrada.precio, oferta: entrada.oferta });
     }
     this.entradas.forEach(e => e.boton.classList.toggle('activa', e === entrada));
-    entrada.boton.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    this.escena3d.mostrar(info, this.sel.color, this.sel.encendido);
-    if (!silencio && !misma) this.decirLola(FRASES_PRODUCTO[Math.floor(Math.random() * FRASES_PRODUCTO.length)]);
+    entrada.boton.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+    if (this.categoria === 'mostrador' && indice < 8) this.escena3d.seleccionarHueco(indice, this.sel.color, this.sel.encendido);
+    else this.escena3d.mostrar(info, this.sel.color, this.sel.encendido);
+    if (!silencio && !misma) {
+      const frases = entrada.mascota ? (entrada.vendida ? ['¡Ese ya se fue con vosotros! Pronto llegará otro.'] : FRASES_MASCOTA) : FRASES_PRODUCTO;
+      this.decirLola(frases[Math.floor(Math.random() * frases.length)]);
+    }
     this.pintarDetalle();
   }
 
   pintarDetalle() {
     const { info, oferta } = this.sel;
     this.$('det-nombre').textContent = info.nombre;
+    if (this.sel.mascota) {
+      const e = ESPECIES[this.sel.mascota];
+      this.$('det-info').innerHTML = `<div class="det-mascota-texto">${e.texto}</div>` + this.rasgosEspecie(e).map(t => `<span class="chip">${t}</span>`).join('') + '<div class="det-mascota-nota">Llega con su propia personalidad 🎲</div>';
+      this.$('det-opciones').innerHTML = '';
+      this.refrescarTienda();
+      this.ajustarListaTienda();
+      return;
+    }
     const chips = [];
     if (oferta) chips.push(`<span class="chip oferta">Oferta · antes ${info.precio}</span>`);
     if (this.sel.mercadillo) chips.push(`<span class="chip oferta">🧺 Mercadillo del finde</span>`);
@@ -364,6 +401,13 @@ export class UI {
     if (!this.sel) return;
     const total = this.sel.precio * this.sel.cantidad;
     const boton = this.$('det-comprar');
+    if (this.sel.mascota) {
+      boton.innerHTML = this.sel.vendida ? '💕 Ya tiene casa' : `🐾 Adoptar · 🪙 ${this.sel.precio}`;
+      boton.disabled = this.sel.vendida || this.sel.precio > this.monedasActual;
+      ['det-regalar', 'det-desear', 'det-proponer'].forEach(id => this.$(id).classList.add('oculto'));
+      this.$('det-tienes').classList.add('oculto');
+      return;
+    }
     boton.innerHTML = `Comprar${this.sel.cantidad > 1 ? ` ${this.sel.cantidad}` : ''} · 🪙 ${total}`;
     boton.disabled = total > this.monedasActual;
     const pareja = this.ev.alHayPareja && this.ev.alHayPareja();
@@ -379,6 +423,13 @@ export class UI {
   }
 
   comprarSeleccion() {
+    if (this.sel.mascota) {
+      if (this.sel.vendida) return;
+      this.escena3d.reaccionar('feliz');
+      this.decirLola('¡Qué ilusión! Ponedle un nombre bonito.');
+      this.ev.alAdoptarMostrador(this.sel.mascota, this.mostradorInfo.periodo);
+      return;
+    }
     const { info, color, precio, cantidad } = this.sel;
     if (!this.ev.alComprar(info, color, precio, cantidad)) {
       this.escena3d.reaccionar('no');
@@ -424,7 +475,7 @@ export class UI {
     });
   }
 
-  abrirRefugio(propias = this.ev.alPedirMascotas()) {
+  abrirRefugio(propias = this.ev.alPedirMascotas(), soloMias = true) {
     this.$('img-mateo').src = this.mini.personaje('mateo');
     const lista = this.$('lista-mascotas');
     const barra = (v, color) => `<i class="adopta-barra"><b style="width:${Math.max(4, Math.round(v))}%;background:${color}"></b></i>`;
@@ -442,6 +493,15 @@ export class UI {
     }));
     const rejilla = document.querySelector('#refugio .rejilla');
     rejilla.classList.add('adopta-rejilla');
+    if (soloMias) {
+      rejilla.innerHTML = '';
+      rejilla.classList.add('oculto');
+      document.querySelector('#refugio .titulo-esperando').classList.add('oculto');
+      this.abrirHoja('refugio');
+      return;
+    }
+    rejilla.classList.remove('oculto');
+    document.querySelector('#refugio .titulo-esperando').classList.remove('oculto');
     const filtros = [
       ['todas', 'Todas'], ['pelo', '🐾 Con pelo'], ['plumas', '🪶 Con plumas'], ['especiales', '✨ Especiales']
     ];

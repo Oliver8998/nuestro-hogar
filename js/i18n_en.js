@@ -1776,5 +1776,21 @@ export default {
 "Abracadabra…":"Abracadabra…",
 "💡 Mantén pulsado un objeto para moverlo o ver sus opciones":"💡 Press and hold an object to move it or see its options",
 "💡 Mantén pulsada una mascota para ver su ficha y cuidarla":"💡 Press and hold a pet to see its profile and look after it",
-"Mantened pulsado un mueble y pulsad 🔍 Buscar":"Press and hold a piece of furniture and tap 🔍 Search"
+"Mantened pulsado un mueble y pulsad 🔍 Buscar":"Press and hold a piece of furniture and tap 🔍 Search",
+"Mostrador":"Counter",
+"Básicos":"Basics",
+"🔄 Productos nuevos en {0}":"🔄 New products in {0}",
+"{0} en casa · cómo están":"{0} at home · how they're doing",
+"Adoptad una en el mostrador de Pilar":"Adopt one at Pilar's counter",
+"Mateo, el veterinario":"Mateo, the vet",
+"Aquí veis cómo están vuestras mascotas. Para adoptar, pasad por el mostrador de Pilar.":"Here you can see how your pets are doing. To adopt, stop by Pilar's counter.",
+"¡Mirad qué carita! Busca una familia.":"Look at that face! Looking for a family.",
+"Este pequeñín lleva días esperando a alguien como vosotros.":"This little one has been waiting days for someone like you.",
+"Se porta genial, os lo prometo.":"Very well behaved, I promise.",
+"Cada dos días cambio lo del mostrador. ¡Si os gusta algo, no lo dejéis escapar!":"I change the counter every two days. If you like something, don't let it get away!",
+"Hoy tengo una mascota buscando casa en el mostrador…":"Today there's a pet looking for a home on the counter…",
+"¡Ese ya se fue con vosotros! Pronto llegará otro.":"That one already went home with you! Another will arrive soon.",
+"¡Qué ilusión! Ponedle un nombre bonito.":"How exciting! Give it a lovely name.",
+"Llega con su propia personalidad 🎲":"Comes with its own personality 🎲",
+"💕 Ya tiene casa":"💕 Already has a home"
 };
