@@ -256,7 +256,7 @@ export class Sueno {
       const trozo = rec.slice(i, i + 6);
       const m1 = new Date(trozo[0].t).toLocaleDateString(LOCAL(), { month: 'long', year: 'numeric' });
       const m2 = new Date(trozo[trozo.length - 1].t).toLocaleDateString(LOCAL(), { month: 'long', year: 'numeric' });
-      const txt = m1 === m2 ? m1 : m1.slice(-4) === m2.slice(-4) ? `${m1.split(' de ')[0]} – ${m2}` : `${m1} – ${m2}`;
+      const txt = m1 === m2 ? m1 : m1.slice(-4) === m2.slice(-4) ? `${m1.replace(/( de)? \d{4}$/, '')} – ${m2}` : `${m1} – ${m2}`;
       const mes = txt.charAt(0).toUpperCase() + txt.slice(1);
       pags.push(`<h3>${mes}</h3><div class="lb-recuerdos">${trozo.map(r => `<div><span>${r.icono}</span><p>${escapar(r.texto)}<small>${fecha(r.t, false)}</small></p></div>`).join('')}</div>`);
     }
