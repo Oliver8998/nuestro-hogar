@@ -320,7 +320,7 @@ export class Cuadros {
 
   ajustar(c) {
     const [w, h] = this.medidas(c);
-    const lim = 3 - w / 2 - (MARCOS[c.marco] ? MARCOS[c.marco].borde : 0.05) - 0.05;
+    const lim = this.ctx.sala.largoPared(c.pared) / 2 - w / 2 - (MARCOS[c.marco] ? MARCOS[c.marco].borde : 0.05) - 0.05;
     c.x = Math.max(-lim, Math.min(lim, c.x));
     c.y = Math.max(h / 2 + 0.35, Math.min(2.5 - h / 2, c.y));
   }

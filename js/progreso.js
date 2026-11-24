@@ -9,11 +9,14 @@ export const CASAS = [
 encarecer(CASAS);
 
 export const OBRAS = [
+  { id: 'ampliar1', nombre: 'Ampliar el salón (6×7)', icono: '📐', nivel: 4, precio: 2500, texto: 'Tirad un tabique: una fila más de salón', filas: 1 },
   { id: 'dormitorio', nombre: 'Dormitorio', icono: '🛏️', nivel: 5, precio: 5000, texto: 'Un cuarto para dormir de verdad' },
   { id: 'terraza', nombre: 'Terraza', icono: '🌇', nivel: 8, precio: 7000, texto: 'Vuestro primer rincón al aire libre', exterior: true },
   { id: 'cocina', nombre: 'Cocina', icono: '🍳', nivel: 10, precio: 8000, texto: 'Para las recetas de mamá y vuestros platos' },
+  { id: 'ampliar2', nombre: 'Ampliar el salón (6×8)', icono: '📐', nivel: 11, precio: 4000, texto: 'Otra fila más para el salón', filas: 2 },
   { id: 'bano', nombre: 'Baño', icono: '🛁', nivel: 13, precio: 10000, texto: 'Bañera, espejo y mucha espuma' },
   { id: 'estudio', nombre: 'Estudio', icono: '💻', nivel: 16, precio: 12000, texto: 'Un sitio tranquilo para trabajar y crear' },
+  { id: 'ampliar3', nombre: 'Ampliar el salón (6×9)', icono: '📐', nivel: 18, precio: 6000, texto: 'El salón más grande posible', filas: 3 },
   { id: 'jardin', nombre: 'Jardín', icono: '🌳', nivel: 20, precio: 18000, texto: 'Comprad el bajo con patio: un jardín enorme', exterior: true, alias: ['Jardín grande'] },
   { id: 'juegos', nombre: 'Sala de juegos', icono: '🎮', nivel: 22, precio: 18000, texto: 'Consolas, futbolín y noches de piques' },
   { id: 'cine', nombre: 'Cine', icono: '🎬', nivel: 24, precio: 20000, texto: 'Vuestra propia sala de cine' },

@@ -22,10 +22,10 @@ export const XP_EVENTO = {
   regar: 3, cosechar: 6, mimos: 2, pasear: 8, jugar: 3, 'colgar-cuadro': 8, reto: 30, visita: 10, cria: 30,
   'aprender-truco': 10, truco: 3, reciclar: 5, averia: 15, tender: 4, piano: 3, cancion: 5, 'foto-editada': 5,
   relax: 3, peces: 3, 'gato-comida': 3, 'gato-callejero': 5, nieve: 5, tesoro: 10, 'like-recibido': 10,
-  'ranking-primero': 25, fiesta: 30, 'fiesta-perfecta': 40, alquiler: 10, obra: 150
+  'ranking-primero': 25, fiesta: 30, 'fiesta-perfecta': 40, alquiler: 20, obra: 150, 'compra-piso': 60, 'cobrar-alquiler': 5, venta: 0
 };
 
-const SIN_TOPE = new Set(['trabajar', 'trabajo-perfecto', 'encargo', 'reformar', 'reto', 'cria', 'fiesta', 'fiesta-perfecta', 'ranking-primero', 'mision', 'logro', 'obra', 'gastar', 'alquiler', 'venta']);
+const SIN_TOPE = new Set(['trabajar', 'trabajo-perfecto', 'encargo', 'reformar', 'reto', 'cria', 'fiesta', 'fiesta-perfecta', 'ranking-primero', 'mision', 'logro', 'obra', 'gastar', 'alquiler', 'venta', 'compra-piso']);
 const TOPE_DIA = 15;
 
 export const NIVEL_OBJETO = { 2: 8, 3: 14, 4: 20 };
@@ -33,6 +33,7 @@ export const NIVEL_OBJETO = { 2: 8, 3: 14, 4: 20 };
 export function desbloqueos() {
   const l = [
     { nivel: 6, icono: '🎨', texto: 'Reto de decoración' },
+    { nivel: 9, icono: '🔑', texto: 'Inmobiliaria: pisos para reformar y vender o alquilar' },
     { nivel: 8, icono: '🌿', texto: 'Objetos de exterior en la tienda (si tenéis terraza o jardín)' },
     { nivel: 14, icono: '🔥', texto: 'Chimenea, columpio, piscina hinchable y mesa de picnic' },
     { nivel: 20, icono: '⛲', texto: 'Piscina y fuente para el jardín' }

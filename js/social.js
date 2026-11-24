@@ -297,8 +297,8 @@ export class Social {
     const figuras = invitados.map((id, i) => {
       const p = crearPersonaje(id);
       const c = mascotas.celdaLibreAlAzar(bloqueadas) || [4 + i, 6];
-      bloqueadas.add(c[0] * 12 + c[1]);
-      p.position.set((c[0] - 6 + 0.5) * 0.5, 0, (c[1] - 6 + 0.5) * 0.5);
+      bloqueadas.add(mascotas.claveCelda(c));
+      p.position.copy(mascotas.posCelda(c));
       p.scale.setScalar(1.2);
       p.userData.fase = Math.random() * 6;
       escena.add(p);

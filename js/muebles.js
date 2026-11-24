@@ -52,15 +52,41 @@ export class GestorMuebles {
   constructor(escena) {
     this.escena = escena;
     this.muebles = [];
-    const rejilla = new THREE.GridHelper(6, 12, 0xffffff, 0xffffff);
-    rejilla.material.transparent = true;
-    rejilla.material.opacity = 0.35;
-    rejilla.material.depthWrite = false;
+    this.lx = LIMITE;
+    this.lz = LIMITE;
+    this.rejilla = null;
+    this.crearRejilla();
+  }
+
+  crearRejilla() {
+    const visible = this.rejilla ? this.rejilla.visible : false;
+    if (this.rejilla) {
+      this.escena.remove(this.rejilla);
+      this.rejilla.geometry.dispose();
+      this.rejilla.material.dispose();
+    }
+    const ax = this.lx * CELDA;
+    const az = this.lz * CELDA;
+    const v = [];
+    for (let i = -this.lx; i <= this.lx; i++) v.push(i * CELDA, 0, -az, i * CELDA, 0, az);
+    for (let j = -this.lz; j <= this.lz; j++) v.push(-ax, 0, j * CELDA, ax, 0, j * CELDA);
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(v, 3));
+    const rejilla = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.35, depthWrite: false }));
     rejilla.position.y = 0.012;
-    rejilla.visible = false;
+    rejilla.visible = visible;
     rejilla.layers.set(1);
-    escena.add(rejilla);
+    this.escena.add(rejilla);
     this.rejilla = rejilla;
+  }
+
+  ajustarTam(ancho, fondo) {
+    const lx = Math.round(ancho / CELDA / 2);
+    const lz = Math.round(fondo / CELDA / 2);
+    if (lx === this.lx && lz === this.lz) return;
+    this.lx = lx;
+    this.lz = lz;
+    this.crearRejilla();
   }
 
   def(id) {
@@ -87,7 +113,7 @@ export class GestorMuebles {
     const datos = mueble.userData;
     const def = datos.def;
     const [w, d] = this.medidas(def, rot);
-    if (x0 < -LIMITE || z0 < -LIMITE || x0 + w > LIMITE || z0 + d > LIMITE) return { valido: false, base: 0 };
+    if (x0 < -this.lx || z0 < -this.lz || x0 + w > this.lx || z0 + d > this.lz) return { valido: false, base: 0 };
     if (def.suelo) return { valido: true, base: 0 };
 
     let altura = null;
@@ -216,8 +242,8 @@ export class GestorMuebles {
     const candidatos = [];
     for (let rot = 0; rot < 2; rot++) {
       const [w, d] = this.medidas(def, rot);
-      for (let x = -LIMITE; x + w <= LIMITE; x++) {
-        for (let z = -LIMITE; z + d <= LIMITE; z++) {
+      for (let x = -this.lx; x + w <= this.lx; x++) {
+        for (let z = -this.lz; z + d <= this.lz; z++) {
           candidatos.push({ x, z, rot, dist: Math.hypot(x + w / 2, z + d / 2) + rot * 0.01 });
         }
       }
@@ -242,8 +268,8 @@ export class GestorMuebles {
   arrastrar(mueble, x, z) {
     const datos = mueble.userData;
     const [w, d] = this.medidas(datos.def, datos.rot);
-    const x0 = THREE.MathUtils.clamp(Math.round(x / CELDA - w / 2), -LIMITE, LIMITE - w);
-    const z0 = THREE.MathUtils.clamp(Math.round(z / CELDA - d / 2), -LIMITE, LIMITE - d);
+    const x0 = THREE.MathUtils.clamp(Math.round(x / CELDA - w / 2), -this.lx, this.lx - w);
+    const z0 = THREE.MathUtils.clamp(Math.round(z / CELDA - d / 2), -this.lz, this.lz - d);
     const a = this.apoyo(mueble, x0, z0, datos.rot);
     const destino = new THREE.Vector3((x0 + w / 2) * CELDA, a.base + 0.08, (z0 + d / 2) * CELDA);
     if (!mueble.visible || !datos.tmp) mueble.position.copy(destino);
@@ -274,8 +300,8 @@ export class GestorMuebles {
     const nuevaRot = (datos.rot + 1) % 4;
     const [w, d] = this.medidas(datos.def, datos.rot);
     const [nw, nd] = this.medidas(datos.def, nuevaRot);
-    const x0 = THREE.MathUtils.clamp(Math.round(datos.x0 + w / 2 - nw / 2), -LIMITE, LIMITE - nw);
-    const z0 = THREE.MathUtils.clamp(Math.round(datos.z0 + d / 2 - nd / 2), -LIMITE, LIMITE - nd);
+    const x0 = THREE.MathUtils.clamp(Math.round(datos.x0 + w / 2 - nw / 2), -this.lx, this.lx - nw);
+    const z0 = THREE.MathUtils.clamp(Math.round(datos.z0 + d / 2 - nd / 2), -this.lz, this.lz - nd);
     const a = this.apoyo(mueble, x0, z0, nuevaRot);
     if (!a.valido) return 'sitio';
     this.colocar(mueble, x0, z0, nuevaRot, a.base);

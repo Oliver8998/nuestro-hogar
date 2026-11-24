@@ -21,11 +21,21 @@ export class CamaraIso {
     this.inercia = 0;
     this.agarrada = false;
     this.anchoVista = this.tamano;
+    this.limX = LIMITE_PAN;
+    this.limZ = LIMITE_PAN;
     this.redimensionar(aspecto);
     this.aplicar();
   }
 
+  ajustar(ancho, fondo) {
+    this.tamano = 10 * Math.max(1, (ancho + fondo) / 12);
+    this.limX = LIMITE_PAN + Math.max(0, ancho - 6) / 2;
+    this.limZ = LIMITE_PAN + Math.max(0, fondo - 6) / 2;
+    if (this.aspecto) this.redimensionar(this.aspecto);
+  }
+
   redimensionar(aspecto) {
+    this.aspecto = aspecto;
     const ancho = aspecto < 1 ? this.tamano : this.tamano * aspecto;
     const alto = ancho / aspecto;
     this.anchoVista = ancho;
@@ -61,8 +71,8 @@ export class CamaraIso {
     const fondo = new THREE.Vector3(-Math.sin(this.angulo), 0, -Math.cos(this.angulo));
     this.objetivoObj.addScaledVector(derecha, -dxPx * porPx);
     this.objetivoObj.addScaledVector(fondo, dyPx * porPx / Math.sin(this.altura));
-    this.objetivoObj.x = THREE.MathUtils.clamp(this.objetivoObj.x, -LIMITE_PAN, LIMITE_PAN);
-    this.objetivoObj.z = THREE.MathUtils.clamp(this.objetivoObj.z, -LIMITE_PAN, LIMITE_PAN + 1.2);
+    this.objetivoObj.x = THREE.MathUtils.clamp(this.objetivoObj.x, -this.limX, this.limX);
+    this.objetivoObj.z = THREE.MathUtils.clamp(this.objetivoObj.z, -this.limZ, this.limZ + 1.2);
   }
 
   reiniciar() {

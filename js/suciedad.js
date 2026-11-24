@@ -168,12 +168,14 @@ export class Suciedad {
 
   posicionLibre() {
     const bloq = this.bloqueadas();
+    const nx = this.mascotas.muebles.lx * 2;
+    const nz = this.mascotas.muebles.lz * 2;
     for (let k = 0; k < 40; k++) {
-      const i = Math.floor(Math.random() * 12);
-      const j = Math.floor(Math.random() * 12);
-      if (bloq.has(i * 12 + j)) continue;
-      const x = (i - 6 + 0.5) * 0.5 + (Math.random() - 0.5) * 0.2;
-      const z = (j - 6 + 0.5) * 0.5 + (Math.random() - 0.5) * 0.2;
+      const i = Math.floor(Math.random() * nx);
+      const j = Math.floor(Math.random() * nz);
+      if (bloq.has(i * nz + j)) continue;
+      const x = (i - nx / 2 + 0.5) * 0.5 + (Math.random() - 0.5) * 0.2;
+      const z = (j - nz / 2 + 0.5) * 0.5 + (Math.random() - 0.5) * 0.2;
       if (this.lista.some(d => d.tipo !== 'telarana' && Math.hypot(d.x - x, d.z - z) < 0.5)) continue;
       return { x, z };
     }
@@ -191,7 +193,11 @@ export class Suciedad {
       const hueco = datos && datos.hueco !== undefined ? datos.hueco : libres[Math.floor(Math.random() * libres.length)];
       if (hueco === undefined) return null;
       const h = HUECOS_TELARANA[hueco];
-      d = { tipo, hueco, pared: h.pared, x: h.pos[0], y: h.pos[1], z: h.pos[2], rot: h.rot };
+      const hx = this.mascotas.muebles.lx * 0.5;
+      const hz = this.mascotas.muebles.lz * 0.5;
+      const px = Math.sign(h.pos[0]) * (hx - (3 - Math.abs(h.pos[0])));
+      const pz = Math.sign(h.pos[2]) * (hz - (3 - Math.abs(h.pos[2])));
+      d = { tipo, hueco, pared: h.pared, x: px, y: h.pos[1], z: pz, rot: h.rot };
     } else {
       const p = datos && datos.x !== undefined ? datos : this.posicionLibre();
       if (!p) return null;
@@ -351,8 +357,10 @@ export class Suciedad {
     }
     const pos = silencio ? this.posicionLibre() : { x: m.grupo.position.x - Math.sin(m.angulo) * 0.25, z: m.grupo.position.z - Math.cos(m.angulo) * 0.25 };
     if (!pos) return;
-    pos.x = THREE.MathUtils.clamp(pos.x, -2.8, 2.8);
-    pos.z = THREE.MathUtils.clamp(pos.z, -2.8, 2.8);
+    const mx = this.mascotas.muebles.lx * 0.5 - 0.2;
+    const mz = this.mascotas.muebles.lz * 0.5 - 0.2;
+    pos.x = THREE.MathUtils.clamp(pos.x, -mx, mx);
+    pos.z = THREE.MathUtils.clamp(pos.z, -mz, mz);
     this.anadir('caca', pos, !silencio);
     if (!silencio) this.eventos.alNuevaSuciedad('caca', m);
   }

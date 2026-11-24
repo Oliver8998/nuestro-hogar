@@ -3210,3 +3210,27 @@ body.colgando #lateral, body.colgando #chips-vida, body.colgando #menu-objeto, b
 .xp-nuevos { background: #fff7e3; border-radius: 14px; padding: 10px 12px; text-align: left; margin: 6px 0; font-weight: 700; font-size: 14px; display: flex; flex-direction: column; gap: 4px; }
 .xp-proximo { font-size: 12px; color: var(--suave); font-weight: 700; margin: 6px 0 0; }
 .obra-aviso { color: #c9707f; font-weight: 800; }
+
+/* Inmobiliaria */
+.inm-mateo { display: flex; gap: 10px; align-items: flex-start; background: #eef4fb; border-radius: 16px; padding: 12px; margin-bottom: 12px; }
+.inm-mateo span { font-size: 34px; }
+.inm-mateo p { margin: 0; font-weight: 700; font-size: 13px; color: var(--texto); }
+.inm-pie { font-size: 12px; margin-top: 10px; }
+.inm-ficha { background: #fff; border-radius: 18px; padding: 12px 14px; box-shadow: 0 3px 0 var(--borde); margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px; }
+.inm-ficha > b { font-size: 16px; font-weight: 900; }
+.inm-ficha small { color: var(--suave); font-weight: 700; font-size: 12px; }
+.inm-datos { display: flex; gap: 8px; flex-wrap: wrap; }
+.inm-datos span { background: #fff7e3; border-radius: 12px; padding: 6px 10px; font-weight: 700; font-size: 13px; }
+.inm-nota { font-style: italic; }
+.inm-hucha i { display: block; height: 10px; background: var(--borde); border-radius: 5px; overflow: hidden; }
+.inm-hucha i b { display: block; height: 100%; background: linear-gradient(90deg, #ffd56b, #f2a93b); }
+.inm-botones { display: flex; flex-direction: column; gap: 8px; }
+.inm-lista { display: flex; flex-direction: column; gap: 8px; text-align: left; }
+.inm-inquilino { display: flex; gap: 10px; align-items: center; background: #fff; border: 2px solid var(--borde); border-radius: 16px; padding: 10px; font-family: inherit; text-align: left; cursor: pointer; }
+.inm-inquilino > span { font-size: 28px; }
+.inm-inquilino div { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.inm-inquilino b { font-weight: 900; font-size: 14px; color: var(--texto); }
+.inm-inquilino small { font-weight: 700; font-size: 12px; color: var(--suave); }
+.inm-inquilino small.ok { color: #4e9d6b; }
+.inm-inquilino small.falta { color: #c9707f; }
+.inm-inquilino em { font-style: normal; font-weight: 900; font-size: 14px; white-space: nowrap; color: var(--texto); }

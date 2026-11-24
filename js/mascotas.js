@@ -20,7 +20,13 @@ export const ESPECIES = {
 for (const e of Object.values(ESPECIES)) if (typeof e.precio === 'number') e.precio = caro(e.precio);
 
 const CELDA = 0.5;
-const N = 12;
+let NX = 12;
+let NZ = 12;
+
+export function usarRejilla(muebles) {
+  NX = muebles.lx * 2;
+  NZ = muebles.lz * 2;
+}
 
 export const PERSONALIDADES = {
   dormilona: { nombre: 'Dormilona', icono: '😴', texto: 'Se cansa enseguida y adora sus siestas' },
@@ -110,17 +116,17 @@ export function crearModeloMascota(especieId) {
 
 function celdaDe(x, z) {
   return [
-    THREE.MathUtils.clamp(Math.floor(x / CELDA + N / 2), 0, N - 1),
-    THREE.MathUtils.clamp(Math.floor(z / CELDA + N / 2), 0, N - 1)
+    THREE.MathUtils.clamp(Math.floor(x / CELDA + NX / 2), 0, NX - 1),
+    THREE.MathUtils.clamp(Math.floor(z / CELDA + NZ / 2), 0, NZ - 1)
   ];
 }
 
 function centroCelda(i, j) {
-  return new THREE.Vector3((i - N / 2 + 0.5) * CELDA, 0, (j - N / 2 + 0.5) * CELDA);
+  return new THREE.Vector3((i - NX / 2 + 0.5) * CELDA, 0, (j - NZ / 2 + 0.5) * CELDA);
 }
 
 function camino(bloqueadas, desde, hasta) {
-  const clave = (i, j) => i * N + j;
+  const clave = (i, j) => i * NZ + j;
   const inicio = clave(desde[0], desde[1]);
   const fin = clave(hasta[0], hasta[1]);
   if (inicio === fin) return [];
@@ -129,12 +135,12 @@ function camino(bloqueadas, desde, hasta) {
   while (cola.length) {
     const actual = cola.shift();
     if (actual === fin) break;
-    const i = Math.floor(actual / N);
-    const j = actual % N;
+    const i = Math.floor(actual / NZ);
+    const j = actual % NZ;
     for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
       const ni = i + di;
       const nj = j + dj;
-      if (ni < 0 || nj < 0 || ni >= N || nj >= N) continue;
+      if (ni < 0 || nj < 0 || ni >= NX || nj >= NZ) continue;
       const k = clave(ni, nj);
       if (previo.has(k)) continue;
       if (bloqueadas.has(k) && k !== fin) continue;
@@ -144,7 +150,7 @@ function camino(bloqueadas, desde, hasta) {
   }
   if (!previo.has(fin)) return null;
   const ruta = [];
-  for (let k = fin; k !== inicio; k = previo.get(k)) ruta.unshift(centroCelda(Math.floor(k / N), k % N));
+  for (let k = fin; k !== inicio; k = previo.get(k)) ruta.unshift(centroCelda(Math.floor(k / NZ), k % NZ));
   return ruta;
 }
 
@@ -222,13 +228,14 @@ export class GestorMascotas {
   }
 
   bloqueadas() {
+    usarRejilla(this.muebles);
     const set = new Set();
     for (const m of this.muebles.muebles) {
       const d = m.userData;
       if (d.def.suelo || d.def.paraMascota || d.base > 0.01) continue;
       const [w, f] = this.muebles.medidas(d.def, d.rot);
       for (let i = d.x0; i < d.x0 + w; i++) {
-        for (let j = d.z0; j < d.z0 + f; j++) set.add((i + N / 2) * N + (j + N / 2));
+        for (let j = d.z0; j < d.z0 + f; j++) set.add((i + NX / 2) * NZ + (j + NZ / 2));
       }
     }
     return set;
@@ -239,11 +246,22 @@ export class GestorMascotas {
     return candidatos.length ? candidatos[Math.floor(Math.random() * candidatos.length)] : null;
   }
 
+  posCelda(c) {
+    usarRejilla(this.muebles);
+    return centroCelda(c[0], c[1]);
+  }
+
+  claveCelda(c) {
+    usarRejilla(this.muebles);
+    return c[0] * NZ + c[1];
+  }
+
   celdaLibreAlAzar(bloqueadas) {
+    usarRejilla(this.muebles);
     for (let k = 0; k < 40; k++) {
-      const i = Math.floor(Math.random() * N);
-      const j = Math.floor(Math.random() * N);
-      if (!bloqueadas.has(i * N + j)) return [i, j];
+      const i = Math.floor(Math.random() * NX);
+      const j = Math.floor(Math.random() * NZ);
+      if (!bloqueadas.has(i * NZ + j)) return [i, j];
     }
     return null;
   }
@@ -357,7 +375,7 @@ export class GestorMascotas {
   celdaDeMueble(mueble) {
     const d = mueble.userData;
     const [w, f] = this.muebles.medidas(d.def, d.rot);
-    return [d.x0 + N / 2 + Math.floor(w / 2), d.z0 + N / 2 + Math.floor(f / 2)];
+    return [d.x0 + NX / 2 + Math.floor(w / 2), d.z0 + NZ / 2 + Math.floor(f / 2)];
   }
 
   celdaJunto(mueble) {
@@ -368,9 +386,9 @@ export class GestorMascotas {
     for (let i = d.x0 - 1; i <= d.x0 + w; i++) {
       for (let j = d.z0 - 1; j <= d.z0 + f; j++) {
         const dentro = i >= d.x0 && i < d.x0 + w && j >= d.z0 && j < d.z0 + f;
-        const ci = i + N / 2;
-        const cj = j + N / 2;
-        if (dentro || ci < 0 || cj < 0 || ci >= N || cj >= N || bloqueadas.has(ci * N + cj)) continue;
+        const ci = i + NX / 2;
+        const cj = j + NZ / 2;
+        if (dentro || ci < 0 || cj < 0 || ci >= NX || cj >= NZ || bloqueadas.has(ci * NZ + cj)) continue;
         opciones.push([ci, cj]);
       }
     }
@@ -424,7 +442,7 @@ export class GestorMascotas {
     const o = otros[Math.floor(Math.random() * otros.length)];
     const [ci, cj] = celdaDe(o.grupo.position.x, o.grupo.position.z);
     const bloq = this.bloqueadas();
-    const opciones = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([a, b]) => [ci + a, cj + b]).filter(([i, j]) => i >= 0 && j >= 0 && i < N && j < N && !bloq.has(i * N + j));
+    const opciones = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([a, b]) => [ci + a, cj + b]).filter(([i, j]) => i >= 0 && j >= 0 && i < NX && j < NZ && !bloq.has(i * NZ + j));
     if (!opciones.length) return false;
     const destino = opciones[Math.floor(Math.random() * opciones.length)];
     this.accion(o, 'mirar', 3, { objetivoMirar: m.grupo.position.clone(), mirarA: 0 });
@@ -596,6 +614,7 @@ export class GestorMascotas {
   }
 
   actualizar(dt) {
+    usarRejilla(this.muebles);
     for (const mueble of this.muebles.muebles) {
       const emp = mueble.userData.empuje;
       if (!emp) continue;

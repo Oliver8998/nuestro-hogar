@@ -595,7 +595,7 @@ export class ObjetosPared {
 
   ajustar(o) {
     const [w, h] = this.medidas(o);
-    const lim = 3 - w / 2 - 0.04;
+    const lim = this.ctx.sala.largoPared(o.pared) / 2 - w / 2 - 0.04;
     o.x = Math.max(-lim, Math.min(lim, o.x));
     o.y = Math.max(h / 2 + 0.3, Math.min(ALTO - h / 2 - 0.04, o.y));
   }
