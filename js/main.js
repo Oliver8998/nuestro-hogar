@@ -43,7 +43,8 @@ import { encarecer, paga } from './balance.js';
 import { Encargos, CLIENTES } from './encargos.js';
 
 let guia = null;
-import { CASAS, COLECCIONES, LOGROS, EXTERIORES, calcularAcogedor, coleccionesCompletas } from './progreso.js';
+import { CASAS, COLECCIONES, LOGROS, EXTERIORES, OBRAS, calcularAcogedor, coleccionesCompletas } from './progreso.js';
+import { Experiencia, NIVEL_OBJETO } from './experiencia.js';
 
 activarTraduccion();
 await cargarModelos();
@@ -85,6 +86,8 @@ let mascotaSel = null;
 let controles = null;
 let interacciones = null;
 let paredObjs = null;
+let experiencia = null;
+let monedasVistas = null;
 let encargos = null;
 let mas = null;
 let arrastre = null;
@@ -174,20 +177,33 @@ function todasHabitaciones() {
   return habs;
 }
 
-const AMPLIACIONES = [
-  { nombre: 'Cine', icono: '🎬', precio: 6000 },
-  { nombre: 'Biblioteca', icono: '📚', precio: 6000 },
-  { nombre: 'Gimnasio', icono: '🏋️', precio: 7000 },
-  { nombre: 'Invernadero', icono: '🪴', precio: 8000 },
-  { nombre: 'Salón de baile', icono: '💃', precio: 10000 },
-  { nombre: 'Torre del observatorio', icono: '🔭', precio: 14000 }
-];
-encarecer(AMPLIACIONES);
 
 function habsCasa(e = estado) {
   const n = (e.casa && e.casa.nivel) || 0;
-  const base = CASAS[n].habitaciones;
-  return n === CASAS.length - 1 ? [...base, ...(e.ampliaciones || [])] : base;
+  const lista = [...CASAS[n].habitaciones];
+  for (const nombre of [...(e.ampliaciones || []), ...(e.obras || []).map(id => (OBRAS.find(o => o.id === id) || {}).nombre)]) {
+    if (nombre && !lista.includes(nombre)) lista.push(nombre);
+  }
+  return lista;
+}
+
+function obraHecha(o, e = estado) {
+  const habs = habsCasa(e);
+  return habs.includes(o.nombre) || (o.alias || []).some(a => habs.includes(a));
+}
+
+function tieneExterior() {
+  return habsCasa().some(h => EXTERIORES[h]);
+}
+
+function nivelXp() {
+  return experiencia ? experiencia.nivel() : 1;
+}
+
+function puedeItem(d) {
+  if (!d.nivel) return true;
+  if (nivelXp() < (NIVEL_OBJETO[d.nivel] || 99)) return false;
+  return !d.exterior || tieneExterior();
 }
 
 function nivelCasa() {
@@ -256,6 +272,7 @@ function aplicarRemoto(datos, conflicto = false, inicial = false) {
   const otroYo = sync && sync.activo ? 1 - sync.yo : null;
   const animoAntes = otroYo !== null && estado.animo && estado.animo[otroYo] ? estado.animo[otroYo].t : 0;
   for (const [k, v] of Object.entries(datos.estado)) if (!LOCALES.includes(k)) estado[k] = v;
+  monedasVistas = estado.monedas;
   if (otroYo !== null) setTimeout(revisarRachaPareja, 0);
   if (!inicial && otroYo !== null && estado.animo && estado.animo[otroYo] && estado.animo[otroYo].t > animoAntes) {
     const a = estado.animo[otroYo];
@@ -406,6 +423,9 @@ const habiaPartida = cargar();
 let terminada = sala.progreso().hechos >= sala.progreso().total;
 
 function refrescarHud() {
+  if (experiencia && monedasVistas !== null && estado.monedas < monedasVistas && !visitando) experiencia.gastar(monedasVistas - estado.monedas);
+  monedasVistas = estado.monedas;
+  if (experiencia) experiencia.pintarPill();
   ui.monedas(estado.monedas);
   ui.tickets(estado.tickets);
   ui.tiradaGratis(estado.gratis);
@@ -1106,6 +1126,8 @@ function contexto() {
     acogedor: () => acogedor().total,
     colecciones: () => (estado.colecciones || []).length,
     nivelCasa,
+    obras: () => (estado.obras || []).length,
+    nivelXp: () => nivelXp(),
     racha: () => (estado.racha && estado.racha.n) || 0,
     hora: () => new Date().getHours(),
     trabajosDistintos: () => ((estado.trabajos && estado.trabajos.hechos) || []).length,
@@ -1214,83 +1236,76 @@ function abrirAcogedor() {
   });
 }
 
-function abrirCasas() {
-  const nivel = nivelCasa();
-  const a = acogedor().total;
+function subObras() {
+  const n = nivelXp();
+  const sig = OBRAS.find(o => !obraHecha(o));
+  if (!sig) return 'Casa completa';
+  return n >= sig.nivel ? `Disponible: ${sig.nombre}` : `${sig.nombre} en el nivel ${sig.nivel}`;
+}
+
+function abrirObras(atras = null) {
+  const n = nivelXp();
   const reformada = contexto().reformaCompleta();
-  const cuerpo = ui.abrirGen('Casas', `
-    <p class="gen-intro">Cuando la casa esté acogedora y tengáis ahorros, podéis mudaros a una mejor. Os lleváis todos los muebles.</p>
-    <div class="casas-lista">${CASAS.map((c, i) => {
-      const estadoCasa = i < nivel ? 'pasada' : i === nivel ? 'actual' : i === nivel + 1 ? 'siguiente' : 'bloqueada';
-      const faltan = [];
-      if (estadoCasa === 'siguiente') {
-        if (c.requisitoReforma && !reformada) faltan.push('reformar el piso');
-        if (a < c.acogedor) faltan.push(`${c.acogedor} de acogedor (tenéis ${a})`);
-        if (estado.monedas < c.precio) faltan.push(`🪙 ${c.precio}`);
-      }
-      return `<div class="casa-fila ${estadoCasa}"><span>${c.icono}</span><div><b>${c.nombre}</b><small>${c.habitaciones.length} ${c.habitaciones.length > 1 ? 'habitaciones' : 'habitación'} · ${c.habitaciones.join(', ')}</small>${estadoCasa === 'siguiente' ? (faltan.length ? `<small class="falta">Falta: ${faltan.join(' · ')}</small>` : `<button class="primario mudarse">🚚 Mudarse · 🪙 ${c.precio}</button>`) : ''}</div><em>${estadoCasa === 'actual' ? '📍 Aquí' : estadoCasa === 'pasada' ? '✅' : estadoCasa === 'bloqueada' ? '🔒' : ''}</em></div>`;
-    }).join('')}</div>
-    ${nivel === CASAS.length - 1 ? `<h4 class="gen-sub">🏗️ Ampliar la mansión</h4>
-    <p class="gen-intro">Ya vivís en lo más alto, pero siempre se puede soñar más grande: añadid habitaciones nuevas.</p>
-    <div class="casas-lista">${AMPLIACIONES.map(x => {
-      const hecha = (estado.ampliaciones || []).includes(x.nombre);
-      return `<div class="casa-fila ${hecha ? 'pasada' : 'siguiente'}"><span>${x.icono}</span><div><b>${x.nombre}</b>${hecha ? '<small>Ya es vuestra</small>' : estado.monedas >= x.precio ? `<button class="primario ampliar" data-n="${x.nombre}">🏗️ Construir · 🪙 ${x.precio}</button>` : `<small class="falta">Falta: 🪙 ${x.precio}</small>`}</div><em>${hecha ? '✅' : ''}</em></div>`;
-    }).join('')}</div>` : ''}`, () => mas.abrir());
-  const b = cuerpo.querySelector('.mudarse');
-  if (b) b.addEventListener('click', () => mudarse(nivel + 1));
-  cuerpo.querySelectorAll('.ampliar').forEach(x => x.addEventListener('click', () => ampliar(x.dataset.n)));
+  const cuerpo = ui.abrirGen('🏗️ Obras', `
+    <p class="gen-intro">Vuestro piso crece con vosotros. Subid de nivel para desbloquear cada obra y pagadla para hacerla. Las habitaciones nuevas llegan sin pintar y hechas un asco.</p>
+    ${reformada ? '' : '<p class="gen-intro obra-aviso">🔨 Primero terminad de reformar el piso.</p>'}
+    <div class="casas-lista">${OBRAS.map(o => {
+      const hecha = obraHecha(o);
+      const bloqueada = n < o.nivel;
+      let pie;
+      if (hecha) pie = '<small>Ya es vuestra</small>';
+      else if (bloqueada) pie = `<small class="falta">🔒 Se desbloquea en el nivel ${o.nivel}</small>`;
+      else if (!reformada) pie = '<small class="falta">Terminad antes la reforma</small>';
+      else if (estado.monedas < o.precio) pie = `<small class="falta">Os faltan 🪙 ${o.precio - estado.monedas}</small>`;
+      else pie = `<button class="primario obra" data-id="${o.id}">🏗️ Hacer obra · 🪙 ${o.precio}</button>`;
+      return `<div class="casa-fila ${hecha ? 'pasada' : bloqueada ? 'bloqueada' : 'siguiente'}"><span>${o.icono}</span><div><b>${o.nombre}</b><small>${o.texto} · 🪙 ${o.precio}</small>${pie}</div><em>${hecha ? '✅' : bloqueada ? `🔒 ${o.nivel}` : ''}</em></div>`;
+    }).join('')}</div>`, atras);
+  cuerpo.querySelectorAll('.obra').forEach(b => b.addEventListener('click', () => {
+    const o = OBRAS.find(x => x.id === b.dataset.id);
+    ui.dialogo({
+      titulo: `${o.icono} ${o.nombre}`,
+      texto: `¿Hacemos la obra por 🪙 ${o.precio}? Llegará sin pintar y llena de polvo, así que tocará dejarla bonita.`,
+      botones: [
+        { texto: 'Mejor luego', tipo: 'secundario' },
+        { texto: `🏗️ Hacer obra · 🪙 ${o.precio}`, tipo: 'primario', accion: () => setTimeout(() => hacerObra(o.id), 250) }
+      ]
+    });
+  }));
 }
 
-function ampliar(nombre) {
-  const x = AMPLIACIONES.find(a => a.nombre === nombre);
-  if (!x || estado.monedas < x.precio || (estado.ampliaciones || []).includes(nombre)) return;
-  estado.monedas -= x.precio;
+function hacerObra(id) {
+  const o = OBRAS.find(x => x.id === id);
+  if (!o || obraHecha(o) || nivelXp() < o.nivel || estado.monedas < o.precio || visitando) return;
+  estado.monedas -= o.precio;
   estado.habs = todasHabitaciones();
-  estado.ampliaciones = [...(estado.ampliaciones || []), nombre];
+  estado.obras = [...(estado.obras || []), o.id];
   estado.habs = todasHabitaciones();
   ui.cerrarHojas();
-  refrescarHud();
-  aplicarEstiloCasa();
-  guardar();
-  pareja.recordar(null, x.icono, `Construimos ${nombre.toLowerCase() === 'cine' ? 'un cine' : `la habitación «${nombre}»`} en la mansión`);
-  sonido.premio();
-  ui.dialogo({
-    imagen: miniaturas.personaje('lola'), personaje: true,
-    titulo: `${x.icono} ¡${nombre} terminado!`,
-    texto: 'Los obreros ya han acabado. Id a la nueva habitación con el botón de arriba y decoradla a vuestro gusto.',
-    confeti: true,
-    botones: [{ texto: '¡A estrenarla!', tipo: 'primario' }]
-  });
-}
-
-function mudarse(n) {
-  const c = CASAS[n];
-  if (estado.monedas < c.precio) return;
-  estado.monedas -= c.precio;
-  estado.habs = todasHabitaciones();
-  if (!estado.casa) estado.casa = {};
-  estado.casa.nivel = n;
-  for (const h of estado.habs) h.suciedad = [];
-  suciedad.sincronizar([]);
-  while (estado.habs.length < c.habitaciones.length) estado.habs.push({ muebles: [], suciedad: [], paredes: [null, null, null, null] });
-  if ((estado.habActual || 0) === 0) sala.pintarParedes(estado.habs[0].paredes, c.pared);
-  aplicarEstiloCasa();
-  ui.cerrarHojas();
+  experiencia.retener(2500);
+  registrar('obra');
+  pareja.recordar(null, o.icono, `Hicimos obra: ${o.nombre}`);
+  const i = habsCasa().indexOf(o.nombre);
+  if (i >= 0) {
+    cambiarHabitacion(i);
+    const sucio = o.exterior ? ['barro', 'barro', 'polvo', 'polvo'] : ['polvo', 'polvo', 'polvo', 'telarana', 'telarana', 'barro', 'bichos'];
+    sucio.forEach((t, k) => setTimeout(() => {
+      if ((estado.habActual || 0) === i) suciedad.anadir(t);
+      if (k === sucio.length - 1) guardar();
+    }, 600 + k * 180));
+  }
   refrescarHud();
   guardar();
-  registrar('mudanza');
-  pareja.recordar(null, c.icono, `Nos mudamos a nuestro ${c.nombre.toLowerCase()}`);
   setTimeout(() => {
     sonido.premio();
     ui.dialogo({
       imagen: miniaturas.personaje('lola'), personaje: true,
-      titulo: `¡Bienvenidos a vuestro ${c.nombre.toLowerCase()}! ${c.icono}`,
-      texto: `Tenéis ${c.habitaciones.length} habitaciones: ${c.habitaciones.join(', ')}. Cambiad de habitación tocando el botón de arriba.`,
+      titulo: `${o.icono} ¡${o.nombre} terminado!`,
+      texto: o.exterior ? 'Los obreros ya han acabado, pero lo han dejado todo perdido. Limpiadlo y decoradlo a vuestro gusto.' : 'Los obreros ya han acabado, pero la han dejado sin pintar y llena de polvo. ¡A dejarla bonita! Cambiad de habitación con el botón de arriba.',
       confeti: true,
-      botones: [{ texto: '¡Qué ilusión!', tipo: 'primario' }]
+      botones: [{ texto: '¡A estrenarla!', tipo: 'primario' }]
     });
-    setTimeout(() => mas.anadirDiario(`Nos mudamos: ${c.nombre}`, true), 1500);
-  }, 400);
+    setTimeout(() => mas.anadirDiario(`Obra nueva: ${o.nombre}`, true), 1500);
+  }, 1800);
 }
 
 function abrirLogros() {
@@ -1334,6 +1349,7 @@ function revisarProgreso() {
     if (!ok) continue;
     estado.logros.push(l.id);
     estado.monedas += l.secreto ? 40 : 15;
+    if (experiencia) experiencia.ganar(50);
     sonido.premio();
     ui.aviso(l.secreto ? `🤫 ¡Logro secreto! ${l.icono} ${l.nombre} (+40 🪙)` : `🏆 Logro: ${l.nombre} (+15 🪙)`);
     refrescarHud();
@@ -1381,6 +1397,7 @@ function asegurarDiarias() {
 }
 
 function registrar(evento, n = 1) {
+  if (experiencia) experiencia.evento(evento, n);
   if (pareja) pareja.registrar(evento);
   if (guia) guia.evento(evento);
   if (!estado.stats) estado.stats = {};
@@ -1522,6 +1539,7 @@ function datosMisiones() {
         d.reclamada = true;
         sonido.premio();
         darPremio(info.premio);
+        experiencia.ganar(20);
         ui.aviso(`🎉 ${textoPremio(info.premio)}`);
       }
     };
@@ -1979,12 +1997,13 @@ window.extrasMenu = () => {
     { id: 'nosotros', icono: '💕', texto: 'Nosotros', sub: 'Notas, regalos, preguntas, viajes y recuerdos', insignia: pareja2.pendientePregunta() ? '!' : null, accion: abrirNosotros },
     { id: 'mascotas', icono: '🐾', texto: 'Vuestras mascotas', sub: mascotas.lista.length ? `${mascotas.lista.length} en casa · cómo están` : 'Adoptad una en el mostrador de Pilar', accion: () => ui.abrirRefugio() },
     { id: 'objetivos', icono: '🏆', texto: 'Objetivos', sub: 'Pase del mes, logros y colecciones', insignia: economia.pendientesPase() || null, accion: abrirObjetivos },
-    { id: 'casas', icono: CASAS[nivel].icono, texto: 'Casas', sub: nivel < CASAS.length - 1 ? `Siguiente: ${CASAS[nivel + 1].nombre}` : 'Lo más alto', accion: abrirCasas },
+    { id: 'casas', icono: '🏗️', texto: 'Obras', sub: subObras(), accion: () => abrirObras(() => mas.abrir()) },
+    { id: 'nivel', icono: '⭐', texto: `Nivel ${nivelXp()}`, sub: 'Experiencia y desbloqueos', accion: () => experiencia.abrir(() => mas.abrir()) },
     { id: 'reformas', icono: '🪵', texto: 'Reformas', sub: 'Suelos, papel pintado, ventanas y luces LED', bloqueo: bloqueoSi(nivel >= 1 || h >= 4, 'Arreglad las grietas y la humedad'), accion: () => casa2.abrirReformas() },
-    { id: 'cocina', icono: '🍳', texto: 'Cocina', sub: `${Object.values(estado.despensa || {}).reduce((a, b) => a + b, 0)} ingredientes · ${casa2.totalPlatos()} platos`, bloqueo: bloqueoSi(nivel >= 2 || tieneCocina, 'Comprad una cocina o mudaos al ático'), accion: () => casa2.abrirCocina(null) },
+    { id: 'cocina', icono: '🍳', texto: 'Cocina', sub: `${Object.values(estado.despensa || {}).reduce((a, b) => a + b, 0)} ingredientes · ${casa2.totalPlatos()} platos`, bloqueo: bloqueoSi(nivel >= 2 || tieneCocina || habsCasa().includes('Cocina'), 'Comprad un mueble de cocina o haced la obra de la cocina'), accion: () => casa2.abrirCocina(null) },
     { id: 'amigos', icono: '🏘️', texto: 'Amigos', sub: 'Visitad casas, ranking y fiestas', bloqueo: bloqueoSi(nivel >= 1 || h >= 6, 'Avanzad en la historia (6/10)'), accion: () => social.abrir() },
     { id: 'taller', icono: '🔨', texto: 'Taller', sub: 'Reciclar, fabricar y encargos a medida', bloqueo: bloqueoSi(nivel >= 1 || h >= 8, 'Avanzad en la historia (8/10)'), accion: () => economia.abrirTaller() },
-    { id: 'reto', icono: '🎨', texto: 'Reto de decoración', sub: '10 minutos y tu pareja puntúa', bloqueo: bloqueoSi(nivel >= 1, 'Mudaos al piso reformado'), accion: () => (estado.reto && !estado.reto.terminado ? verReto() : empezarReto()) }
+    { id: 'reto', icono: '🎨', texto: 'Reto de decoración', sub: '10 minutos y tu pareja puntúa', bloqueo: bloqueoSi(nivel >= 1 || nivelXp() >= 6, 'Llegad al nivel 6'), accion: () => (estado.reto && !estado.reto.terminado ? verReto() : empezarReto()) }
   ];
 };
 
@@ -2032,6 +2051,18 @@ if (new URLSearchParams(location.search).has('encargo')) encargos.datos().proxim
 function tieneCocinaEnCasa() {
   return gestor.muebles.some(m => m.userData.def.id === 'cocina') || (estado.habs || []).some(x => (x.muebles || []).some(d => d.id === 'cocina'));
 }
+
+experiencia = new Experiencia({
+  estado: () => estado, ui, sonido,
+  alCambiar: () => { experiencia.pintarPill(); },
+  refrescarHud: () => refrescarHud(),
+  abrirObras: () => abrirObras(),
+  ocupado: () => visitando || enMenu() || !!(guia && guia.activa()) || !estado.bienvenida || !!ui.hojaAbierta || !!document.querySelector('#juego.abierto, #minijuego.abierto')
+});
+experiencia.migrar();
+ui.puedeItem = d => puedeItem(d);
+document.getElementById('pill-nivel').addEventListener('click', () => { sonido.tocar(); experiencia.abrir(); });
+experiencia.pintarPill();
 
 paredObjs = new ObjetosPared({
   estado: () => estado, ui, sonido, sala, telefono, ambiente,
@@ -2388,6 +2419,7 @@ function ordenarHud() {
   const prog = estado.reforma || sala.progreso();
   const enReforma = nivelCasa() === 0 && prog.hechos < prog.total;
   document.querySelector('#hud .pastilla.casa').classList.toggle('oculto', !enReforma);
+  document.getElementById('pill-nivel').classList.toggle('oculto', enReforma);
   document.getElementById('pill-acogedor').classList.toggle('oculto', enReforma);
   document.getElementById('pill-limpieza').classList.toggle('oculto', suciedad.limpieza() >= 100);
 }
@@ -2637,7 +2669,7 @@ function colocarMenu(dt) {
   ui.posicionarMenu(s.x, s.y);
 }
 
-if (new URLSearchParams(location.search).has('debug')) window.__h = { minijuegos, encargos, THREE, sala, paredObjs, interacciones, controles, guia, telefono, entregas, trabajos, estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida };
+if (new URLSearchParams(location.search).has('debug')) window.__h = { minijuegos, encargos, THREE, sala, paredObjs, interacciones, controles, guia, telefono, entregas, trabajos, estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida, experiencia, registrar, abrirObras, refrescarHud };
 
 renderer.setAnimationLoop(() => {
   const dt = Math.min(reloj.getDelta(), 0.1);

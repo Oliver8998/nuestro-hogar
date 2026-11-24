@@ -8,6 +8,22 @@ export const CASAS = [
 ];
 encarecer(CASAS);
 
+export const OBRAS = [
+  { id: 'dormitorio', nombre: 'Dormitorio', icono: '🛏️', nivel: 5, precio: 5000, texto: 'Un cuarto para dormir de verdad' },
+  { id: 'terraza', nombre: 'Terraza', icono: '🌇', nivel: 8, precio: 7000, texto: 'Vuestro primer rincón al aire libre', exterior: true },
+  { id: 'cocina', nombre: 'Cocina', icono: '🍳', nivel: 10, precio: 8000, texto: 'Para las recetas de mamá y vuestros platos' },
+  { id: 'bano', nombre: 'Baño', icono: '🛁', nivel: 13, precio: 10000, texto: 'Bañera, espejo y mucha espuma' },
+  { id: 'estudio', nombre: 'Estudio', icono: '💻', nivel: 16, precio: 12000, texto: 'Un sitio tranquilo para trabajar y crear' },
+  { id: 'jardin', nombre: 'Jardín', icono: '🌳', nivel: 20, precio: 18000, texto: 'Comprad el bajo con patio: un jardín enorme', exterior: true, alias: ['Jardín grande'] },
+  { id: 'juegos', nombre: 'Sala de juegos', icono: '🎮', nivel: 22, precio: 18000, texto: 'Consolas, futbolín y noches de piques' },
+  { id: 'cine', nombre: 'Cine', icono: '🎬', nivel: 24, precio: 20000, texto: 'Vuestra propia sala de cine' },
+  { id: 'gimnasio', nombre: 'Gimnasio', icono: '🏋️', nivel: 25, precio: 22000, texto: 'Para no tener excusas' },
+  { id: 'biblioteca', nombre: 'Biblioteca', icono: '📚', nivel: 26, precio: 22000, texto: 'Estanterías hasta el techo' },
+  { id: 'invernadero', nombre: 'Invernadero', icono: '🪴', nivel: 27, precio: 25000, texto: 'Plantas exóticas todo el año' },
+  { id: 'baile', nombre: 'Salón de baile', icono: '💃', nivel: 28, precio: 28000, texto: 'Para bailar lo que haga falta' },
+  { id: 'observatorio', nombre: 'Torre del observatorio', icono: '🔭', nivel: 30, precio: 35000, texto: 'Lo más alto: ver las estrellas desde casa' }
+];
+
 export const EXTERIORES = {
   Terraza: { tipo: 'terraza', suelo: [0xc9b8a2, 0xbfae98, 0xd2c1ab, 0xb8a790] },
   'Jardín': { tipo: 'jardin', suelo: [0x7cb35a, 0x74ab52, 0x84bb62, 0x6ea34c] },
@@ -47,8 +63,8 @@ export const LOGROS = [
   { id: 'acogedor80', icono: '🕯️', nombre: 'Hogar, dulce hogar', texto: 'Llegad a 80 de acogedor', check: c => c.acogedor() >= 80 },
   { id: 'coleccion', icono: '📚', nombre: 'Completistas', texto: 'Completad una colección', check: c => c.colecciones() >= 1 },
   { id: 'colecciones4', icono: '🏆', nombre: 'Museo', texto: 'Completad 4 colecciones', check: c => c.colecciones() >= 4 },
-  { id: 'mudanza', icono: '🚚', nombre: '¡Nos mudamos!', texto: 'Mudaos a una casa mejor', check: c => c.nivelCasa() >= 1 },
-  { id: 'mansion', icono: '🏰', nombre: 'Vida de lujo', texto: 'Vivid en la mansión', check: c => c.nivelCasa() >= 4 },
+  { id: 'mudanza', icono: '🏗️', nombre: '¡Más espacio!', texto: 'Haced vuestra primera obra en casa', check: c => c.nivelCasa() >= 1 || c.obras() >= 1 },
+  { id: 'mansion', icono: '🏰', nombre: 'Vida de lujo', texto: 'Llegad al nivel 20', check: c => c.nivelCasa() >= 4 || c.nivelXp() >= 20 },
   { id: 'racha7', icono: '🔥', nombre: 'Constantes', texto: 'Entrad 7 días seguidos', check: c => c.racha() >= 7 },
   { id: 'ruleta', icono: '🎡', nombre: 'Con suerte', texto: 'Conseguid un objeto legendario', check: c => c.tieneLegendario() },
   { id: 'cocinitas', icono: '🍳', nombre: 'Cocinitas', texto: 'Cocinad vuestro primer plato', check: c => c.stat('cocinar') >= 1 },

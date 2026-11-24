@@ -230,7 +230,7 @@ export class UI {
   entradasTienda() {
     const entradas = [];
     if (this.categoria === 'mostrador') {
-      const m = mostradorActual({ nivelCasa: this.nivelCasa || 0, imprescindibles: this.ev.alImprescindibles ? this.ev.alImprescindibles() : [] });
+      const m = mostradorActual({ puede: this.puedeItem || (d => !d.nivel), imprescindibles: this.ev.alImprescindibles ? this.ev.alImprescindibles() : [] });
       this.mostradorInfo = m;
       for (const x of m.items) entradas.push({ info: infoItem(x.id), precio: x.precio, oferta: x.oferta });
       const e = ESPECIES[m.mascota];
