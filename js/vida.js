@@ -1,6 +1,7 @@
 import { paga } from './balance.js';
 import * as THREE from 'three';
 import { crearPersonaje } from './personajes.js';
+import { crearExclamacion } from './telefono.js';
 import { CATALOGO } from './catalogo.js';
 
 const VISITANTES = {
@@ -142,7 +143,7 @@ export class Vida {
     this.ctx.guardar();
     this.ponerVisitante(quien);
     this.ctx.sonido.mascota();
-    this.ctx.ui.aviso(`🚪 ¡Ha venido ${VISITANTES[quien].nombre}! Tocad el aviso de arriba`);
+    this.ctx.ui.aviso(`🚪 ¡Ha venido ${VISITANTES[quien].nombre}! Tocadle para saludar`);
     this.ctx.chip();
   }
 
@@ -152,6 +153,10 @@ export class Vida {
     p.position.set(1.0, 0, 2.35);
     p.rotation.y = Math.PI;
     p.scale.setScalar(1.25);
+    const exc = crearExclamacion(0.3);
+    exc.position.y = 1.3;
+    p.add(exc);
+    p.userData.exclamacion = exc;
     this.ctx.escena.add(p);
     this.visitante = p;
   }
@@ -209,7 +214,7 @@ export class Vida {
     this.estado.ultimaAveria = Date.now();
     this.ctx.guardar();
     this.ctx.sonido.error();
-    this.ctx.ui.aviso(tipo === 'gotera' ? '💧 ¡Hay una gotera! Arreglad la tubería' : '⚡ ¡Se ha ido la luz! Mirad el cuadro eléctrico');
+    this.ctx.ui.aviso(tipo === 'gotera' ? '💧 ¡Hay una gotera! Tocad el charco para arreglarla' : '⚡ ¡Se ha ido la luz! Tocad el cuadro eléctrico de la pared');
     this.ctx.chip();
   }
 
@@ -228,13 +233,51 @@ export class Vida {
       g.add(charco, tubo, gota);
       g.position.set(-2.4, 0, -2.5);
       g.userData.gota = gota;
+      const exc = crearExclamacion(0.3);
+      exc.position.y = 0.6;
+      g.add(exc);
+      g.userData.exclamacion = exc;
       this.ctx.escena.add(g);
       this.gotera = g;
     } else if (tipo !== 'gotera' && this.gotera) {
       this.ctx.escena.remove(this.gotera);
       this.gotera = null;
     }
+    if (tipo === 'luz' && !this.cuadroLuz && this.ctx.sala) {
+      const g = new THREE.Group();
+      const caja = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.44, 0.1), new THREE.MeshStandardMaterial({ color: 0xd8d4cc, roughness: 0.5 }));
+      caja.position.z = 0.05;
+      const tapa = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.3, 0.02), new THREE.MeshStandardMaterial({ color: 0x9aa0a6, metalness: 0.4, roughness: 0.4 }));
+      tapa.position.set(0, 0.03, 0.11);
+      const rayo = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.1, 0.01), new THREE.MeshStandardMaterial({ color: 0xf2c84b, emissive: 0xf2c84b, emissiveIntensity: 0.6 }));
+      rayo.position.set(0, 0.03, 0.125);
+      rayo.rotation.z = 0.5;
+      const zona = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.8, 0.3), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
+      zona.position.z = 0.12;
+      g.add(caja, tapa, rayo, zona);
+      const exc = crearExclamacion(0.3);
+      exc.position.y = 0.45;
+      g.add(exc);
+      g.userData.exclamacion = exc;
+      g.position.set(2.35, 1.95, this.ctx.sala.cara);
+      this.ctx.sala.paredes[0].add(g);
+      this.cuadroLuz = g;
+    } else if (tipo !== 'luz' && this.cuadroLuz) {
+      if (this.cuadroLuz.parent) this.cuadroLuz.parent.remove(this.cuadroLuz);
+      this.cuadroLuz = null;
+    }
     this.ctx.ambiente.apagon = tipo === 'luz';
+  }
+
+  tocable(rayo) {
+    if (this.visitante && this.estado.visita && rayo.intersectObject(this.visitante, true).length) return () => this.atenderVisita();
+    const a = this.estado.averia;
+    if (a) {
+      for (const o of [this.gotera, this.cuadroLuz]) {
+        if (o && o.parent && (o.parent.visible !== false) && rayo.intersectObject(o, true).some(h => !h.object.isSprite || true)) return () => this.arreglarAveria();
+      }
+    }
+    return null;
   }
 
   async arreglarAveria() {
@@ -365,6 +408,10 @@ export class Vida {
   actualizar(dt) {
     this.t += dt;
     if (this.visitante) this.visitante.position.y = Math.abs(Math.sin(this.t * 2)) * 0.03;
+    for (const o of [this.visitante, this.gotera, this.cuadroLuz]) {
+      const e = o && o.userData.exclamacion;
+      if (e) e.position.y = (e.userData.y0 ?? (e.userData.y0 = e.position.y)) + Math.sin(this.t * 4) * 0.05;
+    }
     if (this.gotera) {
       const g = this.gotera.userData.gota;
       g.position.y -= dt * 2.5;

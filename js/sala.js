@@ -308,7 +308,7 @@ export function crearSala(escena) {
     paredes[0].add(grieta);
     grietas.push(grieta);
   });
-  const zonaGrietas = zona(new THREE.PlaneGeometry(1.1, 1.3));
+  const zonaGrietas = zona(new THREE.PlaneGeometry(0.8, 1.0));
   zonaGrietas.position.set(-1.45, 1.55, cara + 0.003);
   paredes[0].add(zonaGrietas);
   const desGrietas = nuevoDesperfecto(
@@ -468,8 +468,6 @@ export function crearSala(escena) {
       if (!o || o.userData.def) return null;
       if (o.userData.desperfecto) return { tipo: 'desperfecto', d: o.userData.desperfecto };
       const i = o.userData.pared;
-      const req = paredes[i].userData.requisito;
-      if (req && !req.hecho && conDesperfectos) return { tipo: 'desperfecto', d: req };
       return { tipo: 'pared', i, pintura: paredes[i].userData.pintura };
     }
     return null;

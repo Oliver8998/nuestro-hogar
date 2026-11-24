@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { CATALOGO } from './catalogo.js';
 import { crearModeloMascota } from './mascotas.js';
+import { crearExclamacion } from './telefono.js';
 
 const MIN = 60000;
 
@@ -136,6 +137,10 @@ export class Sorpresas {
     partes.raiz.position.set(-1.0, 0, 2.55);
     partes.raiz.rotation.y = Math.PI;
     partes.raiz.scale.multiplyScalar(0.67);
+    const exc = crearExclamacion(0.3 / partes.raiz.scale.x);
+    exc.position.y = 0.7 / partes.raiz.scale.x;
+    partes.raiz.add(exc);
+    partes.exclamacion = exc;
     this.ctx.escena.add(partes.raiz);
     this.gato = partes;
   }
@@ -144,7 +149,7 @@ export class Sorpresas {
     const s = this.activa();
     if (!s) return [];
     if (s.tipo === 'nieve') return [{ id: 'nieve', texto: '❄️ ¡Nieva!', accion: () => this.cazarCopos() }];
-    if (s.tipo === 'gato') return [{ id: 'gato', texto: '🐱 Gatito', accion: () => this.atenderGato() }];
+    if (s.tipo === 'gato') return [];
     if (s.tipo === 'tesoro') return [{ id: 'tesoro', texto: '🗺️ Tesoro', accion: () => this.verMapa() }];
     return [];
   }
@@ -200,6 +205,11 @@ export class Sorpresas {
     this.ctx.registrar('nieve');
     this.ctx.ganar(Math.round(20 + res * 60), null, '❄️');
     this.ctx.chip();
+  }
+
+  tocable(rayo) {
+    if (this.gato && this.activa() && this.activa().tipo === 'gato' && rayo.intersectObject(this.gato.raiz, true).length) return () => this.atenderGato();
+    return null;
   }
 
   atenderGato() {
@@ -313,6 +323,10 @@ export class Sorpresas {
 
   actualizar(dt) {
     if (this.gato && this.gato.mixer) this.gato.mixer.update(dt);
+    if (this.gato && this.gato.exclamacion) {
+      const e = this.gato.exclamacion;
+      e.position.y = (e.userData.y0 ?? (e.userData.y0 = e.position.y)) * (1 + Math.sin(this.t * 4) * 0.05);
+    }
     this.t += dt;
     if (this.nieve) {
       const pos = this.nieve.geometry.attributes.position;

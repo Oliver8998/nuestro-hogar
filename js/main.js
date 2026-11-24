@@ -1026,6 +1026,7 @@ controles = new Controles(canvas, camaraIso, gestor, sala, mascotas, entregas, {
     if (paredObjs && paredObjs.tocar(r)) return true;
     return mas && !visitando ? mas.cuadros.tocar(r) : false;
   },
+  mundo: r => (visitando ? null : (vida.tocable(r) || (sorpresas && sorpresas.tocable(r)))),
   paredSeleccionada: r => !!(paredObjs && paredObjs.esSeleccionado(r)),
   agarrarPared: r => !!(paredObjs && paredObjs.agarrar(r)),
   moverPared: r => paredObjs && paredObjs.arrastrar(r),
@@ -2078,7 +2079,7 @@ window.extrasMenu = () => {
 };
 
 const vida = new Vida({
-  estado, ui, sonido, gestor, mascotas, miniaturas, escena, ambiente, inventario, juegos,
+  estado, ui, sonido, gestor, mascotas, miniaturas, escena, ambiente, inventario, juegos, sala,
   abrirTelefono: () => abrirTelefono(),
   pantalla: v => pantalla(v),
   particula: (emoji, m, n) => mascotas.eventos.particula(emoji, m, n),
@@ -2426,8 +2427,7 @@ function pintarChipsVida() {
     const mio = animoDe(sync.yo);
     chips.push({ id: 'animo', texto: suyo ? `💭 ${suyo.e}` : mio ? `💭 ${mio.e}` : '💭 ¿Cómo estás?', accion: abrirAnimo });
   }
-  if (estado.visita) chips.push({ id: 'visita', texto: '🚪 ¡Visita!', accion: () => vida.atenderVisita() });
-  if (estado.averia) chips.push({ id: 'averia', texto: estado.averia.tipo === 'gotera' ? '💧 Gotera' : '⚡ Sin luz', accion: () => vida.arreglarAveria() });
+
   const n = vida.noLeidas();
   for (const c of vida.cartasSinLeer()) chips.push({ id: `carta-${c.id}`, titulo: `Carta de ${c.de}`, texto: `${vida.iconoCarta(c)} ${c.titulo}`, accion: () => vida.abrirCarta(c) });
   if (pareja) chips.push(...pareja.chips());
@@ -2772,7 +2772,7 @@ function colocarMenu(dt) {
   ui.posicionarMenu(s.x, s.y);
 }
 
-if (new URLSearchParams(location.search).has('debug')) window.__h = { minijuegos, encargos, THREE, sala, paredObjs, interacciones, controles, guia, telefono, entregas, trabajos, estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida, experiencia, suciedad, inmobiliaria: () => inmobiliaria, registrar, abrirObras, refrescarHud };
+if (new URLSearchParams(location.search).has('debug')) window.__h = { minijuegos, encargos, THREE, sala, paredObjs, interacciones, controles, guia, telefono, entregas, trabajos, estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida, experiencia, suciedad, vida, inmobiliaria: () => inmobiliaria, registrar, abrirObras, refrescarHud };
 
 renderer.setAnimationLoop(() => {
   const dt = Math.min(reloj.getDelta(), 0.1);

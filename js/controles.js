@@ -201,6 +201,12 @@ export class Controles {
 
     if (this.punteros.size === 1) {
       const rayo = this.rayo(e.clientX, e.clientY);
+      const mundo = this.eventos.mundo ? this.eventos.mundo(rayo) : null;
+      if (mundo) {
+        this.mundoTocado = mundo;
+        this.modo = 'mundo';
+        return;
+      }
       const paquete = this.entregas.intersectar(rayo);
       if (paquete) {
         this.paqueteTocado = paquete;
@@ -310,7 +316,7 @@ export class Controles {
         this.avisado = true;
         this.eventos.alAviso('Quita primero lo que tiene encima', true);
       }
-    } else if (this.modo === 'mascota' || this.modo === 'paquete' || this.modo === 'espera') {
+    } else if (this.modo === 'mascota' || this.modo === 'paquete' || this.modo === 'espera' || this.modo === 'mundo') {
       if (lejos) {
         this.cancelarEspera();
         this.muebleTocado = null;
@@ -369,6 +375,11 @@ export class Controles {
       if (esToque && this.tocarAlSoltar === this.seleccionado) this.eventos.alInteractuar(this.seleccionado);
       this.tocarAlSoltar = null;
       this.modo = 'nada';
+    } else if (this.modo === 'mundo') {
+      const f = this.mundoTocado;
+      this.mundoTocado = null;
+      this.modo = 'nada';
+      if (esToque && f) f();
     } else if (this.modo === 'paquete') {
       this.eventos.alAbrirPaquete(this.paqueteTocado);
       this.paqueteTocado = null;
