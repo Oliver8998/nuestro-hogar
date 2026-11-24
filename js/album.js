@@ -200,7 +200,13 @@ export class Album {
   rachaHtml(racha) {
     const dia = ((racha - 1) % 7) + 1;
     return `<div class="racha-semana">${PREMIOS_RACHA.map((p, i) => `<div class="racha-dia ${i + 1 < dia ? 'hecho' : i + 1 === dia ? 'hoy' : ''} ${i === 6 ? 'grande' : ''}">
-      <small>Día ${i + 1}</small><span>${i + 1 < dia ? '✅' : p.icono}</span><em>${p.texto}</em></div>`).join('')}</div>`;
+      <small>Día ${i + 1}</small><span>${i + 1 < dia ? '✅' : p.icono}</span><em>${this.textoPremio(p)}</em></div>`).join('')}</div>`;
+  }
+
+  textoPremio(p) {
+    const m = paga(p.monedas);
+    const cosas = [p.raro ? 'Objeto raro' : null, p.items ? 'Pienso' : null, p.tickets ? `${p.tickets} ticket${p.tickets > 1 ? 's' : ''}` : null].filter(Boolean);
+    return cosas.length ? `${cosas.join(' + ')} + ${m}` : `${m} monedas`;
   }
 
   premioRacha(racha) {

@@ -554,3 +554,9 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - Sync: tras guardar con éxito se emite `cambio` por el canal en directo y la pareja descarga al momento. Con el directo conectado, el sondeo baja de cada 3 s a cada 10 s (menos batería y datos, y los cambios llegan antes).
 - usos.js: la limpieza de las burbujas de sed se hace cada 2 s, no en cada fotograma.
 - (Ya estaba en v80: no se renderiza la escena 3D con un minijuego abierto. Y en v77: no se renderiza en el menú de inicio.)
+
+## Bienvenida única y lo que hace tu pareja (v84)
+- `bienvenida.js`: al entrar sale UNA sola pantalla (`mostrarBienvenida`) con, si toca: fecha especial (con botón a la tienda en temporada), foto del día (`mas.postalHoy()`, botón «Al álbum»), calendario de la racha con el premio de hoy, vuelta tras días fuera, racha de pareja, «Mientras no estabas» y «La casa os necesita» (`pendientesCasa()`: suciedad, hambre, baños, sed, paquetes y avisos de la inmobiliaria). Sustituye a los diálogos encadenados de antes (buenos días, os echábamos de menos, fechas, racha de pareja y postal). La primera vez sigue saliendo solo la bienvenida de Pilar.
+- `revisarFechas(true)` y `revisarRachaPareja(true)` devuelven datos sin abrir diálogos. `mas.postalDelDia(true)` (respaldo cada 5 s) guarda la foto sin diálogo.
+- Actividad de pareja: `registrar()` anota en `estado.actividad` (`{de, e, t, n}`, últimas 60, agrupa repeticiones en 30 min) los eventos de `ACTIVIDAD` (regar, bañar, comer, cocinar, limpiar, trabajar, favores, obras…). En la bienvenida se ve lo nuevo del otro desde tu última visita (`hogar-actividad-vista` en localStorage). Al llegar un cambio remoto con actividad reciente (menos de 3 min) salen avisos en directo: «💧 Lucía ha regado las plantas».
+- El calendario de racha muestra las monedas ya ajustadas con `paga()`.

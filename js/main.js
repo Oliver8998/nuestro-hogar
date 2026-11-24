@@ -50,6 +50,7 @@ import { Experiencia, NIVEL_OBJETO } from './experiencia.js';
 import { abrirBano } from './bano.js';
 import { Album } from './album.js';
 import { Duo } from './duo.js';
+import { anotarActividad, actividadNueva, marcarActividadVista, textoActividad, mostrarBienvenida } from './bienvenida.js';
 import { Inmobiliaria, INV, NIVEL_INMOBILIARIA } from './inmobiliaria.js';
 
 activarTraduccion();
@@ -313,7 +314,14 @@ function aplicarRemoto(datos, conflicto = false, inicial = false) {
   const nivelAntes = nivelCasa();
   const otroYo = sync && sync.activo ? 1 - sync.yo : null;
   const animoAntes = otroYo !== null && estado.animo && estado.animo[otroYo] ? estado.animo[otroYo].t : 0;
+  const actividadAntes = (estado.actividad || []).length ? estado.actividad[estado.actividad.length - 1].t : 0;
   for (const [k, v] of Object.entries(datos.estado)) if (!LOCALES.includes(k)) estado[k] = v;
+  if (!inicial && otroYo !== null) {
+    const nuevas = (estado.actividad || []).filter(a => a.de === otroYo && a.t > actividadAntes && Date.now() - a.t < 180000).slice(-2);
+    const otro = (estado.pareja && estado.pareja.nombres && estado.pareja.nombres[otroYo]) || 'Tu pareja';
+    nuevas.forEach((a, i) => setTimeout(() => { const x = textoActividad(a, otro); ui.aviso(`${x.icono} ${x.texto}`); }, 600 + i * 2200));
+    if (nuevas.length) marcarActividadVista();
+  }
   monedasVistas = estado.monedas;
   if (otroYo !== null) setTimeout(revisarRachaPareja, 0);
   if (!inicial && otroYo !== null && estado.animo && estado.animo[otroYo] && estado.animo[otroYo].t > animoAntes) {
@@ -1485,6 +1493,7 @@ function asegurarDiarias() {
 }
 
 function registrar(evento, n = 1) {
+  if (sync && sync.activo) anotarActividad(estado, sync.yo, evento);
   if (experiencia) experiencia.evento(evento, n);
   if (pareja) pareja.registrar(evento);
   if (guia) guia.evento(evento);
@@ -2436,8 +2445,9 @@ function rachaPareja() {
   return r.dia === new Date().toDateString() || r.dia === ayer ? r.n : 0;
 }
 
-function revisarRachaPareja() {
-  if (!sync || !sync.activo) return;
+function revisarRachaPareja(silencio = false) {
+  let resultado = null;
+  if (!sync || !sync.activo) return null;
   const hoy = new Date().toDateString();
   if (!estado.vistos) estado.vistos = {};
   let cambio = false;
@@ -2453,13 +2463,16 @@ function revisarRachaPareja() {
     const n = estado.rachaPareja.n;
     if (n > 1) {
       estado.monedas += Math.min(5 * n, 50);
-      setTimeout(() => {
+      const texto = `Racha de pareja: ${n} días entrando los dos (+${Math.min(5 * n, 50)} monedas)`;
+      if (silencio) resultado = texto;
+      else setTimeout(() => {
         sonido.premio();
-        ui.aviso(`🔥 ¡Racha de pareja: ${n} días entrando los dos! +${Math.min(5 * n, 50)} monedas`);
+        ui.aviso(`🔥 ¡${texto}!`);
       }, 2500);
     }
   }
   if (cambio) guardar();
+  return resultado;
 }
 
 function escaparHtml(t) {
@@ -2659,8 +2672,8 @@ function aplicarTemporada() {
   ui.ponerTemporada(t && t !== 'aniversario' ? t : null, t ? NOMBRE_TEMPORADA[t] : '');
 }
 
-function revisarFechas() {
-  if (dialogoAbierto()) return false;
+function revisarFechas(soloDatos = false) {
+  if (dialogoAbierto() && !soloDatos) return false;
   if (!estado.celebrado) estado.celebrado = {};
   for (const f of mas.fechasEspeciales()) {
     if (estado.celebrado[f.clave]) continue;
@@ -2673,6 +2686,7 @@ function revisarFechas() {
     }
     refrescarHud();
     guardar();
+    if (soloDatos) return { icono: f.temporada ? '🎉' : f.titulo.includes('aniversario') ? '💍' : '🎂', titulo: f.titulo, texto: f.texto + (f.temporada ? '' : ' (+75 monedas y 2 tickets)'), boton: f.temporada ? { texto: '🛍️ A la tienda', accion: () => ui.abrirTienda('temporada') } : null };
     sonido.premio();
     ui.dialogo({
       imagen: miniaturas.personaje('lola'), personaje: true,
@@ -2732,11 +2746,26 @@ guia = new Guia({
 });
 setInterval(() => guia && guia.ocultarSi(dialogoAbierto()), 300);
 setInterval(() => {
-  if (!enMenu() && !dialogoAbierto() && !ui.hojaAbierta && !(guia && guia.activa()) && performance.now() > 12000) mas.postalDelDia();
+  if (!enMenu() && !dialogoAbierto() && !ui.hojaAbierta && !(guia && guia.activa()) && performance.now() > 12000) mas.postalDelDia(true);
 }, 5000);
+function pendientesCasa() {
+  const l = [];
+  const suc = suciedad ? suciedad.lista.length : 0;
+  if (suc) l.push(`🧽 ${suc} cosa${suc > 1 ? 's' : ''} por limpiar`);
+  const hambre = mascotas.lista.filter(m => m.hambre < 40).length;
+  if (hambre) l.push(`🍖 ${hambre === 1 ? '1 mascota tiene' : `${hambre} mascotas tienen`} hambre`);
+  const sucias = mascotas.lista.filter(m => m.sucia > 0.5).length;
+  if (sucias) l.push(`🛁 ${sucias === 1 ? '1 mascota necesita' : `${sucias} mascotas necesitan`} un baño`);
+  const sed = gestor.muebles.filter(m => m.userData.datos && m.userData.datos.sed).length;
+  if (sed) l.push(`💧 ${sed} planta${sed > 1 ? 's' : ''} con sed`);
+  const paquetes = entregas.enPuerta().filter(p => p.paquete).length;
+  if (paquetes) l.push(`📦 ${paquetes} paquete${paquetes > 1 ? 's' : ''} en la puerta`);
+  if (inmobiliaria) for (const c of inmobiliaria.chips().slice(0, 2)) l.push(c.texto);
+  return l;
+}
+
 setTimeout(function alEntrar() {
   if (enMenu()) return setTimeout(alEntrar, 500);
-  revisarRachaPareja();
   aplicarTam();
   guia.empezar((estado.historia || 0) >= 3 || nivelCasa() >= 1);
   if (!estado.bienvenida) {
@@ -2744,43 +2773,51 @@ setTimeout(function alEntrar() {
     estado.tickets += 1;
     refrescarHud();
     guardar();
+    revisarRachaPareja();
     ui.dialogo({
       imagen: miniaturas.personaje('lola'), personaje: true,
       titulo: '¡Bienvenidos a casa!',
       texto: 'Soy Pilar, la de la tienda. Este piso está hecho un desastre… Tocad lo que esté roto y os diré qué hace falta. Lo que pidáis os llegará en un paquete a la puerta. ¡Os regalo un ticket para la ruleta!',
       botones: [{ texto: '¡Vamos allá!', tipo: 'primario' }]
     });
-  } else if (revisarFechas()) {
     return;
-  } else if (nuevoDia && habiaPartida && diasFuera >= 3) {
-    const monedas = Math.min(150, 30 * diasFuera);
-    estado.monedas += monedas;
-    estado.tickets += 2;
-    refrescarHud();
-    guardar();
-    ui.dialogo({
-      imagen: miniaturas.personaje('lola'), personaje: true,
-      titulo: '¡Os echábamos de menos!',
-      texto: `Hacía ${diasFuera} días que no veníais. La casa os ha esperado tranquila y os he guardado un regalo de bienvenida: +${monedas} monedas y 2 tickets para la ruleta.`,
-      botones: [{ texto: '¡Qué bien volver!', tipo: 'primario' }],
-      confeti: true
-    });
-  } else if (nuevoDia && habiaPartida) {
+  }
+  const d = { nombre: '' };
+  if (sync && sync.activo && estado.pareja && estado.pareja.nombres) d.nombre = estado.pareja.nombres[sync.yo] || '';
+  const fecha = revisarFechas(true);
+  if (fecha) { d.fecha = fecha; d.confeti = true; sonido.premio(); }
+  const rp = revisarRachaPareja(true);
+  if (rp) d.rachaPareja = rp;
+  if (nuevoDia && habiaPartida) {
     const racha = estado.racha ? estado.racha.n : 1;
     const premio = album.premioRacha(racha);
-    refrescarHud();
-    guardar();
-    const partes = [`+${premio.monedas} monedas`];
-    if (premio.tickets) partes.push(`${premio.tickets} ticket${premio.tickets > 1 ? 's' : ''}`);
+    if (diasFuera >= 3) {
+      const extra = Math.min(150, 30 * diasFuera);
+      estado.monedas += extra;
+      estado.tickets += 2;
+      d.vuelta = `Hacía ${diasFuera} días que no veníais. Pilar os ha guardado +${extra} monedas y 2 tickets`;
+    }
+    const partes = [`+${premio.monedas} 🪙`];
+    if (premio.tickets) partes.push(`${premio.tickets} 🎟️`);
     partes.push(...premio.cosas);
-    ui.dialogo({
-      etiqueta: racha > 1 ? { texto: `🔥 Racha de ${racha} días`, color: '#f2a03c' } : null,
-      titulo: premio.dia === 7 ? '¡Semana completa! 🎉' : '¡Buenos días!',
-      texto: `Día ${premio.dia} de 7: ${partes.join(', ')} y una tirada gratis en la ruleta.`,
-      html: `${album.rachaHtml(racha)}<small class="nota">${premio.dia < 7 ? 'Volved mañana para el siguiente premio. ¡Si faltáis un día, la semana empieza de nuevo!' : '¡Mañana empieza otra semana, con premios un poco mejores!'}</small>`,
-      botones: [{ texto: '¡A por ello!', tipo: 'primario' }],
-      confeti: premio.dia === 7
-    });
+    d.racha = { titulo: premio.dia === 7 ? '¡Semana completa!' : `Día ${premio.dia} de 7`, premio: partes.join(' · '), html: album.rachaHtml(racha) };
+    if (racha > 1) d.etiqueta = { texto: `🔥 ${racha} días seguidos`, color: '#f2a03c' };
+    if (premio.dia === 7) d.confeti = true;
+    const postal = mas.postalHoy();
+    if (postal) d.postal = postal;
+  }
+  if (sync && sync.activo) {
+    const otro = (estado.pareja && estado.pareja.nombres && estado.pareja.nombres[1 - sync.yo]) || 'Tu pareja';
+    const nueva = actividadNueva(estado, sync.yo);
+    if (nueva.length) d.pareja = nueva.map(a => ({ ...textoActividad(a, otro), t: a.t }));
+    marcarActividadVista();
+  }
+  if (d.racha || d.fecha || (d.pareja && d.pareja.length >= 2)) d.pendientes = pendientesCasa();
+  refrescarHud();
+  guardar();
+  if (d.racha || d.fecha || d.pareja || d.rachaPareja) {
+    if (d.racha && !d.fecha) sonido.premio();
+    mostrarBienvenida(ui, d);
   }
 }, 600);
 
@@ -2840,7 +2877,7 @@ function colocarMenu(dt) {
   ui.posicionarMenu(s.x, s.y);
 }
 
-if (new URLSearchParams(location.search).has('debug')) window.__h = { minijuegos, encargos, THREE, sala, paredObjs, interacciones, controles, guia, telefono, entregas, trabajos, estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida, experiencia, suciedad, vida, inmobiliaria: () => inmobiliaria, registrar, abrirObras, refrescarHud, inicio, camaraIso, duo, album, usos, renderer, escena };
+if (new URLSearchParams(location.search).has('debug')) window.__h = { minijuegos, encargos, THREE, sala, paredObjs, interacciones, controles, guia, telefono, entregas, trabajos, estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida, experiencia, suciedad, vida, inmobiliaria: () => inmobiliaria, registrar, abrirObras, refrescarHud, inicio, camaraIso, duo, album, usos, renderer, escena, guardar };
 
 renderer.setAnimationLoop(() => {
   const dt = Math.min(reloj.getDelta(), 0.1);

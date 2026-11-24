@@ -119,13 +119,32 @@ export class Mas {
     return [`La casa ${momento}`, 'Nuestro rincón', 'Así está quedando', 'Un día más en casa'][Math.floor(Math.random() * 4)];
   }
 
-  postalDelDia() {
+  postalDelDia(silenciosa = false) {
+    const p = this.postalHoy();
+    if (!p) return false;
+    if (silenciosa) {
+      this.ctx.ui.aviso('📸 Foto del día guardada en las postales');
+      return true;
+    }
+    this.ctx.sonido.premio();
+    this.ctx.ui.dialogo({
+      titulo: '📸 La foto del día',
+      html: `<img class="postal-grande" src="${p.data}" alt="">`,
+      botones: [
+        { texto: '🖼️ Al álbum', tipo: 'secundario', accion: p.alAlbum },
+        { texto: '¡Qué bonita!', tipo: 'primario' }
+      ]
+    });
+    return true;
+  }
+
+  postalHoy() {
     const hoy = new Date().toDateString();
     try {
-      if (localStorage.getItem(CLAVE_POSTAL_DIA) === hoy) return false;
+      if (localStorage.getItem(CLAVE_POSTAL_DIA) === hoy) return null;
       localStorage.setItem(CLAVE_POSTAL_DIA, hoy);
     } catch (e) {
-      return false;
+      return null;
     }
     const foto = this.capturar(420, 0.92);
     const c = document.createElement('canvas');
@@ -155,16 +174,7 @@ export class Mas {
         if (lista.length < 2) break;
       }
     }
-    this.ctx.sonido.premio();
-    this.ctx.ui.dialogo({
-      titulo: '📸 La foto del día',
-      html: `<img class="postal-grande" src="${data}" alt="">`,
-      botones: [
-        { texto: '🖼️ Al álbum', tipo: 'secundario', accion: () => this.guardarEnAlbum(c) },
-        { texto: '¡Qué bonita!', tipo: 'primario' }
-      ]
-    });
-    return true;
+    return { data, alAlbum: () => this.guardarEnAlbum(c) };
   }
 
   abrirPostales() {
@@ -693,9 +703,9 @@ export class Mas {
       const anios = hoy.getFullYear() - Number(p.aniversario.slice(0, 4));
       lista.push({ clave: `aniv-${hoy.getFullYear()}`, titulo: '¡Feliz aniversario! 💍', texto: anios > 0 ? `Hoy hace ${anios} año${anios > 1 ? 's' : ''} que estáis juntos. ¡Qué bonito! Os he dejado un regalo.` : '¡Hoy es vuestro día! Os he dejado un regalo.' });
     }
-    p.cumples.forEach((c, i) => {
+    (p.cumples || []).forEach((c, i) => {
       if (c && c.slice(5) === md) {
-        const n = p.nombres[i] || (i === 0 ? 'tu cumple' : 'el cumple de tu pareja');
+        const n = (p.nombres || [])[i] || (i === 0 ? 'tu cumple' : 'el cumple de tu pareja');
         lista.push({ clave: `cumple${i}-${hoy.getFullYear()}`, titulo: '¡Feliz cumpleaños! 🎂', texto: `Hoy es el cumple de ${n}. ¡Muchas felicidades! Aquí tenéis un regalito.` });
       }
     });
