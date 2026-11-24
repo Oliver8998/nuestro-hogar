@@ -167,7 +167,7 @@ export class Encargos {
   }
 
   corazones(q) {
-    const n = Math.round(this.datos().conf[q] / 20);
+    const n = Math.max(0, Math.min(5, Math.floor(this.datos().conf[q] / 20)));
     return '❤️'.repeat(n) + '🤍'.repeat(5 - n);
   }
 
@@ -252,7 +252,7 @@ export class Encargos {
     d.activos = d.activos.filter(x => x.id !== e.id);
     const c = CLIENTES[e.quien];
     const antes = d.conf[e.quien];
-    const delta = Math.round((p - 0.55) * 30);
+    const delta = Math.round((p - 0.6) * 12);
     d.conf[e.quien] = Math.max(0, Math.min(100, antes + delta));
     d.hechos = (d.hechos || 0) + 1;
     const pago = Math.max(5, Math.round(e.pago * (0.35 + 0.65 * p)));
