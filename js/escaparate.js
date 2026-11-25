@@ -1,3 +1,4 @@
+import { separar } from './choques.js';
 import * as THREE from 'three';
 import { GestorMuebles } from './muebles.js';
 import { GestorMascotas } from './mascotas.js';
@@ -637,6 +638,15 @@ export class Escaparate {
       if (actual.aspiradora && this.tSala > 0.9) this.animarAspiradora(actual.aspiradora, dt);
     }
     actual.mas.actualizar(dt);
+    if (this.tSala > 1.2) {
+      const cuerpos = actual.mas.cuerposChoque();
+      if (actual.robi) cuerpos.push({ p: actual.robi.g.position, r: 0.26, fijo: true, y: 0 });
+      if (actual.aspiradora && actual.aspiradora.disco.visible !== false) cuerpos.push({ p: actual.aspiradora.disco.position, r: 0.2, fijo: true, y: 0 });
+      if (cuerpos.length > 1) {
+        if (!actual.libreChoque) actual.libreChoque = actual.mas.libreChoque();
+        separar(cuerpos, dt, actual.libreChoque);
+      }
+    }
     actualizarPersonajes(dt);
     this.zoom += (actual.zoom - this.zoom) * Math.min(1, dt * 3);
     this.encuadre();

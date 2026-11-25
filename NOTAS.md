@@ -586,3 +586,8 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - Disparo: flash y sonido de obturador. `capturarZona(rect)` recorta justo lo que hay dentro del marco, sin los sprites (avisos «!», burbujas de sed) y lo pasa al editor de siempre (filtros, pegatinas y marcos) → compartir, álbum o diario (`editarYCompartir`).
 - Mientras está abierto cuenta como `dialogoAbierto()`, así no saltan visitas ni eventos encima.
 - Meshy queda cerrado: se usan los modelos de cubo descargados.
+
+## Las entidades no se atraviesan (v88)
+- `choques.js` → `separar(cuerpos, dt, libre)`: cada cuerpo es un círculo en el suelo `{ p, r, peso, fijo, y, mueve, vx, vz }`. Si dos se solapan se empujan poco a poco (más el de menos peso). Si los dos van andando uno contra otro, además se apartan de lado para cruzarse sin atascarse. `libre(x, z)` impide empujar a nadie dentro de un mueble o fuera de la habitación; si un lado no puede moverse, se mueve el otro.
+- En casa (`evitarChoques` en main.js, cada fotograma): mascotas en el suelo (`mascotas.cuerposChoque()`, radio 0,16 × tamaño; quedan fuera las que están encima de muebles, saltando, en el baño o de paseo), el robot aspirador (peso 3; fijo mientras limpia), Robi la limpiadora y el vecino de visita (fijos).
+- En los pisos de la pantalla de inicio (escaparate.js): mascotas contra Robi y la aspiradora, que siguen su ruta y apartan a las mascotas.

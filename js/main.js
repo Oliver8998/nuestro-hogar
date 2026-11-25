@@ -51,6 +51,7 @@ import { abrirBano } from './bano.js';
 import { Album } from './album.js';
 import { Duo } from './duo.js';
 import { Sueno } from './sueno.js';
+import { separar } from './choques.js';
 import { anotarActividad, actividadNueva, marcarActividadVista, textoActividad, mostrarBienvenida, mostrarGuiaTarde } from './bienvenida.js';
 import { Inmobiliaria, INV, NIVEL_INMOBILIARIA } from './inmobiliaria.js';
 aplicarTamTexto();
@@ -1574,6 +1575,23 @@ function enMenu() {
   return !!i && i.style.display !== 'none' && !i.classList.contains('fuera');
 }
 
+let libreChoque = null;
+let tLibreChoque = 0;
+function evitarChoques(dt) {
+  const cuerpos = mascotas.cuerposChoque();
+  const robot = suciedad.robot;
+  if (robot && robot.malla.visible) cuerpos.push({ p: robot.malla.position, r: 0.18, peso: 3, fijo: robot.estado === 'limpiar', y: 0 });
+  if (suciedad.visita) cuerpos.push({ p: suciedad.visita.malla.position, r: 0.24, fijo: true, y: 0 });
+  if (vida.visitante) cuerpos.push({ p: vida.visitante.position, r: 0.28, fijo: true, y: 0 });
+  if (cuerpos.length < 2) return;
+  tLibreChoque -= dt;
+  if (!libreChoque || tLibreChoque <= 0) {
+    libreChoque = mascotas.libreChoque();
+    tLibreChoque = 0.5;
+  }
+  separar(cuerpos, dt, libreChoque);
+}
+
 function dialogoAbierto() {
   return enMenu() || document.body.classList.contains('modo-foto') || document.getElementById('dialogo').classList.contains('abierto') || !document.getElementById('juego').classList.contains('oculto') || !!document.getElementById('foto-editor') || visitando;
 }
@@ -2990,6 +3008,7 @@ renderer.setAnimationLoop(() => {
   entregas.actualizar(dt);
   suciedad.visibilidadParedes(sala.visibles());
   suciedad.actualizar(dt, hayTrampa());
+  evitarChoques(dt);
   tMisiones += dt;
   if (tMisiones > 1) {
     tMisiones = 0;

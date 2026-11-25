@@ -291,6 +291,28 @@ export class GestorMascotas {
     return set;
   }
 
+  cuerposChoque() {
+    const fuera = ['banar', 'paseo'];
+    return this.lista.filter(m => m.grupo.visible && !m.encima && !m.salto && (m.alturaBase || 0) < 0.05 && !fuera.includes(m.estado) && !m.cogida).map(m => {
+      const anda = m.estado === 'andar' || m.estado === 'correr';
+      const ang = m.objetivoAngulo || 0;
+      return { p: m.grupo.position, r: 0.16 * (m.e.tam || 1), peso: 1, y: 0, mueve: anda, vx: anda ? Math.sin(ang) : 0, vz: anda ? Math.cos(ang) : 0 };
+    });
+  }
+
+  libreChoque() {
+    usarRejilla(this.muebles);
+    const bloq = this.bloqueadas();
+    const mx = NX / 2 * CELDA - 0.14;
+    const mz = NZ / 2 * CELDA - 0.14;
+    return (x, z) => {
+      if (x < -mx || x > mx || z < -mz || z > mz) return false;
+      const i = Math.floor(x / CELDA + NX / 2);
+      const j = Math.floor(z / CELDA + NZ / 2);
+      return !bloq.has(i * NZ + j);
+    };
+  }
+
   buscarMueble(filtro) {
     const candidatos = this.muebles.muebles.filter(m => m.userData.base < 0.01 && filtro(m.userData.def));
     return candidatos.length ? candidatos[Math.floor(Math.random() * candidatos.length)] : null;
