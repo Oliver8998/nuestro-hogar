@@ -59,6 +59,7 @@ function fachada(estilo, n) {
   const luz = lienzo(C * 4, C * 4);
   const g = color.getContext('2d');
   const l = luz.getContext('2d');
+  const encendidas = [[], [], [], []];
   g.fillStyle = estilo.pared;
   g.fillRect(0, 0, C * 4, C * 4);
   l.fillStyle = '#000';
@@ -90,6 +91,7 @@ function fachada(estilo, n) {
       g.lineTo(wx + 14, wy + wh);
       g.fill();
       const encendida = r() < 0.9;
+      encendidas[fy][fx] = encendida;
       const tono = LUCES[Math.floor(r() * LUCES.length)];
       if (encendida) {
         l.fillStyle = tono;
@@ -147,7 +149,7 @@ function fachada(estilo, n) {
       }
     }
   }
-  return { mapa: textura(color), luz: textura(luz) };
+  return { mapa: textura(color), luz: textura(luz), encendidas };
 }
 
 function bajos(n) {
@@ -290,6 +292,7 @@ export class Edificio {
     escena.add(this.raiz);
     this.estilos = ESTILOS.map((e, i) => {
       const f = fachada(e, i + 1);
+      (this.encendidas || (this.encendidas = []))[i] = f.encendidas;
       return new THREE.MeshStandardMaterial({ map: f.mapa, emissiveMap: f.luz, emissive: 0xffffff, emissiveIntensity: 0, roughness: 0.92 });
     });
     const b = bajos(3);
@@ -392,6 +395,7 @@ export class Edificio {
     borrar.forEach(g => g.dispose());
     this.peatones = [];
     this.raiz.clear();
+    if (this.sil) this.sil.activos = [];
     this.raiz.add(this.pisosV.raiz);
     this.vecinos = [];
     this.coches = [];
@@ -533,7 +537,8 @@ export class Edificio {
       ocupado.push([x0 - 0.3, x1 + 0.3, z0 - 0.3, z1 + 0.3]);
       const idx = this.vecinos.length;
       const alto = pisos * PISO;
-      const fach = this.cEstilos[Math.floor(r() * this.cEstilos.length)];
+      const estilo = Math.floor(r() * this.cEstilos.length);
+      const fach = this.cEstilos[estilo];
       const cuerpo = partirCaja(caja(x0, x1, CALLE_Y + PISO, CALLE_Y + alto, z0, z1));
       echar(fach, cuerpo.lados, idx);
       echar(this.cTecho, cuerpo.tapas, idx);
@@ -594,7 +599,7 @@ export class Edificio {
         const az = z0 + 0.8 + r() * (z1 - z0 - 1.6);
         echar(this.cAire, caja(ax - 0.4, ax + 0.4, CALLE_Y + alto + 0.3, CALLE_Y + alto + 0.8, az - 0.3, az + 0.3), idx);
       }
-      this.vecinos.push({ idx, cx: (x0 + x1) / 2, cz: (z0 + z1) / 2, hx: (x1 - x0) / 2, hz: (z1 - z0) / 2, top: CALLE_Y + alto + 0.3, escala: 1, obj: 1 });
+      this.vecinos.push({ idx, estilo, x0, x1, z0, z1, pisos, cx: (x0 + x1) / 2, cz: (z0 + z1) / 2, hx: (x1 - x0) / 2, hz: (z1 - z0) / 2, top: CALLE_Y + alto + 0.3, escala: 1, obj: 1 });
       return true;
     };
     this.alTerminarCiudad = () => {
@@ -764,6 +769,119 @@ export class Edificio {
     return this.q;
   }
 
+  siluetas(dt, cam) {
+    if (!this.sil) {
+      const c = document.createElement('canvas');
+      c.width = 256;
+      c.height = 128;
+      const g = c.getContext('2d');
+      g.fillStyle = '#000';
+      const persona = (x, brazo) => {
+        g.beginPath();
+        g.arc(x + 32, 30, 15, 0, Math.PI * 2);
+        g.fill();
+        g.beginPath();
+        g.moveTo(x + 6, 128);
+        g.quadraticCurveTo(x + 4, 58, x + 32, 52);
+        g.quadraticCurveTo(x + 60, 58, x + 58, 128);
+        g.fill();
+        if (brazo) {
+          g.save();
+          g.translate(x + 52, 66);
+          g.rotate(-0.9);
+          g.fillRect(0, -6, 40, 12);
+          g.restore();
+        }
+      };
+      persona(0, false);
+      persona(64, true);
+      g.beginPath();
+      g.ellipse(160, 108, 26, 16, 0, 0, Math.PI * 2);
+      g.fill();
+      g.beginPath();
+      g.arc(178, 86, 12, 0, Math.PI * 2);
+      g.fill();
+      g.beginPath();
+      g.moveTo(170, 78); g.lineTo(172, 64); g.lineTo(178, 75); g.fill();
+      g.beginPath();
+      g.moveTo(184, 75); g.lineTo(188, 63); g.lineTo(190, 78); g.fill();
+      g.fillRect(132, 96, 6, 26);
+      persona(192, false);
+      const tex = new THREE.CanvasTexture(c);
+      this.sil = { tex, activos: [], t: 0 };
+    }
+    const S = this.sil;
+    S.t -= dt;
+    const noche = this.noche || 0;
+    if (S.t <= 0 && noche > 0.35 && S.activos.length < 7 && cam) {
+      S.t = 0.5 + Math.random() * 1.2;
+      const d = cam.direccionHorizontal();
+      const candidatos = this.vecinos.filter(b => b.escala > 0.98 && b.pisos > 2);
+      const b = candidatos[Math.floor(Math.random() * candidatos.length)];
+      if (b) {
+        const caras = [[0, 1, b.z1], [0, -1, b.z0], [1, 0, b.x1], [-1, 0, b.x0]].filter(([nx, nz]) => nx * d.x + nz * d.z > 0.25);
+        const cara = caras[Math.floor(Math.random() * caras.length)];
+        if (cara) this.nuevaSilueta(b, cara);
+      }
+    }
+    for (const a of [...S.activos]) {
+      a.t += dt;
+      const u = a.t / a.dur;
+      const fade = Math.min(1, a.t / 0.5, (a.dur - a.t) / 0.5);
+      a.m.material.opacity = Math.max(0, fade) * a.opac;
+      if (a.mueve) a.m.position.addScaledVector(a.dir, a.vel * dt);
+      if (a.salta) a.m.position.y = a.y0 + Math.abs(Math.sin(a.t * 6)) * 0.12;
+      if (u >= 1) {
+        a.m.removeFromParent();
+        a.m.material.dispose();
+        S.activos = S.activos.filter(x => x !== a);
+      }
+    }
+  }
+
+  nuevaSilueta(b, [nx, nz, plano]) {
+    const S = this.sil;
+    const a0 = nz ? b.x0 : b.z0;
+    const a1 = nz ? b.x1 : b.z1;
+    const signo = nz > 0 ? 1 : nz < 0 ? -1 : nx > 0 ? -1 : 1;
+    const opciones = [];
+    for (let k = -30; k <= 30; k++) {
+      const local = 3 * k + 1.5;
+      const mundo = local * signo;
+      if (mundo < a0 + 0.8 || mundo > a1 - 0.8) continue;
+      opciones.push([local, mundo]);
+    }
+    if (!opciones.length) return;
+    const [local, mundo] = opciones[Math.floor(Math.random() * opciones.length)];
+    const n = 1 + Math.floor(Math.random() * (b.pisos - 1));
+    const fx = (((Math.floor(local / 3)) % 4) + 4) % 4;
+    const fy = 3 - (n % 4);
+    const tabla = this.encendidas && this.encendidas[b.estilo];
+    if (!tabla || !tabla[fy] || !tabla[fy][fx]) return;
+    const tipo = Math.floor(Math.random() * 4);
+    const geo = this.geoSil || (this.geoSil = new THREE.PlaneGeometry(0.78, 1.0));
+    const mat = new THREE.MeshBasicMaterial({ map: S.tex, transparent: true, opacity: 0, depthWrite: false, color: 0x1a120c });
+    const m = new THREE.Mesh(geo.clone(), mat);
+    const uv = m.geometry.attributes.uv;
+    for (let k = 0; k < uv.count; k++) uv.setX(k, (tipo + uv.getX(k)) / 4);
+    const yBase = CALLE_Y + n * PISO + 0.84;
+    const alto = tipo === 2 ? 0.6 : 1.3;
+    m.scale.set(tipo === 2 ? 0.85 : 1, alto, 1);
+    const y0 = yBase + alto / 2 - 0.02;
+    const off = 0.03;
+    if (nz) m.position.set(mundo, y0, plano + nz * off);
+    else m.position.set(plano + nx * off, y0, mundo);
+    m.rotation.y = Math.atan2(nx, nz);
+    m.layers.set(2);
+    this.raiz.add(m);
+    const lateral = nz ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 0, 1);
+    const mueve = tipo !== 2 && Math.random() < 0.55;
+    const dir = lateral.multiplyScalar(Math.random() < 0.5 ? 1 : -1);
+    if (mueve) m.position.addScaledVector(dir, -0.2);
+    const dur = mueve ? 2.2 + Math.random() * 1.5 : 3 + Math.random() * 4;
+    S.activos.push({ m, t: 0, dur, opac: 0.55 + Math.random() * 0.25, mueve, dir, vel: mueve ? 0.4 / dur : 0, salta: tipo === 1 && Math.random() < 0.4, y0 });
+  }
+
   ponerTipo(tipo) {
     this.tipo = tipo || null;
     this.aplicarTipo();
@@ -799,6 +917,7 @@ export class Edificio {
     if (!this.bloque) return;
     this.t += dt;
     if (this.pisosV.raiz.visible) this.pisosV.actualizar(dt, cam ? cam.direccionHorizontal() : null, null);
+    this.siluetas(dt, cam);
     if (this.calle) {
       this.calle.calma = cam && cam.zoomActual > 1.15 ? 0.75 : 1;
       this.calle.actualizar(dt);
