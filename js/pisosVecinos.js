@@ -85,7 +85,7 @@ function mat(color, extra = {}) {
 }
 
 function aCapa(o) {
-  o.traverse(x => x.layers.set(0));
+  o.traverse(x => x.layers.set(2));
 }
 
 export class PisosVecinos {

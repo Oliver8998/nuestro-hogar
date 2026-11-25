@@ -649,3 +649,7 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - Cámara: zoom inicial 1,2 (`ZOOM_INICIAL`), el piso llena más la pantalla; alejando se ve la ciudad.
 - Con la cámara cerca (zoom > 1,15) coches y peatones van al 75 % de velocidad (`calle.calma`).
 - Ajustes → 🔍 Efecto maqueta (Sí/No, `hogar-maqueta`). Con «No» vuelve el dibujo directo sin desenfoque ni bajar edificios.
+
+## Maqueta más suave y centrada en la habitación (v97)
+- El foco ya no es una franja fija: cada fotograma se proyectan las 8 esquinas de la habitación y se pasa su rectángulo en pantalla al shader (`foco`). Dentro y justo alrededor, nítido; el desenfoque crece con la distancia a ese rectángulo (radio 0,35 → 2,25 texeles a media resolución, antes hasta 4,2) y el apagado/velo también (antes era fijo).
+- El edificio (pisos de abajo y bajos) vuelve a la pasada de la ciudad (capa 2): se ve casi nítido pegado a la habitación y se va difuminando hacia abajo, para que el protagonista sea la habitación y no el bloque.

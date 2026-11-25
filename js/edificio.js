@@ -608,8 +608,6 @@ export class Edificio {
 
   marcarCapa() {
     this.raiz.traverse(o => o.layers.set(2));
-    if (this.bloque) this.bloque.traverse(o => o.layers.set(0));
-    this.pisosV.raiz.traverse(o => o.layers.set(0));
   }
 
   renderizar(renderer, escena, camara, luces) {
@@ -651,6 +649,21 @@ export class Edificio {
       q.material.uniforms.tex.value = this.rt.texture;
       q.material.uniforms.texel.value.set(1 / w, 1 / h);
       if (this.escena.fog) q.material.uniforms.bruma.value.copy(this.escena.fog.color);
+      const v = this.v3f || (this.v3f = new THREE.Vector3());
+      let x0 = 1;
+      let y0 = 1;
+      let x1 = 0;
+      let y1 = 0;
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) for (const yy of [-0.5, ALTO_SALA]) {
+        v.set(sx * this.W / 2, yy, sz * this.D / 2).project(camara);
+        const u = v.x * 0.5 + 0.5;
+        const w2 = v.y * 0.5 + 0.5;
+        x0 = Math.min(x0, u);
+        x1 = Math.max(x1, u);
+        y0 = Math.min(y0, w2);
+        y1 = Math.max(y1, w2);
+      }
+      q.material.uniforms.foco.value.set(x0, y0, x1, y1);
       renderer.render(q.escena, q.camara);
     } else renderer.render(escena, camara);
     renderer.shadowMap.autoUpdate = sombras;
@@ -669,13 +682,15 @@ export class Edificio {
       uniforms: {
         tex: { value: null },
         texel: { value: new THREE.Vector2(1, 1) },
-        bruma: { value: new THREE.Color(0xdfe8f0) }
+        bruma: { value: new THREE.Color(0xdfe8f0) },
+        foco: { value: new THREE.Vector4(0.3, 0.3, 0.7, 0.7) }
       },
       vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
       fragmentShader: `
         uniform sampler2D tex;
         uniform vec2 texel;
         uniform vec3 bruma;
+        uniform vec4 foco;
         varying vec2 vUv;
         const vec2 DISCO[12] = vec2[12](
           vec2(-0.326, -0.406), vec2(-0.840, -0.074), vec2(-0.696, 0.457), vec2(-0.203, 0.621),
@@ -683,8 +698,9 @@ export class Edificio {
           vec2(0.507, 0.064), vec2(0.896, 0.412), vec2(-0.322, -0.933), vec2(-0.792, -0.598)
         );
         void main() {
-          float lejos = smoothstep(0.12, 0.5, abs(vUv.y - 0.52)) * 0.6 + smoothstep(0.2, 0.55, abs(vUv.x - 0.5)) * 0.4;
-          float radio = 1.6 + 2.6 * lejos;
+          vec2 fuera = max(vec2(0.0), max(foco.xy - vUv, vUv - foco.zw));
+          float lejos = smoothstep(0.0, 0.3, length(fuera * vec2(1.0, 1.4)));
+          float radio = 0.35 + 1.9 * lejos;
           vec4 c = texture2D(tex, vUv);
           vec3 suma = c.rgb * c.a;
           float alfa = c.a;
@@ -697,8 +713,8 @@ export class Edificio {
           alfa /= 13.0;
           vec3 col = alfa > 0.001 ? suma / alfa : vec3(0.0);
           float l = dot(col, vec3(0.299, 0.587, 0.114));
-          col = mix(col, vec3(l), 0.22);
-          col = mix(col, bruma, 0.08 + 0.1 * lejos);
+          col = mix(col, vec3(l), 0.1 + 0.15 * lejos);
+          col = mix(col, bruma, 0.04 + 0.1 * lejos);
           gl_FragColor = vec4(col, alfa);
           #include <tonemapping_fragment>
           #include <colorspace_fragment>
