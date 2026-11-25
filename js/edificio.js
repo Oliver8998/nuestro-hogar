@@ -406,7 +406,7 @@ export class Edificio {
     calle(240, true, zC - 44);
     calle(240, false, xC + 46);
     const rayas = [];
-    const LP = ANCHO_CALLE / 2 + 2.15;
+    const LP = ANCHO_CALLE / 2 + 2.2;
     this.lineaPeatones = LP;
     for (let k = 0; k < 8; k++) {
       const off = -ANCHO_CALLE / 2 + 0.45 + k * 0.85;
@@ -471,15 +471,15 @@ export class Edificio {
     });
     R.add(poste, brazo, foco);
     const as = arboles.filter(([x, z]) => libre(x, z));
-    const tronco = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.1, 0.14, 1.6, 6), this.matTronco, as.length);
+    const tronco = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.1, 0.14, 2.4, 6), this.matTronco, as.length);
     const copa = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.9, 0), this.matHoja, as.length);
     const r = semilla(77);
     as.forEach(([x, z], i) => {
-      m4.compose(v.set(x, CALLE_Y + 0.8, z), q.identity(), uno);
+      m4.compose(v.set(x, CALLE_Y + 1.2, z), q.identity(), uno);
       tronco.setMatrixAt(i, m4);
       const s = 0.8 + r() * 0.5;
       e.set(r(), r(), 0);
-      m4.compose(v.set(x, CALLE_Y + 2.0 + s * 0.3, z), q.setFromEuler(e), new THREE.Vector3(s, s * 1.1, s));
+      m4.compose(v.set(x, CALLE_Y + 3.05 + s * 0.35, z), q.setFromEuler(e), new THREE.Vector3(s * 0.85, s * 1.05, s * 0.85));
       copa.setMatrixAt(i, m4);
     });
     R.add(tronco, copa);

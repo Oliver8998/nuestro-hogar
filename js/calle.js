@@ -18,6 +18,63 @@ function mascotaSuelta(especie, clip) {
   return obj;
 }
 
+function envolver(o) {
+  if (!o) return null;
+  const g = new THREE.Group();
+  g.add(o);
+  g.scale.setScalar(0.85);
+  return g;
+}
+
+function vehiculoEspecial(tipo) {
+  const g = new THREE.Group();
+  const blanco = new THREE.MeshStandardMaterial({ color: 0xf7f7f4, roughness: 0.4, metalness: 0.2 });
+  const policia = tipo === 'policia';
+  const largo = policia ? 2.1 : 2.6;
+  const alto = policia ? 0.5 : 1.0;
+  const cuerpo = new THREE.Mesh(new THREE.BoxGeometry(largo, alto, 0.98), blanco);
+  cuerpo.position.y = 0.17 + alto / 2;
+  g.add(cuerpo);
+  const cristal = new THREE.MeshStandardMaterial({ color: 0x9fc3d6, roughness: 0.2 });
+  if (policia) {
+    const cab = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.42, 0.88), cristal);
+    cab.position.set(-0.1, 0.86, 0);
+    const techo = new THREE.Mesh(new THREE.BoxGeometry(0.98, 0.06, 0.9), blanco);
+    techo.position.set(-0.1, 1.08, 0);
+    const franja = new THREE.Mesh(new THREE.BoxGeometry(largo + 0.01, 0.14, 0.99), new THREE.MeshStandardMaterial({ color: 0x1f4fa5 }));
+    franja.position.y = 0.5;
+    g.add(cab, techo, franja);
+  } else {
+    const cab = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.4, 0.8), cristal);
+    cab.position.set(largo / 2, 0.95, 0);
+    const rojo = new THREE.MeshStandardMaterial({ color: 0xd63b3b });
+    const franja = new THREE.Mesh(new THREE.BoxGeometry(largo + 0.01, 0.16, 0.99), rojo);
+    franja.position.y = 0.62;
+    const cruz1 = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.12, 1.0), rojo);
+    cruz1.position.set(-0.4, 0.95, 0);
+    const cruz2 = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.4, 1.0), rojo);
+    cruz2.position.set(-0.4, 0.95, 0);
+    g.add(cab, franja, cruz1, cruz2);
+  }
+  const topeY = policia ? 1.15 : 1.22;
+  const luces = [0x3a7bff, 0xff3030].map((c, i) => {
+    const m = new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 1 });
+    const l = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.1, 0.32), m);
+    l.position.set(policia ? -0.1 : largo / 2 - 0.3, topeY, i ? -0.2 : 0.2);
+    g.add(l);
+    return m;
+  });
+  const rueda = new THREE.MeshStandardMaterial({ color: 0x26282b });
+  for (const [rx, rz] of [[largo / 2 - 0.4, 0.46], [largo / 2 - 0.4, -0.46], [-largo / 2 + 0.4, 0.46], [-largo / 2 + 0.4, -0.46]]) {
+    const w = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.16, 10), rueda);
+    w.rotation.x = Math.PI / 2;
+    w.position.set(rx, 0.2, rz);
+    g.add(w);
+  }
+  g.userData.luces = luces;
+  return g;
+}
+
 function mat(color, extra = {}) {
   return new THREE.MeshStandardMaterial({ color, roughness: 0.8, ...extra });
 }
@@ -54,6 +111,39 @@ function textoTextura(texto, fondo, color, w, h) {
   return t;
 }
 
+function tubo(y0, z0, y1, z1, x, Y, grosor = 0.035) {
+  const largo = Math.hypot(y1 - y0, z1 - z0);
+  const g = new THREE.BoxGeometry(grosor, largo, grosor);
+  g.rotateX(Math.atan2(z1 - z0, y1 - y0));
+  g.translate(x, Y + (y0 + y1) / 2, (z0 + z1) / 2);
+  return g.toNonIndexed();
+}
+
+function bici(x, Y, z, ruedas) {
+  const R0 = 0.27;
+  for (const dz of [-0.42, 0.42]) {
+    const g = new THREE.TorusGeometry(R0, 0.025, 6, 18);
+    g.rotateY(Math.PI / 2);
+    g.translate(x, Y + R0 + 0.01, z + dz);
+    ruedas.push(g.toNonIndexed());
+    const eje = new THREE.CylinderGeometry(0.03, 0.03, 0.08, 6);
+    eje.rotateZ(Math.PI / 2);
+    eje.translate(x, Y + R0 + 0.01, z + dz);
+    ruedas.push(eje.toNonIndexed());
+  }
+  const h = R0 + 0.01;
+  return [
+    tubo(h, z - 0.42, 0.66, z - 0.12, x, Y),
+    tubo(h, z - 0.42, h + 0.02, z - 0.02, x, Y),
+    tubo(h + 0.02, z - 0.02, 0.66, z - 0.12, x, Y),
+    tubo(h + 0.02, z - 0.02, 0.72, z + 0.3, x, Y),
+    tubo(0.66, z - 0.12, 0.72, z + 0.3, x, Y),
+    tubo(h, z + 0.42, 0.78, z + 0.3, x, Y),
+    pieza(0.09, 0.04, 0.2, x, Y + 0.7, z - 0.14),
+    pieza(0.46, 0.03, 0.03, x, Y + 0.8, z + 0.3)
+  ];
+}
+
 function unir(lista) {
   return mergeGeometries(lista.map(g => {
     for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(k)) g.deleteAttribute(k);
@@ -77,6 +167,8 @@ export class Calle {
   }
 
   construir(W, D, zC, xC) {
+    this.W = W;
+    this.D = D;
     const R = this.R;
     const Y = this.Y;
     const AC = this.AC;
@@ -105,7 +197,7 @@ export class Calle {
       if (r() < 0.6) huecos.push({ horiz: true, carril: zC - (AC / 2 - 0.65), s: s + r() * 2 });
       if (r() < 0.6) huecos.push({ horiz: false, carril: xC + (AC / 2 - 0.65), s: s + r() * 2 });
     }
-    const LP = AC / 2 + 2.15;
+    const LP = AC / 2 + 2.2;
     this.LP = LP;
     const prohibido = h => {
       if (Math.abs(h.s - (h.horiz ? xC : zC)) < LP + 3) return true;
@@ -187,7 +279,7 @@ export class Calle {
     contenedor(W / 2 + 7.9, zC + AC / 2 - 0.7, amarillos, true);
     contenedor(W / 2 + 9.3, zC + AC / 2 - 0.7, azules, true);
     contenedor(xC + AC / 2 - 0.7, D / 2 + 5, verdes, false);
-    const parada = zC - AC / 2 - 1.4;
+    const parada = zC - AC / 2 - 0.95;
     const vidrio = [];
     vidrio.push(pieza(3.2, 1.9, 0.05, 6, Y + 1.15, parada - 0.55));
     vidrio.push(pieza(0.05, 1.9, 1.1, 4.4, Y + 1.15, parada));
@@ -244,7 +336,7 @@ export class Calle {
       const p = crearPersonaje(GENTE[(k * 5) % GENTE.length]);
       p.scale.setScalar(1.25);
       const sentido = r() < 0.5 ? 1 : -1;
-      const d = { ...ruta, carril: ruta.carril + (r() - 0.5) * 0.5, sentido, s: ruta.min + r() * (ruta.max - ruta.min), v: corre ? 2.3 : 0.75 + r() * 0.5, corre, esperando: false };
+      const d = { ...ruta, carril: ruta.carril + (ruta.horiz ? 0.3 : -0.3) * sentido + (r() - 0.5) * 0.12, sentido, s: ruta.min + r() * (ruta.max - ruta.min), v: corre ? 2.3 : 0.75 + r() * 0.5, corre, esperando: false };
       p.userData.peaton = d;
       p.rotation.y = d.horiz ? (sentido > 0 ? Math.PI / 2 : -Math.PI / 2) : (sentido > 0 ? 0 : Math.PI);
       animarPersonaje(p, corre ? 'sprint' : 'walk');
@@ -280,7 +372,7 @@ export class Calle {
     for (const [x, z, ry, quien] of sentados) {
       const p = crearPersonaje(quien);
       p.scale.setScalar(1.25);
-      p.position.set(x, Y + 0.04, z);
+      p.position.set(x, Y + 0.4, z);
       p.rotation.y = ry;
       animarPersonaje(p, 'sit');
       R.add(p);
@@ -318,7 +410,7 @@ export class Calle {
     R.add(new THREE.Mesh(unir(toldo.filter(t => t[1]).map(t => t[0])), mat(0xf6efe6)));
     const texCafe = textoTextura('Café Pilar', '#3b2f26', '#ffe9b0', 512, 96);
     const cartelBar = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.45), new THREE.MeshStandardMaterial({ map: texCafe, emissiveMap: texCafe, emissive: 0xffffff, emissiveIntensity: 0.1 }));
-    cartelBar.position.set(W / 2 + 0.03, Y + 2.95, 0);
+    cartelBar.position.set(W / 2 + 0.17, Y + 3.0, 0);
     cartelBar.rotation.y = Math.PI / 2;
     R.add(cartelBar);
     this.cartelBar = cartelBar.material;
@@ -338,18 +430,15 @@ export class Calle {
     R.add(escalon);
     const texPan = textoTextura('Panadería', '#f6efe6', '#8a5a2b', 512, 96);
     const cartelPan = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.42), new THREE.MeshStandardMaterial({ map: texPan, emissiveMap: texPan, emissive: 0xffffff, emissiveIntensity: 0.1 }));
-    cartelPan.position.set(-W / 2 + 1.6, Y + 2.95, D / 2 + 0.03);
+    cartelPan.position.set(-W / 2 + 1.6, Y + 3.0, D / 2 + 0.17);
     R.add(cartelPan);
     this.carteles = [cartelBar.material, cartelPan.material];
     const extra = [];
     const amarillo = [];
     const rojo = [];
     const bolardo = (x, z) => extra.push(cil(0.08, 0.7, x, Y + 0.35, z, 8));
-    for (const sx of [-1, 1]) for (const sz of [-1, 1]) for (let k = 0; k < 3; k++) {
-      bolardo(xC + sx * (AC / 2 + 0.3), zC + sz * (AC / 2 + 0.5 + k * 0.55));
-      bolardo(xC + sx * (AC / 2 + 0.5 + k * 0.55), zC + sz * (AC / 2 + 0.3));
-    }
-    rojo.push(cil(0.12, 0.55, -W / 2 - 1.1, Y + 0.28, aceraNuestraZ + 0.6), cil(0.07, 0.1, -W / 2 - 1.1, Y + 0.6, aceraNuestraZ + 0.6));
+    for (let k = 0; k < 4; k++) bolardo(-W / 2 + 0.6 + k * 1.2, D / 2 + 2.95);
+    rojo.push(cil(0.12, 0.55, -W / 2 - 1.1, Y + 0.28, aceraNuestraZ - 0.2), cil(0.07, 0.1, -W / 2 - 1.1, Y + 0.6, aceraNuestraZ - 0.2));
     amarillo.push(pieza(0.45, 0.85, 0.35, aceraNuestraX - 0.4, Y + 0.43, D / 2 + 3.2), pieza(0.5, 0.1, 0.4, aceraNuestraX - 0.4, Y + 0.9, D / 2 + 3.2));
     const kioskoX = 0.6;
     const kioskoZ = D / 2 + 2.2;
@@ -363,17 +452,16 @@ export class Calle {
     for (let k = 0; k < 5; k++) revistas.push(pieza(0.02, 0.28, 0.22, kioskoX - 0.78, Y + 0.9 + (k % 2) * 0.32, kioskoZ - 0.5 + k * 0.25));
     R.add(new THREE.Mesh(unir(revistas), mat(0xe07a8a, { emissive: 0xe07a8a, emissiveIntensity: 0.1 })));
     const bicis = [];
+    const ruedasB = [];
+    const soporte = [];
     for (let k = 0; k < 3; k++) {
-      const bx = W / 2 + 2.9 + k * 0.7;
-      const bz = D / 2 + 1.2;
-      for (const dz of [-0.45, 0.45]) {
-        const g = new THREE.TorusGeometry(0.28, 0.03, 6, 16);
-        g.rotateY(Math.PI / 2);
-        g.translate(bx, Y + 0.3, bz + dz);
-        bicis.push(g.toNonIndexed());
-      }
-      bicis.push(pieza(0.04, 0.04, 0.9, bx, Y + 0.55, bz), pieza(0.04, 0.35, 0.04, bx, Y + 0.45, bz - 0.15), pieza(0.3, 0.04, 0.04, bx, Y + 0.85, bz + 0.4));
+      const bx = W / 2 + 1.2 + k * 0.75;
+      const bz = D / 2 + 2.0;
+      bicis.push(...bici(bx, Y, bz, ruedasB));
+      soporte.push(pieza(0.04, 0.55, 0.04, bx + 0.12, Y + 0.27, bz - 0.25), pieza(0.04, 0.55, 0.04, bx + 0.12, Y + 0.27, bz + 0.25), pieza(0.04, 0.04, 0.54, bx + 0.12, Y + 0.55, bz));
     }
+    R.add(new THREE.Mesh(unir(ruedasB), mat(0x26282b, { roughness: 0.8 })));
+    R.add(new THREE.Mesh(unir(soporte), mat(0x9aa0a6, { metalness: 0.6, roughness: 0.4 })));
     const tapas = [];
     for (const [x, z] of [[xC + 1.7, zC + 15], [xC - 10, zC - 1.7], [xC + 15, zC + 1.7], [xC - 1.7, zC - 14]]) {
       const g = new THREE.CylinderGeometry(0.35, 0.35, 0.02, 14);
@@ -382,7 +470,7 @@ export class Calle {
     }
     const jardinera = [];
     const flores = [];
-    for (const [x, z] of [[-W / 2 - 1.6, -D / 2 - 1.2], [W / 2 + 2.6, D / 2 + 1.6], [-W / 2 - 1.5, D / 2 + 1.4]]) {
+    for (const [x, z] of [[-W / 2 - 1.6, -D / 2 - 1.6], [-W / 2 - 1.75, D / 2 + 1.4]]) {
       jardinera.push(pieza(1.2, 0.45, 0.5, x, Y + 0.22, z));
       for (let f = 0; f < 4; f++) {
         const g = new THREE.IcosahedronGeometry(0.17, 0);
@@ -462,6 +550,95 @@ export class Calle {
     for (const m of [this.mCuerpo, this.mCristal, this.mRuedas, this.mFaros, this.mPilotos, this.mTaxi]) m.instanceMatrix.needsUpdate = true;
   }
 
+  especial() {
+    const tipos = ['policia', 'policia', 'ambulancia', 'persecucion', 'persecucion', 'perroGato', 'globo'];
+    const tipo = tipos[Math.floor(Math.random() * tipos.length)];
+    const horiz = Math.random() < 0.5;
+    const sentido = Math.random() < 0.5 ? 1 : -1;
+    const R = this.R;
+    const e = { tipo, t: 0, objs: [] };
+    if (tipo === 'policia' || tipo === 'ambulancia') {
+      const g = vehiculoEspecial(tipo);
+      R.add(g);
+      e.objs.push(g);
+      e.coche = { g, horiz, sentido, s: -75 * sentido, carril: (horiz ? this.zC : this.xC) + sentido * 1.7 * (horiz ? 1 : -1), v: tipo === 'policia' ? 17 : 13 };
+      g.rotation.y = horiz ? (sentido > 0 ? 0 : Math.PI) : (sentido > 0 ? -Math.PI / 2 : Math.PI / 2);
+    } else if (tipo === 'persecucion' || tipo === 'perroGato') {
+      const carril = (horiz ? this.zC : this.xC) + (Math.random() < 0.5 ? 1 : -1) * this.LP;
+      const a = tipo === 'persecucion' ? crearPersonaje(['amigos', 'mateo'][Math.floor(Math.random() * 2)]) : envolver(mascotaSuelta('gato', 'run'));
+      const b = tipo === 'persecucion' ? crearPersonaje(['mama', 'lola', 'ramon'][Math.floor(Math.random() * 3)]) : envolver(mascotaSuelta('perro', 'run'));
+      if (!a || !b) return;
+      if (tipo === 'persecucion') {
+        a.scale.setScalar(1.25);
+        b.scale.setScalar(1.25);
+        animarPersonaje(a, 'sprint');
+        animarPersonaje(b, 'sprint');
+      }
+      R.add(a, b);
+      e.objs.push(a, b);
+      e.corredores = [{ o: a, s: -50 * sentido, v: tipo === 'persecucion' ? 3.6 : 3.2 }, { o: b, s: -50 * sentido - 2.4 * sentido, v: tipo === 'persecucion' ? 3.45 : 3.1 }];
+      e.horiz = horiz;
+      e.sentido = sentido;
+      e.carril = carril;
+      for (const c of e.corredores) c.o.rotation.y = horiz ? (sentido > 0 ? Math.PI / 2 : -Math.PI / 2) : (sentido > 0 ? 0 : Math.PI);
+    } else if (tipo === 'globo') {
+      const g = new THREE.Group();
+      const bola = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 10), mat([0xe05656, 0xf2d06b, 0x5a8fd6][Math.floor(Math.random() * 3)], { roughness: 0.3 }));
+      bola.scale.y = 1.2;
+      const hilo = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.8, 4), mat(0xffffff));
+      hilo.position.y = -0.62;
+      g.add(bola, hilo);
+      g.position.set(this.W / 2 + 1.6, this.Y + 1.6, this.D / 2 - 1.4);
+      R.add(g);
+      e.objs.push(g);
+      e.globo = g;
+    }
+    this.especialActual = e;
+  }
+
+  actualizarEspecial(dt) {
+    const e = this.especialActual;
+    if (!e) {
+      this.tEspecial = (this.tEspecial ?? 15) - dt;
+      if (this.tEspecial <= 0) {
+        this.tEspecial = 30 + Math.random() * 45;
+        this.especial();
+      }
+      return;
+    }
+    e.t += dt;
+    for (const o of e.objs) if (!o.layers.isEnabled(2)) o.traverse(x => x.layers.set(2));
+    let fin = false;
+    if (e.coche) {
+      const c = e.coche;
+      c.s += c.v * dt * c.sentido;
+      if (c.horiz) c.g.position.set(c.s, this.Y, c.carril);
+      else c.g.position.set(c.carril, this.Y, c.s);
+      const azul = Math.floor(e.t * 6) % 2 === 0;
+      c.g.userData.luces[0].emissiveIntensity = azul ? 2.2 : 0.1;
+      c.g.userData.luces[1].emissiveIntensity = azul ? 0.1 : 2.2;
+      fin = Math.abs(c.s) > 76;
+    } else if (e.corredores) {
+      for (const c of e.corredores) {
+        c.s += c.v * dt * e.sentido;
+        if (e.horiz) c.o.position.set(c.s, this.Y, e.carril);
+        else c.o.position.set(e.carril, this.Y, c.s);
+        const mx = c.o.children[0] && c.o.children[0].userData.mixer;
+        if (mx) mx.update(dt);
+      }
+      fin = Math.abs(e.corredores[1].s) > 52;
+    } else if (e.globo) {
+      e.globo.position.y += dt * 1.1;
+      e.globo.position.x += Math.sin(e.t * 0.8) * dt * 0.4 + dt * 0.3;
+      e.globo.rotation.z = Math.sin(e.t * 1.3) * 0.15;
+      fin = e.t > 22;
+    }
+    if (fin) {
+      for (const o of e.objs) o.removeFromParent();
+      this.especialActual = null;
+    }
+  }
+
   ponerNoche(k) {
     this.noche = k;
     for (const m of this.carteles || []) m.emissiveIntensity = 0.1 + k * 0.9;
@@ -470,6 +647,7 @@ export class Calle {
   actualizar(dt) {
     if (!this.vehiculos.length) return;
     this.t += dt;
+    this.actualizarEspecial(dt);
     const ciclo = this.t % 16;
     this.fase = ciclo < 7 ? 0 : ciclo < 8 ? 1 : ciclo < 15 ? 2 : 1;
     const ambar = this.fase === 1;
@@ -490,7 +668,14 @@ export class Calle {
         d.esperando = espera;
         animarPersonaje(p, espera ? 'idle' : d.corre ? 'sprint' : 'walk');
       }
-      if (!espera) d.s += d.v * dt * d.sentido;
+      let vel = d.v;
+      for (const o of this.peatones) {
+        const od = o.userData.peaton;
+        if (!od || od === d || od.horiz !== d.horiz || od.sentido !== d.sentido || Math.abs(od.carril - d.carril) > 0.45) continue;
+        const delante = (od.s - d.s) * d.sentido;
+        if (delante > 0 && delante < 0.9) vel = Math.min(vel, od.esperando ? 0 : od.v * 0.95);
+      }
+      if (!espera) d.s += vel * dt * d.sentido;
       if (d.s > d.max) d.s = d.min;
       if (d.s < d.min) d.s = d.max;
       if (d.horiz) p.position.set(d.s, this.Y, d.carril);

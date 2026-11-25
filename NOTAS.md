@@ -629,3 +629,9 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - Barandillas: la gente del balcón se queda dentro de la barandilla (`fuera` a 0,7 de `dentro`) y en las ventanas francesas se queda detrás de los barrotes.
 - Luces: al atardecer (desde las 18 h, sube del 35 % al 100 % a las 20 h) se encienden casi todas las ventanas (90 %) de los edificios y los pisos de abajo (93 %). Arreglado que las ventanas de la ciudad no se encendían nunca (los materiales clonados no recibían la intensidad).
 - Muebles de los pisos de abajo fusionados por material para dibujar menos.
+
+## Repaso de detalles de la calle (v94)
+- Bicis rehechas (`bici()` en calle.js): ruedas con eje, cuadro de tubos que van de buje a sillín y manillar sin atravesar las ruedas, en su aparcabicis de acero y sin chocar con nada.
+- Gente sentada: la pose `sit` de los personajes se sienta en el suelo, así que se suben 0,4 para que queden en la silla o el banco (terraza, banco y parada).
+- Árboles más altos (tronco 2,4) para que la copa no atraviese las cabezas; peatones en dos sentidos separados (cada uno por su derecha, a 1,9 y 2,5 m del bordillo) y frenan si alcanzan a alguien; marquesina, boca de riego, jardineras y bolardos recolocados para no estar en su camino ni dentro de edificios vecinos; carteles del café y la panadería por delante de la cornisa.
+- Sucesos en la calle cada 30-75 s (`calle.especial`): coche de policía a toda velocidad con luces azul/roja, ambulancia con luces, persecución (dos personas corriendo por la acera), un perro persiguiendo a un gato y un globo que se le escapa a alguien en la terraza y sube al cielo.
