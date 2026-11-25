@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { MASCARA_VENTANA } from './ambiente.js';
 
 export const TAM_VENTANA = {
   s: { nombre: 'Pequeña', k: 0.65 },
@@ -28,10 +29,12 @@ function crearVentana(colorMarco, cieloTex) {
   const repisa = new THREE.Mesh(new THREE.BoxGeometry(1.32, 0.05, 0.14), mat);
   repisa.position.set(0, -0.66, 0.05);
   g.add(repisa);
-  const cristal = new THREE.Mesh(new THREE.PlaneGeometry(1.14, 1.12), new THREE.MeshStandardMaterial({ color: 0xa9d4e8, emissive: 0x8fc3dd, emissiveIntensity: 0.4, transparent: true, opacity: 0.32 }));
+  const cristal = new THREE.Mesh(new THREE.PlaneGeometry(1.14, 1.12), new THREE.MeshStandardMaterial({ color: 0xd8ecf5, emissive: 0x8fc3dd, emissiveIntensity: 0.12, transparent: true, opacity: 0.16 }));
   cristal.position.z = 0.012;
   g.add(cristal);
-  const cielo = new THREE.Mesh(new THREE.PlaneGeometry(1.14, 1.2), new THREE.MeshBasicMaterial({ map: cieloTex || null, color: cieloTex ? 0xffffff : 0xbfe3f5, toneMapped: false }));
+  const cielo = new THREE.Mesh(new THREE.PlaneGeometry(1.14, 1.2), MASCARA_VENTANA);
+  cielo.renderOrder = -10;
+  void cieloTex;
   cielo.position.z = 0.001;
   g.add(cielo);
   g.userData.mat = mat;

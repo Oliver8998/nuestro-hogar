@@ -417,10 +417,12 @@ export function crearSala(escena) {
       }
       return;
     }
-    for (const p of paredes) {
-      p.visible = p.userData.normal.dot(direccion) < -0.15;
+    const orden = paredes.map((p, i) => ({ i, d: p.userData.normal.dot(direccion) - (p.visible ? 0.06 : 0) })).sort((a, b) => a.d - b.d);
+    const ver = new Set([orden[0].i, orden[1].i]);
+    paredes.forEach((p, i) => {
+      p.visible = ver.has(i);
       p.userData.bajo.visible = !p.visible;
-    }
+    });
   }
 
   function objetivos() {

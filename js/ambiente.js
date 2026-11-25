@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+
+export const MASCARA_VENTANA = new THREE.MeshBasicMaterial({ colorWrite: false });
 import { horaSolar } from './sol.js';
 
 const CIELO = [
@@ -82,10 +84,11 @@ export class Ambiente {
     this.ctx = this.lienzo.getContext('2d');
     this.textura = new THREE.CanvasTexture(this.lienzo);
     this.textura.colorSpace = THREE.SRGBColorSpace;
-    const cielo = new THREE.Mesh(new THREE.PlaneGeometry(1.14, 1.2), new THREE.MeshBasicMaterial({ map: this.textura, toneMapped: false }));
+    const cielo = new THREE.Mesh(new THREE.PlaneGeometry(1.14, 1.2), MASCARA_VENTANA);
+    cielo.renderOrder = -10;
     cielo.position.z = 0.001;
     sala.ventana.add(cielo);
-    sala.matCristal.opacity = 0.32;
+    sala.matCristal.opacity = 0.16;
     this.gotas = Array.from({ length: 40 }, () => ({ x: Math.random() * 128, y: Math.random() * 256, v: 0.7 + Math.random() * 0.6 }));
     this.estrellas = Array.from({ length: 30 }, () => ({ x: Math.random() * 128, y: Math.random() * 170, f: Math.random() * 6 }));
     this.nubes = Array.from({ length: 4 }, (_, i) => ({ x: Math.random() * 160 - 20, y: 30 + i * 38 + Math.random() * 20, s: 0.6 + Math.random() * 0.6 }));
@@ -160,9 +163,9 @@ export class Ambiente {
       this.cieloArriba.lerp(g, (1 - gris) * 2.5);
       this.cieloAbajo.lerp(g, (1 - gris) * 2.5);
     }
-    this.sala.matCristal.color.copy(this.cieloAbajo).lerp(new THREE.Color(0xffffff), 0.5);
+    this.sala.matCristal.color.copy(this.cieloAbajo).lerp(new THREE.Color(0xffffff), 0.6);
     this.sala.matCristal.emissive.copy(this.cieloAbajo);
-    this.sala.matCristal.emissiveIntensity = this.esNoche() ? 0.15 : 0.35;
+    this.sala.matCristal.emissiveIntensity = this.esNoche() ? 0.05 : 0.15;
     this.fondoExterior = fondoB;
     const hs = this.horaSol;
     this.nocheK = hs >= 20 || hs < 6.5 ? 1 : hs >= 18 ? 0.35 + (hs - 18) / 2 * 0.65 : hs < 8 ? (8 - hs) / 1.5 : 0;

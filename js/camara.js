@@ -88,6 +88,11 @@ export class CamaraIso {
       this.anguloObj += this.inercia;
       this.inercia *= Math.pow(0.85, dt * 60);
     }
+    if (!this.agarrada && !this.libre && Math.abs(this.inercia) < 0.004) {
+      const paso = Math.PI / 2;
+      const diagonal = ANGULO_INICIAL + Math.round((this.anguloObj - ANGULO_INICIAL) / paso) * paso;
+      this.anguloObj += (diagonal - this.anguloObj) * Math.min(1, dt * 5);
+    }
     const k = 1 - Math.pow(0.0001, dt);
     this.angulo += (this.anguloObj - this.angulo) * k;
     this.zoomActual += (this.zoomObj - this.zoomActual) * k;

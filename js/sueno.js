@@ -149,6 +149,7 @@ export class Sueno {
     const cam = this.ctx.camara;
     const zoomAntes = cam.zoomObj;
     cam.reiniciar();
+    cam.libre = true;
     cam.zoomObj = 0.85;
     this.ctx.sonido && this.ctx.sonido.premio();
     let vivo = true;
@@ -181,6 +182,7 @@ export class Sueno {
       setTimeout(() => capa.remove(), 600);
       document.body.classList.remove('modo-cine');
       cam.zoomObj = zoomAntes || 1;
+      cam.libre = false;
       if (primeraVez && !d.final) this.premioFinal();
     };
     const fin = setTimeout(terminar, 600 + frases.length * 3600 + 3500);

@@ -327,8 +327,8 @@ export class Calle {
 
     const rutas = [];
     for (const lado of [1, -1]) {
-      rutas.push({ horiz: true, carril: zC + lado * LP, min: -45, max: xC + 46 - LP - 2 });
-      rutas.push({ horiz: false, carril: xC + lado * LP, min: zC - 44 + LP + 2, max: 45 });
+      rutas.push({ horiz: true, c: zC, lado, min: -45, max: xC + 46 - LP - 2 });
+      rutas.push({ horiz: false, c: xC, lado, min: zC - 44 + LP + 2, max: 45 });
     }
     for (let k = 0; k < 14; k++) {
       const ruta = rutas[k % rutas.length];
@@ -336,7 +336,10 @@ export class Calle {
       const p = crearPersonaje(GENTE[(k * 5) % GENTE.length]);
       p.scale.setScalar(1.25);
       const sentido = r() < 0.5 ? 1 : -1;
-      const d = { ...ruta, carril: ruta.carril + (ruta.horiz ? 0.3 : -0.3) * sentido + (r() - 0.5) * 0.12, sentido, s: ruta.min + r() * (ruta.max - ruta.min), v: corre ? 2.3 : 0.75 + r() * 0.5, corre, esperando: false };
+      const offBase = 2.2 + 0.3 * ruta.lado * (ruta.horiz ? 1 : -1) * sentido;
+      const tramo = (ruta.max - ruta.min) / 4;
+      const d = { ...ruta, offBase, off: offBase, offObj: offBase, sentido, s: ruta.min + tramo * (Math.floor(k / rutas.length) + 0.3 + r() * 0.4), v: corre ? 2.2 : 0.8 + r() * 0.35, corre, esperando: false, pausa: 0, tPausa: 5 + r() * 20 };
+      d.carril = ruta.c + ruta.lado * (AC / 2 + d.off);
       p.userData.peaton = d;
       p.rotation.y = d.horiz ? (sentido > 0 ? Math.PI / 2 : -Math.PI / 2) : (sentido > 0 ? 0 : Math.PI);
       animarPersonaje(p, corre ? 'sprint' : 'walk');
@@ -564,7 +567,7 @@ export class Calle {
       e.coche = { g, horiz, sentido, s: -75 * sentido, carril: (horiz ? this.zC : this.xC) + sentido * 1.7 * (horiz ? 1 : -1), v: tipo === 'policia' ? 17 : 13 };
       g.rotation.y = horiz ? (sentido > 0 ? 0 : Math.PI) : (sentido > 0 ? -Math.PI / 2 : Math.PI / 2);
     } else if (tipo === 'persecucion' || tipo === 'perroGato') {
-      const carril = (horiz ? this.zC : this.xC) + (Math.random() < 0.5 ? 1 : -1) * this.LP;
+      const lado = Math.random() < 0.5 ? 1 : -1;
       const a = tipo === 'persecucion' ? crearPersonaje(['amigos', 'mateo'][Math.floor(Math.random() * 2)]) : envolver(mascotaSuelta('gato', 'run'));
       const b = tipo === 'persecucion' ? crearPersonaje(['mama', 'lola', 'ramon'][Math.floor(Math.random() * 3)]) : envolver(mascotaSuelta('perro', 'run'));
       if (!a || !b) return;
@@ -576,11 +579,12 @@ export class Calle {
       }
       R.add(a, b);
       e.objs.push(a, b);
-      e.corredores = [{ o: a, s: -50 * sentido, v: tipo === 'persecucion' ? 3.6 : 3.2 }, { o: b, s: -50 * sentido - 2.4 * sentido, v: tipo === 'persecucion' ? 3.45 : 3.1 }];
-      e.horiz = horiz;
-      e.sentido = sentido;
-      e.carril = carril;
-      for (const c of e.corredores) c.o.rotation.y = horiz ? (sentido > 0 ? Math.PI / 2 : -Math.PI / 2) : (sentido > 0 ? 0 : Math.PI);
+      const c = horiz ? this.zC : this.xC;
+      const datos = (s0, v) => ({ horiz, c, lado, offBase: 2.2, off: 2.2, offObj: 2.2, sentido, s: s0, v, corre: true, temporal: true, min: -1e9, max: 1e9, pausa: 0, tPausa: 1e9, esperando: false });
+      a.userData.peaton = datos(-50 * sentido, tipo === 'persecucion' ? 3.5 : 3.2);
+      b.userData.peaton = datos(-50 * sentido - 2.4 * sentido, tipo === 'persecucion' ? 3.35 : 3.05);
+      this.peatones.push(a, b);
+      e.corredores = [a, b];
     } else if (tipo === 'globo') {
       const g = new THREE.Group();
       const bola = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 10), mat([0xe05656, 0xf2d06b, 0x5a8fd6][Math.floor(Math.random() * 3)], { roughness: 0.3 }));
@@ -619,14 +623,12 @@ export class Calle {
       c.g.userData.luces[1].emissiveIntensity = azul ? 0.1 : 2.2;
       fin = Math.abs(c.s) > 76;
     } else if (e.corredores) {
-      for (const c of e.corredores) {
-        c.s += c.v * dt * e.sentido;
-        if (e.horiz) c.o.position.set(c.s, this.Y, e.carril);
-        else c.o.position.set(e.carril, this.Y, c.s);
-        const mx = c.o.children[0] && c.o.children[0].userData.mixer;
+      for (const o of e.corredores) {
+        const mx = o.children[0] && o.children[0].userData.mixer;
         if (mx) mx.update(dt);
       }
-      fin = Math.abs(e.corredores[1].s) > 52;
+      fin = Math.abs(e.corredores[1].userData.peaton.s) > 52;
+      if (fin) this.peatones = this.peatones.filter(p => !e.corredores.includes(p));
     } else if (e.globo) {
       e.globo.position.y += dt * 1.1;
       e.globo.position.x += Math.sin(e.t * 0.8) * dt * 0.4 + dt * 0.3;
@@ -656,41 +658,81 @@ export class Calle {
     this.luces[1].emissiveIntensity = ambar ? 1.6 : 0.1;
     this.luces[2].emissiveIntensity = verdeX || this.fase === 2 ? 1.4 : 0.1;
     this.colocarVehiculos(dt);
-    for (const p of this.peatones) {
-      if (!p.layers.isEnabled(2)) p.traverse(o => o.layers.set(2));
+    const andantes = this.peatones.filter(p => p.userData.peaton);
+    for (const p of this.peatones) if (!p.layers.isEnabled(2)) p.traverse(o => o.layers.set(2));
+    for (const p of andantes) {
       const d = p.userData.peaton;
-      if (!d) continue;
       const cruce = d.horiz ? this.xC : this.zC;
       const falta = (cruce - d.s) * d.sentido;
       const puede = d.horiz ? this.fase === 0 : this.fase === 2;
-      const espera = !puede && falta > this.AC / 2 + 0.1 && falta < this.AC / 2 + 0.7;
-      if (espera !== d.esperando) {
-        d.esperando = espera;
-        animarPersonaje(p, espera ? 'idle' : d.corre ? 'sprint' : 'walk');
+      const espera = !d.temporal && !puede && falta > this.AC / 2 + 0.1 && falta < this.AC / 2 + 0.9;
+      const enCruce = Math.abs(cruce - d.s) < this.AC / 2 + 1.2;
+      if (!d.corre && d.pausa <= 0 && !enCruce) {
+        d.tPausa -= dt;
+        if (d.tPausa <= 0) {
+          d.tPausa = 12 + Math.random() * 25;
+          if (Math.random() < 0.5) d.pausa = 2 + Math.random() * 3;
+        }
       }
-      let vel = d.v;
-      for (const o of this.peatones) {
-        const od = o.userData.peaton;
-        if (!od || od === d || od.horiz !== d.horiz || od.sentido !== d.sentido || Math.abs(od.carril - d.carril) > 0.45) continue;
-        const delante = (od.s - d.s) * d.sentido;
-        if (delante > 0 && delante < 0.9) vel = Math.min(vel, od.esperando ? 0 : od.v * 0.95);
+      if (d.pausa > 0) d.pausa -= dt;
+      const parado = espera || d.pausa > 0;
+      let vel = parado ? 0 : d.v;
+      let quiere = d.offBase;
+      for (const q of andantes) {
+        if (q === p) continue;
+        const o = q.userData.peaton;
+        if (o.horiz !== d.horiz || o.lado !== d.lado || o.c !== d.c) continue;
+        const ds = (o.s - d.s) * d.sentido;
+        const dl = o.off - d.off;
+        if (Math.abs(dl) > 0.75 || ds < -0.6 || ds > 2.2) continue;
+        if (o.sentido === d.sentido) {
+          if (ds > 0 && Math.abs(dl) < 0.5) {
+            const masLento = (o.pausa > 0 || o.esperando) ? 0 : o.v;
+            if (vel > masLento + 0.05 && !espera) {
+              const hacia = d.offBase > 2.2 ? -1 : 1;
+              const libre = andantes.every(z => {
+                const zd = z.userData.peaton;
+                if (z === p || z === q || zd.horiz !== d.horiz || zd.lado !== d.lado) return true;
+                return Math.abs(zd.off - (o.off + hacia * 0.55)) > 0.4 || Math.abs(zd.s - d.s) > 2.5;
+              });
+              if (libre) quiere = THREE.MathUtils.clamp(o.off + hacia * 0.55, 1.5, 2.6);
+              else vel = Math.min(vel, ds < 0.8 ? masLento : vel);
+            }
+            if (ds < 0.55 && Math.abs(dl) < 0.38) vel = Math.min(vel, (o.pausa > 0 || o.esperando) ? 0 : o.v * 0.9);
+          }
+        } else if (ds > 0 && ds < 1.6 && Math.abs(dl) < 0.45) {
+          quiere = THREE.MathUtils.clamp(d.off + (d.offBase > o.offBase ? 0.3 : -0.3), 1.5, 2.6);
+        }
       }
-      if (!espera) d.s += vel * dt * d.sentido;
+      d.offObj = quiere;
+      const dOff = d.offObj - d.off;
+      d.off += Math.sign(dOff) * Math.min(Math.abs(dOff), dt * (d.corre ? 1.6 : 0.9));
+      const anim = parado ? (d.pausa > 0 && !espera && d.pausaAnim ? d.pausaAnim : 'idle') : d.corre ? 'sprint' : 'walk';
+      if (d.anim !== anim) {
+        if (parado && d.pausa > 0 && !espera && !d.pausaAnim) d.pausaAnim = Math.random() < 0.4 ? 'interact-right' : 'idle';
+        if (!parado) d.pausaAnim = null;
+        d.anim = parado ? (d.pausaAnim || 'idle') : anim;
+        animarPersonaje(p, d.anim);
+      }
+      d.esperando = espera;
+      d.s += vel * dt * d.sentido;
       if (d.s > d.max) d.s = d.min;
       if (d.s < d.min) d.s = d.max;
+      d.carril = d.c + d.lado * (this.AC / 2 + d.off);
       if (d.horiz) p.position.set(d.s, this.Y, d.carril);
       else p.position.set(d.carril, this.Y, d.s);
+      const giroLat = vel > 0.05 ? Math.atan2(dOff * d.lado * (d.horiz ? 1 : 1), 2.5) : 0;
+      const base = d.horiz ? (d.sentido > 0 ? Math.PI / 2 : -Math.PI / 2) : (d.sentido > 0 ? 0 : Math.PI);
+      p.rotation.y = base + (d.horiz ? -giroLat * d.sentido : giroLat * d.sentido) * 0.6;
       if (d.perro) {
         if (!d.perro.layers.isEnabled(2)) d.perro.traverse(o => o.layers.set(2));
         const atras = -0.7 * d.sentido;
-        if (d.perro.userData.saltando === undefined) d.perro.userData.saltando = 0;
-        const lado = 0.35;
+        const ladoP = 0.32 * (d.offBase > 2.2 ? -1 : 1) * d.lado;
         const mx = d.perro.children[0] && d.perro.children[0].userData.mixer;
-        if (mx && !d.esperando) mx.update(dt);
-        const bote = mx ? 0 : d.esperando ? 0 : Math.abs(Math.sin(this.t * 10)) * 0.03;
-        if (d.horiz) d.perro.position.set(d.s + atras, this.Y + bote, d.carril + lado);
-        else d.perro.position.set(d.carril + lado, this.Y + bote, d.s + atras);
-        d.perro.rotation.y = p.rotation.y;
+        if (mx && !parado) mx.update(dt);
+        if (d.horiz) d.perro.position.set(d.s + atras, this.Y, d.carril + ladoP);
+        else d.perro.position.set(d.carril + ladoP, this.Y, d.s + atras);
+        d.perro.rotation.y = base;
       }
     }
     const ang0 = this.t * 0.08;
