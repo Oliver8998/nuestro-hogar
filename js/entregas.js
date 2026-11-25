@@ -7,7 +7,7 @@ const ALTURA_VENTANA = 1.45;
 const SEPARACION_PARED = 0.75;
 const CUELGA = 0.62;
 
-function crearDron() {
+export function crearDron() {
   const g = new THREE.Group();
   const blanco = new THREE.MeshStandardMaterial({ color: 0xf7f4ef, roughness: 0.35 });
   const gris = new THREE.MeshStandardMaterial({ color: 0x4a4f57, roughness: 0.5, metalness: 0.3 });

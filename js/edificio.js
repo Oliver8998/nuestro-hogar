@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { PisosVecinos } from './pisosVecinos.js';
-import { crearPersonaje, animarPersonaje } from './personajes.js';
+import { Calle } from './calle.js';
 
 const MAX_VECINOS = 96;
 
@@ -372,6 +372,7 @@ export class Edificio {
     this.raiz.add(this.pisosV.raiz);
     this.vecinos = [];
     this.coches = [];
+    this.calle = null;
   }
 
   calles(W, D) {
@@ -467,59 +468,8 @@ export class Edificio {
     });
     R.add(tronco, copa);
 
-    const COLORES = [0xe05656, 0x5a8fd6, 0xf2d06b, 0xf4f1ea, 0x6cc08a, 0x3b3f44, 0xf29b5a, 0x9b6fb5];
-    const N = 8;
-    const unir = lista => {
-      const g = mergeGeometries(lista.map(x => (x.index ? x.toNonIndexed() : x)));
-      return g;
-    };
-    const pieza = (w, h, d, x, y, z) => {
-      const g = new THREE.BoxGeometry(w, h, d);
-      g.translate(x, y, z);
-      return g;
-    };
-    const ruedas = [];
-    for (const [rx, rz] of [[0.62, 0.45], [0.62, -0.45], [-0.62, 0.45], [-0.62, -0.45]]) {
-      const w = new THREE.CylinderGeometry(0.2, 0.2, 0.16, 10);
-      w.rotateX(Math.PI / 2);
-      w.translate(rx, 0.2, rz);
-      ruedas.push(w);
-    }
-    const crear = (geo, mat) => {
-      const m = new THREE.InstancedMesh(geo, mat, N);
-      m.frustumCulled = false;
-      R.add(m);
-      return m;
-    };
-    this.cocheCuerpo = crear(unir([pieza(2.0, 0.5, 0.95, 0, 0.42, 0), pieza(0.95, 0.06, 0.87, -0.1, 1.08, 0)]), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.45, metalness: 0.2 }));
-    this.cocheCristal = crear(pieza(1.05, 0.42, 0.85, -0.1, 0.86, 0), new THREE.MeshStandardMaterial({ color: 0x9fc3d6, roughness: 0.2 }));
-    this.cocheRuedas = crear(unir(ruedas), new THREE.MeshStandardMaterial({ color: 0x26282b, roughness: 0.9 }));
-    this.cocheFaros = crear(unir([pieza(0.04, 0.1, 0.18, 1.0, 0.5, 0.3), pieza(0.04, 0.1, 0.18, 1.0, 0.5, -0.3)]), this.matFaro);
-    this.cochePilotos = crear(unir([pieza(0.04, 0.1, 0.18, -1.0, 0.5, 0.3), pieza(0.04, 0.1, 0.18, -1.0, 0.5, -0.3)]), this.matPiloto);
-    const col = new THREE.Color();
-    for (let k = 0; k < N; k++) {
-      this.cocheCuerpo.setColorAt(k, col.setHex(COLORES[k % COLORES.length]));
-      const horiz = k % 2 === 0;
-      const sentido = k % 4 < 2 ? 1 : -1;
-      const carril = (horiz ? zC : xC) + sentido * 1.7 * (horiz ? 1 : -1);
-      this.coches.push({ horiz, sentido, carril, s: -60 + k * 16 + r() * 6, v: 5 + r() * 3, giro: horiz ? (sentido > 0 ? 0 : Math.PI) : (sentido > 0 ? -Math.PI / 2 : Math.PI / 2) });
-    }
-    this.cocheCuerpo.instanceColor.needsUpdate = true;
-    this.peatones = [];
-    const quienes = ['lola', 'mateo', 'sol', 'ramon', 'amigos', 'mama'];
-    for (let k = 0; k < 5; k++) {
-      const p = crearPersonaje(quienes[k % quienes.length]);
-      p.scale.setScalar(1.25);
-      const horiz = k % 2 === 0;
-      const sentido = k % 3 === 0 ? -1 : 1;
-      const lado = k % 4 < 2 ? 1 : -1;
-      const carril = (horiz ? zC : xC) + lado * (ANCHO_CALLE / 2 + 1.0);
-      p.userData.peaton = { horiz, sentido, carril, s: -40 + k * 17, v: 0.9 + r() * 0.4 };
-      p.rotation.y = horiz ? (sentido > 0 ? Math.PI / 2 : -Math.PI / 2) : (sentido > 0 ? 0 : Math.PI);
-      animarPersonaje(p, 'walk');
-      R.add(p);
-      this.peatones.push(p);
-    }
+    this.calle = new Calle(R, { calleY: CALLE_Y, anchoCalle: ANCHO_CALLE, acera: ACERA, matFaro: this.matFaro, matPiloto: this.matPiloto, azar: r });
+    this.calle.construir(W, D, zC, xC);
   }
 
   ciudad(W, D) {
@@ -658,32 +608,7 @@ export class Edificio {
     if (!this.bloque) return;
     this.t += dt;
     if (this.pisosV.raiz.visible) this.pisosV.actualizar(dt, cam ? cam.direccionHorizontal() : null, null);
-    if (this.coches.length) {
-      const m4 = this.m4 || (this.m4 = new THREE.Matrix4());
-      const q = this.q || (this.q = new THREE.Quaternion());
-      const v = this.v3 || (this.v3 = new THREE.Vector3());
-      const uno = this.uno || (this.uno = new THREE.Vector3(1, 1, 1));
-      const eje = this.eje || (this.eje = new THREE.Vector3(0, 1, 0));
-      this.coches.forEach((d, i) => {
-        d.s += d.v * dt * d.sentido;
-        if (d.s > 70) d.s = -70;
-        if (d.s < -70) d.s = 70;
-        if (d.horiz) v.set(d.s, CALLE_Y, d.carril);
-        else v.set(d.carril, CALLE_Y, d.s);
-        m4.compose(v, q.setFromAxisAngle(eje, d.giro), uno);
-        for (const m of [this.cocheCuerpo, this.cocheCristal, this.cocheRuedas, this.cocheFaros, this.cochePilotos]) m.setMatrixAt(i, m4);
-      });
-      for (const m of [this.cocheCuerpo, this.cocheCristal, this.cocheRuedas, this.cocheFaros, this.cochePilotos]) m.instanceMatrix.needsUpdate = true;
-    }
-    for (const p of this.peatones || []) {
-      const d = p.userData.peaton;
-      d.s += d.v * dt * d.sentido;
-      if (d.s > 60) d.s = -60;
-      if (d.s < -60) d.s = 60;
-      if (d.horiz) p.position.set(d.s, CALLE_Y, d.carril);
-      else p.position.set(d.carril, CALLE_Y, d.s);
-      if (!p.layers.isEnabled(2)) p.traverse(o => o.layers.set(2));
-    }
+    if (this.calle) this.calle.actualizar(dt);
     if (!cam) return;
     const ang = cam.angulo;
     const alt = cam.altura;
