@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { PisosVecinos } from './pisosVecinos.js';
+import { crearPersonaje, animarPersonaje } from './personajes.js';
 
 const MAX_VECINOS = 96;
 
@@ -322,8 +324,9 @@ export class Edificio {
     this.cAire = hundible(new THREE.MeshStandardMaterial({ color: 0xc9ccd0, roughness: 0.6, metalness: 0.3 }));
     this.vecinos = [];
     this.coches = [];
-    this.paneles = [];
+    this.peatones = [];
     this.medidas = null;
+    this.pisosV = new PisosVecinos(this.raiz);
     this.tipo = null;
     this.noche = 0;
     this.t = 0;
@@ -342,36 +345,13 @@ export class Edificio {
     const fach = this.estilos[0];
 
     this.bloque = new THREE.Group();
-    const cuerpo = new THREE.Mesh(caja(-W / 2, W / 2, CALLE_Y + PISO, BASE_Y, -D / 2, D / 2), [fach, fach, this.matTecho, this.matTecho, fach, fach]);
     const bajo = new THREE.Mesh(caja(-W / 2, W / 2, CALLE_Y, CALLE_Y + PISO, -D / 2, D / 2), [this.matBajos, this.matBajos, this.matTecho, this.matTecho, this.matBajos, this.matBajos]);
     const voladizo = new THREE.Mesh(caja(-W / 2 - 0.12, W / 2 + 0.12, CALLE_Y + PISO - 0.18, CALLE_Y + PISO, -D / 2 - 0.12, D / 2 + 0.12), this.matCornisa);
-    this.bloque.add(cuerpo, bajo, voladizo);
-    for (let k = 1; k < ABAJO; k++) {
-      const y = CALLE_Y + PISO * (k + 1) - 0.1;
-      this.bloque.add(new THREE.Mesh(caja(-W / 2 - 0.05, W / 2 + 0.05, y - 0.08, y + 0.04, -D / 2 - 0.05, D / 2 + 0.05), this.matCornisa));
-    }
+    this.bloque.add(bajo, voladizo);
     R.add(this.bloque);
-
-    this.arriba = new THREE.Group();
-    const tope = ALTO_SALA + ARRIBA * PISO;
-    const defs = [
-      [-W / 2, W / 2, -D / 2, -D / 2 + GROSOR],
-      [-W / 2, W / 2, D / 2 - GROSOR, D / 2],
-      [-W / 2, -W / 2 + GROSOR, -D / 2, D / 2],
-      [W / 2 - GROSOR, W / 2, -D / 2, D / 2]
-    ];
-    this.paneles = defs.map(([x0, x1, z0, z1]) => {
-      const p = new THREE.Group();
-      p.add(new THREE.Mesh(caja(x0, x1, ALTO_SALA, tope, z0, z1), [fach, fach, this.matTecho, this.matTecho, fach, fach]));
-      p.add(new THREE.Mesh(caja(x0 - 0.06, x1 + 0.06, tope, tope + 0.35, z0 - 0.06, z1 + 0.06), this.matCornisa));
-      for (let k = 1; k <= ARRIBA; k++) {
-        const y = ALTO_SALA + PISO * k - 0.5;
-        if (y < tope - 0.3) p.add(new THREE.Mesh(caja(x0 - 0.04, x1 + 0.04, y - 0.08, y + 0.04, z0 - 0.04, z1 + 0.04), this.matCornisa));
-      }
-      this.arriba.add(p);
-      return p;
-    });
-    R.add(this.arriba);
+    const niveles = [];
+    for (let k = 1; k < ABAJO; k++) niveles.push(BASE_Y - k * PISO + 0.5);
+    this.pisosV.construir(ancho, fondo, niveles);
 
     this.calles(W, D);
     this.ciudad(W, D);
@@ -381,14 +361,17 @@ export class Edificio {
 
   limpiar() {
     const borrar = [];
+    this.pisosV.limpiar();
+    this.raiz.remove(this.pisosV.raiz);
     this.raiz.traverse(o => {
-      if (o.geometry) borrar.push(o.geometry);
+      if (o.geometry && !o.geometry.userData.compartida) borrar.push(o.geometry);
     });
     borrar.forEach(g => g.dispose());
+    this.peatones = [];
     this.raiz.clear();
+    this.raiz.add(this.pisosV.raiz);
     this.vecinos = [];
     this.coches = [];
-    this.paneles = [];
   }
 
   calles(W, D) {
@@ -522,6 +505,21 @@ export class Edificio {
       this.coches.push({ horiz, sentido, carril, s: -60 + k * 16 + r() * 6, v: 5 + r() * 3, giro: horiz ? (sentido > 0 ? 0 : Math.PI) : (sentido > 0 ? -Math.PI / 2 : Math.PI / 2) });
     }
     this.cocheCuerpo.instanceColor.needsUpdate = true;
+    this.peatones = [];
+    const quienes = ['lola', 'mateo', 'sol', 'ramon', 'amigos', 'mama'];
+    for (let k = 0; k < 5; k++) {
+      const p = crearPersonaje(quienes[k % quienes.length]);
+      p.scale.setScalar(1.25);
+      const horiz = k % 2 === 0;
+      const sentido = k % 3 === 0 ? -1 : 1;
+      const lado = k % 4 < 2 ? 1 : -1;
+      const carril = (horiz ? zC : xC) + lado * (ANCHO_CALLE / 2 + 1.0);
+      p.userData.peaton = { horiz, sentido, carril, s: -40 + k * 17, v: 0.9 + r() * 0.4 };
+      p.rotation.y = horiz ? (sentido > 0 ? Math.PI / 2 : -Math.PI / 2) : (sentido > 0 ? 0 : Math.PI);
+      animarPersonaje(p, 'walk');
+      R.add(p);
+      this.peatones.push(p);
+    }
   }
 
   ciudad(W, D) {
@@ -641,17 +639,18 @@ export class Edificio {
     const jardin = this.tipo === 'jardin';
     this.raiz.position.y = jardin ? ABAJO * PISO : 0;
     this.bloque.visible = !jardin;
-    this.arriba.visible = !this.tipo;
+    this.pisosV.raiz.visible = !jardin;
   }
 
   ponerNoche(k, colorNiebla) {
     this.noche = k;
-    const brillo = k * 0.95;
+    const brillo = k * 1.25;
     for (const m of this.estilos) m.emissiveIntensity = brillo;
     this.matBajos.emissiveIntensity = k * 0.8;
     this.matBombilla.emissiveIntensity = 0.1 + k * 1.6;
     this.matFaro.emissiveIntensity = 0.2 + k * 1.5;
     this.matPiloto.emissiveIntensity = 0.2 + k * 1.2;
+    this.pisosV.ponerNoche(k);
     if (colorNiebla) {
       if (!this.escena.fog) this.escena.fog = new THREE.Fog(colorNiebla, 32, 110);
       else this.escena.fog.color.copy(colorNiebla);
@@ -661,7 +660,7 @@ export class Edificio {
   actualizar(dt, cam, paredesVisibles) {
     if (!this.bloque) return;
     this.t += dt;
-    if (paredesVisibles) this.paneles.forEach((p, i) => { p.visible = paredesVisibles[i]; });
+    if (this.pisosV.raiz.visible) this.pisosV.actualizar(dt, cam ? cam.direccionHorizontal() : null, null);
     if (this.coches.length) {
       const m4 = this.m4 || (this.m4 = new THREE.Matrix4());
       const q = this.q || (this.q = new THREE.Quaternion());
@@ -678,6 +677,15 @@ export class Edificio {
         for (const m of [this.cocheCuerpo, this.cocheCristal, this.cocheRuedas, this.cocheFaros, this.cochePilotos]) m.setMatrixAt(i, m4);
       });
       for (const m of [this.cocheCuerpo, this.cocheCristal, this.cocheRuedas, this.cocheFaros, this.cochePilotos]) m.instanceMatrix.needsUpdate = true;
+    }
+    for (const p of this.peatones || []) {
+      const d = p.userData.peaton;
+      d.s += d.v * dt * d.sentido;
+      if (d.s > 60) d.s = -60;
+      if (d.s < -60) d.s = 60;
+      if (d.horiz) p.position.set(d.s, CALLE_Y, d.carril);
+      else p.position.set(d.carril, CALLE_Y, d.s);
+      if (!p.layers.isEnabled(2)) p.traverse(o => o.layers.set(2));
     }
     if (!cam) return;
     const ang = cam.angulo;

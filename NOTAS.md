@@ -603,3 +603,10 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
   - Según la casa (`tipoEdificio`): pisos 0-1 en medio del edificio; ático sin plantas encima; casa con jardín, mansión y jardín a pie de calle (el bloque de abajo se esconde y la ciudad sube). Los pisos de inversión, en medio.
   - Zoom mínimo 0,5 para ver más ciudad.
 - Reparto en dron (`entregas.js`): sustituye a la furgoneta. Llega volando desde fuera y se queda flotando junto a la pared que da a la cámara (la abierta) con el paquete colgando de un cable. Si giráis la cámara, se recoloca. Al tocar el paquete se suelta y el dron se va. Varios paquetes = varios drones en fila. `entregas.puntoEspera(k)` en main.js decide el sitio.
+
+## Pisos de los vecinos de abajo y gente en la calle (v90)
+- Fuera las plantas de encima: el edificio acaba en vuestro piso.
+- `pisosVecinos.js` (`PisosVecinos`, dentro de `edificio`): las 2 plantas de debajo son pisos abiertos como el vuestro, con paredes que se esconden del lado de la cámara, ventana y muebles del catálogo (4 decorados: salón, dormitorio con escritorio, comedor, salón con tele). La planta baja sigue con tiendas.
+- Cada 7-19 s pasa algo en uno de esos pisos (`empezarEvento`): alguien se asoma al borde y saluda, pasea por casa, dos vecinos charlan, alguien se sienta en el sofá con la tele cambiando de color, riega la planta, un gato o un perro da una vuelta y se asoma; de noche, fiesta con luces de colores y gente saltando, o se enciende/apaga la luz del piso. Los puntos se eligen en la mitad que da a la cámara para que se vea. Pasos: `aparecer / ir / anim / mirar / mover / espera / desaparecer`.
+- De noche los pisos de abajo tienen luz cálida (emisivo de paredes y suelo); uno de cada cuatro, a oscuras.
+- Peatones (`edificio.peatones`): 5 vecinos que van andando por las aceras.
