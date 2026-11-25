@@ -653,3 +653,8 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 ## Maqueta más suave y centrada en la habitación (v97)
 - El foco ya no es una franja fija: cada fotograma se proyectan las 8 esquinas de la habitación y se pasa su rectángulo en pantalla al shader (`foco`). Dentro y justo alrededor, nítido; el desenfoque crece con la distancia a ese rectángulo (radio 0,35 → 2,25 texeles a media resolución, antes hasta 4,2) y el apagado/velo también (antes era fijo).
 - El edificio (pisos de abajo y bajos) vuelve a la pasada de la ciudad (capa 2): se ve casi nítido pegado a la habitación y se va difuminando hacia abajo, para que el protagonista sea la habitación y no el bloque.
+
+## Menos desenfoque, luz de la maqueta y pájaros por delante (v98)
+- Desenfoque máximo bajado otra vez (radio 0,25 → 1,5 texeles).
+- Luz que destaca la habitación (solo con el efecto maqueta): `luzCalida` (PointLight cálida en el centro de la habitación: 2,2 de día, hasta 7,2 de noche), viñeta CSS `#vineta` (esquinas más oscuras, más de noche, `--vk`) y de noche un halo cálido aditivo (`edificio.halo`, sprite en la pasada de la ciudad, opacidad hasta 0,42) que hace que el piso «brille» sobre la ciudad. Se recalcula en `ambiente.alCalcular` y al cambiar la opción en Ajustes.
+- Pájaros: van en su propia capa (4) y se dibujan al final, sin prueba de profundidad, así que siempre pasan por delante de la habitación en vez de meterse por debajo.

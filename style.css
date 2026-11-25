@@ -3822,3 +3822,7 @@ body.modo-foto #hud, body.modo-foto #lateral, body.modo-foto #aviso, body.modo-f
 .mf-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
 .mf-flash.activo { animation: mf-flash .4s ease-out; }
 @keyframes mf-flash { 0% { opacity: .95; } 100% { opacity: 0; } }
+
+/* Viñeta del efecto maqueta */
+#vineta { position: fixed; inset: 0; pointer-events: none; z-index: 0; background: radial-gradient(ellipse 75% 65% at 50% 46%, rgba(0,0,0,0) 55%, rgba(35,22,12,var(--vk, 0.25)) 100%); transition: opacity .6s; }
+#vineta.oculta { opacity: 0; }

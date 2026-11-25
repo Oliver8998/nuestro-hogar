@@ -489,7 +489,7 @@ export class Calle {
     R.add(new THREE.Mesh(unir(jardinera), mat(0xb9b2a6)));
     R.add(new THREE.Mesh(unir(flores), mat(0xe07a8a)));
 
-    const negro = mat(0x2b2b33);
+    const negro = mat(0x2b2b33, { depthTest: false, depthWrite: false });
     for (let k = 0; k < 7; k++) {
       const b = new THREE.Group();
       const alas = [];
@@ -738,7 +738,7 @@ export class Calle {
     }
     const ang0 = this.t * 0.08;
     for (const b of this.pajaros) {
-      if (!b.layers.isEnabled(2)) b.traverse(o => o.layers.set(2));
+      if (!b.layers.isEnabled(4)) b.traverse(o => o.layers.set(4));
       const d = b.userData;
       const fila = d.fila;
       const ang = ang0 - (fila % 2 ? 1 : -1) * Math.ceil(fila / 2) * 0.02 - Math.ceil(fila / 2) * 0.015;

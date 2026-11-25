@@ -78,7 +78,22 @@ const telefono = new Telefono(escena, sala);
 const gestor = new GestorMuebles(escena);
 const ambiente = new Ambiente(sala, renderer);
 const edificio = new Edificio(escena);
-ambiente.alCalcular = a => edificio.ponerNoche(a.nocheK || 0, a.fondoExterior);
+const luzCalida = new THREE.PointLight(0xffc27a, 0, 10, 1.3);
+luzCalida.position.set(0, 2.1, 0);
+escena.add(luzCalida);
+const vineta = document.createElement('div');
+vineta.id = 'vineta';
+canvas.insertAdjacentElement('afterend', vineta);
+function aplicarLuzMaqueta(a) {
+  const k = (a && a.nocheK) || 0;
+  luzCalida.intensity = edificio.maqueta ? 2.2 + k * 5 : 0;
+  vineta.classList.toggle('oculta', !edificio.maqueta);
+  vineta.style.setProperty('--vk', String(0.22 + k * 0.2));
+}
+ambiente.alCalcular = a => {
+  edificio.ponerNoche(a.nocheK || 0, a.fondoExterior);
+  aplicarLuzMaqueta(a);
+};
 ambiente.calcular();
 function tipoEdificio(ext, nivel) {
   if (ext) return ext.tipo;
@@ -1730,7 +1745,7 @@ function temporadaActual() {
 mas = new Mas({
   estado, ui, sonido, sala, ambiente, renderer, escena, camara: camaraIso.camara, lofi,
   pintar: () => edificio.renderizar(renderer, escena, camaraIso.camara, [sala.hemi, sala.sol]),
-  maqueta: v => { edificio.maqueta = v; },
+  maqueta: v => { edificio.maqueta = v; edificio.ponerNoche(ambiente.nocheK || 0); aplicarLuzMaqueta(ambiente); },
   claveHab: () => `${nivelCasa()}-${estado.habActual || 0}`,
   controles: () => controles,
   registrar: e => registrar(e),

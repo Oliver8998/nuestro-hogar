@@ -362,6 +362,22 @@ export class Edificio {
 
     this.calles(W, D);
     this.ciudad(W, D);
+    const lienzoHalo = document.createElement('canvas');
+    lienzoHalo.width = lienzoHalo.height = 128;
+    const gh = lienzoHalo.getContext('2d');
+    const grad = gh.createRadialGradient(64, 64, 8, 64, 64, 64);
+    grad.addColorStop(0, 'rgba(255,200,120,1)');
+    grad.addColorStop(0.45, 'rgba(255,170,90,0.45)');
+    grad.addColorStop(1, 'rgba(255,150,70,0)');
+    gh.fillStyle = grad;
+    gh.fillRect(0, 0, 128, 128);
+    const texHalo = new THREE.CanvasTexture(lienzoHalo);
+    texHalo.colorSpace = THREE.SRGBColorSpace;
+    this.halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: texHalo, transparent: true, opacity: 0, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending }));
+    this.halo.scale.setScalar(Math.hypot(W, D) * 2.4);
+    this.halo.position.set(0, 0.6, 0);
+    this.halo.renderOrder = 50;
+    R.add(this.halo);
     this.marcarCapa();
     this.aplicarTipo();
   }
@@ -673,6 +689,20 @@ export class Edificio {
     camara.far = lejos;
     camara.updateProjectionMatrix();
     renderer.render(escena, camara);
+    if (this.calle && this.calle.pajaros.length) {
+      camara.layers.set(4);
+      camara.near = -100;
+      camara.far = 300;
+      camara.updateProjectionMatrix();
+      const sombras2 = renderer.shadowMap.autoUpdate;
+      renderer.shadowMap.autoUpdate = false;
+      renderer.render(escena, camara);
+      renderer.shadowMap.autoUpdate = sombras2;
+      camara.layers.mask = mascara;
+      camara.near = cerca;
+      camara.far = lejos;
+      camara.updateProjectionMatrix();
+    }
     renderer.autoClear = auto;
   }
 
@@ -700,7 +730,7 @@ export class Edificio {
         void main() {
           vec2 fuera = max(vec2(0.0), max(foco.xy - vUv, vUv - foco.zw));
           float lejos = smoothstep(0.0, 0.3, length(fuera * vec2(1.0, 1.4)));
-          float radio = 0.35 + 1.9 * lejos;
+          float radio = 0.25 + 1.25 * lejos;
           vec4 c = texture2D(tex, vUv);
           vec3 suma = c.rgb * c.a;
           float alfa = c.a;
@@ -757,6 +787,7 @@ export class Edificio {
     this.matFaro.emissiveIntensity = 0.2 + k * 1.5;
     this.matPiloto.emissiveIntensity = 0.2 + k * 1.2;
     this.pisosV.ponerNoche(k);
+    if (this.halo) this.halo.material.opacity = this.maqueta ? Math.min(0.42, k * 0.42) : 0;
     if (this.calle) this.calle.ponerNoche(k);
     if (colorNiebla) {
       if (!this.escena.fog) this.escena.fog = new THREE.Fog(colorNiebla, 32, 110);
