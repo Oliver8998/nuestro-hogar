@@ -86,9 +86,9 @@ vineta.id = 'vineta';
 canvas.insertAdjacentElement('afterend', vineta);
 function aplicarLuzMaqueta(a) {
   const k = (a && a.nocheK) || 0;
-  luzCalida.intensity = edificio.maqueta ? 2.2 + k * 5 : 0;
+  luzCalida.intensity = edificio.maqueta ? 0.6 + k * 1.4 : 0;
   vineta.classList.toggle('oculta', !edificio.maqueta);
-  vineta.style.setProperty('--vk', String(0.22 + k * 0.2));
+  vineta.style.setProperty('--vk', String(0.12 + k * 0.08));
 }
 ambiente.alCalcular = a => {
   edificio.ponerNoche(a.nocheK || 0, a.fondoExterior);

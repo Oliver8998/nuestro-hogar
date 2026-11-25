@@ -787,7 +787,7 @@ export class Edificio {
     this.matFaro.emissiveIntensity = 0.2 + k * 1.5;
     this.matPiloto.emissiveIntensity = 0.2 + k * 1.2;
     this.pisosV.ponerNoche(k);
-    if (this.halo) this.halo.material.opacity = this.maqueta ? Math.min(0.42, k * 0.42) : 0;
+    if (this.halo) this.halo.material.opacity = this.maqueta ? Math.min(0.14, k * 0.14) : 0;
     if (this.calle) this.calle.ponerNoche(k);
     if (colorNiebla) {
       if (!this.escena.fog) this.escena.fog = new THREE.Fog(colorNiebla, 32, 110);
