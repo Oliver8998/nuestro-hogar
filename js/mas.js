@@ -267,6 +267,9 @@ export class Mas {
         <input id="aj-efectos" class="aj-rango" type="range" min="0" max="100" step="5" value="${Math.round((sonido.volumen ?? 1) * 100)}">
         <label>🔤 Tamaño del texto</label>
         <div class="aj-opciones" id="aj-texto">${[['normal', 'Normal'], ['grande', 'Grande'], ['muy', 'Muy grande']].map(([v, t]) => `<button data-v="${v}" class="${tamTexto() === v ? 'activo' : ''}">${t}</button>`).join('')}</div>
+        <label>🔍 Efecto maqueta</label>
+        <div class="aj-opciones" id="aj-maqueta">${[['1', 'Sí'], ['0', 'No']].map(([v, t]) => `<button data-v="${v}" class="${leerLS('hogar-maqueta', '1') === v ? 'activo' : ''}">${t}</button>`).join('')}</div>
+        <small class="nota">Desenfoca un poco la ciudad para que vuestro piso destaque. Si el móvil va justo, quitadlo.</small>
         <label>💬 Avisos en pantalla</label>
         <div class="aj-opciones" id="aj-modo-avisos">${[['todos', 'Todos'], ['pocos', 'Solo importantes']].map(([v, t]) => `<button data-v="${v}" class="${modoAvisos() === v ? 'activo' : ''}">${t}</button>`).join('')}</div>
         <small class="nota">Con «Solo importantes» no salen los avisos de ambiente (lo que hace tu pareja, pegatinas, recuerdos, la lluvia…).</small>
@@ -306,6 +309,7 @@ export class Mas {
     }));
     opciones('#aj-texto', 'hogar-texto', aplicarTamTexto);
     opciones('#aj-modo-avisos', 'hogar-avisos-modo');
+    opciones('#aj-maqueta', 'hogar-maqueta', v => this.ctx.maqueta && this.ctx.maqueta(v !== '0'));
     cuerpo.querySelector('#aj-avisos').addEventListener('click', e => this.alternarAvisos(e.currentTarget));
     cuerpo.querySelector('#aj-copia').addEventListener('click', () => this.descargarCopia());
     cuerpo.querySelector('#aj-restaurar').addEventListener('click', () => cuerpo.querySelector('#aj-archivo').click());

@@ -641,3 +641,11 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - Cámara: al soltar, el giro se asienta en la diagonal más cercana (45° + k·90°), así siempre se ven dos paredes. En sala.js siempre se muestran exactamente las dos paredes del fondo (con un poco de histéresis). `camara.libre = true` desactiva el ajuste (escena final del sueño).
 - Peatones: cada uno guarda `s` (avance) y `off` (distancia al bordillo, entre 1,5 y 2,6). Si alcanza a alguien más lento en su sentido, se aparta a un lado para adelantar si hay hueco (si no, frena); con alguien de frente se separan; vuelven a su carril (por su derecha) cuando no hay nadie. Salen repartidos por tramos para no empezar en fila. De vez en cuando se paran 2-5 s (a veces mirando un escaparate). Los perros van a su lado.
 - Persecución y perro-gato ahora son peatones temporales (`temporal: true`): corren adelantando a la gente sin atravesarla y no esperan al semáforo. Medido: 0 solapes entre peatones en 25 s sin persecución.
+
+## Efecto maqueta: el piso, protagonista (v96)
+- Idea sacada de juegos isométricos acogedores (tilt-shift/desenfoque de lo lejano, fondo tranquilo): la ciudad se dibuja a media resolución en un `WebGLRenderTarget` (HalfFloat) y se pinta en pantalla con un shader (`edificio.cuadro()`) que la desenfoca (disco de 13 muestras, más fuerte hacia arriba/abajo y los lados), le quita un 22 % de saturación y le da un velo del color del cielo. Luego se limpia profundidad y se dibuja la casa nítida como siempre. Tono y espacio de color se aplican en ese shader (`tonemapping_fragment` / `colorspace_fragment`, alfa premultiplicado para que se vea el cielo CSS).
+- Vuestro edificio (bloque de abajo y pisos de los vecinos) pasa a la capa 0: se dibuja nítido con la casa. La calle, los coches y los demás edificios siguen en la capa 2 (desenfocados).
+- Los edificios cercanos que quedan detrás del piso se bajan (hasta un 30 % de su altura) para que su silueta no pase de un poco por encima del piso.
+- Cámara: zoom inicial 1,2 (`ZOOM_INICIAL`), el piso llena más la pantalla; alejando se ve la ciudad.
+- Con la cámara cerca (zoom > 1,15) coches y peatones van al 75 % de velocidad (`calle.calma`).
+- Ajustes → 🔍 Efecto maqueta (Sí/No, `hogar-maqueta`). Con «No» vuelve el dibujo directo sin desenfoque ni bajar edificios.

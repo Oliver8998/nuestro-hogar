@@ -1730,6 +1730,7 @@ function temporadaActual() {
 mas = new Mas({
   estado, ui, sonido, sala, ambiente, renderer, escena, camara: camaraIso.camara, lofi,
   pintar: () => edificio.renderizar(renderer, escena, camaraIso.camara, [sala.hemi, sala.sol]),
+  maqueta: v => { edificio.maqueta = v; },
   claveHab: () => `${nivelCasa()}-${estado.habActual || 0}`,
   controles: () => controles,
   registrar: e => registrar(e),

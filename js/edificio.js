@@ -329,6 +329,11 @@ export class Edificio {
     this.peatones = [];
     this.medidas = null;
     this.pisosV = new PisosVecinos(this.raiz);
+    let maq = '1';
+    try {
+      maq = localStorage.getItem('hogar-maqueta') ?? '1';
+    } catch (e) {}
+    this.maqueta = maq !== '0';
     this.tipo = null;
     this.noche = 0;
     this.t = 0;
@@ -603,6 +608,8 @@ export class Edificio {
 
   marcarCapa() {
     this.raiz.traverse(o => o.layers.set(2));
+    if (this.bloque) this.bloque.traverse(o => o.layers.set(0));
+    this.pisosV.raiz.traverse(o => o.layers.set(0));
   }
 
   renderizar(renderer, escena, camara, luces) {
@@ -623,7 +630,29 @@ export class Edificio {
     camara.updateProjectionMatrix();
     const sombras = renderer.shadowMap.autoUpdate;
     renderer.shadowMap.autoUpdate = false;
-    renderer.render(escena, camara);
+    if (this.maqueta) {
+      renderer.getDrawingBufferSize(this.tamBuf || (this.tamBuf = new THREE.Vector2()));
+      const w = Math.max(2, Math.floor(this.tamBuf.x * 0.5));
+      const h = Math.max(2, Math.floor(this.tamBuf.y * 0.5));
+      if (!this.rt || this.rt.width !== w || this.rt.height !== h) {
+        if (this.rt) this.rt.dispose();
+        this.rt = new THREE.WebGLRenderTarget(w, h, { type: THREE.HalfFloatType, depthBuffer: true });
+        this.rt.texture.colorSpace = THREE.LinearSRGBColorSpace;
+      }
+      const colorPrevio = renderer.getClearColor(this.colorPrevio || (this.colorPrevio = new THREE.Color()));
+      const alfaPrevio = renderer.getClearAlpha();
+      renderer.setRenderTarget(this.rt);
+      renderer.setClearColor(0x000000, 0);
+      renderer.clear();
+      renderer.render(escena, camara);
+      renderer.setRenderTarget(null);
+      renderer.setClearColor(colorPrevio, alfaPrevio);
+      const q = this.cuadro();
+      q.material.uniforms.tex.value = this.rt.texture;
+      q.material.uniforms.texel.value.set(1 / w, 1 / h);
+      if (this.escena.fog) q.material.uniforms.bruma.value.copy(this.escena.fog.color);
+      renderer.render(q.escena, q.camara);
+    } else renderer.render(escena, camara);
     renderer.shadowMap.autoUpdate = sombras;
     renderer.clearDepth();
     camara.layers.mask = mascara;
@@ -632,6 +661,61 @@ export class Edificio {
     camara.updateProjectionMatrix();
     renderer.render(escena, camara);
     renderer.autoClear = auto;
+  }
+
+  cuadro() {
+    if (this.q) return this.q;
+    const material = new THREE.ShaderMaterial({
+      uniforms: {
+        tex: { value: null },
+        texel: { value: new THREE.Vector2(1, 1) },
+        bruma: { value: new THREE.Color(0xdfe8f0) }
+      },
+      vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
+      fragmentShader: `
+        uniform sampler2D tex;
+        uniform vec2 texel;
+        uniform vec3 bruma;
+        varying vec2 vUv;
+        const vec2 DISCO[12] = vec2[12](
+          vec2(-0.326, -0.406), vec2(-0.840, -0.074), vec2(-0.696, 0.457), vec2(-0.203, 0.621),
+          vec2(0.962, -0.195), vec2(0.473, -0.480), vec2(0.519, 0.767), vec2(0.185, -0.893),
+          vec2(0.507, 0.064), vec2(0.896, 0.412), vec2(-0.322, -0.933), vec2(-0.792, -0.598)
+        );
+        void main() {
+          float lejos = smoothstep(0.12, 0.5, abs(vUv.y - 0.52)) * 0.6 + smoothstep(0.2, 0.55, abs(vUv.x - 0.5)) * 0.4;
+          float radio = 1.6 + 2.6 * lejos;
+          vec4 c = texture2D(tex, vUv);
+          vec3 suma = c.rgb * c.a;
+          float alfa = c.a;
+          for (int i = 0; i < 12; i++) {
+            vec4 m = texture2D(tex, vUv + DISCO[i] * texel * radio);
+            suma += m.rgb * m.a;
+            alfa += m.a;
+          }
+          suma /= 13.0;
+          alfa /= 13.0;
+          vec3 col = alfa > 0.001 ? suma / alfa : vec3(0.0);
+          float l = dot(col, vec3(0.299, 0.587, 0.114));
+          col = mix(col, vec3(l), 0.22);
+          col = mix(col, bruma, 0.08 + 0.1 * lejos);
+          gl_FragColor = vec4(col, alfa);
+          #include <tonemapping_fragment>
+          #include <colorspace_fragment>
+          gl_FragColor.rgb *= gl_FragColor.a;
+        }`,
+      transparent: true,
+      premultipliedAlpha: true,
+      depthTest: false,
+      depthWrite: false,
+      toneMapped: true
+    });
+    const malla = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
+    malla.frustumCulled = false;
+    const escena = new THREE.Scene();
+    escena.add(malla);
+    this.q = { escena, camara: new THREE.Camera(), material };
+    return this.q;
   }
 
   ponerTipo(tipo) {
@@ -668,7 +752,10 @@ export class Edificio {
     if (!this.bloque) return;
     this.t += dt;
     if (this.pisosV.raiz.visible) this.pisosV.actualizar(dt, cam ? cam.direccionHorizontal() : null, null);
-    if (this.calle) this.calle.actualizar(dt);
+    if (this.calle) {
+      this.calle.calma = cam && cam.zoomActual > 1.15 ? 0.75 : 1;
+      this.calle.actualizar(dt);
+    }
     if (!cam) return;
     const ang = cam.angulo;
     const alt = cam.altura;
@@ -684,6 +771,7 @@ export class Edificio {
     const salaHacia = this.W / 2 * Math.abs(dirX) + this.D / 2 * Math.abs(dirZ);
     const sube = this.raiz.position.y;
     const salaC = -(ox * dirX + oz * dirZ);
+    const salaArriba = (ALTO_SALA + 0.4) * ca - (salaC - salaHacia) * sa;
     const salaBajo = (this.tipo === 'jardin' || this.tipo === 'casa' ? BASE_Y - 1.2 : CALLE_Y + PISO - 0.6) * ca - (salaHacia + salaC) * sa;
     const k = Math.min(1, dt * 7);
     for (const b of this.vecinos) {
@@ -695,7 +783,14 @@ export class Edificio {
       const anchoB = b.hx * Math.abs(derX) + b.hz * Math.abs(derZ);
       const pantallaArriba = (b.top + sube) * ca - (hacia + ext) * sa;
       const tapa = hacia + ext > salaC - 0.5 && Math.abs(lado - (-ox * derX - oz * derZ)) < anchoB + salaAncho + 0.4 && pantallaArriba > salaBajo;
-      b.obj = tapa ? 0.02 : 1;
+      let obj = tapa ? 0.02 : 1;
+      if (!tapa && this.maqueta && hacia < salaC && Math.hypot(rx + ox, rz + oz) < 24 && Math.abs(lado - (-ox * derX - oz * derZ)) < anchoB + salaAncho + 2.5) {
+        const limite = salaArriba + 1.2;
+        const topePermitido = (limite + (hacia - ext) * sa) / ca - sube;
+        const alto = b.top - CALLE_Y;
+        obj = THREE.MathUtils.clamp((topePermitido - CALLE_Y) / alto, 0.3, 1);
+      }
+      b.obj = obj;
       if (Math.abs(b.escala - b.obj) > 0.001) {
         b.escala += (b.obj - b.escala) * k;
         this.uEsc.value[b.idx] = b.escala;

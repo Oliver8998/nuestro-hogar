@@ -539,6 +539,7 @@ export class Calle {
           if (hueco < 0.8) vel = 0;
           else if (hueco < 3) vel = Math.min(vel, (o.vel ?? o.v) * 0.9);
         }
+        vel *= this.calma ?? 1;
         d.vel = (d.vel ?? vel) + (vel - (d.vel ?? vel)) * Math.min(1, dt * 3);
         d.s += d.vel * dt * d.sentido;
         if (d.s > 70) d.s = -70;
@@ -715,7 +716,7 @@ export class Calle {
         animarPersonaje(p, d.anim);
       }
       d.esperando = espera;
-      d.s += vel * dt * d.sentido;
+      d.s += vel * (this.calma ?? 1) * dt * d.sentido;
       if (d.s > d.max) d.s = d.min;
       if (d.s < d.min) d.s = d.max;
       d.carril = d.c + d.lado * (this.AC / 2 + d.off);

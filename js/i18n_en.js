@@ -2867,5 +2867,9 @@ export default {
 "🛸 ¡Pedido! {0}{1} llega en {2} s":"🛸 Ordered! {0}{1} arrives in {2} s",
 "¡Pedido hecho! Lo trae un dron en unos segundos. Cierra la tienda para verlo llegar":"Order placed! A drone brings it in a few seconds. Close the shop to watch it arrive",
 "El dron viene de camino… 🛸":"The drone is on its way… 🛸",
-"que cuelga del dron para cogerlo":"hanging from the drone to take it"
+"que cuelga del dron para cogerlo":"hanging from the drone to take it",
+"🔍 Efecto maqueta":"🔍 Miniature effect",
+"Desenfoca un poco la ciudad para que vuestro piso destaque. Si el móvil va justo, quitadlo.":"Slightly blurs the city so your flat stands out. Turn it off if your phone struggles.",
+"Sí":"Yes",
+"No":"No"
 };

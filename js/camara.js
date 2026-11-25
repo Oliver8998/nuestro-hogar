@@ -2,6 +2,7 @@ import * as THREE from 'three';
 
 const LIMITE_PAN = 2.5;
 const ANGULO_INICIAL = Math.PI / 4;
+export const ZOOM_INICIAL = 1.2;
 
 export class CamaraIso {
   constructor(aspecto) {
@@ -14,8 +15,8 @@ export class CamaraIso {
     this.zoomMax = 3;
     this.angulo = ANGULO_INICIAL;
     this.anguloObj = ANGULO_INICIAL;
-    this.zoomActual = 1;
-    this.zoomObj = 1;
+    this.zoomActual = ZOOM_INICIAL;
+    this.zoomObj = ZOOM_INICIAL;
     this.objetivo = new THREE.Vector3(0, 1.0, 0);
     this.objetivoObj = new THREE.Vector3(0, 1.0, 0);
     this.inercia = 0;
@@ -78,7 +79,7 @@ export class CamaraIso {
   reiniciar() {
     const vueltas = Math.round((this.anguloObj - ANGULO_INICIAL) / (Math.PI * 2));
     this.anguloObj = ANGULO_INICIAL + vueltas * Math.PI * 2;
-    this.zoomObj = 1;
+    this.zoomObj = ZOOM_INICIAL;
     this.objetivoObj.set(0, 1.0, 0);
     this.inercia = 0;
   }
