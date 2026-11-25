@@ -165,7 +165,7 @@ export class Ambiente {
     this.sala.matCristal.emissiveIntensity = this.esNoche() ? 0.15 : 0.35;
     this.fondoExterior = fondoB;
     const hs = this.horaSol;
-    this.nocheK = hs >= 21 || hs < 6 ? 1 : hs >= 18.5 ? (hs - 18.5) / 2.5 : hs < 7.5 ? (7.5 - hs) / 1.5 : 0;
+    this.nocheK = hs >= 20 || hs < 6.5 ? 1 : hs >= 18 ? 0.35 + (hs - 18) / 2 * 0.65 : hs < 8 ? (8 - hs) / 1.5 : 0;
     if (this.apagon) this.nocheK *= 0.3;
     if (this.alCalcular) this.alCalcular(this);
   }

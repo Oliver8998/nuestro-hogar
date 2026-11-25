@@ -89,7 +89,7 @@ function fachada(estilo, n) {
       g.lineTo(wx + 30, wy);
       g.lineTo(wx + 14, wy + wh);
       g.fill();
-      const encendida = r() < 0.42;
+      const encendida = r() < 0.9;
       const tono = LUCES[Math.floor(r() * LUCES.length)];
       if (encendida) {
         l.fillStyle = tono;
@@ -321,6 +321,8 @@ export class Edificio {
     this.cTecho = hundible(this.matTecho);
     this.cCornisa = hundible(this.matCornisa);
     this.cFarola = hundible(this.matFarola);
+    this.cToldos = [0xd65d5d, 0x4f8a6b, 0x4a6fa5, 0xe0a03c, 0x8d5a97].map(c => hundible(new THREE.MeshStandardMaterial({ color: c, roughness: 0.8 })));
+    this.cPanel = hundible(new THREE.MeshStandardMaterial({ color: 0x24375a, roughness: 0.25, metalness: 0.5 }));
     this.cAire = hundible(new THREE.MeshStandardMaterial({ color: 0xc9ccd0, roughness: 0.6, metalness: 0.3 }));
     this.vecinos = [];
     this.coches = [];
@@ -404,11 +406,23 @@ export class Edificio {
     calle(240, true, zC - 44);
     calle(240, false, xC + 46);
     const rayas = [];
-    for (let k = 0; k < 6; k++) {
-      const a = new THREE.BoxGeometry(3.2, 0.01, 0.45);
-      a.translate(xC + ANCHO_CALLE / 2 + 1.2, CALLE_Y + 0.03, zC - 2.2 + k * 0.8);
-      const b2 = new THREE.BoxGeometry(0.45, 0.01, 3.2);
-      b2.translate(xC - 2.2 + k * 0.8, CALLE_Y + 0.03, zC + ANCHO_CALLE / 2 + 1.2);
+    const LP = ANCHO_CALLE / 2 + 2.15;
+    this.lineaPeatones = LP;
+    for (let k = 0; k < 8; k++) {
+      const off = -ANCHO_CALLE / 2 + 0.45 + k * 0.85;
+      for (const sg of [-1, 1]) {
+        const a = new THREE.BoxGeometry(0.45, 0.01, 2.2);
+        a.translate(xC + off, CALLE_Y + 0.03, zC + sg * LP);
+        const b2 = new THREE.BoxGeometry(2.2, 0.01, 0.45);
+        b2.translate(xC + sg * LP, CALLE_Y + 0.03, zC + off);
+        rayas.push(a.toNonIndexed(), b2.toNonIndexed());
+      }
+    }
+    for (const sg of [-1, 1]) {
+      const a = new THREE.BoxGeometry(ANCHO_CALLE / 2, 0.01, 0.2);
+      a.translate(xC + sg * ANCHO_CALLE / 4, CALLE_Y + 0.03, zC + sg * (LP + 1.6));
+      const b2 = new THREE.BoxGeometry(0.2, 0.01, ANCHO_CALLE / 2);
+      b2.translate(xC + sg * (LP + 1.6), CALLE_Y + 0.03, zC - sg * ANCHO_CALLE / 4);
       rayas.push(a.toNonIndexed(), b2.toNonIndexed());
     }
     R.add(new THREE.Mesh(mergeGeometries(rayas), new THREE.MeshStandardMaterial({ color: 0xefe9da, roughness: 1 })));
@@ -432,7 +446,9 @@ export class Edificio {
         arboles.push([xC + s * (ANCHO_CALLE / 2 + 1.3), k + 1.5]);
       }
     }
-    const libre = (x, z) => !(Math.abs(x) < W / 2 + 0.6 && Math.abs(z) < D / 2 + 0.6) && !(Math.abs(x - xC) < ANCHO_CALLE / 2 + 0.3 && Math.abs(z - zC) < ANCHO_CALLE / 2 + 0.3);
+    const enCalle = (x, z) => [zC, zC - 44].some(c => Math.abs(z - c) < ANCHO_CALLE / 2 + 0.3) || [xC, xC + 46].some(c => Math.abs(x - c) < ANCHO_CALLE / 2 + 0.3);
+    const libre = (x, z) => !(Math.abs(x) < W / 2 + 3 && Math.abs(z) < D / 2 + 3) && !enCalle(x, z)
+      && !(Math.abs(x - xC) < LP + 1.4 && Math.abs(z - zC) < LP + 1.4) && !(Math.abs(z - (zC - ANCHO_CALLE / 2 - 1.4)) < 1.5 && x > 3 && x < 9.5);
     const fs = farolas.filter(([x, z]) => libre(x, z));
     const poste = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.06, 0.08, 4.2, 6), this.matFarola, fs.length);
     const brazo = new THREE.InstancedMesh(new THREE.BoxGeometry(0.06, 0.06, 0.9), this.matFarola, fs.length);
@@ -470,6 +486,7 @@ export class Edificio {
 
     this.calle = new Calle(R, { calleY: CALLE_Y, anchoCalle: ANCHO_CALLE, acera: ACERA, matFaro: this.matFaro, matPiloto: this.matPiloto, azar: r });
     this.calle.construir(W, D, zC, xC);
+    this.calle.ponerNoche(this.noche || 0);
   }
 
   ciudad(W, D) {
@@ -509,6 +526,47 @@ export class Edificio {
         const deposito = new THREE.CylinderGeometry(0.6, 0.6, 1.2, 10);
         deposito.translate(tx, CALLE_Y + alto + 0.9, tz);
         echar(this.cCornisa, deposito, idx);
+      }
+      for (const [cara, a0, a1] of [['x0', z0, z1], ['x1', z0, z1], ['z0', x0, x1], ['z1', x0, x1]]) {
+        const largo = a1 - a0;
+        const n = Math.max(1, Math.floor(largo / 3));
+        for (let t = 0; t < n; t++) {
+          if (r() < 0.35) continue;
+          const c = a0 + (t + 0.5) * largo / n;
+          const w = Math.min(2.4, largo / n - 0.4);
+          const geo = new THREE.BoxGeometry(cara[0] === 'x' ? 0.8 : w, 0.06, cara[0] === 'x' ? w : 0.8);
+          geo.rotateX(cara === 'z1' ? 0.3 : cara === 'z0' ? -0.3 : 0);
+          geo.rotateZ(cara === 'x1' ? -0.3 : cara === 'x0' ? 0.3 : 0);
+          const px = cara === 'x0' ? x0 - 0.38 : cara === 'x1' ? x1 + 0.38 : c;
+          const pz = cara === 'z0' ? z0 - 0.38 : cara === 'z1' ? z1 + 0.38 : c;
+          geo.translate(px, CALLE_Y + 2.5, pz);
+          echar(this.cToldos[Math.floor(r() * this.cToldos.length)], geo, idx);
+        }
+      }
+      if (r() < 0.5) {
+        const cx2 = x0 + 1.3 + r() * Math.max(0.1, x1 - x0 - 2.6);
+        const cz2 = z0 + 1.3 + r() * Math.max(0.1, z1 - z0 - 2.6);
+        echar(this.cCornisa, caja(cx2 - 1, cx2 + 1, CALLE_Y + alto + 0.3, CALLE_Y + alto + 2.6, cz2 - 0.8, cz2 + 0.8), idx);
+        echar(this.cTecho, caja(cx2 - 1.1, cx2 + 1.1, CALLE_Y + alto + 2.6, CALLE_Y + alto + 2.75, cz2 - 0.9, cz2 + 0.9), idx);
+      }
+      if (r() < 0.4) {
+        const ax2 = x0 + 0.6 + r() * (x1 - x0 - 1.2);
+        const az2 = z0 + 0.6 + r() * (z1 - z0 - 1.2);
+        const ant = new THREE.CylinderGeometry(0.03, 0.03, 2.2, 5);
+        ant.translate(ax2, CALLE_Y + alto + 1.4, az2);
+        echar(this.cFarola, ant, idx);
+        const varilla = new THREE.BoxGeometry(0.8, 0.03, 0.03);
+        varilla.translate(ax2, CALLE_Y + alto + 2.1, az2);
+        echar(this.cFarola, varilla, idx);
+      }
+      if (r() < 0.35) {
+        for (let pnl = 0; pnl < 3; pnl++) {
+          const geo = new THREE.BoxGeometry(1.6, 0.05, 0.9);
+          geo.rotateX(-0.45);
+          geo.translate(x0 + 1.2 + pnl * 0.1, CALLE_Y + alto + 0.75, z0 + 1 + pnl * 1.1);
+          if (z0 + 1 + pnl * 1.1 < z1 - 0.5 && x0 + 2 < x1) echar(this.cPanel, geo, idx);
+          else geo.dispose();
+        }
       }
       if (r() < 0.5) {
         const ax = x0 + 0.8 + r() * (x1 - x0 - 1.6);
@@ -592,12 +650,14 @@ export class Edificio {
   ponerNoche(k, colorNiebla) {
     this.noche = k;
     const brillo = k * 1.25;
-    for (const m of this.estilos) m.emissiveIntensity = brillo;
+    for (const m of [...this.estilos, ...(this.cEstilos || [])]) m.emissiveIntensity = brillo;
     this.matBajos.emissiveIntensity = k * 0.8;
+    if (this.cBajos) this.cBajos.emissiveIntensity = k * 0.8;
     this.matBombilla.emissiveIntensity = 0.1 + k * 1.6;
     this.matFaro.emissiveIntensity = 0.2 + k * 1.5;
     this.matPiloto.emissiveIntensity = 0.2 + k * 1.2;
     this.pisosV.ponerNoche(k);
+    if (this.calle) this.calle.ponerNoche(k);
     if (colorNiebla) {
       if (!this.escena.fog) this.escena.fog = new THREE.Fog(colorNiebla, 32, 110);
       else this.escena.fog.color.copy(colorNiebla);

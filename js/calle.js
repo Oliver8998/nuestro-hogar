@@ -6,6 +6,18 @@ import { crearModeloMascota } from './mascotas.js';
 const COLORES = [0xe05656, 0x5a8fd6, 0xf2d06b, 0xf4f1ea, 0x6cc08a, 0x3b3f44, 0xf29b5a, 0x9b6fb5, 0xd9dde0, 0x2f4f7a];
 const GENTE = ['lola', 'mateo', 'sol', 'ramon', 'amigos', 'mama'];
 
+function mascotaSuelta(especie, clip) {
+  const p = crearModeloMascota(especie);
+  if (!p) return null;
+  const obj = p.raiz || p;
+  if (p.acciones && p.acciones[clip]) {
+    Object.values(p.acciones).forEach(a => a.stop());
+    p.acciones[clip].play();
+  }
+  obj.userData.mixer = p.mixer || null;
+  return obj;
+}
+
 function mat(color, extra = {}) {
   return new THREE.MeshStandardMaterial({ color, roughness: 0.8, ...extra });
 }
@@ -20,6 +32,26 @@ function cil(r, h, x, y, z, seg = 10) {
   const g = new THREE.CylinderGeometry(r, r, h, seg);
   g.translate(x, y, z);
   return g.toNonIndexed();
+}
+
+function textoTextura(texto, fondo, color, w, h) {
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  const g = c.getContext('2d');
+  g.fillStyle = fondo;
+  g.fillRect(0, 0, w, h);
+  g.strokeStyle = color;
+  g.lineWidth = 4;
+  g.strokeRect(6, 6, w - 12, h - 12);
+  g.fillStyle = color;
+  g.font = `bold ${Math.round(h * 0.55)}px Georgia, serif`;
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  g.fillText(texto, w / 2, h / 2 + 2);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
 }
 
 function unir(lista) {
@@ -65,7 +97,7 @@ export class Calle {
       const sentido = k % 4 < 2 ? 1 : -1;
       const calle = horiz ? zC : xC;
       const carril = calle + sentido * 1.7 * (horiz ? 1 : -1);
-      const tipo = k === 3 ? 'bus' : k === 6 || k === 9 ? 'furgo' : k === 1 ? 'taxi' : 'coche';
+      const tipo = k === 2 ? 'bus' : k === 6 || k === 9 ? 'furgo' : k === 1 ? 'taxi' : 'coche';
       lista.push({ horiz, sentido, carril, s: -60 + k * 10 + r() * 5, v: tipo === 'bus' ? 4 : 4.5 + r() * 3.5, tipo, aparcado: false });
     }
     const huecos = [];
@@ -73,8 +105,19 @@ export class Calle {
       if (r() < 0.6) huecos.push({ horiz: true, carril: zC - (AC / 2 - 0.65), s: s + r() * 2 });
       if (r() < 0.6) huecos.push({ horiz: false, carril: xC + (AC / 2 - 0.65), s: s + r() * 2 });
     }
+    const LP = AC / 2 + 2.15;
+    this.LP = LP;
+    const prohibido = h => {
+      if (Math.abs(h.s - (h.horiz ? xC : zC)) < LP + 3) return true;
+      if (h.horiz && h.carril < zC && h.s > 2 && h.s < 10.5) return true;
+      if (h.horiz && h.carril > zC && h.s > W / 2 + 4.5 && h.s < W / 2 + 11) return true;
+      if (!h.horiz && h.carril > xC && h.s > D / 2 + 3 && h.s < D / 2 + 7) return true;
+      if (!h.horiz && Math.abs(h.s - (zC - 44)) < AC) return true;
+      if (h.horiz && Math.abs(h.s - (xC + 46)) < AC) return true;
+      return false;
+    };
     for (const h of huecos) {
-      if (Math.abs(h.s - (h.horiz ? xC : zC)) < 6) continue;
+      if (prohibido(h)) continue;
       lista.push({ ...h, sentido: r() < 0.5 ? 1 : -1, v: 0, tipo: r() < 0.2 ? 'furgo' : 'coche', aparcado: true });
     }
     const N = lista.length;
@@ -192,23 +235,25 @@ export class Calle {
 
     const rutas = [];
     for (const lado of [1, -1]) {
-      rutas.push({ horiz: true, carril: zC + lado * (AC / 2 + 1.1) });
-      rutas.push({ horiz: false, carril: xC + lado * (AC / 2 + 1.1) });
+      rutas.push({ horiz: true, carril: zC + lado * LP, min: -45, max: xC + 46 - LP - 2 });
+      rutas.push({ horiz: false, carril: xC + lado * LP, min: zC - 44 + LP + 2, max: 45 });
     }
-    for (let k = 0; k < 10; k++) {
+    for (let k = 0; k < 14; k++) {
       const ruta = rutas[k % rutas.length];
-      const p = crearPersonaje(GENTE[k % GENTE.length]);
+      const corre = k === 5 || k === 12;
+      const p = crearPersonaje(GENTE[(k * 5) % GENTE.length]);
       p.scale.setScalar(1.25);
       const sentido = r() < 0.5 ? 1 : -1;
-      const d = { ...ruta, carril: ruta.carril + (r() - 0.5) * 0.6, sentido, s: -45 + k * 9 + r() * 4, v: 0.8 + r() * 0.5, pausa: 0 };
+      const d = { ...ruta, carril: ruta.carril + (r() - 0.5) * 0.5, sentido, s: ruta.min + r() * (ruta.max - ruta.min), v: corre ? 2.3 : 0.75 + r() * 0.5, corre, esperando: false };
       p.userData.peaton = d;
       p.rotation.y = d.horiz ? (sentido > 0 ? Math.PI / 2 : -Math.PI / 2) : (sentido > 0 ? 0 : Math.PI);
-      animarPersonaje(p, 'walk');
+      animarPersonaje(p, corre ? 'sprint' : 'walk');
       R.add(p);
       this.peatones.push(p);
-      if (k % 3 === 0) {
+      if (k % 4 === 1) {
         try {
-          const perro = crearModeloMascota(['perro', 'perro', 'gato'][k % 3 === 0 && k % 2 ? 2 : 0]);
+          const perro = mascotaSuelta(k % 8 === 1 ? 'perro' : ['gato', 'perro', 'conejo'][k % 3], 'walk');
+          if (!perro) throw new Error('sin modelo');
           const gp = new THREE.Group();
           gp.add(perro);
           gp.scale.setScalar(0.85);
@@ -217,7 +262,22 @@ export class Calle {
         } catch (e) {}
       }
     }
-    for (const [x, z, ry, quien] of [[-W / 2 + 1.2, aceraNuestraZ + 0.2, Math.PI, 'mama'], [6.3, parada - 0.2, 0, 'ramon']]) {
+    const sentados = [[-W / 2 + 1.2, aceraNuestraZ + 0.2, Math.PI, 'mama'], [6.3, parada - 0.2, 0, 'ramon']];
+    const tx = W / 2 + 1.6;
+    const mesas = [];
+    const sillasL = [];
+    const sombrillas = [];
+    for (const [mz, quien1, quien2] of [[-D / 2 + 1.2, 'lola', 'mateo'], [D / 2 - 1.4, 'sol', null], [0, 'amigos', 'mama']]) {
+      mesas.push(cil(0.35, 0.05, tx, Y + 0.75, mz, 14), cil(0.04, 0.75, tx, Y + 0.37, mz, 6));
+      sombrillas.push([tx, mz]);
+      for (const [lado, q] of [[-1, quien1], [1, quien2]]) {
+        const cz = mz + lado * 0.6;
+        sillasL.push(pieza(0.4, 0.05, 0.4, tx, Y + 0.45, cz), pieza(0.4, 0.4, 0.05, tx, Y + 0.65, cz + lado * 0.2));
+        for (const [ox, oz] of [[-0.17, -0.17], [0.17, -0.17], [-0.17, 0.17], [0.17, 0.17]]) sillasL.push(pieza(0.03, 0.45, 0.03, tx + ox, Y + 0.22, cz + oz));
+        if (q) sentados.push([tx, cz - lado * 0.05, lado > 0 ? Math.PI : 0, q]);
+      }
+    }
+    for (const [x, z, ry, quien] of sentados) {
       const p = crearPersonaje(quien);
       p.scale.setScalar(1.25);
       p.position.set(x, Y + 0.04, z);
@@ -233,6 +293,110 @@ export class Calle {
     animarPersonaje(quieto, 'idle');
     R.add(quieto);
     this.peatones.push(quieto);
+    R.add(new THREE.Mesh(unir(sillasL), mat(0x3b3f44, { roughness: 0.6, metalness: 0.3 })));
+    const mMesa = new THREE.Mesh(unir(mesas), mat(0xf2efe9));
+    R.add(mMesa);
+    const lona = [];
+    const palo = [];
+    for (const [x, z] of sombrillas) {
+      const c = new THREE.ConeGeometry(0.95, 0.4, 8, 1, true);
+      c.translate(x, Y + 2.25, z);
+      lona.push(c.toNonIndexed());
+      palo.push(cil(0.03, 2.1, x, Y + 1.05, z, 6));
+    }
+    R.add(new THREE.Mesh(unir(lona), mat(0xd65d5d, { side: THREE.DoubleSide })));
+    R.add(new THREE.Mesh(unir(palo), mat(0xf2efe9)));
+    const toldo = [];
+    for (let b = 0; b < 8; b++) {
+      const z0 = -D / 2 + 0.3 + b * (D - 0.6) / 8;
+      const g = new THREE.BoxGeometry(0.9, 0.05, (D - 0.6) / 8);
+      g.rotateZ(-0.25);
+      g.translate(W / 2 + 0.42, Y + 2.55, z0 + (D - 0.6) / 16);
+      toldo.push([g.toNonIndexed(), b % 2]);
+    }
+    R.add(new THREE.Mesh(unir(toldo.filter(t => !t[1]).map(t => t[0])), mat(0x4f8a6b)));
+    R.add(new THREE.Mesh(unir(toldo.filter(t => t[1]).map(t => t[0])), mat(0xf6efe6)));
+    const texCafe = textoTextura('Café Pilar', '#3b2f26', '#ffe9b0', 512, 96);
+    const cartelBar = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.45), new THREE.MeshStandardMaterial({ map: texCafe, emissiveMap: texCafe, emissive: 0xffffff, emissiveIntensity: 0.1 }));
+    cartelBar.position.set(W / 2 + 0.03, Y + 2.95, 0);
+    cartelBar.rotation.y = Math.PI / 2;
+    R.add(cartelBar);
+    this.cartelBar = cartelBar.material;
+    const puerta = new THREE.Mesh(new THREE.BoxGeometry(1.3, 2.3, 0.1), mat(0x6b4a33));
+    puerta.position.set(1.0, Y + 1.15, D / 2 + 0.02);
+    R.add(puerta);
+    for (const dx of [-0.32, 0.32]) {
+      const v = new THREE.Mesh(new THREE.PlaneGeometry(0.45, 1.3), mat(0x9fc3d6, { roughness: 0.2 }));
+      v.position.set(1.0 + dx, Y + 1.35, D / 2 + 0.075);
+      R.add(v);
+    }
+    const num = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.3), new THREE.MeshStandardMaterial({ map: textoTextura('12', '#2f4f7a', '#ffffff', 128, 96) }));
+    num.position.set(1.0, Y + 2.55, D / 2 + 0.075);
+    R.add(num);
+    const escalon = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.12, 0.5), mat(0xb9b2a6));
+    escalon.position.set(1.0, Y + 0.06, D / 2 + 0.25);
+    R.add(escalon);
+    const texPan = textoTextura('Panadería', '#f6efe6', '#8a5a2b', 512, 96);
+    const cartelPan = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.42), new THREE.MeshStandardMaterial({ map: texPan, emissiveMap: texPan, emissive: 0xffffff, emissiveIntensity: 0.1 }));
+    cartelPan.position.set(-W / 2 + 1.6, Y + 2.95, D / 2 + 0.03);
+    R.add(cartelPan);
+    this.carteles = [cartelBar.material, cartelPan.material];
+    const extra = [];
+    const amarillo = [];
+    const rojo = [];
+    const bolardo = (x, z) => extra.push(cil(0.08, 0.7, x, Y + 0.35, z, 8));
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) for (let k = 0; k < 3; k++) {
+      bolardo(xC + sx * (AC / 2 + 0.3), zC + sz * (AC / 2 + 0.5 + k * 0.55));
+      bolardo(xC + sx * (AC / 2 + 0.5 + k * 0.55), zC + sz * (AC / 2 + 0.3));
+    }
+    rojo.push(cil(0.12, 0.55, -W / 2 - 1.1, Y + 0.28, aceraNuestraZ + 0.6), cil(0.07, 0.1, -W / 2 - 1.1, Y + 0.6, aceraNuestraZ + 0.6));
+    amarillo.push(pieza(0.45, 0.85, 0.35, aceraNuestraX - 0.4, Y + 0.43, D / 2 + 3.2), pieza(0.5, 0.1, 0.4, aceraNuestraX - 0.4, Y + 0.9, D / 2 + 3.2));
+    const kioskoX = 0.6;
+    const kioskoZ = D / 2 + 2.2;
+    const cuerpoK = new THREE.Mesh(new THREE.BoxGeometry(1.6, 2.0, 1.4), mat(0x3f7a5a));
+    cuerpoK.position.set(kioskoX - 1.6, Y + 1.0, kioskoZ);
+    R.add(cuerpoK);
+    const kiosko = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.12, 1.7), mat(0x4f8a6b));
+    kiosko.position.set(kioskoX - 1.6, Y + 2.06, kioskoZ);
+    R.add(kiosko);
+    const revistas = [];
+    for (let k = 0; k < 5; k++) revistas.push(pieza(0.02, 0.28, 0.22, kioskoX - 0.78, Y + 0.9 + (k % 2) * 0.32, kioskoZ - 0.5 + k * 0.25));
+    R.add(new THREE.Mesh(unir(revistas), mat(0xe07a8a, { emissive: 0xe07a8a, emissiveIntensity: 0.1 })));
+    const bicis = [];
+    for (let k = 0; k < 3; k++) {
+      const bx = W / 2 + 2.9 + k * 0.7;
+      const bz = D / 2 + 1.2;
+      for (const dz of [-0.45, 0.45]) {
+        const g = new THREE.TorusGeometry(0.28, 0.03, 6, 16);
+        g.rotateY(Math.PI / 2);
+        g.translate(bx, Y + 0.3, bz + dz);
+        bicis.push(g.toNonIndexed());
+      }
+      bicis.push(pieza(0.04, 0.04, 0.9, bx, Y + 0.55, bz), pieza(0.04, 0.35, 0.04, bx, Y + 0.45, bz - 0.15), pieza(0.3, 0.04, 0.04, bx, Y + 0.85, bz + 0.4));
+    }
+    const tapas = [];
+    for (const [x, z] of [[xC + 1.7, zC + 15], [xC - 10, zC - 1.7], [xC + 15, zC + 1.7], [xC - 1.7, zC - 14]]) {
+      const g = new THREE.CylinderGeometry(0.35, 0.35, 0.02, 14);
+      g.translate(x, Y + 0.035, z);
+      tapas.push(g.toNonIndexed());
+    }
+    const jardinera = [];
+    const flores = [];
+    for (const [x, z] of [[-W / 2 - 1.6, -D / 2 - 1.2], [W / 2 + 2.6, D / 2 + 1.6], [-W / 2 - 1.5, D / 2 + 1.4]]) {
+      jardinera.push(pieza(1.2, 0.45, 0.5, x, Y + 0.22, z));
+      for (let f = 0; f < 4; f++) {
+        const g = new THREE.IcosahedronGeometry(0.17, 0);
+        g.translate(x - 0.45 + f * 0.3, Y + 0.55, z);
+        flores.push(g.toNonIndexed());
+      }
+    }
+    R.add(new THREE.Mesh(unir(extra), mat(0x3b3f44, { roughness: 0.6, metalness: 0.3 })));
+    R.add(new THREE.Mesh(unir(amarillo), mat(0xf2c230)));
+    R.add(new THREE.Mesh(unir(rojo), mat(0xd04040)));
+    R.add(new THREE.Mesh(unir(bicis), mat(0x2f6fb5, { metalness: 0.4, roughness: 0.4 })));
+    R.add(new THREE.Mesh(unir(tapas), mat(0x55585c, { metalness: 0.5, roughness: 0.6 })));
+    R.add(new THREE.Mesh(unir(jardinera), mat(0xb9b2a6)));
+    R.add(new THREE.Mesh(unir(flores), mat(0xe07a8a)));
 
     const negro = mat(0x2b2b33);
     for (let k = 0; k < 7; k++) {
@@ -256,13 +420,34 @@ export class Calle {
     const v = this.v3 || (this.v3 = new THREE.Vector3());
     const eje = this.eje || (this.eje = new THREE.Vector3(0, 1, 0));
     const fuera = this.fuera || (this.fuera = new THREE.Matrix4().makeScale(0, 0, 0));
+    const moviles = this.vehiculos.filter(d => !d.aparcado);
     this.vehiculos.forEach((d, i) => {
       if (!d.aparcado) {
         let vel = d.v;
+        const L = d.escala.x;
         const cruce = d.horiz ? this.xC : this.zC;
         const rojo = d.horiz ? this.fase !== 0 : this.fase !== 2;
-        const hasta = (cruce - d.s) * d.sentido;
-        if (rojo && hasta > 4 && hasta < 6.5) vel = 0;
+        const hasta = (cruce - d.s) * d.sentido - L;
+        if (rojo && hasta > (this.LP || 5.6) + 1.3 && hasta < (this.LP || 5.6) + 3.8) vel = 0;
+        if (d.tipo === 'bus') {
+          d.parada = d.parada || 0;
+          const objetivo = 6.6;
+          if (d.parada <= 0 && Math.abs(d.s - objetivo) < 0.25 && !d.hecho) d.parada = 4.5;
+          if (d.parada > 0) {
+            d.parada -= dt;
+            vel = 0;
+            if (d.parada <= 0) d.hecho = true;
+          }
+          if (Math.abs(d.s - objetivo) > 8) d.hecho = false;
+        }
+        for (const o of moviles) {
+          if (o === d || o.horiz !== d.horiz || o.sentido !== d.sentido || Math.abs(o.carril - d.carril) > 0.5) continue;
+          const delante = (o.s - d.s) * d.sentido;
+          if (delante <= 0) continue;
+          const hueco = delante - L - o.escala.x;
+          if (hueco < 0.8) vel = 0;
+          else if (hueco < 3) vel = Math.min(vel, (o.vel ?? o.v) * 0.9);
+        }
         d.vel = (d.vel ?? vel) + (vel - (d.vel ?? vel)) * Math.min(1, dt * 3);
         d.s += d.vel * dt * d.sentido;
         if (d.s > 70) d.s = -70;
@@ -279,6 +464,7 @@ export class Calle {
 
   ponerNoche(k) {
     this.noche = k;
+    for (const m of this.carteles || []) m.emissiveIntensity = 0.1 + k * 0.9;
   }
 
   actualizar(dt) {
@@ -296,17 +482,29 @@ export class Calle {
       if (!p.layers.isEnabled(2)) p.traverse(o => o.layers.set(2));
       const d = p.userData.peaton;
       if (!d) continue;
-      d.s += d.v * dt * d.sentido;
-      if (d.s > 55) d.s = -55;
-      if (d.s < -55) d.s = 55;
+      const cruce = d.horiz ? this.xC : this.zC;
+      const falta = (cruce - d.s) * d.sentido;
+      const puede = d.horiz ? this.fase === 0 : this.fase === 2;
+      const espera = !puede && falta > this.AC / 2 + 0.1 && falta < this.AC / 2 + 0.7;
+      if (espera !== d.esperando) {
+        d.esperando = espera;
+        animarPersonaje(p, espera ? 'idle' : d.corre ? 'sprint' : 'walk');
+      }
+      if (!espera) d.s += d.v * dt * d.sentido;
+      if (d.s > d.max) d.s = d.min;
+      if (d.s < d.min) d.s = d.max;
       if (d.horiz) p.position.set(d.s, this.Y, d.carril);
       else p.position.set(d.carril, this.Y, d.s);
       if (d.perro) {
         if (!d.perro.layers.isEnabled(2)) d.perro.traverse(o => o.layers.set(2));
         const atras = -0.7 * d.sentido;
+        if (d.perro.userData.saltando === undefined) d.perro.userData.saltando = 0;
         const lado = 0.35;
-        if (d.horiz) d.perro.position.set(d.s + atras, this.Y + Math.abs(Math.sin(this.t * 10)) * 0.03, d.carril + lado);
-        else d.perro.position.set(d.carril + lado, this.Y + Math.abs(Math.sin(this.t * 10)) * 0.03, d.s + atras);
+        const mx = d.perro.children[0] && d.perro.children[0].userData.mixer;
+        if (mx && !d.esperando) mx.update(dt);
+        const bote = mx ? 0 : d.esperando ? 0 : Math.abs(Math.sin(this.t * 10)) * 0.03;
+        if (d.horiz) d.perro.position.set(d.s + atras, this.Y + bote, d.carril + lado);
+        else d.perro.position.set(d.carril + lado, this.Y + bote, d.s + atras);
         d.perro.rotation.y = p.rotation.y;
       }
     }

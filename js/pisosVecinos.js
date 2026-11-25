@@ -39,6 +39,47 @@ const DECORADOS = [
   { pared: 0xf3e3ee, suelo: 0x87674c, muebles: [['sofa', 'izquierda', 0], ['tele', 'derecha', 0], ['alfombra', 'centro', 0], ['comoda', 'fondo', 0.25], ['lampara', 'esquina', 0], ['planta', 'esquina', 2]] }
 ];
 
+function mascotaSuelta(especie, clip) {
+  const p = crearModeloMascota(especie);
+  if (!p) return null;
+  const obj = p.raiz || p;
+  if (p.acciones && p.acciones[clip]) {
+    Object.values(p.acciones).forEach(a => a.stop());
+    p.acciones[clip].play();
+  }
+  obj.userData.mixer = p.mixer || null;
+  return obj;
+}
+
+function fusionar(grupo) {
+  grupo.updateMatrixWorld(true);
+  const inv = new THREE.Matrix4().copy(grupo.matrixWorld).invert();
+  const cubos = new Map();
+  const quitar = [];
+  grupo.traverse(o => {
+    if (!o.isMesh || o.isSkinnedMesh || o.userData.suelta || Array.isArray(o.material)) return;
+    const geo = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
+    for (const k of Object.keys(geo.attributes)) if (!['position', 'normal', 'uv', 'color'].includes(k)) geo.deleteAttribute(k);
+    if (!geo.attributes.normal) return;
+    geo.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld));
+    const m = o.material;
+    if (m.transparent) return;
+    const clave = `${Object.keys(geo.attributes).sort().join(',')}|${m.vertexColors}|${m.type}|${m.map ? m.map.uuid : ""}|${m.color ? m.color.getHex() : 0}|${m.emissive ? m.emissive.getHex() : 0}|${m.roughness}|${m.metalness}`;
+    if (!cubos.has(clave)) cubos.set(clave, { m, lista: [] });
+    cubos.get(clave).lista.push(geo);
+    quitar.push(o);
+  });
+  for (const o of quitar) {
+    o.removeFromParent();
+    if (!o.geometry.userData.compartida) o.geometry.dispose();
+  }
+  for (const { m, lista } of cubos.values()) {
+    const geo = mergeGeometries(lista);
+    lista.forEach(g => g.dispose());
+    if (geo) grupo.add(new THREE.Mesh(geo, m));
+  }
+}
+
 function mat(color, extra = {}) {
   return new THREE.MeshStandardMaterial({ color, roughness: 0.9, ...extra });
 }
@@ -230,7 +271,7 @@ export class PisosVecinos {
           alfeizar.y = SILL + 0.02;
           const fueraAlf = dentro.clone().addScaledVector(cara.n, 0.47);
           fueraAlf.y = SILL + 0.02;
-          ventanas.push({ n: cara.n, dentro, alfeizar, fueraAlf, balcon: !!v.balcon, peq: !!v.peq, francesa: !!v.francesa, sill: SILL, ancho: VW, ropa: extras.ropa || null, persiana, fuera: v.balcon ? dentro.clone().addScaledVector(cara.n, 0.77) : null });
+          ventanas.push({ n: cara.n, dentro, alfeizar, fueraAlf, balcon: !!v.balcon, peq: !!v.peq, francesa: !!v.francesa, sill: SILL, ancho: VW, ropa: extras.ropa || null, persiana, fuera: v.balcon ? dentro.clone().addScaledVector(cara.n, 0.7) : null });
         });
         caja(cursor, L / 2, 0, ALTO, matFachada);
         caja(-L / 2 - 0.05, L / 2 + 0.05, -0.12, 0.02, cornisa, GROSOR + 0.1, 0.03);
@@ -318,12 +359,14 @@ export class PisosVecinos {
           pantalla.position.set(0, 0.72, 0.09);
           grupo.add(pantalla);
           sitio.pantalla = pantalla;
+          pantalla.userData.suelta = true;
         }
         if (id === 'planta' && !sitio.planta) sitio.planta = { x, z };
       }
+      fusionar(muebles);
       aCapa(g);
       this.raiz.add(g);
-      this.pisos.push({ g, ventanas, matPared, matSuelo, sitio, y, encendido: Math.random() < 0.75, gente: [] });
+      this.pisos.push({ g, ventanas, matPared, matSuelo, sitio, y, encendido: Math.random() < 0.93, gente: [] });
     });
   }
 
@@ -381,7 +424,7 @@ export class PisosVecinos {
   mascota(piso) {
     let m = null;
     try {
-      m = crearModeloMascota(Math.random() < 0.6 ? 'gato' : 'perro');
+      m = mascotaSuelta(Math.random() < 0.6 ? 'gato' : 'perro', 'idle');
     } catch (e) {
       m = null;
     }
@@ -673,6 +716,7 @@ export class PisosVecinos {
       vivos++;
       const o = a.obj;
       a.t += dt;
+      if (a.mascota && o.children[0] && o.children[0].userData.mixer) o.children[0].userData.mixer.update(dt);
       if (a.tele && e.piso.sitio.pantalla && a.i >= 2) {
         if (Math.random() < dt * 4) e.piso.sitio.pantalla.material.color.setHSL(Math.random(), 0.5, 0.45 + Math.random() * 0.2);
       }
