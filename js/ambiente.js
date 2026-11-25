@@ -163,6 +163,11 @@ export class Ambiente {
     this.sala.matCristal.color.copy(this.cieloAbajo).lerp(new THREE.Color(0xffffff), 0.5);
     this.sala.matCristal.emissive.copy(this.cieloAbajo);
     this.sala.matCristal.emissiveIntensity = this.esNoche() ? 0.15 : 0.35;
+    this.fondoExterior = fondoB;
+    const hs = this.horaSol;
+    this.nocheK = hs >= 21 || hs < 6 ? 1 : hs >= 18.5 ? (hs - 18.5) / 2.5 : hs < 7.5 ? (7.5 - hs) / 1.5 : 0;
+    if (this.apagon) this.nocheK *= 0.3;
+    if (this.alCalcular) this.alCalcular(this);
   }
 
   icono() {

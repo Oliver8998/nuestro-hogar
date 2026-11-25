@@ -3,33 +3,57 @@ import { construirPiezas, liberar } from './modelos.js';
 import { crearExclamacion } from './telefono.js';
 
 const PI = Math.PI;
-const CARRIL_Z = 4.6;
-const PARADA_X = 1.75;
-const Y_ACERA = -0.12;
-const HUECOS = [[1.0, 3.6], [0.45, 3.65], [1.55, 3.65]];
-const ALTURA_FLOTAR = 0.55;
+const ALTURA_VENTANA = 1.45;
+const SEPARACION_PARED = 0.75;
+const CUELGA = 0.62;
 
-const PIEZAS_FURGONETA = [
-  [1.5, 1.0, 0.95, -0.25, 0.68, 0, 0xfffaf4],
-  [0.62, 0.78, 0.93, 0.8, 0.57, 0, 0xf4b3be],
-  [0.04, 0.36, 0.8, 1.1, 0.78, 0, 0xa9d4e8, { rz: -0.35 }],
-  [0.34, 0.3, 0.945, 0.78, 0.76, 0, 0xa9d4e8],
-  [1.53, 0.12, 0.97, -0.255, 0.52, 0, 0xe58f9e],
-  [0.2, 0.2, 0.02, -0.25, 0.85, 0.48, 0xe58f9e, 'cil', { rx: PI / 2 }],
-  [0.2, 0.2, 0.02, -0.25, 0.85, -0.48, 0xe58f9e, 'cil', { rx: PI / 2 }],
-  [0.1, 0.14, 0.92, 1.13, 0.26, 0, 0x9a8470],
-  [0.1, 0.14, 0.92, -1.02, 0.26, 0, 0x9a8470],
-  [0.06, 0.08, 0.06, 1.12, 0.45, 0.36, 0xfff1a8, 'esfera', { brillo: true }],
-  [0.06, 0.08, 0.06, 1.12, 0.45, -0.36, 0xfff1a8, 'esfera', { brillo: true }],
-  [0.38, 0.14, 0.38, 0.62, 0.19, 0.44, 0x3b2f26, 'cil', { rx: PI / 2 }],
-  [0.38, 0.14, 0.38, 0.62, 0.19, -0.44, 0x3b2f26, 'cil', { rx: PI / 2 }],
-  [0.38, 0.14, 0.38, -0.6, 0.19, 0.44, 0x3b2f26, 'cil', { rx: PI / 2 }],
-  [0.38, 0.14, 0.38, -0.6, 0.19, -0.44, 0x3b2f26, 'cil', { rx: PI / 2 }],
-  [0.16, 0.15, 0.16, 0.62, 0.19, 0.45, 0xe8e0d6, 'cil', { rx: PI / 2 }],
-  [0.16, 0.15, 0.16, 0.62, 0.19, -0.45, 0xe8e0d6, 'cil', { rx: PI / 2 }],
-  [0.16, 0.15, 0.16, -0.6, 0.19, 0.45, 0xe8e0d6, 'cil', { rx: PI / 2 }],
-  [0.16, 0.15, 0.16, -0.6, 0.19, -0.45, 0xe8e0d6, 'cil', { rx: PI / 2 }]
-];
+function crearDron() {
+  const g = new THREE.Group();
+  const blanco = new THREE.MeshStandardMaterial({ color: 0xf7f4ef, roughness: 0.35 });
+  const gris = new THREE.MeshStandardMaterial({ color: 0x4a4f57, roughness: 0.5, metalness: 0.3 });
+  const rosa = new THREE.MeshStandardMaterial({ color: 0xe58f9e, roughness: 0.4 });
+  const cuerpo = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.12, 0.42), blanco);
+  const cupula = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 10, 0, PI * 2, 0, PI / 2), rosa);
+  cupula.position.y = 0.06;
+  const ojo = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 8), new THREE.MeshStandardMaterial({ color: 0x1f2a33, roughness: 0.1, metalness: 0.4 }));
+  ojo.position.set(0, -0.02, 0.21);
+  g.add(cuerpo, cupula, ojo);
+  const helices = [];
+  for (const [x, z] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+    const brazo = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.04, 0.42), gris);
+    brazo.position.set(x * 0.15, 0.02, z * 0.15);
+    brazo.rotation.y = Math.atan2(x, z);
+    const motor = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.05, 0.08, 10), gris);
+    motor.position.set(x * 0.3, 0.05, z * 0.3);
+    const aro = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.014, 6, 24), blanco);
+    aro.rotation.x = PI / 2;
+    aro.position.set(x * 0.3, 0.09, z * 0.3);
+    const helice = new THREE.Group();
+    helice.position.set(x * 0.3, 0.1, z * 0.3);
+    const pala = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.008, 0.045), new THREE.MeshStandardMaterial({ color: 0x2c3036, transparent: true, opacity: 0.75 }));
+    helice.add(pala);
+    const disco = new THREE.Mesh(new THREE.CircleGeometry(0.15, 18), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.12, depthWrite: false }));
+    disco.rotation.x = -PI / 2;
+    helice.add(disco);
+    g.add(brazo, motor, aro, helice);
+    helices.push(helice);
+  }
+  for (const [x, color] of [[0.12, 0x6cff9a], [-0.12, 0xff6060]]) {
+    const led = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 6), new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 1.2 }));
+    led.position.set(x, -0.02, 0.2);
+    g.add(led);
+  }
+  const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, CUELGA - 0.3, 6), gris);
+  cable.position.y = -0.06 - (CUELGA - 0.3) / 2;
+  const gancho = new THREE.Mesh(new THREE.TorusGeometry(0.035, 0.01, 6, 12), gris);
+  gancho.position.y = -CUELGA + 0.27;
+  g.add(cable, gancho);
+  g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  g.userData.helices = helices;
+  g.userData.cable = cable;
+  g.userData.gancho = gancho;
+  return g;
+}
 
 export const PIEZAS_PAQUETE = [
   [0.42, 0.32, 0.42, 0, 0.16, 0, 0xc99a63],
@@ -51,13 +75,12 @@ export class Entregas {
     this.escena = this.raiz;
     this.eventos = eventos;
     this.pedidos = [];
-    this.anim = null;
+    this.drones = [];
     this.t = 0;
-  }
-  desplazarZ(dz) {
-    this.raiz.position.z = dz;
+    this.puntoEspera = null;
   }
 
+  desplazarZ() {}
 
   pedir(items, segundos) {
     const p = { id: `p${Date.now()}${Math.floor(Math.random() * 1000)}`, items, llega: Date.now() + segundos * 1000, estado: 'camino' };
@@ -69,7 +92,7 @@ export class Entregas {
     for (const d of lista || []) {
       const p = { id: d.id, items: d.items, llega: d.llega, estado: d.estado === 'puerta' || d.estado === 'reparto' ? 'puerta' : 'camino' };
       this.pedidos.push(p);
-      if (p.estado === 'puerta') this.crearPaquete(p, false);
+      if (p.estado === 'puerta') this.crearDronCon(p, false);
     }
   }
 
@@ -97,32 +120,41 @@ export class Entregas {
     return Math.max(0, Math.ceil((c[0].llega - Date.now()) / 1000));
   }
 
-  posicionHueco(p) {
-    const k = this.enPuerta().filter(x => x !== p && x.paquete).length;
-    const [x, z] = HUECOS[k % HUECOS.length];
-    return new THREE.Vector3(x, ALTURA_FLOTAR + Math.floor(k / HUECOS.length) * 0.45, z);
+  espera(k) {
+    if (this.puntoEspera) return this.puntoEspera(k);
+    return new THREE.Vector3((k - 0.5) * 0.9, ALTURA_VENTANA, 3 + SEPARACION_PARED);
   }
 
-  crearPaquete(p, animado) {
+  crearDronCon(p, volando) {
+    const dron = crearDron();
+    dron.scale.setScalar(1.45);
     const { grupo } = construirPiezas(PIEZAS_PAQUETE);
+    grupo.scale.setScalar(0.62);
+    grupo.position.y = -CUELGA;
     grupo.userData.pedido = p;
-    grupo.rotation.y = (Math.random() - 0.5) * 0.6;
-    const pos = this.posicionHueco(p);
-    grupo.position.copy(pos);
-    grupo.userData.reposo = pos.clone();
-    grupo.userData.fase = Math.random() * 6;
-    const excl = crearExclamacion(0.36);
-    excl.position.y = 0.6;
+    const excl = crearExclamacion(0.32);
+    excl.position.y = 0.55;
     grupo.add(excl);
     grupo.userData.excl = excl;
-    this.escena.add(grupo);
+    dron.add(grupo);
     p.paquete = grupo;
-    if (animado) grupo.scale.setScalar(0.01);
-    return grupo;
+    const k = this.drones.length;
+    const destino = this.espera(k);
+    const d = { p, dron, fase: volando ? 'llegar' : 'esperar', t: 0, fasePulso: Math.random() * 6, vel: new THREE.Vector3() };
+    if (volando) {
+      const fuera = destino.clone().sub(new THREE.Vector3(0, destino.y, 0)).setY(0);
+      if (fuera.lengthSq() < 0.01) fuera.set(0, 0, 1);
+      fuera.normalize();
+      d.desde = destino.clone().addScaledVector(fuera, 14).add(new THREE.Vector3(fuera.z * 6, 7, -fuera.x * 6));
+      dron.position.copy(d.desde);
+    } else dron.position.copy(destino);
+    this.raiz.add(dron);
+    this.drones.push(d);
+    return d;
   }
 
   intersectar(raycaster) {
-    const paquetes = this.enPuerta().map(p => p.paquete).filter(Boolean);
+    const paquetes = this.drones.filter(d => d.fase === 'esperar' && d.p.paquete).map(d => d.p.paquete);
     if (!paquetes.length) return null;
     const hits = raycaster.intersectObjects(paquetes, true);
     if (!hits.length) return null;
@@ -136,48 +168,41 @@ export class Entregas {
     this.pedidos = this.pedidos.filter(x => x !== p);
     const paquete = p.paquete;
     if (paquete) {
+      this.raiz.attach(paquete);
+      paquete.userData.base = paquete.scale.x;
       paquete.userData.abriendo = 0;
       paquete.userData.pedido = null;
       if (paquete.userData.excl) paquete.userData.excl.visible = false;
     }
-    this.recolocar();
+    const d = this.drones.find(x => x.p === p);
+    if (d) {
+      d.fase = 'irse';
+      d.t = 0;
+      d.desde = d.dron.position.clone();
+    }
     return p.items;
-  }
-
-  recolocar() {
-    this.enPuerta().forEach((p, k) => {
-      if (!p.paquete) return;
-      const [x, z] = HUECOS[k % HUECOS.length];
-      p.paquete.userData.reposo = new THREE.Vector3(x, ALTURA_FLOTAR + Math.floor(k / HUECOS.length) * 0.45, z);
-    });
   }
 
   empezarReparto(p) {
     p.estado = 'reparto';
-    const { grupo } = construirPiezas(PIEZAS_FURGONETA);
-    grupo.rotation.y = PI;
-    grupo.position.set(10, Y_ACERA, CARRIL_Z);
-    this.escena.add(grupo);
-    this.anim = { p, van: grupo, fase: 'llegar', t: 0 };
+    this.crearDronCon(p, true);
     this.eventos.alClaxon();
   }
 
   actualizar(dt) {
     this.t += dt;
-    if (!this.anim) {
-      const ahora = Date.now();
+    const ahora = Date.now();
+    if (!this.drones.some(d => d.fase === 'llegar')) {
       const listo = this.pedidos.find(p => p.estado === 'camino' && p.llega <= ahora);
       if (listo) this.empezarReparto(listo);
-    } else {
-      this.animarFurgoneta(dt);
     }
 
     for (const obj of [...this.escena.children]) {
-      const d = obj.userData;
-      if (d.abriendo !== undefined) {
-        d.abriendo += dt;
-        const k = d.abriendo / 0.45;
-        obj.scale.setScalar(k < 0.4 ? 1 + k * 0.6 : Math.max(0.01, 1.24 * (1 - (k - 0.4) / 0.6)));
+      const ud = obj.userData;
+      if (ud.abriendo !== undefined) {
+        ud.abriendo += dt;
+        const k = ud.abriendo / 0.45;
+        obj.scale.setScalar((ud.base || 1) * (k < 0.4 ? 1 + k * 0.6 : Math.max(0.01, 1.24 * (1 - (k - 0.4) / 0.6))));
         obj.rotation.y += dt * 10;
         if (k >= 1) {
           this.escena.remove(obj);
@@ -186,70 +211,52 @@ export class Entregas {
       }
     }
 
-    for (const p of this.enPuerta()) {
-      const g = p.paquete;
-      if (!g || g.userData.volando) continue;
-      const r = g.userData.reposo;
-      g.position.x += (r.x - g.position.x) * Math.min(1, dt * 6);
-      g.position.z += (r.z - g.position.z) * Math.min(1, dt * 6);
-      g.position.y = r.y + Math.sin(this.t * 2 + g.userData.fase) * 0.07;
-      g.rotation.y += dt * 1.3;
-      if (g.scale.x < 1) g.scale.setScalar(Math.min(1, g.scale.x + dt * 4));
-    }
-  }
-
-  animarFurgoneta(dt) {
-    const a = this.anim;
-    a.t += dt;
-    const van = a.van;
-    const ruedas = (v) => {
-      van.children.forEach((m, i) => { if (i >= 11) m.rotation.y += v * dt * 6; });
-    };
-    if (a.fase === 'llegar') {
-      const k = Math.min(1, a.t / 2.2);
-      const e = 1 - Math.pow(1 - k, 3);
-      van.position.x = 10 + (PARADA_X - 10) * e;
-      van.position.y = Y_ACERA + Math.abs(Math.sin(a.t * 18)) * 0.015 * (1 - k);
-      ruedas(1 - k);
-      if (k >= 1) {
-        a.fase = 'dejar';
-        a.t = 0;
-        const paquete = this.crearPaquete(a.p, false);
-        paquete.userData.volando = true;
-        a.desde = new THREE.Vector3(PARADA_X + 1.0, 0.5, CARRIL_Z - 0.2);
-        a.hasta = paquete.userData.reposo.clone();
-        paquete.position.copy(a.desde);
-        a.paquete = paquete;
+    let k = 0;
+    for (const d of [...this.drones]) {
+      const dron = d.dron;
+      d.t += dt;
+      dron.userData.helices.forEach((h, i) => { h.rotation.y += dt * (i % 2 ? -38 : 38); });
+      const antes = dron.position.clone();
+      if (d.fase === 'llegar') {
+        const destino = this.espera(k);
+        const u = Math.min(1, d.t / 3.2);
+        const e = 1 - Math.pow(1 - u, 3);
+        dron.position.lerpVectors(d.desde, destino, e);
+        dron.position.y += Math.sin(u * PI) * 0.8;
+        if (u >= 1) {
+          d.fase = 'esperar';
+          d.t = 0;
+          d.p.estado = 'puerta';
+          this.eventos.alLlegar(d.p);
+        }
+        k++;
+      } else if (d.fase === 'esperar') {
+        const destino = this.espera(k);
+        destino.y += Math.sin(this.t * 2.2 + d.fasePulso) * 0.06;
+        dron.position.lerp(destino, Math.min(1, dt * 2.5));
+        if (d.p.paquete) {
+          d.p.paquete.rotation.z = Math.sin(this.t * 1.7 + d.fasePulso) * 0.08;
+          d.p.paquete.rotation.y += dt * 0.6;
+        }
+        k++;
+      } else {
+        const u = Math.min(1, d.t / 2.4);
+        dron.userData.cable.visible = false;
+        dron.userData.gancho.visible = false;
+        const fuera = d.desde.clone().setY(0);
+        if (fuera.lengthSq() < 0.01) fuera.set(0, 0, 1);
+        fuera.normalize();
+        dron.position.copy(d.desde).addScaledVector(fuera, u * u * 12);
+        dron.position.y += u * u * 9;
+        if (u >= 1) {
+          this.raiz.remove(dron);
+          liberar(dron);
+          this.drones = this.drones.filter(x => x !== d);
+        }
       }
-    } else if (a.fase === 'dejar') {
-      const k = Math.min(1, a.t / 0.9);
-      const pos = a.desde.clone().lerp(a.hasta, suavizar(k));
-      pos.y += Math.sin(k * PI) * 0.9;
-      a.paquete.position.copy(pos);
-      a.paquete.rotation.x = k * PI * 2;
-      if (k >= 1) {
-        a.paquete.rotation.x = 0;
-        a.paquete.userData.volando = false;
-        a.p.estado = 'puerta';
-        this.eventos.alLlegar(a.p);
-        a.fase = 'esperar';
-        a.t = 0;
-      }
-    } else if (a.fase === 'esperar') {
-      if (a.t > 0.5) {
-        a.fase = 'irse';
-        a.t = 0;
-      }
-    } else {
-      const k = Math.min(1, a.t / 2.2);
-      const e = k * k * k;
-      van.position.x = PARADA_X + (-11 - PARADA_X) * e;
-      ruedas(k);
-      if (k >= 1) {
-        this.escena.remove(van);
-        liberar(van);
-        this.anim = null;
-      }
+      d.vel.subVectors(dron.position, antes).divideScalar(Math.max(dt, 1e-3));
+      dron.rotation.z += (THREE.MathUtils.clamp(-d.vel.x * 0.12, -0.4, 0.4) - dron.rotation.z) * Math.min(1, dt * 5);
+      dron.rotation.x += (THREE.MathUtils.clamp(d.vel.z * 0.12, -0.4, 0.4) - dron.rotation.x) * Math.min(1, dt * 5);
     }
   }
 }

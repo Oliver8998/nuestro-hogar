@@ -2859,5 +2859,13 @@ export default {
 "Mañana":"Morning",
 "Atardecer":"Sunset",
 "Noche":"Night",
-"🐾 No hay mascotas despiertas para posar":"🐾 There are no pets awake to pose"
+"🐾 No hay mascotas despiertas para posar":"🐾 There are no pets awake to pose",
+"🛸 ¡Ha llegado el dron con un paquete! Tocad el paquete para cogerlo":"🛸 The drone has arrived with a parcel! Tap the parcel to take it",
+"🛸 {0} paquete{1} en la ventana":"🛸 {0} parcel{1} at the window",
+"Ya lo habéis pedido. Lo traerá un dron a la ventana.":"You've already ordered it. A drone will bring it to the window.",
+"🛸 El próximo paquete llega en {0} s":"🛸 The next parcel arrives in {0} s",
+"🛸 ¡Pedido! {0}{1} llega en {2} s":"🛸 Ordered! {0}{1} arrives in {2} s",
+"¡Pedido hecho! Lo trae un dron en unos segundos. Cierra la tienda para verlo llegar":"Order placed! A drone brings it in a few seconds. Close the shop to watch it arrive",
+"El dron viene de camino… 🛸":"The drone is on its way… 🛸",
+"que cuelga del dron para cogerlo":"hanging from the drone to take it"
 };

@@ -591,3 +591,15 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - `choques.js` → `separar(cuerpos, dt, libre)`: cada cuerpo es un círculo en el suelo `{ p, r, peso, fijo, y, mueve, vx, vz }`. Si dos se solapan se empujan poco a poco (más el de menos peso). Si los dos van andando uno contra otro, además se apartan de lado para cruzarse sin atascarse. `libre(x, z)` impide empujar a nadie dentro de un mueble o fuera de la habitación; si un lado no puede moverse, se mueve el otro.
 - En casa (`evitarChoques` en main.js, cada fotograma): mascotas en el suelo (`mascotas.cuerposChoque()`, radio 0,16 × tamaño; quedan fuera las que están encima de muebles, saltando, en el baño o de paseo), el robot aspirador (peso 3; fijo mientras limpia), Robi la limpiadora y el vecino de visita (fijos).
 - En los pisos de la pantalla de inicio (escaparate.js): mascotas contra Robi y la aspiradora, que siguen su ruta y apartan a las mascotas.
+
+## El piso dentro de un edificio y el dron de reparto (v89)
+- `edificio.js` (`Edificio`): el piso ya no flota. Está en la 4ª planta de un edificio:
+  - Debajo: el bloque del edificio (`bloque`) con fachada de ventanas y balcones, cornisas por planta y bajos con tiendas y toldos, hasta la calle (`CALLE_Y` = -9,5).
+  - Encima: 3 plantas más (`paneles`, uno por pared) que siguen la misma regla que las paredes: se esconden las que dan a la cámara.
+  - Alrededor: 2 calles con asfalto, pasos de cebra, bordillos, farolas y árboles (InstancedMesh), 8 coches que circulan (InstancedMesh, color por instancia) y ~45 edificios vecinos de 3 a 12 plantas.
+  - Edificios vecinos fusionados en una malla por material, con un atributo `aV` (índice del edificio) y un uniform `uEsc[96]`: si un edificio quedaría delante del piso tapándolo, se «hunde» suavemente en el suelo (`actualizar`). Una sola llamada de dibujo por material.
+  - Texturas de fachada hechas en canvas (6 estilos; 12 × 12 m por repetición) con un `emissiveMap` de ventanas encendidas al azar. De noche (`ambiente.nocheK`, de 18:30 a 21 sube poco a poco) se encienden ventanas, escaparates, farolas y faros. Niebla con el color del cielo para la distancia.
+  - Se dibuja en dos pasadas (`edificio.renderizar`): primero la ciudad (capa 2, near -40 / far 170) y, tras limpiar profundidad, la casa con la cámara de siempre (near 4 / far 44). Así no se pierde precisión de profundidad en la casa (lo del parpadeo de la ventana). Las fotos (`mas.capturar`) usan la misma función (`ctx.pintar`).
+  - Según la casa (`tipoEdificio`): pisos 0-1 en medio del edificio; ático sin plantas encima; casa con jardín, mansión y jardín a pie de calle (el bloque de abajo se esconde y la ciudad sube). Los pisos de inversión, en medio.
+  - Zoom mínimo 0,5 para ver más ciudad.
+- Reparto en dron (`entregas.js`): sustituye a la furgoneta. Llega volando desde fuera y se queda flotando junto a la pared que da a la cámara (la abierta) con el paquete colgando de un cable. Si giráis la cámara, se recoloca. Al tocar el paquete se suelta y el dron se va. Varios paquetes = varios drones en fila. `entregas.puntoEspera(k)` en main.js decide el sitio.

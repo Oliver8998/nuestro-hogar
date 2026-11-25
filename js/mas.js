@@ -626,7 +626,8 @@ export class Mas {
 
   capturar(ancho = 900, recorte = 1) {
     const { renderer, escena, camara } = this.ctx;
-    renderer.render(escena, camara);
+    if (this.ctx.pintar) this.ctx.pintar();
+    else renderer.render(escena, camara);
     const fuente = renderer.domElement;
     const w = fuente.width;
     const h = fuente.height;
@@ -733,7 +734,8 @@ export class Mas {
         ocultos.push(o);
       }
     });
-    renderer.render(escena, camara);
+    if (this.ctx.pintar) this.ctx.pintar();
+    else renderer.render(escena, camara);
     const fuente = renderer.domElement;
     const caja = fuente.getBoundingClientRect();
     const kx = fuente.width / caja.width;

@@ -32,12 +32,12 @@ const PASOS = [
   },
   {
     id: 'cerrar', objetivo: () => '#tienda .tienda-cabecera .cerrar',
-    texto: '¡Pedido hecho! Llega en furgoneta en unos segundos. Cierra la tienda para verla llegar',
+    texto: '¡Pedido hecho! Lo trae un dron en unos segundos. Cierra la tienda para verlo llegar',
     avanza: ['cerrar:tienda']
   },
   {
     id: 'paquete', objetivo: c => c.posPaquete(),
-    texto: c => (c.posPaquete() ? '¡Ya está aquí! Toca el <b>paquete</b> de la puerta para abrirlo' : 'La furgoneta viene de camino… 🚚'),
+    texto: c => (c.posPaquete() ? '¡Ya está aquí! Toca el <b>paquete</b> que cuelga del dron para cogerlo' : 'El dron viene de camino… 🛸'),
     avanza: ['paquete']
   },
   {

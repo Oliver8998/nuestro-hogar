@@ -10,7 +10,7 @@ export class CamaraIso {
     this.camara.layers.enable(1);
     this.altura = THREE.MathUtils.degToRad(32);
     this.distancia = 20;
-    this.zoomMin = 0.7;
+    this.zoomMin = 0.5;
     this.zoomMax = 3;
     this.angulo = ANGULO_INICIAL;
     this.anguloObj = ANGULO_INICIAL;

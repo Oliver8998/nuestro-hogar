@@ -52,6 +52,7 @@ import { Album } from './album.js';
 import { Duo } from './duo.js';
 import { Sueno } from './sueno.js';
 import { separar } from './choques.js';
+import { Edificio } from './edificio.js';
 import { anotarActividad, actividadNueva, marcarActividadVista, textoActividad, mostrarBienvenida, mostrarGuiaTarde } from './bienvenida.js';
 import { Inmobiliaria, INV, NIVEL_INMOBILIARIA } from './inmobiliaria.js';
 aplicarTamTexto();
@@ -76,6 +77,14 @@ const sala = crearSala(escena);
 const telefono = new Telefono(escena, sala);
 const gestor = new GestorMuebles(escena);
 const ambiente = new Ambiente(sala, renderer);
+const edificio = new Edificio(escena);
+ambiente.alCalcular = a => edificio.ponerNoche(a.nocheK || 0, a.fondoExterior);
+ambiente.calcular();
+function tipoEdificio(ext, nivel) {
+  if (ext) return ext.tipo;
+  if (enPiso()) return null;
+  return nivel >= 3 ? 'casa' : nivel === 2 ? 'atico' : null;
+}
 const inventario = new Inventario();
 const miniaturas = new Miniaturas(160);
 
@@ -119,14 +128,38 @@ const mascotas = new GestorMascotas(escena, gestor, {
 
 const entregas = new Entregas(escena, {
   alClaxon() {
-    sonido.claxon();
+    sonido.ruido(1.4, { volumen: 0.035, freq: 520, q: 6 });
+    setTimeout(() => sonido.ruido(1.2, { volumen: 0.03, freq: 560, q: 6 }), 1300);
   },
   alLlegar() {
     sonido.pop();
-    ui.aviso('📦 ¡Ha llegado un paquete! Tocadlo para abrirlo');
+    ui.aviso('🛸 ¡Ha llegado el dron con un paquete! Tocad el paquete para cogerlo');
     guardar();
   }
 });
+let paredDron = -1;
+entregas.puntoEspera = k => {
+  const d = camaraIso.direccionHorizontal();
+  const mx = sala.ancho() / 2 + 0.15;
+  const mz = sala.fondo() / 2 + 0.15;
+  const caras = [[0, -1, mz], [0, 1, mz], [-1, 0, mx], [1, 0, mx]];
+  let mejor = 0;
+  let valor = -Infinity;
+  caras.forEach(([nx, nz], i) => {
+    const v = nx * d.x + nz * d.z + (i === paredDron ? 0.2 : 0);
+    if (v > valor) {
+      valor = v;
+      mejor = i;
+    }
+  });
+  paredDron = mejor;
+  const [nx, nz, dist] = caras[mejor];
+  const largo = mejor < 2 ? sala.ancho() : sala.fondo();
+  const lado = [0, 0.95, -0.95, 1.9, -1.9][k % 5];
+  const off = THREE.MathUtils.clamp(lado, -largo / 2 + 0.4, largo / 2 - 0.4);
+  const ext = sala.esExterior();
+  return new THREE.Vector3(nx * (dist + 0.75) - nz * off, (ext ? 1.5 : 1.75) + Math.floor(k / 5) * 0.6, nz * (dist + 0.75) + nx * off);
+};
 
 const suciedad = new Suciedad(escena, {
   mascotas,
@@ -237,6 +270,7 @@ function aplicarTam() {
   sala.redimensionar(ancho, fondo);
   gestor.ajustarTam(ancho, fondo);
   camaraIso.ajustar(ancho, fondo);
+  edificio.construir(ancho, fondo);
   entregas.desplazarZ(fondo / 2 - 3);
   if (casa2) casa2.tiras.forEach((t, i) => { t.scale.x = (sala.largoPared(i) + 0.2) / 6.2; });
   if (jardinMalla) jardinMalla.position.x = ancho / 2 - 3;
@@ -552,7 +586,7 @@ function comprarDirecto(id, color = null, precio = null, cantidad = 1) {
   entregas.pedir([{ id, color: info.tipo === 'mueble' && info.colores ? (color ?? 0) : null, cantidad }], segundos);
   sonido.comprar();
   refrescarHud();
-  ui.aviso(`🚚 ¡Pedido! ${cantidad > 1 ? `${cantidad} × ` : ''}${info.nombre} llega en ${segundos} s`);
+  ui.aviso(`🛸 ¡Pedido! ${cantidad > 1 ? `${cantidad} × ` : ''}${info.nombre} llega en ${segundos} s`);
   guardar();
   return true;
 }
@@ -997,7 +1031,7 @@ const ui = new UI(miniaturas, {
       return;
     }
     const s = entregas.segundosProximo();
-    if (s !== null) ui.aviso(`🚚 El próximo paquete llega en ${s} s`);
+    if (s !== null) ui.aviso(`🛸 El próximo paquete llega en ${s} s`);
   },
   alEmpezarArrastre(item, info) {
     arrastre = { item, info };
@@ -1122,14 +1156,14 @@ controles = new Controles(canvas, camaraIso, gestor, sala, mascotas, entregas, {
     const linea = tiene
       ? `Tenéis ${tiene}. Arrastradlo desde el inventario hasta aquí.`
       : pedido
-        ? 'Ya lo habéis pedido. Llegará en un paquete a la puerta.'
+        ? 'Ya lo habéis pedido. Lo traerá un dron a la ventana.'
         : `Cuesta 🪙 ${mat.precio} en la tienda.`;
     ui.dialogo({
       imagen: miniaturas.item(d.material),
       titulo: d.nombre,
       texto: d.descripcion,
       html: `<div class="necesita${tiene || pedido ? ' tienes-ya' : ''}">
-        <div><b>${tiene ? '✅' : pedido ? '🚚' : '🛠️'} Necesitas: ${mat.nombre}</b>
+        <div><b>${tiene ? '✅' : pedido ? '🛸' : '🛠️'} Necesitas: ${mat.nombre}</b>
         <small>${linea}</small></div></div>`,
       botones: tiene || pedido
         ? [{ texto: '¡Entendido!', tipo: 'primario' }]
@@ -1177,7 +1211,7 @@ function tocarSuciedad(d) {
     imagen: miniaturas.item(info.producto),
     titulo: info.nombre,
     texto: d.tipo === 'caca' ? info.descripcion + ' 💩' : info.descripcion,
-    html: `<div class="necesita${tiene || pedido ? ' tienes-ya' : ''}"><div><b>${tiene ? '✅' : pedido ? '🚚' : '🧽'} A mano: ${prod.nombre}</b>
+    html: `<div class="necesita${tiene || pedido ? ' tienes-ya' : ''}"><div><b>${tiene ? '✅' : pedido ? '🛸' : '🧽'} A mano: ${prod.nombre}</b>
       <small>${tiene ? 'Limpiad a mano con un minijuego, o arrastradlo encima.' : pedido ? 'Ya está pedido, llegará a la puerta.' : `Cuesta 🪙 ${prod.precio}.`}</small></div></div>
       <div class="solucion">💡 ${soluciones[d.tipo]}</div>`,
     botones,
@@ -1242,6 +1276,7 @@ function aplicarEstiloCasa() {
   const hab = estado.habActual || 0;
   const ext = exteriorActual();
   sala.modoExterior(ext ? ext.tipo : null);
+  edificio.ponerTipo(tipoEdificio(ext, nivelCasa()));
   sala.pintarSuelo(ext ? ext.suelo : casa.suelo);
   ui.ponerNivelCasa(nivelCasa());
   ambiente.vista = ['calle', 'calle', 'tejados', 'jardin', 'colinas'][nivelCasa()];
@@ -1694,6 +1729,7 @@ function temporadaActual() {
 
 mas = new Mas({
   estado, ui, sonido, sala, ambiente, renderer, escena, camara: camaraIso.camara, lofi,
+  pintar: () => edificio.renderizar(renderer, escena, camaraIso.camara, [sala.hemi, sala.sol]),
   claveHab: () => `${nivelCasa()}-${estado.habActual || 0}`,
   controles: () => controles,
   registrar: e => registrar(e),
@@ -2424,6 +2460,7 @@ function verHabitacionVisita(i) {
   for (const d of h.suciedad || []) suciedad.anadir(d.tipo, d, false);
   const ext = EXTERIORES[habsCasa(e)[i]] || null;
   sala.modoExterior(ext ? ext.tipo : null);
+  edificio.ponerTipo(tipoEdificio(ext, n));
   sala.pintarSuelo(ext ? ext.suelo : casa.suelo);
   sala.pintarParedes(h.paredes || vacia.paredes, n > 0 || i > 0 ? casa.pared : null);
   ambiente.vista = ['calle', 'calle', 'tejados', 'jardin', 'colinas'][n];
@@ -2822,7 +2859,7 @@ guia = new Guia({
   categoriaTienda: () => ui.categoria,
   posPaquete: () => {
     const p = entregas.enPuerta().find(x => x.paquete);
-    return p ? pantalla(p.paquete.position.clone().add(new THREE.Vector3(0, 0.25, 0))) : null;
+    return p ? pantalla(p.paquete.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.25, 0))) : null;
   }
 });
 setInterval(() => guia && guia.ocultarSi(dialogoAbierto()), 300);
@@ -2840,7 +2877,7 @@ function pendientesCasa() {
   const sed = gestor.muebles.filter(m => m.userData.datos && m.userData.datos.sed).length;
   if (sed) l.push(`💧 ${sed} planta${sed > 1 ? 's' : ''} con sed`);
   const paquetes = entregas.enPuerta().filter(p => p.paquete).length;
-  if (paquetes) l.push(`📦 ${paquetes} paquete${paquetes > 1 ? 's' : ''} en la puerta`);
+  if (paquetes) l.push(`🛸 ${paquetes} paquete${paquetes > 1 ? 's' : ''} en la ventana`);
   if (inmobiliaria) for (const c of inmobiliaria.chips().slice(0, 2)) l.push(c.texto);
   return l;
 }
@@ -2979,7 +3016,7 @@ function colocarMenu(dt) {
   ui.posicionarMenu(s.x, s.y);
 }
 
-if (new URLSearchParams(location.search).has('debug')) window.__h = { minijuegos, encargos, THREE, sala, paredObjs, interacciones, controles, guia, telefono, entregas, trabajos, estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida, experiencia, suciedad, vida, inmobiliaria: () => inmobiliaria, registrar, abrirObras, refrescarHud, inicio, camaraIso, duo, album, usos, renderer, escena, guardar, sueno, juegos };
+if (new URLSearchParams(location.search).has('debug')) window.__h = { minijuegos, encargos, THREE, sala, paredObjs, interacciones, controles, guia, telefono, entregas, trabajos, estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida, experiencia, suciedad, vida, inmobiliaria: () => inmobiliaria, registrar, abrirObras, refrescarHud, inicio, camaraIso, duo, album, usos, renderer, escena, guardar, sueno, juegos, edificio };
 
 renderer.setAnimationLoop(() => {
   const dt = Math.min(reloj.getDelta(), 0.1);
@@ -3043,11 +3080,12 @@ renderer.setAnimationLoop(() => {
     tChip = 0;
     const n = entregas.enPuerta().length;
     const s = entregas.segundosProximo();
-    if (s !== null) ui.chipReparto(`🚚 ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`, false);
+    if (s !== null) ui.chipReparto(`🛸 ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`, false);
     else ui.chipReparto(null);
   }
   estabilizarLuces();
-  renderer.render(escena, camaraIso.camara);
+  edificio.actualizar(dt, camaraIso, sala.visibles());
+  edificio.renderizar(renderer, escena, camaraIso.camara, [sala.hemi, sala.sol]);
   tGuardado += dt;
   if (tGuardado > 20) {
     tGuardado = 0;
