@@ -529,7 +529,7 @@ export class Edificio {
     const xC = this.xCalle;
     const ocupado = [];
     const choca = (x0, x1, z0, z1) => {
-      if (x1 > -W / 2 - 0.4 && x0 < W / 2 + 0.4 && z1 > -D / 2 - 0.4 && z0 < D / 2 + 0.4) return true;
+      if (x1 > -W / 2 - 3.2 && x0 < W / 2 + 3.2 && z1 > -D / 2 - 3.2 && z0 < D / 2 + 3.2) return true;
       for (const c of [zC, zC - 44]) if (z1 > c - ANCHO_CALLE / 2 - ACERA && z0 < c + ANCHO_CALLE / 2 + ACERA) return true;
       for (const c of [xC, xC + 46]) if (x1 > c - ANCHO_CALLE / 2 - ACERA && x0 < c + ANCHO_CALLE / 2 + ACERA) return true;
       return ocupado.some(o => x1 > o[0] && x0 < o[1] && z1 > o[2] && z0 < o[3]);
@@ -579,9 +579,6 @@ export class Edificio {
     };
     const altos = [4, 5, 6, 7, 8, 9, 10];
     const pisosAl = (cerca) => (cerca ? altos[Math.floor(r() * altos.length)] : 3 + Math.floor(r() * 9));
-    poner(W / 2 + 0.05, W / 2 + 7, -D / 2, D / 2 + 1.5, 6 + Math.floor(r() * 3));
-    poner(-W / 2 - 6.5, -W / 2 - 0.05, -D / 2 - 0.2, D / 2 + 1, 4 + Math.floor(r() * 4));
-    poner(-W / 2, W / 2, D / 2 + 0.05, D / 2 + 7, 5 + Math.floor(r() * 4));
     for (let gx = -54; gx <= 54; gx += 8.5) {
       for (let gz = -54; gz <= 54; gz += 8.5) {
         if (Math.hypot(gx, gz) > 60) continue;
@@ -636,7 +633,7 @@ export class Edificio {
 
   aplicarTipo() {
     if (!this.bloque) return;
-    const jardin = this.tipo === 'jardin';
+    const jardin = this.tipo === 'jardin' || this.tipo === 'casa';
     this.raiz.position.y = jardin ? ABAJO * PISO : 0;
     this.bloque.visible = !jardin;
     this.pisosV.raiz.visible = !jardin;
@@ -702,7 +699,7 @@ export class Edificio {
     const salaHacia = this.W / 2 * Math.abs(dirX) + this.D / 2 * Math.abs(dirZ);
     const sube = this.raiz.position.y;
     const salaC = -(ox * dirX + oz * dirZ);
-    const salaBajo = (BASE_Y - 1.2) * ca - (salaHacia + salaC) * sa;
+    const salaBajo = (this.tipo === 'jardin' || this.tipo === 'casa' ? BASE_Y - 1.2 : CALLE_Y + PISO - 0.6) * ca - (salaHacia + salaC) * sa;
     const k = Math.min(1, dt * 7);
     for (const b of this.vecinos) {
       const rx = b.cx - ox;
