@@ -1,4 +1,4 @@
-const CACHE = 'hogar-v108';
+const CACHE = 'hogar-v109';
 const ARCHIVOS = [
   './',
   './index.html',

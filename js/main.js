@@ -2893,10 +2893,6 @@ function medirMargenes() {
   const lat = document.getElementById('lateral');
   const r = lat ? lat.getBoundingClientRect() : null;
   if (r && r.height > 0 && r.width > r.height && r.top > h * 0.6) abajo = h - r.top + 6;
-  if (ui.inventarioAbierto) {
-    const rb = document.getElementById('barra').getBoundingClientRect();
-    if (rb.top > h * 0.4 && rb.top < h) abajo = Math.max(abajo, h - rb.top + 4);
-  }
   camaraIso.ponerMargenes(arriba, abajo, h);
 }
 
@@ -3097,7 +3093,7 @@ function colocarMenu(dt) {
   ui.posicionarMenu(s.x, s.y);
 }
 
-if (new URLSearchParams(location.search).has('debug')) window.__h = { minijuegos, encargos, THREE, sala, paredObjs, interacciones, controles, guia, telefono, entregas, trabajos, estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida, experiencia, suciedad, vida, inmobiliaria: () => inmobiliaria, registrar, abrirObras, refrescarHud, inicio, camaraIso, duo, album, usos, renderer, escena, guardar, sueno, juegos, edificio };
+if (new URLSearchParams(location.search).has('debug')) window.__h = { inventario, minijuegos, encargos, THREE, sala, paredObjs, interacciones, controles, guia, telefono, entregas, trabajos, estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida, experiencia, suciedad, vida, inmobiliaria: () => inmobiliaria, registrar, abrirObras, refrescarHud, inicio, camaraIso, duo, album, usos, renderer, escena, guardar, sueno, juegos, edificio };
 
 renderer.setAnimationLoop(() => {
   const dt = Math.min(reloj.getDelta(), 0.1);

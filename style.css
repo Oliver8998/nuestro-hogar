@@ -3858,3 +3858,6 @@ textarea.carta-texto { font-family: 'Georgia', serif; line-height: 1.5; }
 .menu-uso { max-width: 260px; text-align: center; line-height: 1.25; }
 .menu-uso b { display: block; font-size: 13px; font-weight: 900; }
 .menu-uso small { display: block; font-size: 11.5px; font-weight: 700; color: var(--suave); margin-top: 2px; }
+
+#inventario { height: 92px; grid-auto-flow: column; grid-template-columns: none; grid-auto-columns: 74px; grid-template-rows: 86px; grid-auto-rows: 86px; overflow-x: auto; overflow-y: hidden; touch-action: pan-x; padding: 2px 4px; }
+#inventario .vacio { grid-column: auto; grid-row: 1; width: calc(100vw - 40px); align-self: center; }

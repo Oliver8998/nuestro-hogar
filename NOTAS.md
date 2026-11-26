@@ -723,3 +723,8 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - La torre ya no es una sola fija: cada sala del escaparate construye la suya (`crearTorre(per, W, D, k, texturas)`) dentro de su grupo, así entra y sale con la habitación. 8 estilos (`ESTILOS_TORRE`): terracota, crema con ventanas altas, gris azulado de 5 columnas, rosa con contraventanas verdes, ladrillo, salvia con persianas naranjas, piedra con marcos oscuros y amarillo con persianas azules; balcones, macetas y luces encendidas al azar según la hora.
 - 6 salas nuevas (14 en total) con tamaños de 4×4 a 9×9: Vuestro primer piso (4×4, colchón y cajas), Rincón de pareja (7×5, ordenador, impresora, mapa, corcho, caballete, calendario, tarro, cofre y árbol), Cuarto de mascotas (5×5, 6 mascotas), Loft enorme (9×9), Terraza (6×4, exterior) y Noche de Halloween (5×4). Zoom del escaparate entre 0,72 y 1,6 para que quepan todas.
 - Los muebles del escaparate aceptan un 7.º valor `base` para apilar (las cajas del primer piso).
+
+## Inventario de una fila, sin mover la cámara (v109)
+- Quitado lo de v103 que subía la cámara al abrir el inventario (Oliver no lo quiere).
+- En su lugar el inventario es una sola fila con scroll horizontal (`#inventario` 92 px, `grid-auto-flow: column`, `touch-action: pan-x`): el panel mide ~160 px y el piso 4×4 cabe entero encima sin mover nada.
+- `__h.inventario` añadido al modo debug.
