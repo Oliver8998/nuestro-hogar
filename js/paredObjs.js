@@ -68,8 +68,8 @@ export class ObjetosPared {
   deHab(k = this.ctx.claveHab()) {
     const l = this.lista();
     if (!l.some(o => o.hab === k && o.principal)) l.push({ id: `v0-${k}`, tipo: 'ventana', principal: true, hab: k, pared: 0, x: 1, y: 1.5 });
-    if (!l.some(o => o.hab === k && o.tipo === 'telefono')) l.push({ id: `t-${k}`, tipo: 'telefono', hab: k, pared: 0, x: -2.45, y: 1.3 });
-    if (!l.some(o => o.hab === k && o.tipo === 'cartel')) l.push({ id: `c-${k}`, tipo: 'cartel', hab: k, pared: 0, x: -0.35, y: 2.1 });
+    if (!l.some(o => o.hab === k && o.tipo === 'telefono')) l.push({ id: `t-${k}`, tipo: 'telefono', hab: k, pared: 0, x: -1.55, y: 1.3 });
+    if (!l.some(o => o.hab === k && o.tipo === 'cartel')) l.push({ id: `c-${k}`, tipo: 'cartel', hab: k, pared: 0, x: -1.0, y: 2.15 });
     return l.filter(o => o.hab === k);
   }
 

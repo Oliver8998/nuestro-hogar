@@ -9,16 +9,16 @@ export const CASAS = [
 encarecer(CASAS);
 
 export const OBRAS = [
-  { id: 'ampliar1', nombre: 'Ampliar el salón (6×7)', icono: '📐', nivel: 4, precio: 2500, texto: 'Tirad un tabique: una fila más de salón', filas: 1 },
-  { id: 'ampliar2', nombre: 'Ampliar el salón (7×7)', icono: '📐', nivel: 7, precio: 3500, texto: 'Ahora también hacia el fondo', filas: 2 },
+  { id: 'ampliar1', nombre: 'Ampliar el salón (5×4)', icono: '📐', nivel: 2, precio: 1200, texto: 'Tirad un tabique: una fila más de salón', filas: 1 },
+  { id: 'ampliar2', nombre: 'Ampliar el salón (5×5)', icono: '📐', nivel: 4, precio: 2200, texto: 'Ahora también hacia el fondo', filas: 2 },
   { id: 'dormitorio', nombre: 'Dormitorio', icono: '🛏️', nivel: 5, precio: 5000, texto: 'Un cuarto para dormir de verdad' },
   { id: 'terraza', nombre: 'Terraza', icono: '🌇', nivel: 8, precio: 7000, texto: 'Vuestro primer rincón al aire libre', exterior: true },
   { id: 'cocina', nombre: 'Cocina', icono: '🍳', nivel: 10, precio: 8000, texto: 'Para las recetas de mamá y vuestros platos' },
-  { id: 'ampliar3', nombre: 'Ampliar el salón (7×8)', icono: '📐', nivel: 11, precio: 4500, texto: 'Otra fila más para el salón', filas: 3 },
-  { id: 'ampliar4', nombre: 'Ampliar el salón (8×8)', icono: '📐', nivel: 14, precio: 6000, texto: 'Un salón de los grandes', filas: 4 },
+  { id: 'ampliar3', nombre: 'Ampliar el salón (6×6)', icono: '📐', nivel: 7, precio: 3500, texto: 'Un salón ya de buen tamaño', filas: 3 },
+  { id: 'ampliar4', nombre: 'Ampliar el salón (7×7)', icono: '📐', nivel: 11, precio: 5000, texto: 'Un salón de los grandes', filas: 4 },
   { id: 'bano', nombre: 'Baño', icono: '🛁', nivel: 13, precio: 10000, texto: 'Bañera, espejo y mucha espuma' },
   { id: 'estudio', nombre: 'Estudio', icono: '💻', nivel: 16, precio: 12000, texto: 'Un sitio tranquilo para trabajar y crear' },
-  { id: 'ampliar5', nombre: 'Ampliar el salón (8×9)', icono: '📐', nivel: 18, precio: 7500, texto: 'Casi un loft', filas: 5 },
+  { id: 'ampliar5', nombre: 'Ampliar el salón (8×8)', icono: '📐', nivel: 16, precio: 7500, texto: 'Casi un loft', filas: 5 },
   { id: 'jardin', nombre: 'Jardín', icono: '🌳', nivel: 20, precio: 18000, texto: 'Comprad el bajo con patio: un jardín enorme', exterior: true, alias: ['Jardín grande'] },
   { id: 'ampliar6', nombre: 'Ampliar el salón (9×9)', icono: '📐', nivel: 22, precio: 9000, texto: 'El salón más grande posible', filas: 6 },
   { id: 'juegos', nombre: 'Sala de juegos', icono: '🎮', nivel: 22, precio: 18000, texto: 'Consolas, futbolín y noches de piques' },

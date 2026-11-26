@@ -1,4 +1,5 @@
 import { paga } from './balance.js';
+import { enSala } from './medidas.js';
 import * as THREE from 'three';
 import { crearPersonaje } from './personajes.js';
 import { crearExclamacion } from './telefono.js';
@@ -167,7 +168,7 @@ export class Vida {
   ponerVisitante(quien) {
     this.quitarVisitante();
     const p = crearPersonaje(quien);
-    p.position.set(1.0, 0, 2.35);
+    p.position.set(...(([x, z]) => [x, 0, z])(enSala(1.0, 2.35)));
     p.rotation.y = Math.PI;
     p.scale.setScalar(1.25);
     const exc = crearExclamacion(0.3);
@@ -253,7 +254,7 @@ export class Vida {
       const gota = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 6), new THREE.MeshStandardMaterial({ color: 0x9fd0ff, roughness: 0.1 }));
       gota.position.set(0, 2.4, -0.25);
       g.add(charco, tubo, gota);
-      g.position.set(-2.4, 0, -2.5);
+      g.position.set(...(([x, z]) => [x, 0, z])(enSala(-2.4, -2.5)));
       g.userData.gota = gota;
       const exc = crearExclamacion(0.3);
       exc.position.y = 0.6;

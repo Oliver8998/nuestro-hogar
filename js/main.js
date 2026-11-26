@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { ponerMedidas } from './medidas.js';
 import { CamaraIso } from './camara.js';
 import { crearSala } from './sala.js';
 import { GestorMuebles } from './muebles.js';
@@ -265,7 +266,14 @@ function tieneExterior() {
   return habsCasa().some(h => EXTERIORES[h]);
 }
 
-const TAM_SALON = [[6, 6], [7, 6], [7, 7], [8, 7], [8, 8], [9, 8], [9, 9]];
+const TAM_SALON = [[4, 4], [5, 4], [5, 5], [6, 6], [7, 7], [8, 8], [9, 9]];
+const FILAS_ANTIGUAS = [3, 4, 4, 5, 5, 6, 6];
+
+function migrarTam(e, tenia) {
+  if (tenia === 2) return;
+  e.salonFilas = FILAS_ANTIGUAS[Math.min(6, e.salonFilas || 0)];
+  e.tamV = 2;
+}
 
 function tamHab(i = estado.habActual || 0, e = estado) {
   return i === 0 ? TAM_SALON[Math.min(TAM_SALON.length - 1, e.salonFilas || 0)] : [6, 6];
@@ -274,6 +282,7 @@ function tamHab(i = estado.habActual || 0, e = estado) {
 let anchoVisita = null;
 function aplicarTam() {
   const [ancho, fondo] = visitando && anchoVisita ? anchoVisita : tamHab();
+  ponerMedidas(ancho, fondo);
   sala.redimensionar(ancho, fondo);
   gestor.ajustarTam(ancho, fondo);
   camaraIso.ajustar(ancho, fondo);
@@ -360,6 +369,7 @@ function aplicarRemoto(datos, conflicto = false, inicial = false) {
   const animoAntes = otroYo !== null && estado.animo && estado.animo[otroYo] ? estado.animo[otroYo].t : 0;
   const actividadAntes = (estado.actividad || []).length ? estado.actividad[estado.actividad.length - 1].t : 0;
   for (const [k, v] of Object.entries(datos.estado)) if (!LOCALES.includes(k)) estado[k] = v;
+  migrarTam(estado, datos.estado.tamV);
   if (!inicial && otroYo !== null) {
     const nuevas = (estado.actividad || []).filter(a => a.de === otroYo && a.t > actividadAntes && Date.now() - a.t < 180000).slice(-2);
     const otro = (estado.pareja && estado.pareja.nombres && estado.pareja.nombres[otroYo]) || 'Tu pareja';
@@ -483,11 +493,13 @@ function cargar() {
     datos = JSON.parse(localStorage.getItem(CLAVE));
   } catch (e) {}
   if (!datos) {
-    gestor.anadir('colchon', -5, -5, 0);
-    gestor.anadir('caja', 3, -4, 0);
-    gestor.anadir('caja', 4, -4, 0);
+    estado.tamV = 2;
+    aplicarTam();
+    gestor.anadir('colchon', -4, -4, 0);
+    gestor.anadir('caja', 2, -3, 0);
     gestor.anadir('caja', 3, -3, 0);
-    gestor.anadir('caja', 3, -4, 0, { base: 0.42 });
+    gestor.anadir('caja', 2, -2, 0);
+    gestor.anadir('caja', 2, -3, 0, { base: 0.42 });
     suciedad.anadir('polvo', null, false);
     suciedad.anadir('polvo', null, false);
     suciedad.anadir('telarana', { hueco: 0 }, false);
@@ -505,6 +517,7 @@ function cargar() {
   estado.evento = datos.evento ?? null;
   const MUNDO = ['muebles', 'inventario', 'sala', 'mascotas', 'pedidos', 'suciedad', 't', 'reparaciones'];
   for (const [k, v] of Object.entries(datos)) if (!MUNDO.includes(k) && !(k in estado)) estado[k] = v;
+  migrarTam(estado, datos.tamV);
   aplicarTam();
   for (const m of datos.muebles || []) gestor.anadir(m.id, m.x0, m.z0, m.rot, m);
   inventario.cargar(datos.inventario);
@@ -2010,7 +2023,7 @@ pareja = new Pareja({
   comprar: (id, color, precio) => comprarDirecto(id, color, precio),
   instantanea,
   aplicarRemoto,
-  abrirMas: () => mas.abrir(),
+  abrirMas: () => mas.abrirAjustes(),
   abrirInicio: () => { ui.cerrarHojas(); inicio.mostrar(); },
   alDesconectar: () => { suciedad.genera = true; pintarBotonReaccion(); },
   alConectar: () => { pintarBotonReaccion(); sync.conectarDirecto(); pareja.recordar('pareja', '💑', 'Conectamos nuestras casas'); }
@@ -2021,9 +2034,12 @@ const pareja2 = new Pareja2({
   guardar: () => guardar(),
   refrescarHud: () => refrescarHud(),
   dialogoAbierto: () => dialogoAbierto(),
-  abrirMas: () => abrirNosotros()
+  abrirMas: () => ui.cerrarHojas()
 });
 usos.ctx.pareja2 = pareja2;
+usos.ctx.pintarCuadro = () => mas.pintarNuevo();
+usos.ctx.libro = () => sueno.libro(null);
+mas.ctx.abrirPareja = () => pareja.abrir();
 pintarBotonReaccion();
 sync.conectarDirecto();
 
@@ -2210,7 +2226,6 @@ function abrirObjetivos() {
 
 window.abrirGanar = () => abrirGanar();
 window.abrirObjetivos = () => abrirObjetivos();
-window.abrirNosotros = () => abrirNosotros();
 
 window.extrasMenu = () => {
   const nivel = nivelCasa();
@@ -2218,7 +2233,6 @@ window.extrasMenu = () => {
   const tieneCocina = gestor.muebles.some(m => m.userData.def.id === 'cocina') || (estado.habs || []).some(x => (x.muebles || []).some(d => d.id === 'cocina'));
   return [
     { id: 'juntos', icono: '🎮', texto: 'Jugar juntos', sub: sync && sync.activo ? 'Minijuegos a dúo, cada uno desde su móvil' : 'Conectad vuestras casas para jugar a dúo', bloqueo: bloqueoSi(sync && sync.activo, 'Entrad con vuestra cuenta desde el menú principal'), accion: () => duo.abrir(() => mas.abrir()) },
-    { id: 'nosotros', icono: '💕', texto: 'Nosotros', sub: 'Notas, regalos, preguntas, viajes y recuerdos', insignia: pareja2.pendientePregunta() ? '!' : null, accion: abrirNosotros },
     { id: 'mascotas', icono: '🐾', texto: 'Vuestras mascotas', sub: mascotas.lista.length ? `${mascotas.lista.length} en casa · cómo están` : 'Adoptad una en el mostrador de Pilar', accion: () => ui.abrirRefugio() },
     { id: 'objetivos', icono: '🏆', texto: 'Objetivos', sub: 'Pase del mes, logros y colecciones', insignia: economia.pendientesPase() || null, accion: abrirObjetivos },
     { id: 'casas', icono: '🏗️', texto: 'Obras', sub: subObras(), accion: () => abrirObras(() => mas.abrir()) },
@@ -2595,6 +2609,7 @@ function pintarChipsVida() {
   if (pareja) chips.push(...pareja.chips());
   const ca = pareja2.chipCuentaAtras();
   if (ca) chips.push({ id: 'cuenta', texto: ca, accion: () => pareja2.abrirCuentaAtras() });
+  if (pareja2.pendientePregunta() && gestor.muebles.some(m => m.userData.def.id === 'tarro-preguntas')) chips.push({ id: 'pregunta', texto: '💬 Pregunta del día', accion: () => pareja2.abrirPregunta() });
   if (estado.reto && !estado.reto.terminado) {
     const min = Math.max(0, Math.ceil((estado.reto.fin - Date.now()) / 60000));
     chips.push({ id: 'reto', texto: `🎨 ${min} min`, accion: () => verReto() });
@@ -2752,22 +2767,6 @@ function puntuarReto() {
     if (n === 5) pareja.recordar(null, '🎨', `Decoramos un ${tema.nombre.toLowerCase()} de 5 estrellas`);
   }));
   return true;
-}
-
-function abrirNosotros() {
-  const tiles = [
-    { id: 'pareja', icono: '💑', texto: 'Notas y regalos', sub: 'Notitas en la nevera, regalos, votos y misiones de pareja', accion: () => pareja.abrir() },
-    { id: 'pregunta', icono: '💬', texto: 'Pregunta del día', sub: pareja2.pendientePregunta() ? '¡Hoy toca responder!' : 'Respondida', insignia: pareja2.pendientePregunta() ? '!' : null, accion: () => pareja2.abrirPregunta() },
-    { id: 'quiz', icono: '🎯', texto: '¿Cuánto me conoces?', sub: 'Quiz de pareja', accion: () => pareja2.abrirQuiz() },
-    { id: 'viajes', icono: '✈️', texto: 'Mapa de viajes', sub: `${(estado.viajes || []).length} sitios`, accion: () => pareja2.abrirViajes() },
-    { id: 'cuenta', icono: '⏳', texto: 'Cuenta atrás', sub: pareja2.textoFalta() || 'Para la próxima vez que os veis', accion: () => pareja2.abrirCuentaAtras() },
-    { id: 'metas', icono: '📌', texto: 'Nuestras metas', sub: (estado.metas || []).length ? `${(estado.metas || []).filter(m => m.hecha).length}/${(estado.metas || []).length} cumplidas` : 'Apuntad lo que queréis conseguir', accion: () => pareja2.abrirMetas() },
-    { id: 'recuerdos', icono: '🌳', texto: 'Recuerdos', sub: `${(estado.recuerdos || []).length} momentos`, accion: () => pareja.verRecuerdos() },
-    { id: 'libro', icono: '📖', texto: 'Libro de recuerdos', sub: 'Vuestra historia, página a página', accion: () => sueno.libro(() => abrirNosotros()) },
-    { id: 'capsula', icono: '💌', texto: 'Cápsula del tiempo', sub: `${(estado.capsulas || []).length} mensajes`, accion: () => pareja.verCapsulas() },
-    { id: 'planes', icono: '📅', texto: 'Planes', sub: 'Cenas, viajes, pelis…', accion: () => pareja.verPlanes() }
-  ];
-  abrirHub('Nosotros', tiles);
 }
 
 function aplicarTemporada() {

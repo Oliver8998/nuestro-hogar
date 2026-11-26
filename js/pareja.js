@@ -53,7 +53,7 @@ export class Pareja {
     const l = [];
     for (const n of this.estado.notas || []) {
       if (n.de === yo || this.vistos.has(n.t)) continue;
-      l.push({ id: `nota-${n.t}`, titulo: `Nota de ${this.nombre(n.de)}`, texto: `📝 ${n.texto.length > 40 ? `${n.texto.slice(0, 40)}…` : n.texto}`, noTraducir: true, accion: () => this.verNota(n) });
+      l.push({ id: `nota-${n.t}`, titulo: n.carta ? `Carta de ${this.nombre(n.de)}` : `Nota de ${this.nombre(n.de)}`, texto: n.carta ? '✉️ Te ha escrito una carta' : `📝 ${n.texto.length > 40 ? `${n.texto.slice(0, 40)}…` : n.texto}`, noTraducir: !n.carta, accion: () => this.verNota(n) });
     }
     for (const r of this.estado.regalos || []) {
       if (r.para !== yo || r.abierto) continue;
@@ -72,9 +72,9 @@ export class Pareja {
     this.marcarVisto(n.t);
     sonido.mascota();
     ui.dialogo({
-      titulo: `📝 Nota de ${this.nombre(n.de)}`,
-      html: `<div class="nota-papel">${escapar(n.texto)}</div>`,
-      botones: [{ texto: 'Responder', tipo: 'secundario', accion: () => setTimeout(() => this.escribirNota(), 250) }, { texto: '💕', tipo: 'primario' }]
+      titulo: n.carta ? `✉️ Carta de ${this.nombre(n.de)}` : `📝 Nota de ${this.nombre(n.de)}`,
+      html: `<div class="nota-papel${n.carta ? ' carta-papel' : ''}">${escapar(n.texto)}</div>`,
+      botones: [{ texto: 'Responder', tipo: 'secundario', accion: () => setTimeout(() => (n.carta ? this.escribirCarta() : this.escribirNota()), 250) }, { texto: '💕', tipo: 'primario' }]
     });
     if (this.ctx.chip) this.ctx.chip();
   }
@@ -158,7 +158,7 @@ export class Pareja {
 
   proponer(info, color, precio) {
     if (!this.sync.activo) {
-      this.ctx.ui.aviso('Primero conectad vuestras casas en ✨ Más → Pareja', true);
+      this.ctx.ui.aviso('Para dejar notas, entrad con vuestra cuenta desde el menú principal', true);
       return;
     }
     if (!this.estado.votos) this.estado.votos = [];
@@ -171,7 +171,7 @@ export class Pareja {
 
   regalar(info, color, precio) {
     if (!this.sync.activo) {
-      this.ctx.ui.aviso('Primero conectad vuestras casas en ✨ Más → Pareja', true);
+      this.ctx.ui.aviso('Para dejar notas, entrad con vuestra cuenta desde el menú principal', true);
       return;
     }
     if (this.estado.monedas < precio) {
@@ -205,7 +205,7 @@ export class Pareja {
   escribirNota() {
     const { ui, sonido } = this.ctx;
     if (!this.sync.activo) {
-      ui.aviso('Primero conectad vuestras casas en ✨ Más → Pareja', true);
+      ui.aviso('Para dejar notas, entrad con vuestra cuenta desde el menú principal', true);
       return;
     }
     const { caja } = ui.dialogo({
@@ -227,6 +227,39 @@ export class Pareja {
             this.ctx.guardar();
             sonido.pop();
             ui.aviso('📝 ¡Nota pegada!');
+          }
+        }
+      ]
+    });
+    setTimeout(() => caja.querySelector('textarea').focus(), 250);
+  }
+
+  escribirCarta() {
+    const { ui, sonido } = this.ctx;
+    if (!this.sync.activo) {
+      ui.aviso('Para mandar cartas, entrad con vuestra cuenta desde el menú principal', true);
+      return;
+    }
+    const { caja } = ui.dialogo({
+      titulo: `✉️ Carta para ${this.otro()}`,
+      texto: 'La escribís en el ordenador y sale por la impresora. Le llegará al momento.',
+      html: '<div class="campo"><textarea class="carta-texto" maxlength="600" rows="7" placeholder="Querida…"></textarea></div>',
+      botones: [
+        { texto: 'Cancelar', tipo: 'secundario' },
+        {
+          texto: '🖨️ Imprimir y mandar', tipo: 'primario', accion: c => {
+            const texto = c.querySelector('textarea').value.trim();
+            if (!texto) return;
+            if (!this.estado.notas) this.estado.notas = [];
+            const t = Date.now();
+            this.estado.notas.push({ t, de: this.sync.yo, texto, carta: true });
+            this.estado.notas = this.estado.notas.slice(-12);
+            this.marcarVisto(t);
+            if (window.avisarPareja) window.avisarPareja('nota', '✉️ Te ha escrito una carta');
+            this.recordar(null, '✉️', `${this.nombre(this.sync.yo)} escribió una carta`);
+            this.ctx.guardar();
+            sonido.arreglo();
+            ui.aviso('🖨️ ¡Carta impresa y enviada!');
           }
         }
       ]
@@ -264,7 +297,7 @@ export class Pareja {
     const r = (this.estado.recuerdos || []).slice().reverse();
     this.ctx.ui.abrirGen('Nuestros recuerdos', `
       <p class="gen-intro">Los momentos especiales se apuntan solos. Si ponéis el <b>Árbol de recuerdos</b> (tienda → Deco), le sale una hoja por cada uno.</p>
-      <div class="recuerdos">${r.length ? r.map(x => `<div class="recuerdo"><span>${x.icono}</span><div><b>${escapar(x.texto)}</b><small>${new Date(x.t).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</small></div></div>`).join('') : '<p class="vacio">Todavía no hay recuerdos. ¡A crearlos!</p>'}</div>`, () => (this.sync.activo ? this.abrir() : (window.abrirNosotros || this.ctx.abrirMas)()));
+      <div class="recuerdos">${r.length ? r.map(x => `<div class="recuerdo"><span>${x.icono}</span><div><b>${escapar(x.texto)}</b><small>${new Date(x.t).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</small></div></div>`).join('') : '<p class="vacio">Todavía no hay recuerdos. ¡A crearlos!</p>'}</div>`, null);
   }
 
   alternarDeseo(info, color) {
@@ -292,7 +325,7 @@ export class Pareja {
       <div class="deseos">${lista.length ? lista.map((d, i) => {
         const info = this.ctx.infoItem(d.id);
         return `<button class="deseo" data-i="${i}"><img src="${this.ctx.miniaturas.item(d.id, d.color)}" alt=""><b>${escapar(info.nombre)}</b><small>🎁 Regalar · 🪙 ${info.precio}</small></button>`;
-      }).join('') : `<p class="vacio">${escapar(this.otro())} aún no ha apuntado nada. Se apunta con ❤️ en la tienda.</p>`}</div>`, () => this.abrir());
+      }).join('') : `<p class="vacio">${escapar(this.otro())} aún no ha apuntado nada. Se apunta con ❤️ en la tienda.</p>`}</div>`, null);
     cuerpo.querySelectorAll('.deseo').forEach(b => b.addEventListener('click', () => {
       const d = lista[Number(b.dataset.i)];
       const info = this.ctx.infoItem(d.id);
@@ -309,7 +342,7 @@ export class Pareja {
       <button id="cap-nueva" class="primario">✍️ Guardar un mensaje</button>
       <div class="capsulas">${caps.map(c => c.abrir <= ahora
         ? `<div class="capsula abierta"><span>💌</span><div><b>De ${escapar(this.nombre(c.de))}</b><p>${escapar(c.texto)}</p><small>Escrito el ${new Date(c.creada).toLocaleDateString('es-ES')}</small></div></div>`
-        : `<div class="capsula"><span>🔒</span><div><b>De ${escapar(this.nombre(c.de))}</b><small>Se abre el ${new Date(c.abrir).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })} · faltan ${Math.ceil((c.abrir - ahora) / 86400000)} días</small></div></div>`).join('')}</div>`, () => this.abrir());
+        : `<div class="capsula"><span>🔒</span><div><b>De ${escapar(this.nombre(c.de))}</b><small>Se abre el ${new Date(c.abrir).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })} · faltan ${Math.ceil((c.abrir - ahora) / 86400000)} días</small></div></div>`).join('')}</div>`, null);
     cuerpo.querySelector('#cap-nueva').addEventListener('click', () => {
       ui.dialogo({
         titulo: '⏳ Mensaje para el futuro',
@@ -350,7 +383,7 @@ export class Pareja {
         <div class="fila2"><input id="pl-fecha" type="date" min="${hoy}"><select id="pl-tipo">${Object.entries(TIPOS).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select></div>
         <button id="pl-anadir" class="primario">➕ Apuntar plan</button>
       </div>
-      <div class="planes">${planes.map(p => `<div class="plan"><span>${TIPOS[p.tipo].split(' ')[0]}</span><div><b>${escapar(p.titulo)}</b><small>${new Date(p.fecha + 'T12:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</small></div><button class="borrar" data-id="${p.id}">✕</button></div>`).join('') || '<p class="vacio">No hay planes apuntados.</p>'}</div>`, () => this.abrir());
+      <div class="planes">${planes.map(p => `<div class="plan"><span>${TIPOS[p.tipo].split(' ')[0]}</span><div><b>${escapar(p.titulo)}</b><small>${new Date(p.fecha + 'T12:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</small></div><button class="borrar" data-id="${p.id}">✕</button></div>`).join('') || '<p class="vacio">No hay planes apuntados.</p>'}</div>`, null);
     cuerpo.querySelector('#pl-anadir').addEventListener('click', () => {
       const titulo = cuerpo.querySelector('#pl-titulo').value.trim();
       const fecha = cuerpo.querySelector('#pl-fecha').value;
@@ -420,7 +453,7 @@ export class Pareja {
     if (!this.sync.activo) {
       const cuerpo = ui.abrirGen('Pareja', `
         <p class="gen-intro">Para compartir la casa, entrad con vuestra cuenta desde el menú principal: uno crea la casa y el otro se une con el código.</p>
-        <button id="pj-menu" class="primario">🏠 Ir al menú principal</button>`, () => (window.abrirNosotros || this.ctx.abrirMas)());
+        <button id="pj-menu" class="primario">🏠 Ir al menú principal</button>`, () => this.ctx.abrirMas());
       cuerpo.querySelector('#pj-menu').addEventListener('click', () => this.ctx.abrirInicio());
       return;
     }
@@ -442,7 +475,7 @@ export class Pareja {
       <button id="pj-planes" class="secundario">📅 Nuestros planes (${(this.estado.planes || []).filter(p => p.fecha >= this.hoyISO()).length})</button>
       <button id="pj-recuerdos" class="secundario">🌳 Nuestros recuerdos (${(this.estado.recuerdos || []).length})</button>
       <p class="gen-intro">🎁 Para hacer un regalo o proponer una compra, elegid el objeto en la tienda y usad los botones <b>🎁</b>, <b>🗳️</b> y <b>❤️</b>.</p>
-      `, () => (window.abrirNosotros || this.ctx.abrirMas)());
+      `, () => this.ctx.abrirMas());
     cuerpo.querySelector('#pj-compartir').addEventListener('click', async () => {
       const texto = `Únete a nuestra casa en Our Place 🏠💕 Código: ${this.sync.codigo}\nhttps://oliver8998.github.io/nuestro-hogar/`;
       try {

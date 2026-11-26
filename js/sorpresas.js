@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { enSala } from './medidas.js';
 import { CATALOGO } from './catalogo.js';
 import { crearModeloMascota } from './mascotas.js';
 import { crearExclamacion } from './telefono.js';
@@ -134,7 +135,7 @@ export class Sorpresas {
 
   ponerGato() {
     const partes = crearModeloMascota('gato');
-    partes.raiz.position.set(-1.0, 0, 2.55);
+    partes.raiz.position.set(...(([x, z]) => [x, 0, z])(enSala(-1.0, 2.55)));
     partes.raiz.rotation.y = Math.PI;
     partes.raiz.scale.multiplyScalar(0.67);
     const exc = crearExclamacion(0.3 / partes.raiz.scale.x);

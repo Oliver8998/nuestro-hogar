@@ -105,7 +105,7 @@ export class Mas {
     ];
     const tile = t => `<button class="mas-tile${t.bloqueo ? ' bloqueado' : ''}" data-id="${t.id}"><span>${t.bloqueo ? '🔒' : t.icono}</span><b>${t.texto}</b><small>${t.bloqueo || t.sub}</small>${!t.bloqueo && t.insignia ? `<i class="insignia">${t.insignia}</i>` : ''}</button>`;
     const GRUPOS = [
-      ['💑 Vosotros', ['juntos', 'nosotros', 'mascotas', 'fotos']],
+      ['💑 Vosotros', ['juntos', 'mascotas', 'fotos']],
       ['🏠 La casa', ['casas', 'reformas', 'cocina', 'taller', 'inmobiliaria']],
       ['🏘️ El barrio', ['amigos', 'reto']],
       ['⭐ Progreso', ['nivel', 'objetivos']]
@@ -245,6 +245,7 @@ export class Mas {
     const p = this.pareja();
     const cuerpo = ui.abrirGen('Ajustes', `
       <div class="ajustes">
+        <button id="aj-pareja" class="secundario">💑 Casa compartida: código y misiones de pareja</button>
         <label>Vuestros nombres</label>
         <div class="fila2"><input id="aj-n1" maxlength="14" placeholder="Tú" value="${escapar(p.nombres[0])}"><input id="aj-n2" maxlength="14" placeholder="Tu pareja" value="${escapar(p.nombres[1])}"></div>
         <label>Nombre de la casa</label>
@@ -281,6 +282,7 @@ export class Mas {
         <button id="aj-guardar" class="primario">Guardar</button>
         <button id="aj-menu" class="secundario">🏠 Menú principal</button>
       </div>`, () => this.abrir());
+    cuerpo.querySelector('#aj-pareja').addEventListener('click', () => this.ctx.abrirPareja && this.ctx.abrirPareja());
     cuerpo.querySelector('#aj-sonido').addEventListener('click', e => {
       const on = sonido.alternar();
       e.currentTarget.textContent = on ? '🔊 Sonido activado' : '🔇 Sonido desactivado';

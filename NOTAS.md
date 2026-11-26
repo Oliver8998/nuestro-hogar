@@ -689,3 +689,18 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - Ruleta: el botón ponía "Tirar" (en inglés salía "Throw away"); ahora "¡A girar!".
 - i18n: un texto con emoji delante y "?" al final ya encuentra su traducción.
 - Pruebas hechas: guía completa hasta coger el paquete, todas las pantallas de Más/Tienda/Trabajar/Misiones/Inventario, búsqueda de español sin traducir en inglés, 20 trabajos arrancados con toques al azar y 80 s de juego con mascotas, noche y pedidos: sin errores de JS.
+
+## Piso inicial pequeño y "Nosotros" pasa a objetos (v104)
+- Salón: `TAM_SALON` = 4×4, 5×4, 5×5, 6×6, 7×7, 8×8, 9×9 (antes empezaba en 6×6). Con la cámara de encuadre automático el piso pequeño se ve mucho más cerca. Obras de ampliar renombradas y abaratadas al principio (5×4 nivel 2 · 1200; 5×5 nivel 4 · 2200; 6×6 nivel 7 · 3500; 7×7 nivel 11; 8×8 nivel 16; 9×9 nivel 22).
+- Partidas viejas: `estado.tamV` (2 = medidas nuevas). Si una partida (o lo que llega de la pareja) no lo tiene, `migrarTam` pasa `salonFilas` a la fila nueva con el mismo tamaño o mayor (6×6→6×6, 7×6→7×7…), así nadie pierde espacio.
+- Posiciones pensadas para 6×6 ahora se adaptan: `js/medidas.js` (`ponerMedidas`, `enSala`) para el gato de la puerta, Robi, visitas, gotera y decoraciones de planes; desperfectos (tabla, mancha, cucarachas, grietas, humedad), teléfono (-1,55) y cartel (-1, 2,15) recolocados para 4×4. Mobiliario inicial: colchón (-4,-4) y cajas en (2..3, -3..-2).
+- Quitado el apartado "Nosotros" de Más. Todo se hace con objetos que se compran en la nueva pestaña **💕 Pareja** de la tienda (los objetos `pareja: true` salen siempre ahí y ya no en el mostrador que rota) y se tocan en casa (`usos.opciones`):
+  - Ordenador portátil + Impresora → ✉️ Carta (`pareja.escribirCarta`: carta larga, llega como mensaje "Carta de X", papel de rayas). Si falta uno de los dos, avisa.
+  - Caballete de pintar → 🎨 Pintar (`mas.pintarNuevo`).
+  - Calendario de mesa → ⏳ Cuenta atrás y 📅 Planes.
+  - Tarro de preguntas → 💬 Pregunta del día (con ❗ si toca; si el tarro está en casa también llega al teléfono) y 🎯 Quiz.
+  - Tablón de corcho → 📌 Metas y ❤️ Deseos.
+  - Cofre del tiempo → 💌 Cápsula del tiempo.
+  - Árbol de recuerdos → 📜 Recuerdos y 📖 Libro; Mapa del mundo → ✈️ Viajes; Nevera → 📝 Notas (como antes).
+  - Cada objeto lleva en la tienda un chip 💡 con para qué sirve (`uso`).
+- El código de la casa y las misiones de pareja están en Ajustes → "💑 Casa compartida".

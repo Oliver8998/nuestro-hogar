@@ -49,7 +49,7 @@ export function textoCambio(t = Date.now()) {
 export function mostradorActual({ puede = d => !d.nivel, imprescindibles = [] } = {}) {
   const periodo = periodoMostrador();
   const r = generador(periodo * 7919 + 13);
-  const disponibles = CATALOGO.filter(d => d.enTienda !== false && !d.temporada && puede(d));
+  const disponibles = CATALOGO.filter(d => d.enTienda !== false && !d.temporada && !d.pareja && puede(d));
   const de = cat => barajar(disponibles.filter(d => d.categoria === cat), r);
   const muebles = de('muebles');
   const deco = de('deco');

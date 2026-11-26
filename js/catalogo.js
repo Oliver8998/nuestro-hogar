@@ -370,13 +370,70 @@ export const CATALOGO = [
     [0.5, 0.4, 0.5, 0.3, 1.4, 0.15, 0xf9cbd6, 'esfera'],
     [0.5, 0.4, 0.5, -0.3, 1.45, -0.1, 0xf3a6ba, 'esfera']
   ]},
-  { id: 'ordenador', categoria: 'deco', nombre: 'Ordenador portátil', precio: 260, ancho: 1, fondo: 1, ordenador: true, piezas: [
+  { id: 'ordenador', categoria: 'deco', pareja: true, uso: 'Teletrabajo y, con una impresora, cartas para tu pareja', nombre: 'Ordenador portátil', precio: 260, ancho: 1, fondo: 1, ordenador: true, piezas: [
     [0.36, 0.02, 0.26, 0, 0.01, 0.02, 0x9aa0a6, { metal: 0.4, rugosidad: 0.4 }],
     [0.34, 0.005, 0.22, 0, 0.022, 0.02, 0x3d3d3d],
     [0.36, 0.24, 0.015, 0, 0.13, -0.11, 0x9aa0a6, { rx: -0.2, metal: 0.4, rugosidad: 0.4 }],
     [0.32, 0.2, 0.005, 0, 0.13, -0.1, 0x223040, { rx: -0.2 }]
   ], encendible: { piezas: [3], brillo: 0x7fb8e8, luz: 0.25, intensidad: 0.6, colorLuz: 0x9fd0ff, inicial: false },
   colores: { grupos: [[0, 2]], paleta: [[0x9aa0a6], [0xf2b8c6], [0x3d3d3d], [0xd9c27a]] }},
+
+  { id: 'impresora', categoria: 'deco', pareja: true, uso: 'Junto al ordenador, imprime cartas para tu pareja', nombre: 'Impresora', precio: 70, ancho: 1, fondo: 1, piezas: [
+    [0.38, 0.14, 0.3, 0, 0.07, 0, 0xe8e6e1, { rugosidad: 0.5 }],
+    [0.32, 0.02, 0.12, 0, 0.145, -0.07, 0x3d3d3d],
+    [0.26, 0.2, 0.005, 0, 0.22, -0.11, 0xffffff, { rx: -0.35 }],
+    [0.3, 0.02, 0.12, 0, 0.045, 0.19, 0xd0cec8],
+    [0.24, 0.004, 0.1, 0, 0.058, 0.19, 0xffffff],
+    [0.04, 0.02, 0.01, 0.13, 0.1, 0.152, 0x6cc36a]
+  ], colores: { grupos: [[0]], paleta: [[0xe8e6e1], [0x3d3d3d], [0xf2b8c6], [0x9fc4e0]] }},
+  { id: 'caballete', categoria: 'deco', pareja: true, uso: 'Pintad un cuadro para colgarlo en casa', nombre: 'Caballete de pintar', precio: 90, ancho: 1, fondo: 1, piezas: [
+    [0.04, 1.5, 0.04, -0.24, 0.74, 0.06, 0x9c6b45, { rz: 0.14, rx: -0.08 }],
+    [0.04, 1.5, 0.04, 0.24, 0.74, 0.06, 0x9c6b45, { rz: -0.14, rx: -0.08 }],
+    [0.04, 1.4, 0.04, 0, 0.68, -0.22, 0x9c6b45, { rx: 0.32 }],
+    [0.62, 0.04, 0.1, 0, 0.6, 0.12, 0x9c6b45],
+    [0.56, 0.62, 0.03, 0, 0.94, 0.11, 0xf7f3ea, { rx: -0.08 }],
+    [0.16, 0.12, 0.006, -0.1, 1.04, 0.128, 0xe07a8a, { rx: -0.08 }],
+    [0.12, 0.1, 0.006, 0.12, 0.88, 0.128, 0x7fb8e8, { rx: -0.08 }],
+    [0.1, 0.08, 0.006, -0.02, 0.8, 0.128, 0xf2c94c, { rx: -0.08 }]
+  ]},
+  { id: 'calendario', categoria: 'deco', pareja: true, uso: 'Cuenta atrás para veros y vuestros planes', nombre: 'Calendario de mesa', precio: 35, ancho: 1, fondo: 1, piezas: [
+    [0.28, 0.22, 0.015, 0, 0.1, 0.035, 0xf7f3ea, { rx: -0.32 }],
+    [0.28, 0.22, 0.015, 0, 0.1, -0.035, 0xb79c7e, { rx: 0.32 }],
+    [0.28, 0.05, 0.02, 0, 0.19, 0.008, 0xd9534f, { rx: -0.32 }],
+    [0.1, 0.08, 0.004, 0, 0.09, 0.07, 0x3d3d3d, { rx: -0.32 }],
+    [0.04, 0.03, 0.03, -0.08, 0.215, 0, 0x8a8f95, 'cil', { rz: 1.57 }],
+    [0.04, 0.03, 0.03, 0.08, 0.215, 0, 0x8a8f95, 'cil', { rz: 1.57 }]
+  ], colores: { grupos: [[2]], paleta: [[0xd9534f], [0xf2b8c6], [0x7fb8e8], [0x6cc36a]] }},
+  { id: 'tarro-preguntas', categoria: 'deco', pareja: true, uso: 'Una pregunta para los dos cada día y el quiz de pareja', nombre: 'Tarro de preguntas', precio: 30, ancho: 1, fondo: 1, piezas: [
+    [0.2, 0.26, 0.2, 0, 0.13, 0, 0xcfe8f0, 'cil', { transparente: 0.45, rugosidad: 0.1 }],
+    [0.21, 0.04, 0.21, 0, 0.28, 0, 0xd9a441, 'cil'],
+    [0.07, 0.04, 0.05, 0.03, 0.04, 0.02, 0xf2b8c6, { ry: 0.5 }],
+    [0.07, 0.04, 0.05, -0.04, 0.07, -0.02, 0xfff1a8, { ry: -0.4 }],
+    [0.07, 0.04, 0.05, 0.01, 0.11, 0.04, 0xb8e0c8, { ry: 1.1 }],
+    [0.07, 0.04, 0.05, -0.02, 0.15, -0.03, 0xc9b8f0, { ry: 0.2 }],
+    [0.14, 0.05, 0.005, 0, 0.13, 0.101, 0xfff7ec]
+  ]},
+  { id: 'corcho', categoria: 'deco', pareja: true, uso: 'Vuestras metas y la lista de deseos', nombre: 'Tablón de corcho', precio: 55, ancho: 2, fondo: 1, piezas: [
+    [0.04, 1.3, 0.04, -0.38, 0.62, 0.08, 0x8a5a3c, { rx: -0.12 }],
+    [0.04, 1.3, 0.04, 0.38, 0.62, 0.08, 0x8a5a3c, { rx: -0.12 }],
+    [0.04, 1.2, 0.04, 0, 0.6, -0.2, 0x8a5a3c, { rx: 0.25 }],
+    [0.92, 0.62, 0.04, 0, 1.02, 0.02, 0x8a5a3c, { rx: -0.12 }],
+    [0.84, 0.54, 0.02, 0, 1.02, 0.045, 0xc99a63, { rx: -0.12 }],
+    [0.18, 0.16, 0.005, -0.25, 1.1, 0.062, 0xfff1a8, { rx: -0.12, rz: 0.08 }],
+    [0.16, 0.18, 0.005, 0.02, 0.98, 0.062, 0xf2b8c6, { rx: -0.12, rz: -0.06 }],
+    [0.2, 0.14, 0.005, 0.26, 1.08, 0.062, 0xb8e0c8, { rx: -0.12, rz: 0.05 }],
+    [0.04, 0.04, 0.04, -0.25, 1.17, 0.07, 0xd9534f, 'esfera'],
+    [0.04, 0.04, 0.04, 0.02, 1.06, 0.07, 0x4a90d9, 'esfera'],
+    [0.04, 0.04, 0.04, 0.26, 1.14, 0.07, 0xf2c94c, 'esfera']
+  ]},
+  { id: 'cofre', categoria: 'deco', pareja: true, uso: 'Cápsula del tiempo: mensajes que se abren en el futuro', nombre: 'Cofre del tiempo', precio: 65, ancho: 1, fondo: 1, piezas: [
+    [0.5, 0.26, 0.34, 0, 0.13, 0, 0x8a5a3c],
+    [0.52, 0.1, 0.36, 0, 0.31, 0, 0x9c6b45],
+    [0.04, 0.37, 0.37, -0.16, 0.18, 0, 0xd9c27a, { metal: 0.6, rugosidad: 0.35 }],
+    [0.04, 0.37, 0.37, 0.16, 0.18, 0, 0xd9c27a, { metal: 0.6, rugosidad: 0.35 }],
+    [0.08, 0.1, 0.03, 0, 0.25, 0.18, 0xd9c27a, { metal: 0.6, rugosidad: 0.35 }],
+    [0.06, 0.06, 0.01, 0, 0.4, 0.13, 0xe07a8a, { rx: -0.6 }]
+  ]},
 
   { id: 'huerto', categoria: 'deco', nombre: 'Huerto en jardinera', precio: 180, ancho: 2, fondo: 1, huerto: true, piezas: [
     [0.9, 0.3, 0.42, 0, 0.15, 0, 0x9c6b45],
@@ -386,7 +443,7 @@ export const CATALOGO = [
     [0.08, 0.08, 0.08, 0.2, 0.45, 0.06, 0xe05050, 'esfera']
   ], colores: { grupos: [[0]], paleta: [[0x9c6b45], [0xf2efe9], [0x7fa3c6], [0x6d4c3d]] }},
 
-  { id: 'arbol-recuerdos', categoria: 'deco', nombre: 'Árbol de recuerdos', precio: 80, ancho: 2, fondo: 2, piezas: [
+  { id: 'arbol-recuerdos', categoria: 'deco', pareja: true, uso: 'Guarda vuestros recuerdos y el libro de vuestra historia', nombre: 'Árbol de recuerdos', precio: 80, ancho: 2, fondo: 2, piezas: [
     [0.4, 0.3, 0.4, 0, 0.15, 0, 0xd9c29a, 'cil'],
     [0.08, 0.8, 0.08, 0, 0.7, 0, 0x7a5a3a, 'cil'],
     [0.7, 0.55, 0.7, 0, 1.25, 0, 0x7cbf6a, 'esfera', { transparente: 0.35 }]
@@ -455,7 +512,7 @@ export const CATALOGO = [
     [0.45, 0.1, 0.45, 0, 0.82, 0, 0xd8d0c4, 'cil']
   ]},
 
-  { id: 'mapa-mundi', categoria: 'deco', nombre: 'Mapa del mundo', precio: 120, ancho: 2, fondo: 1, piezas: [
+  { id: 'mapa-mundi', categoria: 'deco', pareja: true, uso: 'Marcad los sitios a los que habéis viajado', nombre: 'Mapa del mundo', precio: 120, ancho: 2, fondo: 1, piezas: [
     [0.04, 1.3, 0.04, -0.35, 0.62, 0.08, 0x8a5a3c, { rx: -0.12 }],
     [1.0, 0.55, 0.03, 0, 1.0, 0.02, 0xbfe0ee, { rx: -0.12 }],
     [0.04, 1.3, 0.04, 0.35, 0.62, 0.08, 0x8a5a3c, { rx: -0.12 }],

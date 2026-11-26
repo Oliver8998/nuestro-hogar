@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { enSala } from './medidas.js';
 import { crearPersonaje, animarPersonaje } from './personajes.js';
 import { liberar, modeloSuelto } from './modelos.js';
 
@@ -605,7 +606,7 @@ export class Suciedad {
     if (this.tVisita > 0 || !this.lista.length) return;
     this.tVisita = 75;
     const malla = crearPersonaje('robi');
-    malla.position.set(1.0, 0, 2.3);
+    malla.position.set(...(([x, z]) => [x, 0, z])(enSala(1.0, 2.3)));
     malla.scale.setScalar(0.01);
     malla.traverse(o => { if (o.isMesh) o.castShadow = true; });
     this.escena.add(malla);

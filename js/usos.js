@@ -1,4 +1,5 @@
 import { paga } from './balance.js';
+import { enSala } from './medidas.js';
 import * as THREE from 'three';
 import { dibujarMapa } from './pareja2.js';
 
@@ -327,7 +328,29 @@ export class Usos {
     }
     if (def.id === 'arbol-recuerdos' && this.ctx.pareja) {
       ops.push({ icono: '📜', texto: 'Recuerdos', accion: () => this.ctx.pareja.verRecuerdos() });
+      if (this.ctx.libro) ops.push({ icono: '📖', texto: 'Libro', accion: () => this.ctx.libro() });
     }
+    const hay = id => this.ctx.gestor.muebles.some(x => x.userData.def.id === id);
+    const pj = this.ctx.pareja;
+    const pj2 = this.ctx.pareja2;
+    if ((def.id === 'ordenador' || def.id === 'impresora') && pj) {
+      const falta = def.id === 'ordenador' ? 'impresora' : 'ordenador';
+      ops.push({ icono: '✉️', texto: 'Carta', accion: () => (hay(falta) ? pj.escribirCarta() : ui.aviso(falta === 'impresora' ? '🖨️ Para imprimir la carta os falta una impresora (Tienda → Pareja)' : '💻 Para escribir la carta os falta el ordenador (Tienda → Pareja)', true)) });
+    }
+    if (def.id === 'caballete' && this.ctx.pintarCuadro) ops.push({ icono: '🎨', texto: 'Pintar', accion: () => this.ctx.pintarCuadro() });
+    if (def.id === 'calendario' && pj && pj2) {
+      ops.push({ icono: '⏳', texto: 'Cuenta atrás', accion: () => pj2.abrirCuentaAtras() });
+      ops.push({ icono: '📅', texto: 'Planes', accion: () => pj.verPlanes() });
+    }
+    if (def.id === 'tarro-preguntas' && pj2) {
+      ops.push({ icono: '💬', texto: pj2.pendientePregunta() ? 'Pregunta ❗' : 'Pregunta', accion: () => pj2.abrirPregunta() });
+      ops.push({ icono: '🎯', texto: 'Quiz', accion: () => pj2.abrirQuiz() });
+    }
+    if (def.id === 'corcho' && pj && pj2) {
+      ops.push({ icono: '📌', texto: 'Metas', accion: () => pj2.abrirMetas() });
+      ops.push({ icono: '❤️', texto: 'Deseos', accion: () => pj.verDeseos() });
+    }
+    if (def.id === 'cofre' && pj) ops.push({ icono: '💌', texto: 'Cápsula', accion: () => pj.verCapsulas() });
     if (def.id === 'radio' && this.estado.pareja && this.estado.pareja.cancion) {
       ops.push({ icono: '💕', texto: 'Nuestra canción', accion: () => { window.open(this.estado.pareja.cancion, '_blank'); this.ctx.registrar('cancion'); } });
     }
@@ -499,7 +522,7 @@ export class Usos {
         pegatina.rotation.x = Math.PI / 2;
         pegatina.position.set(0.08, 0.35, 0.115);
         g.add(cuerpo, asa, ruedas, pegatina);
-        g.position.set(1.6, 0, 2.6);
+        g.position.set(...(([x, z]) => [x, 0, z])(enSala(1.6, 2.6)));
         g.rotation.y = 0.3;
       } else if (tipo === 'cena' || tipo === 'cine') {
         const base = buscar(tipo === 'cena' ? ['mesa', 'escritorio', 'mesita'] : ['mesa', 'mesita', 'sofa', 'tele']);
@@ -538,7 +561,7 @@ export class Usos {
           hilo.position.set(k * 0.18 - 0.25, 0.75 + (k % 2) * 0.1, (k % 2) * 0.1);
           g.add(globo, hilo);
         }
-        g.position.set(-2.4, 0, -2.4);
+        g.position.set(...(([x, z]) => [x, 0, z])(enSala(-2.4, -2.4)));
       }
       g.traverse(o => { if (o.isMesh) o.castShadow = true; });
       return g;

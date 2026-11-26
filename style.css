@@ -3826,3 +3826,6 @@ body.modo-foto #hud, body.modo-foto #lateral, body.modo-foto #aviso, body.modo-f
 /* Viñeta del efecto maqueta */
 #vineta { position: fixed; inset: 0; pointer-events: none; z-index: 0; background: radial-gradient(ellipse 75% 65% at 50% 46%, rgba(0,0,0,0) 55%, rgba(35,22,12,var(--vk, 0.25)) 100%); transition: opacity .6s; }
 #vineta.oculta { opacity: 0; }
+
+.nota-papel.carta-papel { background: #fffdf6; background-image: repeating-linear-gradient(transparent 0 23px, #e9e1d0 23px 24px); line-height: 24px; text-align: left; white-space: pre-wrap; font-family: 'Georgia', serif; transform: none; padding: 14px 16px; }
+textarea.carta-texto { font-family: 'Georgia', serif; line-height: 1.5; }

@@ -166,7 +166,7 @@ export function crearSala(escena) {
     toque.position.y = 0.12;
     const modelo = modeloSuelto('sucio-cucaracha');
     grupo.add(modelo ?? cuerpo, toque);
-    grupo.position.set((Math.random() * 2 - 1) * 2.6, 0, (Math.random() * 2 - 1) * 2.6);
+    grupo.position.set((Math.random() * 2 - 1) * 1.5, 0, (Math.random() * 2 - 1) * 1.5);
     [cuerpo, toque].forEach(m => { m.userData.desperfecto = cucas; });
     if (modelo) modelo.traverse(m => { m.userData.desperfecto = cucas; });
     sala.add(grupo);
@@ -176,7 +176,7 @@ export function crearSala(escena) {
 
   const manchaSuelo = mancha(0.45, 0x3d2c1d, 0.45);
   manchaSuelo.rotation.x = -Math.PI / 2;
-  manchaSuelo.position.set(-1, 0.003, 1.4);
+  manchaSuelo.position.set(-0.8, 0.003, 0.9);
   sala.add(manchaSuelo);
   nuevoDesperfecto(
     { id: 'mancha', descripcion: 'Una mancha reseca en el suelo que no sale ni frotando.', mensaje: '¡Suelo limpio!', nombre: 'Mancha del suelo', material: 'limpiador' },
@@ -186,7 +186,7 @@ export function crearSala(escena) {
   );
 
   const tablaRota = caja(0.48, 0.1, 1.2, 0x6a4e34);
-  tablaRota.position.set(1.25, 0.03, 1.6);
+  tablaRota.position.set(0.9, 0.03, 1.0);
   tablaRota.rotation.x = -0.12;
   sala.add(tablaRota);
   nuevoDesperfecto(
@@ -260,7 +260,7 @@ export function crearSala(escena) {
   ));
 
   const grietas = [];
-  [[-1.6, 1.9, 0.6, -0.7], [-1.3, 1.55, 0.4, 0.5], [-1.45, 1.2, 0.5, -0.4]].forEach(([x, y, largo, ang]) => {
+  [[-0.7, 1.9, 0.6, -0.7], [-0.4, 1.55, 0.4, 0.5], [-0.55, 1.2, 0.5, -0.4]].forEach(([x, y, largo, ang]) => {
     const grieta = caja(largo, 0.02, 0.005, 0x6a604e);
     grieta.castShadow = false;
     grieta.material.transparent = true;
@@ -270,7 +270,7 @@ export function crearSala(escena) {
     grietas.push(grieta);
   });
   const zonaGrietas = zona(new THREE.PlaneGeometry(0.8, 1.0));
-  zonaGrietas.position.set(-1.45, 1.55, cara + 0.003);
+  zonaGrietas.position.set(-0.55, 1.55, cara + 0.003);
   paredes[0].add(zonaGrietas);
   const desGrietas = nuevoDesperfecto(
     { id: 'grietas', descripcion: 'La pared está llena de grietas. Hay que taparlas antes de pintarla.', mensaje: '¡Grietas tapadas!', nombre: 'Grietas', material: 'masilla', pared: 0 },
@@ -282,7 +282,7 @@ export function crearSala(escena) {
   paredes[0].userData.requisito = desGrietas;
 
   const humedades = [];
-  [[1.6, 0.4, 0.5, 0.45], [2.1, 0.25, 0.35, 0.35], [1.2, 0.75, 0.3, 0.3], [-2.2, 2.2, 0.4, 0.3]].forEach(([x, y, r, o]) => {
+  [[0.9, 0.4, 0.5, 0.45], [1.3, 0.25, 0.35, 0.35], [0.5, 0.75, 0.3, 0.3], [-1.4, 2.1, 0.4, 0.3]].forEach(([x, y, r, o]) => {
     const m = mancha(r, 0x6e6b4c, o);
     m.position.set(x, y, cara);
     paredes[2].add(m);
@@ -538,9 +538,11 @@ export function crearSala(escena) {
       const p = c.grupo.position;
       p.x += Math.sin(c.angulo) * c.velocidad * dt;
       p.z += Math.cos(c.angulo) * c.velocidad * dt;
-      if (Math.abs(p.x) > 2.8 || Math.abs(p.z) > 2.8) {
-        p.x = THREE.MathUtils.clamp(p.x, -2.8, 2.8);
-        p.z = THREE.MathUtils.clamp(p.z, -2.8, 2.8);
+      const lx = anchoActual / 2 - 0.2;
+      const lz = fondoActual / 2 - 0.2;
+      if (Math.abs(p.x) > lx || Math.abs(p.z) > lz) {
+        p.x = THREE.MathUtils.clamp(p.x, -lx, lx);
+        p.z = THREE.MathUtils.clamp(p.z, -lz, lz);
         c.angulo += Math.PI;
       }
       c.grupo.rotation.y = c.angulo;
