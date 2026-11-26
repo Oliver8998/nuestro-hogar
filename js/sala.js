@@ -657,25 +657,31 @@ export function crearSala(escena) {
     patio = new THREE.Group();
     patio.name = 'patio';
     const borde = GROSOR + 0.1;
-    const losa = caja(E + borde, 0.4, F + borde * 2, 0xb9a48c);
-    losa.position.set(mx + (E + borde) / 2, -0.3, 0);
-    losa.castShadow = false;
+    const losa = caja(E + borde, 0.26, F + borde * 2, 0xb9a48c);
+    losa.position.set(mx + (E + borde) / 2, -0.18, 0);
     patio.add(losa);
-    const mzr0 = fondoActual / 2 + borde;
-    if (mzr0 - mz - borde > 0.01) {
-      for (const sz of [-1, 1]) {
-        const largo = mzr0 - mz - borde;
-        const azotea = caja(E + borde, 0.36, largo, 0xa79c90);
-        azotea.position.set(mx + (E + borde) / 2, -0.32, sz * (mz + borde + largo / 2));
-        azotea.castShadow = false;
-        patio.add(azotea);
-        const pretil = caja(0.12, 0.3, largo, 0xb9a48c);
-        pretil.position.set(mx + E + borde - 0.06, 0.0, sz * (mz + borde + largo / 2));
-        patio.add(pretil);
-        const pretil2 = caja(E + borde, 0.3, 0.12, 0xb9a48c);
-        pretil2.position.set(mx + (E + borde) / 2, 0.0, sz * (mzr0 - 0.06));
-        patio.add(pretil2);
-      }
+    const canto = caja(E + borde + 0.04, 0.06, F + borde * 2 + 0.04, 0xe9dfd2);
+    canto.position.set(mx + (E + borde) / 2 + 0.02, -0.06, 0);
+    canto.castShadow = false;
+    patio.add(canto);
+    const matMensula = new THREE.MeshStandardMaterial({ color: 0x6a6f75, roughness: 0.5, metalness: 0.4 });
+    const fachada = mx + GROSOR + 0.1;
+    const alcance = Math.min(E * 0.6, 1.6);
+    for (const sz of [-1, 1]) {
+      const x0 = fachada;
+      const y0 = -1.1;
+      const x1 = fachada + alcance;
+      const y1 = -0.32;
+      const largo = Math.hypot(x1 - x0, y1 - y0);
+      const puntal = new THREE.Mesh(new THREE.BoxGeometry(largo, 0.07, 0.07), matMensula);
+      puntal.position.set((x0 + x1) / 2, (y0 + y1) / 2, sz * (F / 2 - 0.12));
+      puntal.rotation.z = Math.atan2(y1 - y0, x1 - x0);
+      puntal.castShadow = true;
+      const tirante = new THREE.Mesh(new THREE.BoxGeometry(alcance, 0.06, 0.07), matMensula);
+      tirante.position.set(fachada + alcance / 2, -0.34, sz * (F / 2 - 0.12));
+      const placa = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.9, 0.16), matMensula);
+      placa.position.set(fachada + 0.015, -0.75, sz * (F / 2 - 0.12));
+      patio.add(puntal, tirante, placa);
     }
     const tex = texturaPatio(tipo);
     tex.repeat.set(E / (tipo === 'terraza' ? 1 : 2), F / (tipo === 'terraza' ? 1 : 2));

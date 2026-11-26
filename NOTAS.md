@@ -746,3 +746,6 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - Ya nadie empieza con patio: `tipoPatio()` solo mira `estado.patio` (obra Terraza). Antes, quien tenía el "Jardín para el perro" veía un patio 2×2 sin haberlo comprado. Ese servicio sale de la tienda (`enTienda: false`); los perros y compañía hacen sus cosas fuera si hay terraza (`suciedad.jardin = jardin antiguo || patio`).
 - La pared del lado de la terraza ya no desaparece: se construye con un hueco del ancho del patio (`userData.hueco`, tramos a los lados y dintel a 2,25 m, también en el zócalo), sigue las reglas normales de paredes que se ocultan y lleva la pintura/papel de siempre. En el hueco va la cristalera (vidrio a los lados, paso de 1,5 m en el centro, marco, dintel y umbral), visible solo cuando esa pared se ve.
 - Cuadros y objetos de pared que caigan en el hueco no se dibujan (`sala.enHueco`).
+
+## La terraza es un balcón que sale del edificio (v113)
+- El edificio ya no se ensancha bajo la terraza: `edificio.construir(ancho, fondo, extraX)` mantiene el bloque del tamaño del piso (`raiz.position.x = 0`) y solo usa `extraX` para dejar libre ese lado al colocar edificios vecinos. Debajo del balcón no hay pisos: losa de 26 cm con canto claro y dos ménsulas metálicas (puntal, tirante y placa) contra la fachada. Quitada la azotea de los lados.

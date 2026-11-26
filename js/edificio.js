@@ -343,10 +343,11 @@ export class Edificio {
     this.t = 0;
   }
 
-  construir(ancho, fondo) {
-    const clave = `${ancho}x${fondo}`;
+  construir(ancho, fondo, extraX = 0) {
+    const clave = `${ancho}x${fondo}+${extraX}`;
     if (this.medidas === clave) return;
     this.medidas = clave;
+    this.extraX = extraX;
     this.limpiar();
     const W = ancho + GROSOR * 2 + 0.2;
     const D = fondo + GROSOR * 2 + 0.2;
@@ -531,7 +532,7 @@ export class Edificio {
     const xC = this.xCalle;
     const ocupado = [];
     const choca = (x0, x1, z0, z1) => {
-      if (x1 > -W / 2 - 3.2 && x0 < W / 2 + 3.2 && z1 > -D / 2 - 3.2 && z0 < D / 2 + 3.2) return true;
+      if (x1 > -W / 2 - 3.2 && x0 < W / 2 + 3.2 + (this.extraX || 0) && z1 > -D / 2 - 3.2 && z0 < D / 2 + 3.2) return true;
       for (const c of [zC, zC - 44]) if (z1 > c - ANCHO_CALLE / 2 - ACERA && z0 < c + ANCHO_CALLE / 2 + ACERA) return true;
       for (const c of [xC, xC + 46]) if (x1 > c - ANCHO_CALLE / 2 - ACERA && x0 < c + ANCHO_CALLE / 2 + ACERA) return true;
       return ocupado.some(o => x1 > o[0] && x0 < o[1] && z1 > o[2] && z0 < o[3]);

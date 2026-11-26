@@ -313,8 +313,8 @@ function aplicarTam() {
   sala.ponerPatio(patio ? patio.tipo : null, E, patio ? patio.fondo : 0);
   gestor.ajustarTam(ancho, fondo, E, patio ? patio.fondo : 0);
   camaraIso.ajustar(ancho, fondo, E);
-  edificio.construir(ancho + E, fondo);
-  edificio.raiz.position.x = E / 2;
+  edificio.construir(ancho, fondo, E);
+  edificio.raiz.position.x = 0;
   suciedad.jardin = !!estado.jardin || !!estado.patio;
   entregas.desplazarZ(fondo / 2 - 3);
   if (casa2) casa2.tiras.forEach((t, i) => { t.scale.x = (sala.largoPared(i) + 0.2) / 6.2; });
