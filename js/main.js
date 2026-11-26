@@ -163,8 +163,8 @@ entregas.puntoEspera = k => {
   n.y = 0;
   n.normalize();
   const lado = new THREE.Vector3(-n.z, 0, n.x);
-  const desp = [0, 0.7, -0.7, 1.4, -1.4][k % 5];
-  return centro.addScaledVector(n, 0.45).addScaledVector(lado, desp).setY(centro.y + 0.22 + Math.floor(k / 5) * 0.5);
+  const desp = [0, 0.45, -0.45, 0.9, -0.9][k % 5];
+  return centro.addScaledVector(n, 0.45).addScaledVector(lado, desp).setY(centro.y - 0.05 + Math.floor(k / 5) * 0.5);
 };
 
 const suciedad = new Suciedad(escena, {
@@ -2824,6 +2824,23 @@ function redimensionar() {
   const h = window.innerHeight;
   renderer.setSize(w, h, false);
   camaraIso.redimensionar(w / h);
+  medirMargenes();
+}
+
+let tMargenes = 0;
+function medirMargenes() {
+  const h = window.innerHeight;
+  let arriba = 0;
+  for (const sel of ['#hud .pastilla.casa', '#hud .hud-derecha .moneda']) {
+    const el = document.querySelector(sel);
+    const r = el ? el.getBoundingClientRect() : null;
+    if (r && r.height > 0 && r.bottom < h * 0.3) arriba = Math.max(arriba, r.bottom + 6);
+  }
+  let abajo = 0;
+  const lat = document.getElementById('lateral');
+  const r = lat ? lat.getBoundingClientRect() : null;
+  if (r && r.height > 0 && r.width > r.height && r.top > h * 0.6) abajo = h - r.top + 6;
+  camaraIso.ponerMargenes(arriba, abajo, h);
 }
 
 window.addEventListener('resize', redimensionar);
@@ -3049,6 +3066,11 @@ renderer.setAnimationLoop(() => {
   gestor.actualizar(dt);
   interacciones.actualizar(dt);
   mascotas.actualizar(dt);
+  tMargenes -= dt;
+  if (tMargenes <= 0) {
+    tMargenes = 0.5;
+    medirMargenes();
+  }
   entregas.ponerCapa(sala.paredes[0].visible && !sala.esExterior() ? 2 : 0);
   entregas.actualizar(dt);
   suciedad.visibilidadParedes(sala.visibles());

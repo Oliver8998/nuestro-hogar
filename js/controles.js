@@ -299,6 +299,7 @@ export class Controles {
     const p = this.punteros.get(e.pointerId);
     if (!p) return;
     const dx = e.clientX - p.x;
+    const dy = e.clientY - p.y;
     p.x = e.clientX;
     p.y = e.clientY;
     const lejos = Math.hypot(e.clientX - p.xIni, e.clientY - p.yIni) > 8;
@@ -324,7 +325,9 @@ export class Controles {
         this.cam.agarrar();
       }
     } else if (this.modo === 'rotar') {
-      if (dx !== 0) {
+      if (this.cam.ampliada()) {
+        if (dx !== 0 || dy !== 0) this.cam.desplazar(dx, dy, this.canvas.getBoundingClientRect().width);
+      } else if (dx !== 0) {
         this.cam.rotar(-dx * 0.008);
         this.tMovimiento = performance.now();
       }
@@ -396,7 +399,9 @@ export class Controles {
         this.eventos.alSeleccionarMascota(null);
         const u = this.ultimoToque;
         if (ahora - u.t < 320 && Math.hypot(e.clientX - u.x, e.clientY - u.y) < 30) {
-          this.cam.reiniciar();
+          const punto = this.puntoSuelo(e.clientX, e.clientY);
+          if (this.cam.ampliada() || !punto) this.cam.reiniciar();
+          else this.cam.acercarA(punto);
           this.ultimoToque = { t: 0, x: 0, y: 0 };
         } else {
           this.ultimoToque = { t: ahora, x: e.clientX, y: e.clientY };

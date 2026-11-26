@@ -150,7 +150,7 @@ export class Sueno {
     const zoomAntes = cam.zoomObj;
     cam.reiniciar();
     cam.libre = true;
-    cam.zoomObj = 0.85;
+    cam.zoomObj = (cam.zoomFit || 1.2) * 0.7;
     this.ctx.sonido && this.ctx.sonido.premio();
     let vivo = true;
     let ultimo = performance.now();
@@ -181,7 +181,7 @@ export class Sueno {
       capa.classList.add('saliendo');
       setTimeout(() => capa.remove(), 600);
       document.body.classList.remove('modo-cine');
-      cam.zoomObj = zoomAntes || 1;
+      cam.zoomObj = zoomAntes || cam.zoomFit || 1;
       cam.libre = false;
       if (primeraVez && !d.final) this.premioFinal();
     };

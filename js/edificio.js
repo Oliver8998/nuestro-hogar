@@ -919,7 +919,7 @@ export class Edificio {
     if (this.pisosV.raiz.visible) this.pisosV.actualizar(dt, cam ? cam.direccionHorizontal() : null, null);
     this.siluetas(dt, cam);
     if (this.calle) {
-      this.calle.calma = cam && cam.zoomActual > 1.15 ? 0.75 : 1;
+      this.calle.calma = cam && cam.zoomActual > (cam.zoomFit || 1.2) * 0.95 ? 0.75 : 1;
       this.calle.actualizar(dt);
     }
     if (!cam) return;

@@ -128,7 +128,7 @@ export class Entregas {
 
   crearDronCon(p, volando) {
     const dron = crearDron();
-    dron.scale.setScalar(1.45);
+    dron.scale.setScalar(1.1);
     const { grupo } = construirPiezas(PIEZAS_PAQUETE);
     grupo.scale.setScalar(0.62);
     grupo.position.y = -CUELGA;

@@ -667,3 +667,9 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - El dron de los pedidos espera siempre delante de la ventana principal (pared 0), fijo aunque se gire la cámara (`entregas.puntoEspera` usa la posición/normal de `sala.ventana`; varios drones se reparten a los lados). Si el cristal está roto se pone en el lado del cristal.
 - Cuando esa pared está al fondo, los drones se pintan en la capa 2 (la de la ciudad) para verse a través del hueco de la ventana; si la pared está oculta, capa 0 (`entregas.ponerCapa`, el raycast activa la capa).
 - Quitada la puerta de la habitación (pared 1 entera). Textos de "llega a la puerta" → "a la ventana"; pared 1 se llama "de enfrente".
+
+## Cámara que encuadra el piso (v101)
+- Cámara más alta: 44° (antes 32°), el suelo se ve más grande en vertical.
+- Encuadre automático (`camaraIso.encajar`): calcula el zoom para que la habitación (con paredes y forjado) quepa justa de lado a lado y en el hueco libre entre el HUD de arriba y la barra de abajo (`ponerMargenes`, medido desde main cada 0,5 s y al redimensionar). El frustum se desplaza para centrar el piso en ese hueco. `zoomFit` sustituye a ZOOM_INICIAL; zoom mínimo 0,5×fit y máximo 3,2×fit.
+- Ampliado (`ampliada()`: zoom > 1,25×fit) un dedo arrastra la vista en vez de girar. Doble toque en hueco: si está normal acerca 2× a ese punto (`acercarA`); si está ampliado vuelve a la vista general.
+- Dron más pequeño (escala 1,1) y recolocado para que con el nuevo ángulo quepa dentro del marco de la ventana.
