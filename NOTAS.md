@@ -749,3 +749,6 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 
 ## La terraza es un balcón que sale del edificio (v113)
 - El edificio ya no se ensancha bajo la terraza: `edificio.construir(ancho, fondo, extraX)` mantiene el bloque del tamaño del piso (`raiz.position.x = 0`) y solo usa `extraX` para dejar libre ese lado al colocar edificios vecinos. Debajo del balcón no hay pisos: losa de 26 cm con canto claro y dos ménsulas metálicas (puntal, tirante y placa) contra la fachada. Quitada la azotea de los lados.
+
+## Balcón sin borde saliente (v114)
+- La losa del balcón ya no sobresale de las barandillas (antes 25 cm más un canto claro): mide E + 5 cm × F + 10 cm, a ras de la barandilla. Quitado el canto.

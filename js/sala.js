@@ -656,14 +656,9 @@ export function crearSala(escena) {
     const E = ancho;
     patio = new THREE.Group();
     patio.name = 'patio';
-    const borde = GROSOR + 0.1;
-    const losa = caja(E + borde, 0.26, F + borde * 2, 0xb9a48c);
-    losa.position.set(mx + (E + borde) / 2, -0.18, 0);
+    const losa = caja(E + 0.05, 0.26, F + 0.1, 0xb9a48c);
+    losa.position.set(mx + (E + 0.05) / 2, -0.18, 0);
     patio.add(losa);
-    const canto = caja(E + borde + 0.04, 0.06, F + borde * 2 + 0.04, 0xe9dfd2);
-    canto.position.set(mx + (E + borde) / 2 + 0.02, -0.06, 0);
-    canto.castShadow = false;
-    patio.add(canto);
     const matMensula = new THREE.MeshStandardMaterial({ color: 0x6a6f75, roughness: 0.5, metalness: 0.4 });
     const fachada = mx + GROSOR + 0.1;
     const alcance = Math.min(E * 0.6, 1.6);
