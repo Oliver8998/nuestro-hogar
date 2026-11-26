@@ -165,6 +165,7 @@ export class Cuadros {
       else lista.push(this.colocando.c);
     }
     for (const c of lista) {
+      if (!(this.colocando && this.colocando.c.id === c.id) && this.ctx.sala.enHueco && this.ctx.sala.enHueco(c.pared, c.x || 0)) continue;
       const g = this.crear(c);
       if (this.colocando && this.colocando.c.id === c.id) g.userData.colocando = true;
       this.grupos.push(g);

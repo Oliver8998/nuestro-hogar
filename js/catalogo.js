@@ -655,7 +655,7 @@ export const MATERIALES = [
     [0.02, 0.14, 0.02, 0, 0.94, 0, 0xdfe8ee, 'cil'],
     [0.08, 0.08, 0.08, 0, 1.03, 0, 0xf4b3be, 'esfera']
   ]},
-  { id: 'jardin', categoria: 'limpieza', nombre: 'Jardín para el perro', precio: 800, servicio: 'jardin', pista: 'Un trocito de césped junto a la casa: los perros harán ahí sus cosas', piezas: [
+  { id: 'jardin', categoria: 'limpieza', enTienda: false, nombre: 'Jardín para el perro', precio: 800, servicio: 'jardin', pista: 'Un trocito de césped junto a la casa: los perros harán ahí sus cosas', piezas: [
     [0.9, 0.1, 0.9, 0, 0.05, 0, 0x8a6a4a],
     [0.88, 0.04, 0.88, 0, 0.12, 0, 0x7cc46a],
     [0.04, 0.22, 0.9, -0.43, 0.24, 0, 0xf0eae1],

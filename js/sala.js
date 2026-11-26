@@ -4,6 +4,7 @@ import { modeloSuelto } from './modelos.js';
 const TAM = 6;
 const ALTO = 2.6;
 const GROSOR = 0.15;
+const ALTO_HUECO = 2.25;
 const PARED_SUCIA = new THREE.Color(0xb3a78d);
 const RESALTE_OK = new THREE.Color(0x3cd870);
 const RESALTE_MAL = new THREE.Color(0xff4040);
@@ -126,8 +127,17 @@ export function crearSala(escena) {
       piezas.length = 0;
       const largo = (i < 2 ? anchoActual : fondoActual) + GROSOR * 2;
       const marcar = m => { m.userData.tramo = true; return m; };
-      marcar(tramo(-largo / 2, largo / 2, -0.1, ALTO, grupo, piezas));
-      marcar(tramo(-largo / 2, largo / 2, -0.1, 0.14, bajo));
+      const h = Math.min(grupo.userData.hueco || 0, largo / 2 - 0.25);
+      if (h > 0.2) {
+        marcar(tramo(-largo / 2, -h, -0.1, ALTO, grupo, piezas));
+        marcar(tramo(h, largo / 2, -0.1, ALTO, grupo, piezas));
+        marcar(tramo(-h, h, ALTO_HUECO, ALTO, grupo, piezas));
+        marcar(tramo(-largo / 2, -h, -0.1, 0.14, bajo));
+        marcar(tramo(h, largo / 2, -0.1, 0.14, bajo));
+      } else {
+        marcar(tramo(-largo / 2, largo / 2, -0.1, ALTO, grupo, piezas));
+        marcar(tramo(-largo / 2, largo / 2, -0.1, 0.14, bajo));
+      }
       if (grupo.userData.piezas) grupo.userData.muro = piezas[0];
     };
     construirTramos();
@@ -386,8 +396,7 @@ export function crearSala(escena) {
     });
     if (patio) {
       patio.userData.cristalera.visible = ver.has(3);
-      paredes[3].visible = false;
-      paredes[3].userData.bajo.visible = false;
+      patio.userData.cristalera.children.forEach(o => { if (o.material.transparent) o.visible = true; });
     }
   }
 
@@ -635,11 +644,12 @@ export function crearSala(escena) {
     }
     patioTipo = tipo;
     patioAncho = tipo ? ancho : 0;
-    paredes[3].userData.patio = !!tipo;
-    if (!tipo) {
-      paredes[3].visible = true;
-      return;
+    const huecoNuevo = tipo ? Math.min(fondoActual, fondoP) / 2 : 0;
+    if ((paredes[3].userData.hueco || 0) !== huecoNuevo) {
+      paredes[3].userData.hueco = huecoNuevo;
+      paredes[3].userData.construirTramos();
     }
+    if (!tipo) return;
     const mx = anchoActual / 2;
     const mz = Math.min(fondoActual, fondoP) / 2;
     const F = mz * 2;
@@ -715,31 +725,36 @@ export function crearSala(escena) {
     cristalera.name = 'cristalera';
     const matMarco = new THREE.MeshStandardMaterial({ color: 0xf3eee4, roughness: 0.6 });
     const matVidrio = new THREE.MeshStandardMaterial({ color: 0xd8eef6, transparent: true, opacity: 0.22, roughness: 0.05, depthWrite: false });
-    const hueco = 0.75;
-    const xg = mx + 0.02;
-    const mzr = fondoActual / 2;
-    for (const [z0, z1] of [[-mzr, -hueco], [hueco, mzr]]) {
+    const h = Math.min(mz, fondoActual / 2 - 0.25);
+    const paso = Math.min(0.75, h - 0.1);
+    const xg = mx + GROSOR / 2;
+    for (const [z0, z1] of [[-h, -paso], [paso, h]]) {
       const largo = z1 - z0;
-      const vidrio = new THREE.Mesh(new THREE.BoxGeometry(0.02, ALTO - 0.1, largo), matVidrio);
-      vidrio.position.set(xg, (ALTO - 0.1) / 2, (z0 + z1) / 2);
-      cristalera.add(vidrio);
-      for (const z of [z0, z1, (z0 + z1) / 2]) {
-        const poste = new THREE.Mesh(new THREE.BoxGeometry(0.06, ALTO, 0.06), matMarco);
-        poste.position.set(xg, ALTO / 2, z);
+      if (largo > 0.05) {
+        const vidrio = new THREE.Mesh(new THREE.BoxGeometry(0.02, ALTO_HUECO, largo), matVidrio);
+        vidrio.position.set(xg, ALTO_HUECO / 2, (z0 + z1) / 2);
+        cristalera.add(vidrio);
+      }
+      for (const z of [z0, z1]) {
+        const poste = new THREE.Mesh(new THREE.BoxGeometry(GROSOR + 0.02, ALTO_HUECO, 0.06), matMarco);
+        poste.position.set(xg, ALTO_HUECO / 2, z);
         cristalera.add(poste);
       }
     }
-    const dintel = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, fondoActual), matMarco);
-    dintel.position.set(xg, ALTO - 0.04, 0);
-    const umbral = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.03, fondoActual), matMarco);
+    const dintel = new THREE.Mesh(new THREE.BoxGeometry(GROSOR + 0.02, 0.07, h * 2 + 0.06), matMarco);
+    dintel.position.set(xg, ALTO_HUECO - 0.03, 0);
+    const umbral = new THREE.Mesh(new THREE.BoxGeometry(GROSOR + 0.04, 0.03, h * 2), matMarco);
     umbral.position.set(xg, 0.015, 0);
     cristalera.add(dintel, umbral);
     cristalera.traverse(o => { if (o.isMesh && o.material === matMarco) o.castShadow = true; });
     patio.add(cristalera);
     patio.userData.cristalera = cristalera;
     sala.add(patio);
-    paredes[3].visible = false;
-    paredes[3].userData.bajo.visible = false;
+  }
+
+  function enHueco(pared, x, ancho = 0.6) {
+    const h = paredes[pared] && paredes[pared].userData.hueco;
+    return !!h && Math.abs(x) < h + ancho / 2;
   }
 
   function redimensionar(ancho, fondo = TAM) {
@@ -803,5 +818,5 @@ export function crearSala(escena) {
     });
   }
 
-  return { paredes, cara, redimensionar, ponerPatio, patio: () => (patioTipo ? { tipo: patioTipo, ancho: patioAncho } : null), largoPared, ancho: () => anchoActual, fondo: () => fondoActual, modoVisita, ponerPapel, decorSuelo, tablas, modoExterior, esExterior: () => exterior, pintarSuelo, mostrarDesperfectos, completarTodo, pintarParedes, conDesperfectos: () => conDesperfectos, ventana, ventanaRota: () => carton.parent === ventana, matCristal, hemi, sol, visibles: () => paredes.map(p => p.visible), actualizarParedes, actualizar, buscar, tocar, puedeAplicar, aplicar, resaltar, estado, restaurar, progreso };
+  return { paredes, cara, redimensionar, ponerPatio, enHueco, patio: () => (patioTipo ? { tipo: patioTipo, ancho: patioAncho } : null), largoPared, ancho: () => anchoActual, fondo: () => fondoActual, modoVisita, ponerPapel, decorSuelo, tablas, modoExterior, esExterior: () => exterior, pintarSuelo, mostrarDesperfectos, completarTodo, pintarParedes, conDesperfectos: () => conDesperfectos, ventana, ventanaRota: () => carton.parent === ventana, matCristal, hemi, sol, visibles: () => paredes.map(p => p.visible), actualizarParedes, actualizar, buscar, tocar, puedeAplicar, aplicar, resaltar, estado, restaurar, progreso };
 }

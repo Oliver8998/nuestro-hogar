@@ -292,15 +292,14 @@ const TAM_PATIO = [[2, 2], [3, 3], [3, 4], [4, 5], [5, 6]];
 const RANGO_PATIO = { perro: 0, terraza: 1, jardin: 2 };
 
 function tipoPatio(e = estado) {
-  if (e.patio) return e.patio;
-  return e.jardin ? 'perro' : null;
+  return e.patio || null;
 }
 
 function patioActual() {
   if (visitando || enPiso() || (estado.habActual || 0) !== 0) return null;
   const t = tipoPatio();
   if (!t) return null;
-  const [a, f] = t === 'perro' ? TAM_PATIO[0] : TAM_PATIO[Math.min(TAM_PATIO.length - 1, estado.patioFilas || 0)];
+  const [a, f] = TAM_PATIO[Math.min(TAM_PATIO.length - 1, estado.patioFilas || 0)];
   return { tipo: t, ancho: a, fondo: Math.min(f, tamHab()[1]) };
 }
 
@@ -316,6 +315,7 @@ function aplicarTam() {
   camaraIso.ajustar(ancho, fondo, E);
   edificio.construir(ancho + E, fondo);
   edificio.raiz.position.x = E / 2;
+  suciedad.jardin = !!estado.jardin || !!estado.patio;
   entregas.desplazarZ(fondo / 2 - 3);
   if (casa2) casa2.tiras.forEach((t, i) => { t.scale.x = (sala.largoPared(i) + 0.2) / 6.2; });
 }
@@ -459,7 +459,6 @@ async function jugarMinijuego(d) {
 
 function ponerJardin() {
   suciedad.jardin = true;
-  if (!estado.patio) aplicarTam();
 }
 
 function hayTrampa() {

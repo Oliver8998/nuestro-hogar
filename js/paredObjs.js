@@ -132,6 +132,7 @@ export class ObjetosPared {
     const colorMarco = sala.ventana.children[0] ? sala.ventana.children[0].material.color.getHex() : 0x6b4f36;
     const cieloTex = this.ctx.ambiente && this.ctx.ambiente.textura;
     for (const o of lista) {
+      if (!o.principal && sala.enHueco && sala.enHueco(o.pared, o.x)) continue;
       if (o.tipo === 'telefono') {
         telefono.fijar(o.pared, o.x, o.y);
         continue;
