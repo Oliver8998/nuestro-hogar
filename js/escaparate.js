@@ -97,6 +97,67 @@ export const SALAS = [
       ['estanteria', -6, 1, 1, 0], ['libros', -6, 1, 0], ['cama-mascota', 2, 2, 0, 0], ['puff', -3, 3, 0, 0], ['planta', 5, 5, 0]
     ],
     mascotas: [['perro', 0.2, 1.0], ['gato', -1.6, 1.8], ['conejo', 1.4, 0.4]]
+  },
+  {
+    icono: '📦', nombre: 'Vuestro primer piso', ancho: 4, fondo: 4, suelo: 'roble',
+    ventanas: [['f', 0.8, 1.2]],
+    muebles: [
+      ['colchon', -4, -4, 0], ['radio', -1, -4, 0], ['caja', 2, -4, 0], ['caja', 3, -4, 0], ['caja', 2, -3, 0], ['caja', 2, -4, 0, null, null, 0.42],
+      ['alfombra', -1, 0, 0, 1], ['puff', 2, 2, 0, 2], ['planta', 3, 3, 0], ['lampara', -4, 3, 0, 0]
+    ],
+    mascotas: [['gato', 0.4, 0.7]]
+  },
+  {
+    icono: '💌', nombre: 'Rincón de pareja', ancho: 7, fondo: 5, suelo: 'terrazo', papel: 'lunares', cortina: 0xf2b8c6, luz: 0xffc0d0,
+    ventanas: [['f', 1.0, 1.2], ['i', 0.8, 1.2]],
+    muebles: [
+      ['escritorio', -7, -5, 0, 1], ['ordenador', -7, -5, 0], ['impresora', -6, -5, 0], ['silla', -7, -4, 2, 1],
+      ['mapa-mundi', -4, -5, 0], ['corcho', -1, -5, 0], ['caballete', 4, -5, 0],
+      ['comoda', 5, -5, 0, 2], ['calendario', 5, -5, 0], ['tarro-preguntas', 6, -5, 0],
+      ['alfombra', -3, -3, 0, 3], ['mesita', -2, -2, 0, 1], ['rosas', -2, -2, 0], ['sofa', -3, 0, 2, 2],
+      ['arbol-recuerdos', -7, 2, 0], ['cofre', -4, 3, 0], ['puff-corazon', 3, 1, 0], ['lampara-corazon', 6, 3, 0], ['planta', 6, -2, 0]
+    ],
+    mascotas: [['perro', 1.6, 1.4], ['conejo', -0.8, 2.0]]
+  },
+  {
+    icono: '🐾', nombre: 'Cuarto de mascotas', ancho: 5, fondo: 5, suelo: 'moqueta', papel: 'rayas', cortina: 0x9fc4e0,
+    ventanas: [['f', 0.6, 1.2]],
+    muebles: [
+      ['caseta', -5, -5, 0], ['rascador', -2, -5, 0], ['cama-mascota', 0, -5, 0, 2], ['acuario', 3, -5, 0],
+      ['comedero', -5, 0, 0], ['comedero', -4, 0, 0], ['arenero', -5, 3, 0], ['pelota', 0, 1, 0], ['pelota', 2, 2, 0],
+      ['lampara', 4, -2, 0, 2], ['planta', 4, 4, 0]
+    ],
+    mascotas: [['perro', 1.2, 0.2], ['gato', -0.6, -0.8], ['conejo', 0.4, 1.6], ['pato', -1.4, 1.2], ['panda', 1.8, 1.9], ['zorro', -0.2, 0.4]]
+  },
+  {
+    icono: '🏙️', nombre: 'Loft enorme', ancho: 9, fondo: 9, suelo: 'hidraulico', papel: 'ladrillo', led: 0xffa040, cortina: 0x3d3d3d,
+    ventanas: [['f', -2.8, 1.2], ['f', 2.8, 1.2], ['i', -2.4, 1.2], ['i', 2.4, 1.2]],
+    muebles: [
+      ['cama', -9, -9, 0, 1], ['mesita', -6, -9, 0, 1], ['lampara-mesa', -6, -9, 0], ['estanteria', -4, -9, 0, 0], ['libros', -4, -9, 0],
+      ['tele', -1, -9, 0, 0], ['comoda', 2, -9, 0, 1], ['radio', 2, -9, 0], ['jarron', 3, -9, 0], ['lavadora', 4, -9, 0, 1], ['cocina', 5, -9, 0, 0], ['nevera', 7, -9, 0, 1],
+      ['alfombra', -3, -6, 0, 2], ['mesita', -2, -5, 0, 1], ['cactus', -2, -5, 0], ['sofa', -3, -3, 2, 1], ['puff', -5, -5, 0, 3],
+      ['mesa', 4, -4, 0, 1], ['silla', 3, -4, 1, 1], ['silla', 6, -3, 3, 1], ['silla', 4, -2, 2, 1], ['silla', 5, -5, 0, 1], ['lampara-mesa', 4, -4, 0],
+      ['piano', -9, 0, 1], ['arcade', -6, 2, 0], ['sillon-huevo', 0, 1, 0, 1], ['acuario', -9, 5, 1], ['arbol-recuerdos', 4, 3, 0],
+      ['huerto', 5, 7, 0], ['rascador', 1, 6, 0], ['cama-mascota', -3, 6, 0, 1], ['lampara', 8, 0, 0, 2], ['planta', 8, 8, 0, 1]
+    ],
+    mascotas: [['perro', 1.6, 0.6], ['gato', -2.2, 1.2], ['loro', 2.4, -1.4]]
+  },
+  {
+    icono: '🌇', nombre: 'Terraza', ancho: 6, fondo: 4, exterior: true,
+    muebles: [
+      ['tumbona', -6, -4, 0, 0], ['sombrilla', -5, -4, 0, 1], ['tumbona', -4, -4, 0, 2], ['barbacoa', 3, -4, 0], ['farola', 5, -4, 0],
+      ['mesa-picnic', -1, 0, 0], ['cerezo', 2, 1, 0], ['maceta-grande', -6, 3, 0], ['maceta-grande', 5, 3, 0], ['huerto', -6, 0, 1]
+    ],
+    mascotas: [['pato', 0.2, -1.0], ['perro', -1.4, -0.4]]
+  },
+  {
+    icono: '🎃', nombre: 'Noche de Halloween', ancho: 5, fondo: 4, suelo: 'ceniza', papel: 'estrellas', cortina: 0x5a3d78, luz: 0xff9a40,
+    ventanas: [['f', 0.6, 1.2]],
+    muebles: [
+      ['estanteria', -5, -4, 0, 2], ['libros', -5, -4, 0], ['calabaza', -3, -4, 0], ['comoda', 2, -4, 0, 2], ['lampara-lava', 2, -4, 0], ['calabaza', 3, -4, 0],
+      ['alfombra', -4, -3, 0, 3], ['sofa', -4, 0, 2, 3], ['puff', 1, 0, 0, 3], ['fantasma', 3, 1, 0], ['caldero', 0, 2, 0], ['calabaza', -5, 2, 0], ['cactus', 4, 3, 0]
+    ],
+    mascotas: [['gato', 0.6, 0.2], ['zorro', -1.4, 1.6]]
   }
 ];
 
@@ -133,7 +194,18 @@ const LUZ = {
 
 const suave = t => t * t * (3 - 2 * t);
 
-function fachadaTorre(per, semilla) {
+const ESTILOS_TORRE = [
+  { pared: '#c9a98f', banda: '#b79780', marco: '#f3ece2', cols: 4, balcon: 0.35 },
+  { pared: '#e8dcc4', banda: '#d3c3a6', marco: '#ffffff', cols: 3, balcon: 0.5, alta: true },
+  { pared: '#9fb0bf', banda: '#8a9cad', marco: '#eef2f5', cols: 5, balcon: 0.15 },
+  { pared: '#e3b7b0', banda: '#d39f98', marco: '#fff4f0', cols: 4, balcon: 0.45, persiana: '#7fa88a' },
+  { pared: '#a8584a', banda: '#8f4a3e', marco: '#efe6da', cols: 4, balcon: 0.3, ladrillo: true },
+  { pared: '#a9bba0', banda: '#97aa8e', marco: '#f4f1e6', cols: 3, balcon: 0.4, persiana: '#c98a4a' },
+  { pared: '#d9cbb8', banda: '#c4b39c', marco: '#5b5048', cols: 5, balcon: 0.2, alta: true },
+  { pared: '#f0e2c8', banda: '#e0cba6', marco: '#ffffff', cols: 4, balcon: 0.55, persiana: '#5f8fb5' }
+];
+
+function fachadaTorre(per, semilla, e) {
   const c = document.createElement('canvas');
   c.width = 256;
   c.height = 1024;
@@ -146,22 +218,29 @@ function fachadaTorre(per, semilla) {
   gl.fillRect(0, 0, 256, 1024);
   let a = semilla;
   const r = () => ((a = (a * 16807) % 2147483647) / 2147483647);
-  g.fillStyle = '#c9a98f';
+  g.fillStyle = e.pared;
   g.fillRect(0, 0, 256, 1024);
-  const cols = 4;
+  if (e.ladrillo) {
+    g.fillStyle = 'rgba(0,0,0,.08)';
+    for (let y = 0; y < 1024; y += 8) {
+      g.fillRect(0, y, 256, 1);
+      for (let x = (y / 8) % 2 ? 0 : 8; x < 256; x += 16) g.fillRect(x, y, 1, 8);
+    }
+  }
+  const cols = e.cols;
   const pisos = 10;
   const fw = 256 / cols;
   const fh = 1024 / pisos;
   const enc = { dia: 0.08, tarde: 0.45, noche: 0.8 }[per] || 0.3;
   for (let f = 0; f < pisos; f++) {
-    g.fillStyle = '#b79780';
+    g.fillStyle = e.banda;
     g.fillRect(0, f * fh, 256, 6);
     for (let k = 0; k < cols; k++) {
-      const x = k * fw + fw * 0.22;
-      const y = f * fh + fh * 0.22;
-      const w = fw * 0.56;
-      const h = fh * 0.56;
-      g.fillStyle = '#f3ece2';
+      const w = fw * (e.alta ? 0.5 : 0.56);
+      const h = fh * (e.alta ? 0.68 : 0.56);
+      const x = k * fw + (fw - w) / 2;
+      const y = f * fh + fh * (e.alta ? 0.16 : 0.22);
+      g.fillStyle = e.marco;
       g.fillRect(x - 4, y - 4, w + 8, h + 8);
       const luz = r() < enc;
       g.fillStyle = luz ? '#ffd58f' : per === 'dia' ? '#8fb3cc' : '#3b3f5e';
@@ -172,10 +251,19 @@ function fachadaTorre(per, semilla) {
         gl.fillStyle = '#ffd58f';
         gl.fillRect(x, y, w, h);
       }
-      if (r() < 0.35) {
+      if (e.persiana && r() < 0.5) {
+        g.fillStyle = e.persiana;
+        g.fillRect(x - 10, y - 2, 7, h + 4);
+        g.fillRect(x + w + 3, y - 2, 7, h + 4);
+      }
+      if (r() < e.balcon) {
         g.fillStyle = '#2f2f36';
         for (let b = 0; b < 6; b++) g.fillRect(x - 4 + b * (w + 8) / 5, y + h - 10, 2, 16);
         g.fillRect(x - 6, y + h + 4, w + 12, 3);
+        if (r() < 0.5) {
+          g.fillStyle = ['#e07a8a', '#f2c94c', '#7cc46a'][Math.floor(r() * 3)];
+          g.fillRect(x, y + h - 4, w, 5);
+        }
       }
     }
   }
@@ -186,32 +274,25 @@ function fachadaTorre(per, semilla) {
   return { mapa, luz };
 }
 
-function crearTorre(per) {
+function crearTorre(per, W, D, k, texturas) {
   const grupo = new THREE.Group();
   const ALTO = 30;
+  const e = ESTILOS_TORRE[k % ESTILOS_TORRE.length];
   const intensidad = { dia: 0, tarde: 0.7, noche: 1.1 }[per] ?? 0.5;
-  const caras = [1, 2].map(k => {
-    const f = fachadaTorre(per, 7919 * k + 11);
+  const caras = [1, 2].map(n => {
+    const f = fachadaTorre(per, 7919 * n + 131 * k + 11, e);
+    texturas.push(f.mapa, f.luz);
     return new THREE.MeshStandardMaterial({ map: f.mapa, emissiveMap: f.luz, emissive: 0xffffff, emissiveIntensity: intensidad, roughness: 0.95 });
   });
   const techo = new THREE.MeshStandardMaterial({ color: 0x9c8c80, roughness: 1 });
-  const cuerpo = new THREE.Mesh(new THREE.BoxGeometry(1, ALTO, 1), [caras[0], caras[1], techo, techo, caras[1], caras[0]]);
+  const cuerpo = new THREE.Mesh(new THREE.BoxGeometry(W, ALTO, D), [caras[0], caras[1], techo, techo, caras[1], caras[0]]);
   cuerpo.position.y = -0.45 - ALTO / 2;
   cuerpo.receiveShadow = true;
   grupo.add(cuerpo);
-  const cornisa = new THREE.Mesh(new THREE.BoxGeometry(1, 0.18, 1), new THREE.MeshStandardMaterial({ color: 0xe9dfd2, roughness: 0.9 }));
+  const cornisa = new THREE.Mesh(new THREE.BoxGeometry(W + 0.16, 0.18, D + 0.16), new THREE.MeshStandardMaterial({ color: new THREE.Color(e.marco).lerp(new THREE.Color(e.pared), 0.35), roughness: 0.9 }));
   cornisa.position.y = -0.5;
   grupo.add(cornisa);
-  let w = 6;
-  let d = 6;
-  const ajustar = (nw, nd, k) => {
-    w += (nw - w) * k;
-    d += (nd - d) * k;
-    cuerpo.scale.set(w, 1, d);
-    cornisa.scale.set(w + 0.16, 1, d + 0.16);
-  };
-  ajustar(6.5, 6.5, 1);
-  return { grupo, ajustar };
+  return grupo;
 }
 
 export class Escaparate {
@@ -252,8 +333,6 @@ export class Escaparate {
     this.geoBurbuja.userData.compartida = true;
     this.matBurbuja = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xbfe9ff, emissiveIntensity: 0.8, roughness: 0.2 });
     this.matBurbuja.userData.fijo = true;
-    this.torre = crearTorre(periodo());
-    this.escena.add(this.torre.grupo);
     this.indice = Math.floor(Math.random() * SALAS.length);
     this.t = 0;
     this.tSala = 0;
@@ -298,7 +377,7 @@ export class Escaparate {
     const W = s.ancho;
     const D = s.fondo;
     const g = new THREE.Group();
-    const sala = { s, grupo: g, texturas: [], luces: [], zoom: THREE.MathUtils.clamp((W + D) / 12, 0.85, 1.38) };
+    const sala = { s, grupo: g, texturas: [], luces: [], zoom: THREE.MathUtils.clamp((W + D) / 12, 0.72, 1.6) };
     const caja = (w, h, d, color, x, y, z, op = {}) => {
       const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshStandardMaterial({ color, roughness: op.rug ?? 0.9, ...(op.map ? { map: op.map } : {}) }));
       m.position.set(x, y, z);
@@ -307,6 +386,7 @@ export class Escaparate {
       g.add(m);
       return m;
     };
+    g.add(crearTorre(per, W + 0.5, D + 0.5, SALAS.indexOf(s), sala.texturas));
     caja(W + 0.5, 0.4, D + 0.5, s.exterior ? 0x8a6a4a : 0xb9a48c, 0, -0.25, 0, { sinSombra: true });
     const suelo = s.suelo && SUELOS.find(x => x.id === s.suelo);
     const matSuelo = { sinSombra: true };
@@ -387,8 +467,8 @@ export class Escaparate {
     if (gestor.rejilla) gestor.rejilla.visible = false;
     sala.gestor = gestor;
     let k = 0;
-    for (const [id, x0, z0, rot, color, encendido] of s.muebles) {
-      const m = gestor.anadir(id, x0, z0, rot, { color: color ?? 0, encendido: encendido ?? encender });
+    for (const [id, x0, z0, rot, color, encendido, base] of s.muebles) {
+      const m = gestor.anadir(id, x0, z0, rot, { color: color ?? 0, encendido: encendido ?? encender, ...(base ? { base } : {}) });
       if (m) {
         m.userData.aparece = 0.12 + k * 0.055;
         m.scale.setScalar(0.001);
@@ -732,7 +812,6 @@ export class Escaparate {
     }
     actualizarPersonajes(dt);
     this.zoom += (actual.zoom - this.zoom) * Math.min(1, dt * 3);
-    this.torre.ajustar(actual.s.ancho + 0.5, actual.s.fondo + 0.5, Math.min(1, dt * 4));
     this.encuadre();
     const ang = Math.PI / 4 + Math.sin(this.t * 0.25) * 0.35;
     const d = 14;

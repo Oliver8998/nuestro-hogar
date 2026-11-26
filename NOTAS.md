@@ -718,3 +718,8 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 
 ## Siempre un objeto de pareja en el mostrador (v107)
 - `mostradorActual`: si en el reparto no ha caído ningún objeto `pareja`, se añade uno al azar (misma semilla del periodo, igual en los dos móviles). Comprobado en 12 periodos seguidos: siempre hay al menos uno.
+
+## Escaparate: el edificio cambia con cada piso y más variedad (v108)
+- La torre ya no es una sola fija: cada sala del escaparate construye la suya (`crearTorre(per, W, D, k, texturas)`) dentro de su grupo, así entra y sale con la habitación. 8 estilos (`ESTILOS_TORRE`): terracota, crema con ventanas altas, gris azulado de 5 columnas, rosa con contraventanas verdes, ladrillo, salvia con persianas naranjas, piedra con marcos oscuros y amarillo con persianas azules; balcones, macetas y luces encendidas al azar según la hora.
+- 6 salas nuevas (14 en total) con tamaños de 4×4 a 9×9: Vuestro primer piso (4×4, colchón y cajas), Rincón de pareja (7×5, ordenador, impresora, mapa, corcho, caballete, calendario, tarro, cofre y árbol), Cuarto de mascotas (5×5, 6 mascotas), Loft enorme (9×9), Terraza (6×4, exterior) y Noche de Halloween (5×4). Zoom del escaparate entre 0,72 y 1,6 para que quepan todas.
+- Los muebles del escaparate aceptan un 7.º valor `base` para apilar (las cajas del primer piso).
