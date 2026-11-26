@@ -627,7 +627,7 @@ export function crearSala(escena) {
     return t;
   }
 
-  function ponerPatio(tipo, ancho) {
+  function ponerPatio(tipo, ancho, fondoP = fondoActual) {
     if (patio) {
       sala.remove(patio);
       patio.traverse(o => { if (o.isMesh) { o.geometry.dispose(); if (o.material.map) o.material.map.dispose(); o.material.dispose(); } });
@@ -641,18 +641,35 @@ export function crearSala(escena) {
       return;
     }
     const mx = anchoActual / 2;
-    const mz = fondoActual / 2;
+    const mz = Math.min(fondoActual, fondoP) / 2;
+    const F = mz * 2;
     const E = ancho;
     patio = new THREE.Group();
     patio.name = 'patio';
     const borde = GROSOR + 0.1;
-    const losa = caja(E + borde, 0.4, fondoActual + borde * 2, 0xb9a48c);
+    const losa = caja(E + borde, 0.4, F + borde * 2, 0xb9a48c);
     losa.position.set(mx + (E + borde) / 2, -0.3, 0);
     losa.castShadow = false;
     patio.add(losa);
+    const mzr0 = fondoActual / 2 + borde;
+    if (mzr0 - mz - borde > 0.01) {
+      for (const sz of [-1, 1]) {
+        const largo = mzr0 - mz - borde;
+        const azotea = caja(E + borde, 0.36, largo, 0xa79c90);
+        azotea.position.set(mx + (E + borde) / 2, -0.32, sz * (mz + borde + largo / 2));
+        azotea.castShadow = false;
+        patio.add(azotea);
+        const pretil = caja(0.12, 0.3, largo, 0xb9a48c);
+        pretil.position.set(mx + E + borde - 0.06, 0.0, sz * (mz + borde + largo / 2));
+        patio.add(pretil);
+        const pretil2 = caja(E + borde, 0.3, 0.12, 0xb9a48c);
+        pretil2.position.set(mx + (E + borde) / 2, 0.0, sz * (mzr0 - 0.06));
+        patio.add(pretil2);
+      }
+    }
     const tex = texturaPatio(tipo);
-    tex.repeat.set(E / (tipo === 'terraza' ? 1 : 2), fondoActual / (tipo === 'terraza' ? 1 : 2));
-    const suelo = new THREE.Mesh(new THREE.BoxGeometry(E, 0.1, fondoActual), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.95 }));
+    tex.repeat.set(E / (tipo === 'terraza' ? 1 : 2), F / (tipo === 'terraza' ? 1 : 2));
+    const suelo = new THREE.Mesh(new THREE.BoxGeometry(E, 0.1, F), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.95 }));
     suelo.position.set(mx + E / 2, -0.05, 0);
     suelo.receiveShadow = true;
     patio.add(suelo);
@@ -700,7 +717,8 @@ export function crearSala(escena) {
     const matVidrio = new THREE.MeshStandardMaterial({ color: 0xd8eef6, transparent: true, opacity: 0.22, roughness: 0.05, depthWrite: false });
     const hueco = 0.75;
     const xg = mx + 0.02;
-    for (const [z0, z1] of [[-mz, -hueco], [hueco, mz]]) {
+    const mzr = fondoActual / 2;
+    for (const [z0, z1] of [[-mzr, -hueco], [hueco, mzr]]) {
       const largo = z1 - z0;
       const vidrio = new THREE.Mesh(new THREE.BoxGeometry(0.02, ALTO - 0.1, largo), matVidrio);
       vidrio.position.set(xg, (ALTO - 0.1) / 2, (z0 + z1) / 2);

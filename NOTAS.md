@@ -736,3 +736,8 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - Cámara: `ajustar(ancho, fondo, extra)` mueve el centro a `extra/2` (objetivo, reinicio, límites de arrastre y encuadre). Edificio: se construye con `ancho + extra` y `raiz.position.x = extra/2`; el foco de la maqueta y el hundimiento de vecinos restan ese desplazamiento.
 - `obraHecha` para terraza/jardín mira el rango del patio; `tieneExterior()` cuenta el patio (no el del perro). Partidas antiguas con "Terraza"/"Jardín" como habitación aparte se quedan como estaban.
 - Arreglado el diálogo de ampliar el salón, que decía las medidas al revés.
+
+## La terraza empieza pequeña y se amplía pagando (v111)
+- El patio ya no ocupa todo el lado del salón: empieza en 2×2 (ancho × fondo) sea cual sea el piso, centrado en el lado +x, y crece con obras como el salón: `TAM_PATIO` = 2×2, 3×3, 3×4, 4×5, 5×6 (`estado.patioFilas`; el fondo nunca pasa del del salón). Obras nuevas en `OBRAS`: Ampliar la terraza 3×3 (nivel 10 · 2000), 3×4 (12 · 3200), 4×5 (15 · 5000), 5×6 (19 · 7500) con `patioFilas`; necesitan la terraza hecha y la ampliación anterior. Terraza baja a 5000; Jardín (nivel 20 · 12000) ahora solo cambia las baldosas por césped y mantiene el tamaño. El jardín del perro es siempre 2×2.
+- Muebles: `gestor.ez` = medio fondo del patio en celdas; fuera de esa franja no se puede poner nada en el lado del patio. Mascotas: esas celdas están bloqueadas. Rejilla dibujada con la forma real.
+- Lo que sobra a los lados del patio es azotea (losa gris con pretil) para que no se vea el hueco; la cristalera sigue ocupando todo el lado del salón.

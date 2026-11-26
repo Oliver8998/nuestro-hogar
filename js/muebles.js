@@ -55,6 +55,7 @@ export class GestorMuebles {
     this.lx = LIMITE;
     this.lz = LIMITE;
     this.ex = 0;
+    this.ez = 0;
     this.rejilla = null;
     this.crearRejilla();
   }
@@ -70,8 +71,12 @@ export class GestorMuebles {
     const bx = (this.lx + this.ex) * CELDA;
     const az = this.lz * CELDA;
     const v = [];
-    for (let i = -this.lx; i <= this.lx + this.ex; i++) v.push(i * CELDA, 0, -az, i * CELDA, 0, az);
-    for (let j = -this.lz; j <= this.lz; j++) v.push(-ax, 0, j * CELDA, bx, 0, j * CELDA);
+    const pz = this.ez * CELDA;
+    for (let i = -this.lx; i <= this.lx + this.ex; i++) {
+      const lim = i > this.lx ? pz : az;
+      v.push(i * CELDA, 0, -lim, i * CELDA, 0, lim);
+    }
+    for (let j = -this.lz; j <= this.lz; j++) v.push(-ax, 0, j * CELDA, this.ex && Math.abs(j) <= this.ez ? bx : ax, 0, j * CELDA);
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.Float32BufferAttribute(v, 3));
     const rejilla = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.35, depthWrite: false }));
@@ -82,14 +87,16 @@ export class GestorMuebles {
     this.rejilla = rejilla;
   }
 
-  ajustarTam(ancho, fondo, extra = 0) {
+  ajustarTam(ancho, fondo, extra = 0, fondoExtra = 0) {
     const lx = Math.round(ancho / CELDA / 2);
     const lz = Math.round(fondo / CELDA / 2);
     const ex = Math.round(extra / CELDA);
-    if (lx === this.lx && lz === this.lz && ex === this.ex) return;
+    const ez = Math.round(fondoExtra / CELDA / 2);
+    if (lx === this.lx && lz === this.lz && ex === this.ex && ez === this.ez) return;
     this.lx = lx;
     this.lz = lz;
     this.ex = ex;
+    this.ez = ez;
     this.crearRejilla();
   }
 
@@ -119,6 +126,7 @@ export class GestorMuebles {
     const [w, d] = this.medidas(def, rot);
     if (x0 < -this.lx || z0 < -this.lz || x0 + w > this.lx + this.ex || z0 + d > this.lz) return { valido: false, base: 0 };
     if (this.ex && x0 < this.lx && x0 + w > this.lx) return { valido: false, base: 0 };
+    if (this.ex && x0 + w > this.lx && (z0 < -this.ez || z0 + d > this.ez)) return { valido: false, base: 0 };
     if (def.suelo) return { valido: true, base: 0 };
 
     let altura = null;

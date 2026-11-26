@@ -291,8 +291,11 @@ export class GestorMascotas {
       }
     }
     if (this.muebles.ex) {
+      const pz = (this.muebles.ez || 0) * CELDA;
       for (let j = 0; j < NZ; j++) {
-        if (Math.abs((j - NZ / 2 + 0.5) * CELDA) < 0.75) continue;
+        const zc = Math.abs((j - NZ / 2 + 0.5) * CELDA);
+        if (zc > pz) for (let i = 2 * OX; i < NX; i++) set.add(i * NZ + j);
+        if (zc < 0.75) continue;
         set.add((2 * OX - 1) * NZ + j);
         set.add(2 * OX * NZ + j);
       }
