@@ -704,3 +704,9 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
   - Árbol de recuerdos → 📜 Recuerdos y 📖 Libro; Mapa del mundo → ✈️ Viajes; Nevera → 📝 Notas (como antes).
   - Cada objeto lleva en la tienda un chip 💡 con para qué sirve (`uso`).
 - El código de la casa y las misiones de pareja están en Ajustes → "💑 Casa compartida".
+
+## Trabajos a elegir, luz de noche, historial de monedas e inicio en la ciudad (v105)
+- Trabajar: 3 ofertas distintas cada día (`trabajos.ofertasDia()`, la primera es `delDia()`; mismas en los dos móviles). Cada turno se elige cuál; tarjetas con icono, texto, vuestro mejor % o "Nuevo para vosotros" y la paga.
+- Luz del piso de noche: `luzTecho` (PointLight cálida, sin bombilla ni modelo) en el centro a 2,35 m; intensidad `nocheK × 3,2`, alcance según el tamaño del salón; apagada en exteriores.
+- Monedas: tocar la pastilla 🪙 abre "Vuestras monedas" (ganado y gastado de la semana y lista por días). `refrescarHud` anota cada cambio de monedas en `estado.movs` (8 días, máx. 80; agrupa seguidos iguales). El motivo sale de `pista(icono, texto)` justo antes (tienda, adopción, ruleta, Robi exprés, obras) o del icono de `ganar()` (`TEXTO_EMOJI`); `ganar` acepta un 5.º parámetro de texto (los trabajos ponen "Trabajo: X"). Lo que llega de la pareja no se anota en tu móvil (se sincroniza su lista).
+- Pantalla de inicio: el piso del escaparate está encima de una torre (`crearTorre` en escaparate.js: fachada con ventanas que se encienden según día/tarde/noche y que se ajusta al tamaño de cada salón) y al fondo hay dos capas de edificios con ventanas en el SVG (en vez del banco de nubes). El lienzo se funde por abajo con una máscara.

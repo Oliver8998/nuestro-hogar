@@ -36,7 +36,7 @@ import { Social } from './social.js';
 import { Sorpresas } from './sorpresas.js';
 import { Lofi } from './lofi.js';
 import { Trabajos } from './trabajos.js';
-import { activarTraduccion } from './i18n.js';
+import { activarTraduccion, idioma } from './i18n.js';
 import { Guia } from './guia.js';
 import * as avisos from './avisos.js';
 import { Telefono } from './telefono.js';
@@ -82,12 +82,17 @@ const edificio = new Edificio(escena);
 const luzCalida = new THREE.PointLight(0xffc27a, 0, 10, 1.3);
 luzCalida.position.set(0, 2.1, 0);
 escena.add(luzCalida);
+const luzTecho = new THREE.PointLight(0xffd6a0, 0, 9, 1);
+luzTecho.position.set(0, 2.35, 0);
+escena.add(luzTecho);
 const vineta = document.createElement('div');
 vineta.id = 'vineta';
 canvas.insertAdjacentElement('afterend', vineta);
 function aplicarLuzMaqueta(a) {
   const k = (a && a.nocheK) || 0;
   luzCalida.intensity = edificio.maqueta ? 0.6 + k * 1.4 : 0;
+  luzTecho.intensity = sala.esExterior() ? 0 : k * 3.2;
+  luzTecho.distance = Math.max(sala.ancho(), sala.fondo()) * 1.6;
   vineta.classList.toggle('oculta', !edificio.maqueta);
   vineta.style.setProperty('--vk', String(0.12 + k * 0.08));
 }
@@ -537,7 +542,54 @@ function cargar() {
 const habiaPartida = cargar();
 let terminada = sala.progreso().hechos >= sala.progreso().total;
 
+const TEXTO_EMOJI = { '💼': 'Teletrabajo', '📞': 'Encargo', '❄️': 'Nevada', '🐾': 'Mascotas', '🎓': 'Mascotas', '🦴': 'Mascotas', '👕': 'Colada', '🍅': 'Cosecha del huerto', '🎡': 'Ruleta', '🏆': 'Logro', '🎁': 'Regalo', '⭐': 'Misión', '📋': 'Misión' };
+let pistaMov = null;
+function pista(i, x) {
+  pistaMov = { i, x, t: Date.now() };
+}
+
+function anotarMovimiento(n) {
+  if (!n) return;
+  const p = pistaMov && Date.now() - pistaMov.t < 4000 && (n > 0) === pistaMov.x.startsWith('+') ? pistaMov : null;
+  if (p) pistaMov = null;
+  const mov = { t: Date.now(), n, i: p ? p.i : n > 0 ? '🪙' : '🛒', x: p ? p.x.replace(/^\+/, '') : n > 0 ? 'Monedas ganadas' : 'Compras' };
+  if (!Array.isArray(estado.movs)) estado.movs = [];
+  const ult = estado.movs[estado.movs.length - 1];
+  if (ult && ult.x === mov.x && ult.i === mov.i && Math.sign(ult.n) === Math.sign(n) && mov.t - ult.t < 120000) {
+    ult.n += n;
+    ult.t = mov.t;
+  } else estado.movs.push(mov);
+  const corte = Date.now() - 8 * 86400000;
+  estado.movs = estado.movs.filter(m => m.t > corte).slice(-80);
+}
+
+function abrirMovimientos() {
+  const semana = Date.now() - 7 * 86400000;
+  const movs = (estado.movs || []).filter(m => m.t > semana);
+  const ganado = movs.filter(m => m.n > 0).reduce((a, m) => a + m.n, 0);
+  const gastado = -movs.filter(m => m.n < 0).reduce((a, m) => a + m.n, 0);
+  const dia = t => {
+    const d = new Date(t);
+    const hoy = new Date();
+    const ayer = new Date(Date.now() - 86400000);
+    if (d.toDateString() === hoy.toDateString()) return 'Hoy';
+    if (d.toDateString() === ayer.toDateString()) return 'Ayer';
+    return d.toLocaleDateString(idioma() === 'en' ? 'en-GB' : 'es-ES', { weekday: 'long', day: 'numeric' });
+  };
+  let html = `<div class="movs-resumen"><div><small>Ganado esta semana</small><b class="mas">+${ganado}</b></div><div><small>Gastado esta semana</small><b class="menos">−${gastado}</b></div></div>`;
+  let actual = '';
+  const filas = movs.slice().reverse().map(m => {
+    const d = dia(m.t);
+    const cab = d !== actual ? `<h5 class="movs-dia">${d}</h5>` : '';
+    actual = d;
+    return `${cab}<div class="mov"><span>${m.i}</span><b>${escaparHtml(m.x)}</b><em class="${m.n > 0 ? 'mas' : 'menos'}">${m.n > 0 ? '+' : '−'}${Math.abs(m.n)}</em></div>`;
+  }).join('');
+  html += filas || '<p class="vacio">Todavía no hay movimientos esta semana.</p>';
+  ui.abrirGen('🪙 Vuestras monedas', html);
+}
+
 function refrescarHud() {
+  if (monedasVistas !== null && estado.monedas !== monedasVistas && !visitando) anotarMovimiento(estado.monedas - monedasVistas);
   if (experiencia && monedasVistas !== null && estado.monedas < monedasVistas && !visitando) experiencia.gastar(monedasVistas - estado.monedas);
   monedasVistas = estado.monedas;
   if (experiencia) experiencia.pintarPill();
@@ -584,6 +636,7 @@ function comprarDirecto(id, color = null, precio = null, cantidad = 1) {
     return false;
   }
   estado.monedas -= coste;
+  pista('🛒', `Tienda: ${info.nombre}`);
   if (info.servicio) {
     if (info.servicio === 'limpiadora') {
       estado.limpiadoraHasta = Math.max(Date.now(), estado.limpiadoraHasta) + 3 * 86400000;
@@ -869,6 +922,7 @@ async function adoptar(especie, gratis = false) {
   });
   if (!nombre) return false;
   if (!gratis) estado.monedas -= e.precio;
+  pista('🐾', `Adopción: ${e.nombre}`);
   ui.cerrarHojas();
   const m = mascotas.adoptar(especie, nombre);
   pareja.recordar(mascotas.lista.length === 1 ? 'mascota' : null, '🐾', `Adoptamos a ${nombre} (${e.nombre.toLowerCase()})`);
@@ -1009,7 +1063,10 @@ const ui = new UI(miniaturas, {
   alGirar() {
     if (estado.gratis) estado.gratis = false;
     else if (estado.tickets > 0) estado.tickets--;
-    else if (estado.monedas >= COSTE_TIRADA) estado.monedas -= COSTE_TIRADA;
+    else if (estado.monedas >= COSTE_TIRADA) {
+      estado.monedas -= COSTE_TIRADA;
+      pista('🎡', 'Ruleta');
+    }
     else {
       sonido.error();
       ui.aviso('No tenéis tickets ni monedas suficientes', true);
@@ -1221,6 +1278,7 @@ function tocarSuciedad(d) {
   botones.push({
     texto: `⚡ Que lo limpie Robi ya · 🪙 ${expres}`, tipo: 'rosa', desactivado: estado.monedas < expres, accion: () => {
       estado.monedas -= expres;
+      pista('🤖', 'Limpieza exprés de Robi');
       sonido.arreglo();
       suciedad.eventos.particula('✨', d.grupo.position, 4);
       suciedad.limpiar(d, 'expres');
@@ -1423,6 +1481,7 @@ function hacerObra(id) {
   if (!o || obraHecha(o) || nivelXp() < o.nivel || estado.monedas < o.precio || visitando) return;
   if (o.filas && (estado.salonFilas || 0) < o.filas - 1) return;
   estado.monedas -= o.precio;
+  pista('🏗️', `Obra: ${o.nombre}`);
   estado.habs = todasHabitaciones();
   estado.obras = [...(estado.obras || []), o.id];
   if (o.filas) estado.salonFilas = o.filas;
@@ -1779,8 +1838,9 @@ mas = new Mas({
 
 const juegos = new Juegos({ sonido, miniaturas });
 
-function ganar(n, m = null, emoji = '🪙', exacto = false) {
+function ganar(n, m = null, emoji = '🪙', exacto = false, texto = null) {
   if (!exacto) n = paga(n);
+  pista(emoji, `+${texto || TEXTO_EMOJI[emoji] || 'Monedas ganadas'}`);
   estado.monedas += n;
   sonido.premio();
   if (m) {
@@ -2163,23 +2223,25 @@ function bloqueoSi(cond, texto) {
 }
 
 function abrirTrabajar() {
-  const t = trabajos.delDia();
+  const ofertas = trabajos.ofertasDia();
   const hechos = trabajos.turnosHoy();
   const quedan = Math.max(0, 3 - hechos);
-  const gratis = !!ui.ruletaGratis;
   const pendientes = encargos.datos().activos.length;
+  const mejor = trabajos.datos().mejor || {};
   const cuerpo = ui.abrirGen('💼 Trabajar', `
-    <div class="tr-hero">
-      <div class="tr-cabecera"><span class="tr-ico">${t.icono}</span><div><small>Trabajo de hoy</small><b>${t.nombre}</b></div></div>
-      <p>${t.texto}</p>
-      <div class="tr-turnos">${[0, 1, 2].map(i => `<i class="${i < hechos ? 'hecho' : ''}">${i < hechos ? '✓' : i + 1}</i>`).join('')}<em>${quedan ? `Te ${quedan === 1 ? 'queda 1 turno' : `quedan ${quedan} turnos`} con paga entera` : 'Turnos de hoy hechos: ahora son horas extra al 30%'}</em></div>
-      <button class="primario tr-ir" id="tr-ir">${quedan ? '¡A trabajar!' : 'Hacer horas extra'}<small>hasta 🪙 ${paga(quedan ? t.pago : Math.round(t.pago * 0.3))}</small></button>
-    </div>
+    <div class="tr-turnos tr-turnos-sueltos">${[0, 1, 2].map(i => `<i class="${i < hechos ? 'hecho' : ''}">${i < hechos ? '✓' : i + 1}</i>`).join('')}<em>${quedan ? `Te ${quedan === 1 ? 'queda 1 turno' : `quedan ${quedan} turnos`} con paga entera hoy` : 'Turnos de hoy hechos: ahora son horas extra al 30%'}</em></div>
+    <h4 class="gen-sub">Ofertas de hoy · elegid una</h4>
+    <div class="tr-ofertas">${ofertas.map((t, i) => `
+      <button class="tr-oferta" data-i="${i}">
+        <span class="tr-ico">${t.icono}</span>
+        <div><b>${t.nombre}</b><small>${t.texto}</small>${mejor[t.id] ? `<em>🏅 Vuestro mejor: ${Math.round(mejor[t.id] * 100)}%</em>` : '<em>✨ Nuevo para vosotros</em>'}</div>
+        <i>🪙 ${paga(quedan ? t.pago : Math.round(t.pago * 0.3))}</i>
+      </button>`).join('')}</div>
     <h4 class="gen-sub">Más formas de ganar</h4>
     <div class="tr-otros">
       <button data-a="encargos" class="${pendientes ? 'destacado' : ''}"><span>📞</span><b>Encargos</b><small>${pendientes ? `${pendientes} ${pendientes === 1 ? 'favor pendiente' : 'favores pendientes'}` : 'Os llamarán para pedir favores'}</small></button>
     </div>`);
-  cuerpo.querySelector('#tr-ir').addEventListener('click', () => trabajos.trabajar(t));
+  cuerpo.querySelectorAll('.tr-oferta').forEach(b => b.addEventListener('click', () => trabajos.trabajar(ofertas[Number(b.dataset.i)])));
   cuerpo.querySelector('[data-a="encargos"]').addEventListener('click', () => abrirEncargos());
 }
 
@@ -2278,7 +2340,7 @@ encargos = new Encargos({
   refrescarHud: () => refrescarHud(),
   registrar: e => registrar(e),
   recordar: (...a) => pareja.recordar(...a),
-  ganar: (n, m, icono, exacto) => ganar(n, m, icono, exacto),
+  ganar: (n, m, icono, exacto, texto) => ganar(n, m, icono, exacto, texto),
   chip: () => pintarChipsVida(),
   avisarPareja: (t, x) => window.avisarPareja && window.avisarPareja(t, x),
   tieneCocina: () => tieneCocinaEnCasa(),
@@ -2328,6 +2390,7 @@ inmobiliaria = new Inmobiliaria({
 });
 ui.puedeItem = d => puedeItem(d);
 document.getElementById('pill-nivel').addEventListener('click', () => { sonido.tocar(); experiencia.abrir(); });
+document.querySelector('#hud .pastilla.moneda').addEventListener('click', () => { sonido.tocar(); abrirMovimientos(); });
 experiencia.pintarPill();
 
 paredObjs = new ObjetosPared({

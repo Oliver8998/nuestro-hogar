@@ -133,6 +133,87 @@ const LUZ = {
 
 const suave = t => t * t * (3 - 2 * t);
 
+function fachadaTorre(per, semilla) {
+  const c = document.createElement('canvas');
+  c.width = 256;
+  c.height = 1024;
+  const g = c.getContext('2d');
+  const l = document.createElement('canvas');
+  l.width = 256;
+  l.height = 1024;
+  const gl = l.getContext('2d');
+  gl.fillStyle = '#000';
+  gl.fillRect(0, 0, 256, 1024);
+  let a = semilla;
+  const r = () => ((a = (a * 16807) % 2147483647) / 2147483647);
+  g.fillStyle = '#c9a98f';
+  g.fillRect(0, 0, 256, 1024);
+  const cols = 4;
+  const pisos = 10;
+  const fw = 256 / cols;
+  const fh = 1024 / pisos;
+  const enc = { dia: 0.08, tarde: 0.45, noche: 0.8 }[per] || 0.3;
+  for (let f = 0; f < pisos; f++) {
+    g.fillStyle = '#b79780';
+    g.fillRect(0, f * fh, 256, 6);
+    for (let k = 0; k < cols; k++) {
+      const x = k * fw + fw * 0.22;
+      const y = f * fh + fh * 0.22;
+      const w = fw * 0.56;
+      const h = fh * 0.56;
+      g.fillStyle = '#f3ece2';
+      g.fillRect(x - 4, y - 4, w + 8, h + 8);
+      const luz = r() < enc;
+      g.fillStyle = luz ? '#ffd58f' : per === 'dia' ? '#8fb3cc' : '#3b3f5e';
+      g.fillRect(x, y, w, h);
+      g.fillStyle = 'rgba(255,255,255,.18)';
+      g.fillRect(x + w / 2 - 1, y, 2, h);
+      if (luz) {
+        gl.fillStyle = '#ffd58f';
+        gl.fillRect(x, y, w, h);
+      }
+      if (r() < 0.35) {
+        g.fillStyle = '#2f2f36';
+        for (let b = 0; b < 6; b++) g.fillRect(x - 4 + b * (w + 8) / 5, y + h - 10, 2, 16);
+        g.fillRect(x - 6, y + h + 4, w + 12, 3);
+      }
+    }
+  }
+  const mapa = new THREE.CanvasTexture(c);
+  mapa.colorSpace = THREE.SRGBColorSpace;
+  const luz = new THREE.CanvasTexture(l);
+  luz.colorSpace = THREE.SRGBColorSpace;
+  return { mapa, luz };
+}
+
+function crearTorre(per) {
+  const grupo = new THREE.Group();
+  const ALTO = 30;
+  const intensidad = { dia: 0, tarde: 0.7, noche: 1.1 }[per] ?? 0.5;
+  const caras = [1, 2].map(k => {
+    const f = fachadaTorre(per, 7919 * k + 11);
+    return new THREE.MeshStandardMaterial({ map: f.mapa, emissiveMap: f.luz, emissive: 0xffffff, emissiveIntensity: intensidad, roughness: 0.95 });
+  });
+  const techo = new THREE.MeshStandardMaterial({ color: 0x9c8c80, roughness: 1 });
+  const cuerpo = new THREE.Mesh(new THREE.BoxGeometry(1, ALTO, 1), [caras[0], caras[1], techo, techo, caras[1], caras[0]]);
+  cuerpo.position.y = -0.45 - ALTO / 2;
+  cuerpo.receiveShadow = true;
+  grupo.add(cuerpo);
+  const cornisa = new THREE.Mesh(new THREE.BoxGeometry(1, 0.18, 1), new THREE.MeshStandardMaterial({ color: 0xe9dfd2, roughness: 0.9 }));
+  cornisa.position.y = -0.5;
+  grupo.add(cornisa);
+  let w = 6;
+  let d = 6;
+  const ajustar = (nw, nd, k) => {
+    w += (nw - w) * k;
+    d += (nd - d) * k;
+    cuerpo.scale.set(w, 1, d);
+    cornisa.scale.set(w + 0.16, 1, d + 0.16);
+  };
+  ajustar(6.5, 6.5, 1);
+  return { grupo, ajustar };
+}
+
 export class Escaparate {
   constructor(contenedor) {
     this.contenedor = contenedor;
@@ -171,6 +252,8 @@ export class Escaparate {
     this.geoBurbuja.userData.compartida = true;
     this.matBurbuja = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xbfe9ff, emissiveIntensity: 0.8, roughness: 0.2 });
     this.matBurbuja.userData.fijo = true;
+    this.torre = crearTorre(periodo());
+    this.escena.add(this.torre.grupo);
     this.indice = Math.floor(Math.random() * SALAS.length);
     this.t = 0;
     this.tSala = 0;
@@ -649,6 +732,7 @@ export class Escaparate {
     }
     actualizarPersonajes(dt);
     this.zoom += (actual.zoom - this.zoom) * Math.min(1, dt * 3);
+    this.torre.ajustar(actual.s.ancho + 0.5, actual.s.fondo + 0.5, Math.min(1, dt * 4));
     this.encuadre();
     const ang = Math.PI / 4 + Math.sin(this.t * 0.25) * 0.35;
     const d = 14;

@@ -1076,6 +1076,19 @@ export class Trabajos {
     return TRABAJOS[i];
   }
 
+  ofertasDia(fecha = new Date()) {
+    const base = this.delDia(fecha);
+    const r = hash(`ofertas-${fecha.getFullYear()}-${fecha.getMonth()}-${fecha.getDate()}`);
+    const lista = [base];
+    let k = 0;
+    while (lista.length < 3 && k < 50) {
+      const t = TRABAJOS[(r + k * 7 + 3) % TRABAJOS.length];
+      if (!lista.includes(t)) lista.push(t);
+      k++;
+    }
+    return lista;
+  }
+
   datos() {
     const hoy = new Date().toDateString();
     if (!this.estado.trabajos) this.estado.trabajos = { dia: hoy, turnos: 0, mejor: {}, hechos: [] };
@@ -1133,7 +1146,7 @@ export class Trabajos {
     this.ctx.registrar('trabajar');
     this.ctx.registrar(`trabajo-${t.id}`);
     if (puntos >= 0.99) this.ctx.registrar('trabajo-perfecto');
-    this.ctx.ganar(cobro, null, t.icono);
+    this.ctx.ganar(cobro, null, t.icono, false, `Trabajo: ${t.nombre}`);
     if (extra && factor === 1) setTimeout(() => ui.aviso(`🌟 ¡Turno perfecto! Propina de ${paga(extra)}`), 1200);
     if (d.hechos.length === TRABAJOS.length && !d.todos) {
       d.todos = true;
