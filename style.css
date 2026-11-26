@@ -3879,3 +3879,5 @@ textarea.carta-texto { font-family: 'Georgia', serif; line-height: 1.5; }
 #menu-camara { position: fixed; top: calc(env(safe-area-inset-top) + 66px); left: 50%; right: auto; transform: translateX(-50%); }
 .fila-camara { width: 56px; }
 #flecha-camara { position: absolute; right: 100%; top: 0; }
+#flecha-camara { right: auto; left: 50%; top: 50%; width: 34px; height: 34px; margin: -17px 0 0 -17px; font-size: 26px; }
+#flecha-camara { text-shadow: 0 0 3px rgba(40, 30, 20, .75), 0 2px 4px rgba(40, 30, 20, .5); }

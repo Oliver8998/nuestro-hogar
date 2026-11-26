@@ -769,3 +769,6 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 ## Cámara de cine arriba en el centro y HUD más limpio (v116)
 - El botón de cámara es ahora 🎥 grande (38 px), sin círculo blanco, fijo arriba en el centro; la flecha del balcón va a su izquierda (también sin fondo, blanca con sombra) y el menú se abre centrado debajo.
 - Quitadas de la pantalla principal las pastillas de Reforma y de Limpieza (`display: none`). El progreso de la reforma sigue en Misiones e historia.
+
+## La flecha gira alrededor de la cámara (v117)
+- La flecha del balcón ya no está fija a la izquierda: orbita alrededor del 🎥 a 40 px del centro, en la misma dirección hacia la que apunta (`actualizarFlecha` mueve el botón con translate y gira la flecha).
