@@ -715,3 +715,6 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - Quitada la pestaña 💕 Pareja: ordenador, impresora, caballete, calendario, tarro de preguntas, corcho, cofre, árbol de recuerdos y mapa vuelven a salir (o no) en el mostrador que rota, como cualquier objeto. Si falta ordenador o impresora para la carta, el aviso dice que a veces los tiene Pilar.
 - Info de lo que hace cada objeto (`uso`): además de los de pareja, `USOS` en catalogo.js da texto a tele, nevera, cocina, lavadora, chimenea, sofás/pufs/sillón (relax y tapizar), cama, silla, radio, piano, acuario, huerto, cosas de mascotas, robot, arenero y trampa; plantas → "Regadla una vez al día"; cualquier `encendible` → "Tocadla para encenderla o apagarla". Sale como chip 💡 en la tienda y como cabecera (nombre + 💡) en el menú al tocar el objeto en casa.
 - Inicio: quitado el dibujo de la ciudad del fondo (vuelve el banco de nubes); se queda la torre bajo el piso.
+
+## Siempre un objeto de pareja en el mostrador (v107)
+- `mostradorActual`: si en el reparto no ha caído ningún objeto `pareja`, se añade uno al azar (misma semilla del periodo, igual en los dos móviles). Comprobado en 12 periodos seguidos: siempre hay al menos uno.

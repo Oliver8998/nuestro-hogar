@@ -69,6 +69,10 @@ export function mostradorActual({ puede = d => !d.nivel, imprescindibles = [] } 
   coger(utiles, 1);
   if (exterior.length) coger(exterior, 1);
   else coger(barajar([...muebles, ...deco], r), 1);
+  if (!elegidos.some(d => d.pareja)) {
+    const pareja = barajar(disponibles.filter(d => d.pareja), r)[0];
+    if (pareja) elegidos.push(pareja);
+  }
   for (const id of imprescindibles) {
     const d = disponibles.find(x => x.id === id);
     if (!d || elegidos.includes(d)) continue;
