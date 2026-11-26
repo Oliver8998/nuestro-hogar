@@ -3871,3 +3871,11 @@ textarea.carta-texto { font-family: 'Georgia', serif; line-height: 1.5; }
 #menu-camara button { border: none; background: none; text-align: left; font: inherit; font-weight: 800; font-size: 14px; padding: 9px 12px; border-radius: 10px; color: var(--texto); white-space: nowrap; }
 #menu-camara button:active { background: #f4ebdf; }
 .hud-derecha { position: relative; }
+
+#hud .pastilla.casa, #pill-limpieza { display: none !important; }
+.fila-camara { position: fixed; top: calc(env(safe-area-inset-top) + 6px); left: 50%; transform: translateX(-50%); margin: 0; gap: 2px; align-items: center; z-index: 4; }
+.boton-camara { width: 56px; height: 56px; background: none; box-shadow: none; font-size: 38px; filter: drop-shadow(0 2px 3px rgba(40, 30, 20, .35)); }
+#flecha-camara { width: 40px; height: 56px; background: none; color: #fff; font-size: 30px; text-shadow: 0 2px 4px rgba(40, 30, 20, .5); }
+#menu-camara { position: fixed; top: calc(env(safe-area-inset-top) + 66px); left: 50%; right: auto; transform: translateX(-50%); }
+.fila-camara { width: 56px; }
+#flecha-camara { position: absolute; right: 100%; top: 0; }

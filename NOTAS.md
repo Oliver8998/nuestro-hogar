@@ -765,3 +765,7 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - **Sonido de ambiente:** rumor suave de ciudad (ruido marrón filtrado en bucle, `sonido.ambiente`), más alto mirando el balcón o desde la calle y más bajo de noche; va por el volumen de efectos.
 - **Obras con andamio:** al hacer una obra sale 3 s un andamio con lona donde se amplía (salón o balcón), con golpes y polvo; el aviso de obra terminada llega después.
 - **Guía de 6 pasos** (antes 11): tienda, Reparar, comprar (la tienda se cierra sola), paquete, arrastrar y Reforma (que ya menciona Trabajar). Misiones y Trabajar enseñan un aviso corto la primera vez que se abren.
+
+## Cámara de cine arriba en el centro y HUD más limpio (v116)
+- El botón de cámara es ahora 🎥 grande (38 px), sin círculo blanco, fijo arriba en el centro; la flecha del balcón va a su izquierda (también sin fondo, blanca con sombra) y el menú se abre centrado debajo.
+- Quitadas de la pantalla principal las pastillas de Reforma y de Limpieza (`display: none`). El progreso de la reforma sigue en Misiones e historia.
