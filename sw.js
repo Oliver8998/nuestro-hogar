@@ -67,6 +67,7 @@ const ARCHIVOS = [
   './js/intros.js',
   './js/bienvenida.js',
   './js/sueno.js',
+  './js/medidas.js',
   './js/choques.js',
   './js/edificio.js',
   './js/pisosVecinos.js',
