@@ -663,7 +663,7 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - Luz de la maqueta muy rebajada: `luzCalida` 0,6 de día y hasta 2,0 de noche; viñeta 0,12-0,2; halo nocturno hasta 0,14.
 - Siluetas en ventanas encendidas (`edificio.siluetas` / `nuevaSilueta`): de noche (`noche > 0.35`) van apareciendo hasta 7 a la vez en los edificios de la ciudad, en la cara que mira a la cámara y solo en ventanas que de verdad están encendidas en su textura (`fachada()` ahora devuelve la tabla `encendidas` de cada estilo y cada edificio guarda su `estilo`; la posición de cada ventana se calcula con la misma cuenta que las UV: celdas de 3 m, ventana centrada, de 0,84 a 2,39 m sobre el suelo de la planta). Tipos: persona quieta, persona con el brazo levantado (a veces dando saltitos), un gato y otra persona; algunas cruzan despacio la ventana. Aparecen y desaparecen con fundido; al estar en la pasada de la ciudad se ven suaves con el efecto maqueta.
 
-### v100 — Dron en la ventana y sin puerta
+## Dron fijo en la ventana y sin puerta en la habitación (v100)
 - El dron de los pedidos espera siempre delante de la ventana principal (pared 0), fijo aunque se gire la cámara (`entregas.puntoEspera` usa la posición/normal de `sala.ventana`; varios drones se reparten a los lados). Si el cristal está roto se pone en el lado del cristal.
 - Cuando esa pared está al fondo, los drones se pintan en la capa 2 (la de la ciudad) para verse a través del hueco de la ventana; si la pared está oculta, capa 0 (`entregas.ponerCapa`, el raycast activa la capa).
 - Quitada la puerta de la habitación (pared 1 entera). Textos de "llega a la puerta" → "a la ventana"; pared 1 se llama "de enfrente".
