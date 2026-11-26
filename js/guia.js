@@ -27,13 +27,8 @@ const PASOS = [
   },
   {
     id: 'comprar', objetivo: () => '#det-comprar',
-    texto: 'Elige algo de la lista (el martillo para la tabla del suelo, por ejemplo) y dale a <b>Comprar</b>',
+    texto: 'Elige algo de la lista (el martillo para la tabla del suelo, por ejemplo) y dale a <b>Comprar</b>. Lo traerá un dron',
     avanza: ['pedido']
-  },
-  {
-    id: 'cerrar', objetivo: () => '#tienda .tienda-cabecera .cerrar',
-    texto: '¡Pedido hecho! Lo trae un dron en unos segundos. Cierra la tienda para verlo llegar',
-    avanza: ['cerrar:tienda']
   },
   {
     id: 'paquete', objetivo: c => c.posPaquete(),
@@ -47,34 +42,12 @@ const PASOS = [
   },
   {
     id: 'reforma', objetivo: () => '#hud .pastilla.casa',
-    texto: '¡Muy bien! Cada arreglo sube la <b>Reforma</b>. Arreglad las 10 cosas para dejar el piso como nuevo',
+    texto: '¡Muy bien! Cada arreglo sube la <b>Reforma</b>. Arreglad las 10 cosas para dejar el piso como nuevo. Para ganar monedas, a <b>💼 Trabajar</b>',
     boton: 'Entendido'
-  },
-  {
-    id: 'cerrarInv', objetivo: () => '#cerrar-inv',
-    texto: 'Ahora cierra el <b>inventario</b> con la ✕ para ver bien la casa',
-    avanza: ['clic:#cerrar-inv'],
-    saltaSi: c => !c.ui.inventarioAbierto
-  },
-  {
-    id: 'misiones', objetivo: () => '#btn-misiones',
-    texto: 'Si no sabéis qué hacer, mirad las <b>Misiones</b>: os guían y dan monedas',
-    avanza: ['clic:#btn-misiones']
-  },
-  {
-    id: 'cerrarMis', objetivo: () => '#misiones .cerrar',
-    texto: 'Aquí tenéis las misiones. Ciérralas con la ✕ para seguir',
-    avanza: ['clic:#misiones .cerrar'],
-    saltaSi: c => c.ui.hojaAbierta !== 'misiones'
-  },
-  {
-    id: 'trabajar', objetivo: () => '#btn-trabajar',
-    texto: 'Y lo más importante: en <b>Trabajar</b> ganáis monedas cada día para comprar cosas. ¡Ya sabéis lo básico!',
-    avanza: ['clic:#btn-trabajar']
   }
 ];
 
-const SALTOS = { pedido: 3, paquete: 5, arreglar: 6, colocar: 6, limpiar: 6 };
+const SALTOS = { pedido: 3, paquete: 4, arreglar: 5, colocar: 5, limpiar: 5 };
 
 export class Guia {
   constructor(ctx) {
@@ -134,6 +107,7 @@ export class Guia {
 
   evento(e) {
     if (!this.activa()) return;
+    if (e === 'pedido' && this.paso <= 2) setTimeout(() => this.ctx.ui.cerrarHojas(), 900);
     if (SALTOS[e] !== undefined && SALTOS[e] > this.paso) return this.ir(SALTOS[e]);
     if ((PASOS[this.paso].avanza || []).includes(e)) this.ir(this.paso + 1);
   }
@@ -177,7 +151,6 @@ export class Guia {
       if (this.paso === 1 || this.paso === 2) this.escribir(0);
     }
     if (this.paso === 0 && hoja === 'tienda') return this.ir(1);
-    if (this.paso === 3 && hoja !== 'tienda') return this.ir(4);
     if (this.oculta) {
       this.quitar();
       return;

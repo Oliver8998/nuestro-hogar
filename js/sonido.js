@@ -66,6 +66,41 @@ function ruido(duracion, { volumen = 0.08, freq = 1800, q = 1, inicio = 0 } = {}
   src.stop(t + duracion + 0.02);
 }
 
+let amb = null;
+function ambiente(nivel) {
+  const c = ctx;
+  if (!c || c.state !== 'running') return;
+  if (!amb) {
+    const largo = c.sampleRate * 4;
+    const buf = c.createBuffer(1, largo, c.sampleRate);
+    const d = buf.getChannelData(0);
+    let ult = 0;
+    for (let i = 0; i < largo; i++) {
+      ult = (ult + 0.02 * (Math.random() * 2 - 1)) / 1.02;
+      d[i] = ult * 3.2;
+    }
+    const n = 2000;
+    for (let i = 0; i < n; i++) {
+      const k = i / n;
+      d[i] = d[i] * k + d[largo - n + i] * (1 - k);
+    }
+    const src = c.createBufferSource();
+    src.buffer = buf;
+    src.loop = true;
+    src.loopEnd = (largo - n) / c.sampleRate;
+    const f = c.createBiquadFilter();
+    f.type = 'lowpass';
+    f.frequency.value = 520;
+    const g = c.createGain();
+    g.gain.value = 0;
+    src.connect(f).connect(g).connect(busEfectos);
+    src.start();
+    amb = { g };
+  }
+  const objetivo = activo ? Math.max(0, nivel) * 0.12 : 0;
+  amb.g.gain.setTargetAtTime(objetivo, c.currentTime, 1.2);
+}
+
 export function audio() {
   return contexto();
 }
@@ -103,6 +138,9 @@ export const sonido = {
   },
   desbloquear() {
     contexto();
+  },
+  ambiente(nivel) {
+    ambiente(nivel);
   },
   tono(freq, inicio = 0, duracion = 0.3, op = {}) {
     nota(freq, inicio, duracion, op);

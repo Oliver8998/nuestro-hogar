@@ -752,3 +752,16 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 
 ## Balcón sin borde saliente (v114)
 - La losa del balcón ya no sobresale de las barandillas (antes 25 cm más un canto claro): mide E + 5 cm × F + 10 cm, a ras de la barandilla. Quitado el canto.
+
+## Botón de cámara, retos semanales, piso vivo y más (v115)
+- **Cámara (arriba a la derecha):** botón 📷 con menú (🎯 Centrar, 🏙️ Ver desde la calle ↔ 🏠 Volver al piso, ↻ Girar la casa). Si hay balcón aparece una flecha al lado: lleva la vista al balcón y, estando en el balcón, de vuelta al piso. La flecha gira suave hacia donde está en pantalla la otra zona vista desde el centro actual (`actualizarFlecha`, proyecta los dos centros con la cámara). `camaraIso.enfocar('todo'|'piso'|'balcon')`, `centroZona`, `medirCaja(ancho, fondo)`, `vistaCalle(si)` (zoom 0,42×fit y objetivo bajado a y = -4); `zoomMin` = 0,3×fit.
+- **Retos de la semana en pareja** (Misiones): 600 monedas entre los dos, limpiar 15 cosas, entrar los dos 4 días. Cada uno da 60 🪙 + 2 🎟️; los tres, unos **Farolillos de papel** exclusivos. `estado.semana` (semana que empieza el lunes); las monedas se suman desde `anotarMovimiento`, la limpieza desde `registrar('limpiar')`, los días al abrir el juego.
+- **Piso vivo:** el cristal de la ventana principal se va llenando de polvo en 4 días (`estado.cristalLimpio`, capa con manchas en `sala.ponerPolvoVentana`); se limpia tocando la ventana → 🧽 Limpiar. (Las plantas ya crecían, se mustiaban y florecían, y los muebles blandos ya se desgastaban.)
+- **Resumen al entrar:** la bienvenida también sale si llevabais más de 2 h fuera, y "La casa os necesita" incluye encargos, cartas, misiones por recoger, turnos de trabajo y el cristal sucio.
+- **Luces nuevas:** Guirnalda de luces y Velas en el mostrador; Farolillos solo con los retos.
+- **Vecinos:** con la radio puesta de 23 a 8 h más de un minuto, el de abajo golpea el techo (una vez por sesión). Con 3 o más cosas en el balcón, Sol os deja una nota y 30 monedas (una vez).
+- **Dron:** con muebles grandes el paquete y el dron son más grandes; con lluvia o nieve tarda 15 s más y lo avisa.
+- **Clima en el balcón:** nieve en las barandillas y una capa blanca en el suelo cuando nieva; charcos cuando llueve (`sala.ponerClimaPatio`).
+- **Sonido de ambiente:** rumor suave de ciudad (ruido marrón filtrado en bucle, `sonido.ambiente`), más alto mirando el balcón o desde la calle y más bajo de noche; va por el volumen de efectos.
+- **Obras con andamio:** al hacer una obra sale 3 s un andamio con lona donde se amplía (salón o balcón), con golpes y polvo; el aviso de obra terminada llega después.
+- **Guía de 6 pasos** (antes 11): tienda, Reparar, comprar (la tienda se cierra sola), paquete, arrastrar y Reforma (que ya menciona Trabajar). Misiones y Trabajar enseñan un aviso corto la primera vez que se abren.

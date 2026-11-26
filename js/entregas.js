@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { construirPiezas, liberar } from './modelos.js';
 import { crearExclamacion } from './telefono.js';
+import { infoItem } from './catalogo.js';
 
 const PI = Math.PI;
 const ALTURA_VENTANA = 1.45;
@@ -128,9 +129,11 @@ export class Entregas {
 
   crearDronCon(p, volando) {
     const dron = crearDron();
-    dron.scale.setScalar(1.1);
+    const tam = Math.max(1, ...(p.items || []).map(it => { const i = infoItem(it.id); return i && i.ancho ? i.ancho * (i.fondo || 1) : 1; }));
+    const grande = tam >= 6 ? 1.6 : tam >= 3 ? 1.25 : 1;
+    dron.scale.setScalar(1.1 * (grande > 1 ? 1.15 : 1));
     const { grupo } = construirPiezas(PIEZAS_PAQUETE);
-    grupo.scale.setScalar(0.62);
+    grupo.scale.setScalar(0.62 * grande);
     grupo.position.y = -CUELGA;
     grupo.userData.pedido = p;
     const excl = crearExclamacion(0.32);

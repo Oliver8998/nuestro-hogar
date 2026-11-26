@@ -229,6 +229,37 @@ export function crearSala(escena) {
   cristal.position.set(-0.3, 0, 0.012);
   ventana.add(cristal);
 
+  const polvoCanvas = document.createElement('canvas');
+  polvoCanvas.width = polvoCanvas.height = 128;
+  {
+    const g = polvoCanvas.getContext('2d');
+    for (let k = 0; k < 900; k++) {
+      g.fillStyle = `rgba(${150 + Math.random() * 40},${135 + Math.random() * 30},${110 + Math.random() * 20},${0.15 + Math.random() * 0.35})`;
+      const r = 1 + Math.random() * 3;
+      g.beginPath();
+      g.arc(Math.random() * 128, Math.random() * 128, r, 0, Math.PI * 2);
+      g.fill();
+    }
+    g.strokeStyle = 'rgba(120,105,85,.25)';
+    g.lineWidth = 3;
+    for (let k = 0; k < 4; k++) {
+      g.beginPath();
+      g.moveTo(Math.random() * 128, 0);
+      g.lineTo(Math.random() * 128, 128);
+      g.stroke();
+    }
+  }
+  const texPolvo = new THREE.CanvasTexture(polvoCanvas);
+  const polvoCristal = new THREE.Mesh(new THREE.PlaneGeometry(1.14, 1.14), new THREE.MeshStandardMaterial({ map: texPolvo, transparent: true, opacity: 0, depthWrite: false, roughness: 1 }));
+  polvoCristal.position.z = 0.03;
+  polvoCristal.visible = false;
+  ventana.add(polvoCristal);
+  function ponerPolvoVentana(k) {
+    const o = k * 0.85;
+    polvoCristal.material.opacity = o;
+    polvoCristal.visible = o > 0.03 && carton.parent !== ventana;
+  }
+
   const grietasVentana = [];
   [[-0.35, 0.2, 0.5, 0.6], [-0.22, 0.05, 0.35, -0.9], [-0.4, -0.15, 0.3, 0.3]].forEach(([x, y, largo, ang]) => {
     const grieta = caja(largo, 0.012, 0.005, 0x2f3b40);
@@ -717,11 +748,37 @@ export function crearSala(escena) {
         }
       }
       g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+      const capa = new THREE.Mesh(new THREE.BoxGeometry(largo + 0.04, 0.05, terraza ? 0.11 : 0.06), matNieve);
+      capa.position.y = terraza ? 0.81 : 0.57;
+      capa.visible = false;
+      g.add(capa);
+      nieves.push(capa);
       patio.add(g);
     };
+    const matNieve = new THREE.MeshStandardMaterial({ color: 0xf8fbff, roughness: 1 });
+    const nieves = [];
     tramoValla(mx + 0.05, -mz - 0.02, mx + E, -mz - 0.02);
     tramoValla(mx + E + 0.02, -mz, mx + E + 0.02, mz);
     tramoValla(mx + E, mz + 0.02, mx + 0.05, mz + 0.02);
+    const mantoNieve = new THREE.Mesh(new THREE.PlaneGeometry(E - 0.1, F - 0.1), new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.55, roughness: 1, depthWrite: false }));
+    mantoNieve.rotation.x = -Math.PI / 2;
+    mantoNieve.position.set(mx + E / 2, 0.006, 0);
+    mantoNieve.visible = false;
+    nieves.push(mantoNieve);
+    patio.add(mantoNieve);
+    const charcos = [];
+    const matCharco = new THREE.MeshStandardMaterial({ color: 0x9fc4e0, roughness: 0.05, metalness: 0.2, transparent: true, opacity: 0.55, depthWrite: false });
+    for (let k = 0; k < Math.max(2, Math.round(E * F / 4)); k++) {
+      const c = new THREE.Mesh(new THREE.CircleGeometry(0.18 + Math.random() * 0.16, 20), matCharco);
+      c.rotation.x = -Math.PI / 2;
+      c.scale.set(1, 0.6 + Math.random() * 0.4, 1);
+      c.position.set(mx + 0.3 + Math.random() * (E - 0.6), 0.004, (Math.random() - 0.5) * (F - 0.6));
+      c.visible = false;
+      charcos.push(c);
+      patio.add(c);
+    }
+    patio.userData.nieves = nieves;
+    patio.userData.charcos = charcos;
     const cristalera = new THREE.Group();
     cristalera.name = 'cristalera';
     const matMarco = new THREE.MeshStandardMaterial({ color: 0xf3eee4, roughness: 0.6 });
@@ -751,6 +808,14 @@ export function crearSala(escena) {
     patio.add(cristalera);
     patio.userData.cristalera = cristalera;
     sala.add(patio);
+  }
+
+  function ponerClimaPatio(clima) {
+    if (!patio) return;
+    const nieva = clima === 'nieve';
+    const llueve = clima === 'lluvia';
+    patio.userData.nieves.forEach(n => { n.visible = nieva; });
+    patio.userData.charcos.forEach(c => { c.visible = llueve; });
   }
 
   function enHueco(pared, x, ancho = 0.6) {
@@ -819,5 +884,5 @@ export function crearSala(escena) {
     });
   }
 
-  return { paredes, cara, redimensionar, ponerPatio, enHueco, patio: () => (patioTipo ? { tipo: patioTipo, ancho: patioAncho } : null), largoPared, ancho: () => anchoActual, fondo: () => fondoActual, modoVisita, ponerPapel, decorSuelo, tablas, modoExterior, esExterior: () => exterior, pintarSuelo, mostrarDesperfectos, completarTodo, pintarParedes, conDesperfectos: () => conDesperfectos, ventana, ventanaRota: () => carton.parent === ventana, matCristal, hemi, sol, visibles: () => paredes.map(p => p.visible), actualizarParedes, actualizar, buscar, tocar, puedeAplicar, aplicar, resaltar, estado, restaurar, progreso };
+  return { paredes, cara, redimensionar, ponerPatio, enHueco, ponerPolvoVentana, ponerClimaPatio, patio: () => (patioTipo ? { tipo: patioTipo, ancho: patioAncho } : null), largoPared, ancho: () => anchoActual, fondo: () => fondoActual, modoVisita, ponerPapel, decorSuelo, tablas, modoExterior, esExterior: () => exterior, pintarSuelo, mostrarDesperfectos, completarTodo, pintarParedes, conDesperfectos: () => conDesperfectos, ventana, ventanaRota: () => carton.parent === ventana, matCristal, hemi, sol, visibles: () => paredes.map(p => p.visible), actualizarParedes, actualizar, buscar, tocar, puedeAplicar, aplicar, resaltar, estado, restaurar, progreso };
 }

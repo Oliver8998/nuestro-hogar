@@ -3861,3 +3861,13 @@ textarea.carta-texto { font-family: 'Georgia', serif; line-height: 1.5; }
 
 #inventario { height: 92px; grid-auto-flow: column; grid-template-columns: none; grid-auto-columns: 74px; grid-template-rows: 86px; grid-auto-rows: 86px; overflow-x: auto; overflow-y: hidden; touch-action: pan-x; padding: 2px 4px; }
 #inventario .vacio { grid-column: auto; grid-row: 1; width: calc(100vw - 40px); align-self: center; }
+
+.fila-camara { display: flex; gap: 6px; justify-content: flex-end; margin-top: 6px; pointer-events: auto; }
+.boton-camara { width: 42px; height: 42px; border-radius: 50%; border: none; background: rgba(255, 252, 247, .95); box-shadow: 0 3px 10px rgba(59, 47, 38, .14); font-size: 20px; display: grid; place-items: center; padding: 0; }
+.boton-camara:active { transform: scale(.92); }
+#flecha-camara { background: #fff1dc; color: #c77a3a; font-size: 22px; font-weight: 900; }
+#flecha-camara span { display: inline-block; line-height: 1; transition: none; }
+#menu-camara { position: absolute; right: 0; top: 104px; background: #fffcf7; border-radius: 16px; box-shadow: 0 6px 20px rgba(59, 47, 38, .18); padding: 6px; display: flex; flex-direction: column; gap: 4px; z-index: 6; pointer-events: auto; }
+#menu-camara button { border: none; background: none; text-align: left; font: inherit; font-weight: 800; font-size: 14px; padding: 9px 12px; border-radius: 10px; color: var(--texto); white-space: nowrap; }
+#menu-camara button:active { background: #f4ebdf; }
+.hud-derecha { position: relative; }

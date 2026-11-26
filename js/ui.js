@@ -789,6 +789,12 @@ export class UI {
   abrirMisiones() {
     this.pintarMisiones(this.ev.alPedirMisiones());
     this.abrirHoja('misiones');
+    try {
+      if (!localStorage.getItem('hogar-vio-misiones')) {
+        localStorage.setItem('hogar-vio-misiones', '1');
+        setTimeout(() => this.avisoSuave('📋 Misiones del día, retos de la semana y vuestra historia: todas dan premio'), 500);
+      }
+    } catch (e) {}
   }
 
   pintarMisiones(d) {
@@ -810,6 +816,11 @@ export class UI {
     const lista = this.$('lista-diarias');
     lista.innerHTML = '';
     for (const m of d.diarias) lista.appendChild(this.filaMision(m));
+    const sem = this.$('lista-semana');
+    if (sem) {
+      sem.innerHTML = '';
+      for (const m of d.semana || []) sem.appendChild(this.filaMision(m));
+    }
     const h = this.$('historia-tarjeta');
     h.innerHTML = '';
     if (d.historia) h.appendChild(this.filaMision(d.historia));

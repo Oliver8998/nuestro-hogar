@@ -312,7 +312,7 @@ function aplicarTam() {
   sala.redimensionar(ancho, fondo);
   sala.ponerPatio(patio ? patio.tipo : null, E, patio ? patio.fondo : 0);
   gestor.ajustarTam(ancho, fondo, E, patio ? patio.fondo : 0);
-  camaraIso.ajustar(ancho, fondo, E);
+  camaraIso.ajustar(ancho, fondo, E, patio ? patio.fondo : 0);
   edificio.construir(ancho, fondo, E);
   edificio.raiz.position.x = 0;
   suciedad.jardin = !!estado.jardin || !!estado.patio;
@@ -466,7 +466,8 @@ function hayTrampa() {
 }
 
 function tiempoEntrega(cantidad) {
-  return Math.min(45, 20 + 4 * (cantidad - 1));
+  const base = Math.min(45, 20 + 4 * (cantidad - 1));
+  return ambiente.clima === 'lluvia' || ambiente.clima === 'nieve' ? base + 15 : base;
 }
 
 function abrirPaquete(p) {
@@ -528,6 +529,7 @@ function cargar() {
     suciedad.anadir('telarana', { hueco: 0 }, false);
     return false;
   }
+  tUltimaSesion = datos.t || 0;
   estado.monedas = datos.monedas ?? 250;
   estado.tickets = datos.tickets ?? 0;
   estado.dia = datos.dia ?? null;
@@ -557,6 +559,43 @@ function cargar() {
   return true;
 }
 
+let tUltimaSesion = 0;
+let tMusica = 0;
+let golpesNoche = false;
+let tVecinos = 5;
+function vecinosReaccionan(dt) {
+  tVecinos -= dt;
+  if (tVecinos > 0) return;
+  tVecinos = 5;
+  const h = new Date().getHours();
+  const noche = h >= 23 || h < 8;
+  if (usos.musica && noche && !visitando) tMusica += 5;
+  else tMusica = Math.max(0, tMusica - 5);
+  if (tMusica >= 60 && !golpesNoche && !dialogoAbierto()) {
+    golpesNoche = true;
+    for (let k = 0; k < 3; k++) sonido.tono(70, k * 0.28, 0.18, { tipo: 'sine', hasta: 40, volumen: 0.3 });
+    ui.aviso('🔨 ¡Pom, pom, pom! El vecino de abajo golpea el techo: ¡que son horas!');
+  }
+  const p = patioActual();
+  sonido.ambiente((camaraIso.zona === 'balcon' ? 1 : camaraIso.lejos ? 0.9 : 0.45) * (noche ? 0.5 : 1));
+  sala.ponerClimaPatio && sala.ponerClimaPatio(ambiente.clima);
+  if (p && !estado.notaBalcon && !dialogoAbierto() && !visitando) {
+    const W = sala.ancho() / 2;
+    const fuera = gestor.muebles.filter(m => m.position.x > W).length;
+    if (fuera >= 3) {
+      estado.notaBalcon = true;
+      ganar(60, null, '🌿', false, 'Nota de la vecina');
+      ui.dialogo({
+        imagen: miniaturas.personaje('sol'), personaje: true,
+        titulo: '💌 Una nota de la vecina',
+        texto: '«¡Qué balcón tan bonito os ha quedado! Se ve desde la calle y da gusto. Os dejo un detallito.» — Sol, la del 2.º',
+        botones: [{ texto: '¡Qué maja!', tipo: 'primario' }]
+      });
+      guardar();
+    }
+  }
+}
+let tPolvo = 0;
 const habiaPartida = cargar();
 let terminada = sala.progreso().hechos >= sala.progreso().total;
 
@@ -571,6 +610,7 @@ function anotarMovimiento(n) {
   const p = pistaMov && Date.now() - pistaMov.t < 4000 && (n > 0) === pistaMov.x.startsWith('+') ? pistaMov : null;
   if (p) pistaMov = null;
   const mov = { t: Date.now(), n, i: p ? p.i : n > 0 ? '🪙' : '🛒', x: p ? p.x.replace(/^\+/, '') : n > 0 ? 'Monedas ganadas' : 'Compras' };
+  if (n > 0) asegurarSemana().monedas += n;
   if (!Array.isArray(estado.movs)) estado.movs = [];
   const ult = estado.movs[estado.movs.length - 1];
   if (ult && ult.x === mov.x && ult.i === mov.i && Math.sign(ult.n) === Math.sign(n) && mov.t - ult.t < 120000) {
@@ -677,7 +717,7 @@ function comprarDirecto(id, color = null, precio = null, cantidad = 1) {
   entregas.pedir([{ id, color: info.tipo === 'mueble' && info.colores ? (color ?? 0) : null, cantidad }], segundos);
   sonido.comprar();
   refrescarHud();
-  ui.aviso(`🛸 ¡Pedido! ${cantidad > 1 ? `${cantidad} × ` : ''}${info.nombre} llega en ${segundos} s`);
+  ui.aviso(`🛸 ¡Pedido! ${cantidad > 1 ? `${cantidad} × ` : ''}${info.nombre} llega en ${segundos} s${ambiente.clima === 'lluvia' || ambiente.clima === 'nieve' ? ' (con este tiempo el dron va más despacio)' : ''}`);
   guardar();
   return true;
 }
@@ -1539,6 +1579,7 @@ function hacerObra(id) {
   }
   refrescarHud();
   guardar();
+  animarObra(o);
   setTimeout(() => {
     sonido.premio();
     ui.dialogo({
@@ -1549,7 +1590,60 @@ function hacerObra(id) {
       botones: [{ texto: '¡A estrenarla!', tipo: 'primario' }]
     });
     setTimeout(() => mas.anadirDiario(`Obra nueva: ${o.nombre}`, true), 1500);
-  }, 1800);
+  }, 3800);
+}
+
+function animarObra(o) {
+  if ((estado.habActual || 0) !== 0 && !o.filas && !o.patioFilas && estado.patio !== o.id) return;
+  const g = new THREE.Group();
+  const metal = new THREE.MeshStandardMaterial({ color: 0x8a8f95, metalness: 0.5, roughness: 0.4 });
+  const tabla = new THREE.MeshStandardMaterial({ color: 0xc99a5e, roughness: 0.9 });
+  const lona = new THREE.MeshStandardMaterial({ color: 0x5f8fb5, roughness: 0.9, side: THREE.DoubleSide });
+  const W = sala.ancho();
+  const D = sala.fondo();
+  const p = patioActual();
+  const enPatio = o.patioFilas || estado.patio === o.id;
+  const x = enPatio && p ? W / 2 + p.ancho / 2 : W / 2 + 0.6;
+  const largo = enPatio && p ? p.fondo : D;
+  for (const z of [-largo / 2, 0, largo / 2]) for (const dx of [-0.35, 0.35]) {
+    const poste = new THREE.Mesh(new THREE.BoxGeometry(0.05, 3, 0.05), metal);
+    poste.position.set(x + dx, 1.3, z);
+    g.add(poste);
+  }
+  for (const y of [0.9, 1.9, 2.8]) {
+    const t = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.05, largo + 0.2), tabla);
+    t.position.set(x, y, 0);
+    g.add(t);
+  }
+  const red = new THREE.Mesh(new THREE.PlaneGeometry(largo + 0.2, 2.4), lona);
+  red.rotation.y = Math.PI / 2;
+  red.position.set(x + 0.42, 1.6, 0);
+  red.material.transparent = true;
+  red.material.opacity = 0.75;
+  g.add(red);
+  g.traverse(m => { if (m.isMesh) m.castShadow = true; });
+  g.scale.set(1, 0.001, 1);
+  escena.add(g);
+  const ini = performance.now();
+  let golpes = 0;
+  const paso = () => {
+    const t = (performance.now() - ini) / 1000;
+    const sube = Math.min(1, t / 0.5);
+    const baja = t > 2.9 ? Math.max(0.001, 1 - (t - 2.9) / 0.5) : 1;
+    g.scale.y = Math.max(0.001, Math.min(sube, baja));
+    if (t > golpes * 0.45 + 0.4 && t < 2.8) {
+      golpes++;
+      sonido.ruido(0.08, { volumen: 0.12, freq: 900, q: 3 });
+      const v = pantalla(new THREE.Vector3(x, 1 + Math.random() * 1.5, (Math.random() - 0.5) * largo));
+      ui.particula(Math.random() < 0.5 ? '🔨' : '💨', v.x, v.y, 1);
+    }
+    if (t < 3.4) requestAnimationFrame(paso);
+    else {
+      escena.remove(g);
+      g.traverse(m => { if (m.isMesh) m.geometry.dispose(); });
+    }
+  };
+  requestAnimationFrame(paso);
 }
 
 function abrirLogros() {
@@ -1656,6 +1750,7 @@ function registrar(evento, n = 1) {
   if (guia) guia.evento(evento);
   if (!estado.stats) estado.stats = {};
   estado.stats[evento] = (estado.stats[evento] || 0) + n;
+  if (evento === 'limpiar') asegurarSemana().limpiar += n;
   asegurarDiarias();
   for (const d of estado.diarias.lista) {
     const info = infoDiaria(d.id);
@@ -1686,9 +1781,75 @@ function darPremio(premio) {
   return item;
 }
 
+function polvoVentana() {
+  if (!estado.cristalLimpio) estado.cristalLimpio = Date.now();
+  if (sala.ventanaRota() || (estado.habActual || 0) !== 0 || enPiso()) return 0;
+  return Math.min(1, Math.max(0, (Date.now() - estado.cristalLimpio) / (4 * 86400000)));
+}
+
+function limpiarVentana() {
+  estado.cristalLimpio = Date.now();
+  sala.ponerPolvoVentana(0);
+  sonido.arreglo();
+  ui.aviso('🪟 ¡Cristal como nuevo!');
+  registrar('limpiar');
+  guardar();
+}
+
+const RETOS_SEMANA = [
+  { id: 'monedas', icono: '🪙', texto: 'Ganad 600 monedas entre los dos', meta: 600, valor: s => s.monedas || 0 },
+  { id: 'limpiar', icono: '🧹', texto: 'Limpiad 15 cosas entre los dos', meta: 15, valor: s => s.limpiar || 0 },
+  { id: 'dias', icono: '💑', texto: 'Entrad los dos 4 días esta semana', meta: 4, valor: s => (sync && sync.activo ? Math.min((s.dias[0] || []).length, (s.dias[1] || []).length) : (s.dias[0] || []).length) }
+];
+const PREMIO_RETO = { monedas: 120, tickets: 2 };
+
+function claveSemana(t = Date.now()) {
+  const d = new Date(t);
+  const lunes = new Date(d.getFullYear(), d.getMonth(), d.getDate() - ((d.getDay() + 6) % 7));
+  return lunes.toDateString();
+}
+
+function asegurarSemana() {
+  const id = claveSemana();
+  if (!estado.semana || estado.semana.id !== id) estado.semana = { id, monedas: 0, limpiar: 0, dias: { 0: [], 1: [] }, reclamados: [] };
+  const yo = sync && sync.activo ? sync.yo : 0;
+  const hoy = new Date().toDateString();
+  if (!estado.semana.dias[yo]) estado.semana.dias[yo] = [];
+  if (!estado.semana.dias[yo].includes(hoy)) estado.semana.dias[yo].push(hoy);
+  return estado.semana;
+}
+
+function retosSemana() {
+  const s = asegurarSemana();
+  return RETOS_SEMANA.map(r => {
+    const v = Math.min(r.meta, r.valor(s));
+    const hecho = s.reclamados.includes(r.id);
+    return {
+      icono: r.icono, texto: r.texto, progreso: v, meta: r.meta, premioTexto: textoPremio(PREMIO_RETO),
+      estado: hecho ? 'hecha' : v >= r.meta ? 'lista' : 'curso',
+      accion: () => {
+        if (s.reclamados.includes(r.id)) return;
+        s.reclamados.push(r.id);
+        sonido.premio();
+        darPremio(PREMIO_RETO);
+        ui.aviso(`🎉 ${textoPremio(PREMIO_RETO)}`);
+        if (s.reclamados.length === RETOS_SEMANA.length) {
+          inventario.anadir('farolillos', null, 1);
+          ui.pintarInventario(inventario);
+          setTimeout(() => ui.dialogo({ imagen: miniaturas.item('farolillos'), titulo: '🏮 ¡Semana perfecta!', texto: 'Habéis completado los tres retos de la semana. Os regalamos unos farolillos que solo se consiguen así. Están en el inventario.', confeti: true, botones: [{ texto: '¡Qué bonitos!', tipo: 'primario' }] }), 900);
+          pareja.recordar(null, '🏮', 'Completamos todos los retos de una semana');
+        }
+        refrescarHud();
+        guardar();
+      }
+    };
+  });
+}
+
 function misionesListas() {
   asegurarDiarias();
   let n = estado.diarias.lista.filter(d => !d.reclamada && d.progreso >= (infoDiaria(d.id)?.meta ?? 1)).length;
+  n += retosSemana().filter(r => r.estado === 'lista').length;
   const h = HISTORIA[estado.historia];
   if (h && h.check(contexto())) n++;
   return n;
@@ -1827,7 +1988,7 @@ function datosMisiones() {
       ui.aviso(`🎉 ${textoPremio(h.premio)}`);
     }
   } : null;
-  return { evento, diarias, historia };
+  return { evento, diarias, historia, semana: retosSemana() };
 }
 
 controles.suciedad = suciedad;
@@ -2253,6 +2414,12 @@ function bloqueoSi(cond, texto) {
 }
 
 function abrirTrabajar() {
+  try {
+    if (!localStorage.getItem('hogar-vio-trabajar')) {
+      localStorage.setItem('hogar-vio-trabajar', '1');
+      setTimeout(() => ui.avisoSuave('💼 Cada día hay 3 trabajos: los 3 primeros turnos se pagan enteros'), 500);
+    }
+  } catch (e) {}
   const ofertas = trabajos.ofertasDia();
   const hechos = trabajos.turnosHoy();
   const quedan = Math.max(0, 3 - hechos);
@@ -2421,10 +2588,52 @@ inmobiliaria = new Inmobiliaria({
 ui.puedeItem = d => puedeItem(d);
 document.getElementById('pill-nivel').addEventListener('click', () => { sonido.tocar(); experiencia.abrir(); });
 document.querySelector('#hud .pastilla.moneda').addEventListener('click', () => { sonido.tocar(); abrirMovimientos(); });
+const menuCamara = document.getElementById('menu-camara');
+const flechaCamara = document.getElementById('flecha-camara');
+document.getElementById('btn-camara').addEventListener('click', e => {
+  e.stopPropagation();
+  sonido.tocar();
+  menuCamara.querySelector('[data-c="calle"]').textContent = camaraIso.lejos ? '🏠 Volver al piso' : '🏙️ Ver desde la calle';
+  menuCamara.classList.toggle('oculto');
+});
+menuCamara.querySelectorAll('button').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  sonido.tocar();
+  menuCamara.classList.add('oculto');
+  const c = b.dataset.c;
+  if (c === 'centrar') camaraIso.reiniciar();
+  else if (c === 'calle') camaraIso.vistaCalle(!camaraIso.lejos);
+  else if (c === 'girar') camaraIso.rotar(Math.PI / 2);
+}));
+document.addEventListener('pointerdown', e => { if (!menuCamara.contains(e.target) && e.target.id !== 'btn-camara') menuCamara.classList.add('oculto'); });
+flechaCamara.addEventListener('click', () => {
+  sonido.tocar();
+  camaraIso.enfocar(camaraIso.zona === 'balcon' ? 'piso' : 'balcon');
+});
+let anguloFlecha = 0;
+const vC = new THREE.Vector3();
+const vT = new THREE.Vector3();
+function actualizarFlecha(dt) {
+  const hay = !!camaraIso.extra && !visitando;
+  flechaCamara.classList.toggle('oculto', !hay);
+  if (!hay) return;
+  const destino = camaraIso.zona === 'balcon' ? 'piso' : 'balcon';
+  vC.copy(camaraIso.objetivo).setY(1).project(camaraIso.camara);
+  vT.copy(camaraIso.centroZona(destino)).project(camaraIso.camara);
+  const ang = Math.atan2(-(vT.y - vC.y), vT.x - vC.x);
+  let d = ang - anguloFlecha;
+  while (d > Math.PI) d -= Math.PI * 2;
+  while (d < -Math.PI) d += Math.PI * 2;
+  anguloFlecha += d * Math.min(1, dt * 8);
+  flechaCamara.firstChild.style.transform = `rotate(${anguloFlecha.toFixed(3)}rad)`;
+  flechaCamara.title = destino === 'balcon' ? 'Ir al balcón' : 'Volver al piso';
+}
 experiencia.pintarPill();
 
 paredObjs = new ObjetosPared({
   estado: () => estado, ui, sonido, sala, telefono, ambiente,
+  polvoVentana: () => polvoVentana(),
+  limpiarVentana: () => limpiarVentana(),
   claveHab: () => `${nivelCasa()}-${estado.habActual || 0}`,
   visitando: () => !!visitando,
   controles: () => controles,
@@ -2983,6 +3192,14 @@ function pendientesCasa() {
   const paquetes = entregas.enPuerta().filter(p => p.paquete).length;
   if (paquetes) l.push(`🛸 ${paquetes} paquete${paquetes > 1 ? 's' : ''} en la ventana`);
   if (inmobiliaria) for (const c of inmobiliaria.chips().slice(0, 2)) l.push(c.texto);
+  const enc = encargos ? encargos.datos().activos.length : 0;
+  if (enc) l.push(`📞 ${enc} ${enc === 1 ? 'encargo pendiente' : 'encargos pendientes'}`);
+  const cartas = vida ? vida.noLeidas() : 0;
+  if (cartas) l.push(`✉️ ${cartas} ${cartas === 1 ? 'carta sin leer' : 'cartas sin leer'}`);
+  const listas = misionesListas();
+  if (listas) l.push(`📋 ${listas} ${listas === 1 ? 'misión para recoger' : 'misiones para recoger'}`);
+  if (trabajos && trabajos.turnosHoy() < 3) l.push(`💼 ${3 - trabajos.turnosHoy()} turnos de trabajo hoy`);
+  if (polvoVentana() > 0.5) l.push('🪟 El cristal de la ventana tiene polvo');
   return l;
 }
 
@@ -3055,10 +3272,11 @@ setTimeout(function alEntrar() {
     if (nueva.length) d.pareja = nueva.map(a => ({ ...textoActividad(a, otro), t: a.t }));
     marcarActividadVista();
   }
-  if (d.racha || d.fecha || (d.pareja && d.pareja.length >= 2)) d.pendientes = pendientesCasa();
+  const ausencia = habiaPartida && tUltimaSesion && Date.now() - tUltimaSesion > 2 * 3600000;
+  if (d.racha || d.fecha || ausencia || (d.pareja && d.pareja.length >= 2)) d.pendientes = pendientesCasa();
   refrescarHud();
   guardar();
-  if (d.racha || d.fecha || d.pareja || d.rachaPareja) {
+  if (d.racha || d.fecha || d.pareja || d.rachaPareja || (ausencia && d.pendientes && d.pendientes.length)) {
     if (d.racha && !d.fecha) sonido.premio();
     mostrarBienvenida(ui, d);
   }
@@ -3120,7 +3338,7 @@ function colocarMenu(dt) {
   ui.posicionarMenu(s.x, s.y);
 }
 
-if (new URLSearchParams(location.search).has('debug')) window.__h = { inventario, minijuegos, encargos, THREE, sala, paredObjs, interacciones, controles, guia, telefono, entregas, trabajos, estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida, experiencia, suciedad, vida, inmobiliaria: () => inmobiliaria, registrar, abrirObras, refrescarHud, inicio, camaraIso, duo, album, usos, renderer, escena, guardar, sueno, juegos, edificio };
+if (new URLSearchParams(location.search).has('debug')) window.__h = { hacerObra, ambienteObj: ambiente, inventario, minijuegos, encargos, THREE, sala, paredObjs, interacciones, controles, guia, telefono, entregas, trabajos, estado, gestor, mascotas, casa2, mascotas2, social, sorpresas, controles, sala, opcionesMueble, opcionesMascota, sync, lofi, mas, ui, aplicarEstiloCasa, acogedor, pintarChipsVida, experiencia, suciedad, vida, inmobiliaria: () => inmobiliaria, registrar, abrirObras, refrescarHud, inicio, camaraIso, duo, album, usos, renderer, escena, guardar, sueno, juegos, edificio };
 
 renderer.setAnimationLoop(() => {
   const dt = Math.min(reloj.getDelta(), 0.1);
@@ -3150,6 +3368,13 @@ renderer.setAnimationLoop(() => {
   if (tMargenes <= 0) {
     tMargenes = 0.5;
     medirMargenes();
+  }
+  actualizarFlecha(dt);
+  vecinosReaccionan(dt);
+  tPolvo -= dt;
+  if (tPolvo <= 0) {
+    tPolvo = 3;
+    sala.ponerPolvoVentana(polvoVentana());
   }
   entregas.ponerCapa(sala.paredes[0].visible && !sala.esExterior() && !sala.ventanaRota() ? 2 : 0);
   entregas.actualizar(dt);

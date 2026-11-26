@@ -435,6 +435,41 @@ export const CATALOGO = [
     [0.06, 0.06, 0.01, 0, 0.4, 0.13, 0xe07a8a, { rx: -0.6 }]
   ]},
 
+  { id: 'guirnalda', categoria: 'deco', nombre: 'Guirnalda de luces', precio: 70, ancho: 2, fondo: 1, uso: 'Luces cálidas que de noche se ven desde la calle', piezas: [
+    [0.06, 0.08, 0.06, -0.42, 1.36, 0, 0xfff1a8, 'esfera'],
+    [0.06, 0.08, 0.06, -0.28, 1.31, 0, 0xffc9a0, 'esfera'],
+    [0.06, 0.08, 0.06, -0.14, 1.27, 0, 0xfff1a8, 'esfera'],
+    [0.06, 0.08, 0.06, 0.00, 1.26, 0, 0xffd6e0, 'esfera'],
+    [0.06, 0.08, 0.06, 0.14, 1.27, 0, 0xfff1a8, 'esfera'],
+    [0.06, 0.08, 0.06, 0.28, 1.31, 0, 0xffc9a0, 'esfera'],
+    [0.06, 0.08, 0.06, 0.42, 1.36, 0, 0xfff1a8, 'esfera'],
+    [0.04, 1.45, 0.04, -0.47, 0.72, 0, 0x3d3d3d, 'cil'],
+    [0.04, 1.45, 0.04, 0.47, 0.72, 0, 0x3d3d3d, 'cil'],
+    [0.16, 0.05, 0.16, -0.47, 0.025, 0, 0x3d3d3d, 'cil'],
+    [0.16, 0.05, 0.16, 0.47, 0.025, 0, 0x3d3d3d, 'cil'],
+    [0.96, 0.012, 0.012, 0, 1.33, 0, 0x2f2f2f]
+  ], encendible: { piezas: [0, 1, 2, 3, 4, 5, 6], luz: 1.3, intensidad: 1.6, colorLuz: 0xffd59a, inicial: true }},
+  { id: 'velas', categoria: 'deco', nombre: 'Velas', precio: 30, ancho: 1, fondo: 1, uso: 'Encendedlas para una noche acogedora', piezas: [
+    [0.3, 0.02, 0.3, 0, 0.01, 0, 0xd9c9b0, 'cil'],
+    [0.08, 0.18, 0.08, -0.06, 0.11, 0.03, 0xfff6e8, 'cil'],
+    [0.07, 0.12, 0.07, 0.06, 0.08, -0.03, 0xfff6e8, 'cil'],
+    [0.06, 0.08, 0.06, 0.04, 0.06, 0.07, 0xfff6e8, 'cil'],
+    [0.025, 0.05, 0.025, -0.06, 0.225, 0.03, 0xffb84a, 'cono'],
+    [0.022, 0.045, 0.022, 0.06, 0.162, -0.03, 0xffb84a, 'cono'],
+    [0.02, 0.04, 0.02, 0.04, 0.12, 0.07, 0xffb84a, 'cono']
+  ], encendible: { piezas: [4, 5, 6], luz: 0.25, intensidad: 0.9, colorLuz: 0xffb060, inicial: true }},
+  { id: 'farolillos', categoria: 'deco', enTienda: false, rareza: 'epico', nombre: 'Farolillos de papel', ancho: 2, fondo: 1, uso: 'Regalo por completar los retos de una semana. De noche brillan de colores', piezas: [
+    [0.16, 0.2, 0.16, -0.32, 1.22, 0, 0xf28a7a, 'esfera'],
+    [0.16, 0.2, 0.16, -0.1, 1.17, 0, 0xf7d36b, 'esfera'],
+    [0.16, 0.2, 0.16, 0.12, 1.17, 0, 0x8fd0b8, 'esfera'],
+    [0.16, 0.2, 0.16, 0.33, 1.22, 0, 0xc9a8f0, 'esfera'],
+    [0.04, 1.5, 0.04, -0.47, 0.75, 0, 0x8a5a3c, 'cil'],
+    [0.04, 1.5, 0.04, 0.47, 0.75, 0, 0x8a5a3c, 'cil'],
+    [0.16, 0.05, 0.16, -0.47, 0.025, 0, 0x8a5a3c, 'cil'],
+    [0.16, 0.05, 0.16, 0.47, 0.025, 0, 0x8a5a3c, 'cil'],
+    [0.96, 0.012, 0.012, 0, 1.36, 0, 0x2f2f2f]
+  ], encendible: { piezas: [0, 1, 2, 3], luz: 1.2, intensidad: 1.4, colorLuz: 0xffc890, inicial: true }},
+
   { id: 'huerto', categoria: 'deco', nombre: 'Huerto en jardinera', precio: 180, ancho: 2, fondo: 1, huerto: true, piezas: [
     [0.9, 0.3, 0.42, 0, 0.15, 0, 0x9c6b45],
     [0.84, 0.04, 0.36, 0, 0.29, 0, 0x5e4329],

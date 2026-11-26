@@ -27,7 +27,10 @@ export class CamaraIso {
     this.salaW = 6;
     this.salaD = 6;
     this.extra = 0;
+    this.fondoExtra = 0;
     this.centroX = 0;
+    this.zona = 'todo';
+    this.lejos = false;
     this.margenArriba = 0;
     this.margenAbajo = 0;
     this.altoPx = window.innerHeight || 760;
@@ -38,8 +41,10 @@ export class CamaraIso {
     this.aplicar();
   }
 
-  ajustar(ancho, fondo, extra = 0) {
+  ajustar(ancho, fondo, extra = 0, fondoExtra = 0) {
     const centroAntes = this.centroX;
+    this.fondoExtra = fondoExtra;
+    if (!extra) this.zona = 'todo';
     this.salaW = ancho;
     this.salaD = fondo;
     this.extra = extra;
@@ -73,6 +78,47 @@ export class CamaraIso {
     this.encajar();
   }
 
+  medirCaja(ancho, fondo) {
+    const G = 0.2;
+    const sa = Math.sin(this.altura);
+    const ca = Math.cos(this.altura);
+    const a = ANGULO_INICIAL;
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    for (const x of [-1, 1]) for (const z of [-1, 1]) for (const y of [-0.45, 2.75]) {
+      const px = x * (ancho / 2 + G);
+      const pz = z * (fondo / 2 + G);
+      const sx = px * Math.cos(a) - pz * Math.sin(a);
+      const sy = (y - 1.0) * ca - (px * Math.sin(a) + pz * Math.cos(a)) * sa;
+      x0 = Math.min(x0, sx); x1 = Math.max(x1, sx);
+      y0 = Math.min(y0, sy); y1 = Math.max(y1, sy);
+    }
+    const libre = Math.max(0.3, (this.altoPx - this.margenArriba - this.margenAbajo) / this.altoPx);
+    return Math.min(this.anchoVista * 0.97 / (x1 - x0), this.altoVista * libre * 0.95 / (y1 - y0));
+  }
+
+  centroZona(zona) {
+    if (zona === 'piso') return new THREE.Vector3(0, 1, 0);
+    if (zona === 'balcon') return new THREE.Vector3(this.salaW / 2 + this.extra / 2, 1, 0);
+    return new THREE.Vector3(this.centroX, 1, 0);
+  }
+
+  enfocar(zona) {
+    if (zona !== 'todo' && !this.extra) zona = 'todo';
+    this.zona = zona;
+    this.lejos = false;
+    this.objetivoObj.copy(this.centroZona(zona));
+    if (zona === 'piso') this.zoomObj = Math.min(this.zoomMax, this.medirCaja(this.salaW, this.salaD));
+    else if (zona === 'balcon') this.zoomObj = Math.min(this.zoomMax, this.medirCaja(this.extra, this.fondoExtra || this.salaD) * 0.9);
+    else this.zoomObj = this.zoomFit;
+  }
+
+  vistaCalle(si) {
+    this.lejos = si;
+    this.zona = 'todo';
+    this.objetivoObj.set(this.centroX, si ? -4 : 1, 0);
+    this.zoomObj = si ? this.zoomFit * 0.42 : this.zoomFit;
+  }
+
   encajar() {
     if (!this.altoVista) return;
     const G = 0.2;
@@ -92,7 +138,7 @@ export class CamaraIso {
     const antes = this.zoomFit;
     this.zoomFit = Math.min(this.anchoVista * 0.97 / (x1 - x0), this.altoVista * libre * 0.95 / (y1 - y0));
     this.centroCaja = (y0 + y1) / 2;
-    this.zoomMin = this.zoomFit * 0.5;
+    this.zoomMin = this.zoomFit * 0.3;
     this.zoomMax = this.zoomFit * 3.2;
     if (antes && Math.abs(this.zoomObj - antes) < 0.02) this.zoomObj = this.zoomFit;
     else this.zoomObj = THREE.MathUtils.clamp(this.zoomObj, this.zoomMin, this.zoomMax);
@@ -144,6 +190,8 @@ export class CamaraIso {
     const vueltas = Math.round((this.anguloObj - ANGULO_INICIAL) / (Math.PI * 2));
     this.anguloObj = ANGULO_INICIAL + vueltas * Math.PI * 2;
     this.zoomObj = this.zoomFit;
+    this.zona = 'todo';
+    this.lejos = false;
     this.objetivoObj.set(this.centroX, 1.0, 0);
     this.inercia = 0;
   }

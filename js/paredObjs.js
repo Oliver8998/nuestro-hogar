@@ -542,7 +542,9 @@ export class ObjetosPared {
     if (r.tipo === 'telefono') {
       return [{ icono: '☎️', texto: 'Mensajes', accion: () => { this.ctx.telefono.descolgado = 1.4; this.ctx.abrirTelefono(); } }];
     }
-    const op = [{
+    const op = [];
+    if (r.principal && this.ctx.polvoVentana && this.ctx.polvoVentana() > 0.2) op.push({ icono: '🧽', texto: 'Limpiar', accion: () => { this.ctx.limpiarVentana(); this.tras(); } });
+    op.push({
       icono: '📏', texto: TAM_VENTANA[this.tamDe(r)].nombre, accion: () => {
         const orden = Object.keys(TAM_VENTANA);
         const i0 = orden.indexOf(this.tamDe(r));
@@ -563,7 +565,7 @@ export class ObjetosPared {
       }
     }, {
       icono: '➕', texto: `Otra 🪙${PRECIO_VENTANA}`, desactivado: this.estado.monedas < PRECIO_VENTANA, accion: () => this.comprarVentana()
-    }];
+    });
     if (!r.principal) {
       op.push({
         icono: '📤', texto: 'Quitar', accion: () => {
