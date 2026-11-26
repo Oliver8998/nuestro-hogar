@@ -202,7 +202,7 @@ function bajos(n) {
   return { mapa: textura(color), luz: textura(luz) };
 }
 
-function asfalto() {
+function asfalto(lineas = true) {
   const c = lienzo(128, 128);
   const g = c.getContext('2d');
   g.fillStyle = '#4f5257';
@@ -211,6 +211,7 @@ function asfalto() {
     g.fillStyle = Math.random() < 0.5 ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.06)';
     g.fillRect(Math.random() * 128, Math.random() * 128, 2, 2);
   }
+  if (!lineas) return textura(c);
   g.fillStyle = '#e9e3d0';
   g.fillRect(0, 62, 64, 4);
   g.fillStyle = 'rgba(233,227,208,.9)';
@@ -430,6 +431,15 @@ export class Edificio {
     calle(240, false, xC);
     calle(240, true, zC - 44);
     calle(240, false, xC + 46);
+    const matCruce = this.matCruce || (this.matCruce = new THREE.MeshStandardMaterial({ map: asfalto(false), roughness: 1 }));
+    const cruces = [];
+    for (const cx of [xC, xC + 46]) for (const cz of [zC, zC - 44]) {
+      const g = new THREE.PlaneGeometry(ANCHO_CALLE, ANCHO_CALLE);
+      g.rotateX(-Math.PI / 2);
+      g.translate(cx, CALLE_Y + 0.026, cz);
+      cruces.push(g);
+    }
+    R.add(new THREE.Mesh(mergeGeometries(cruces), matCruce));
     const rayas = [];
     const LP = ANCHO_CALLE / 2 + 2.2;
     this.lineaPeatones = LP;
@@ -694,7 +704,9 @@ export class Edificio {
     camara.far = lejos;
     camara.updateProjectionMatrix();
     renderer.render(escena, camara);
-    if (this.calle && this.calle.pajaros.length) {
+    if (this.calle && this.calle.pajaros.some(b => b.visible)) {
+      luces.forEach(l => l.layers.enable(4));
+      renderer.clearDepth();
       camara.layers.set(4);
       camara.near = -100;
       camara.far = 300;

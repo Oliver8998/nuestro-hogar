@@ -489,20 +489,60 @@ export class Calle {
     R.add(new THREE.Mesh(unir(jardinera), mat(0xb9b2a6)));
     R.add(new THREE.Mesh(unir(flores), mat(0xe07a8a)));
 
-    const negro = mat(0x2b2b33, { depthTest: false, depthWrite: false });
-    for (let k = 0; k < 7; k++) {
+    const plumaGris = mat(0x8d949e, { roughness: 0.9 });
+    const plumaClara = mat(0xe4e7ea, { roughness: 0.9 });
+    const plumaPunta = mat(0x3c4149, { roughness: 0.9 });
+    const pico = mat(0xe8a23a);
+    const geoCuerpo = new THREE.SphereGeometry(0.5, 10, 8);
+    geoCuerpo.scale(0.17, 0.15, 0.48);
+    const geoCabeza = new THREE.SphereGeometry(0.075, 8, 6);
+    const geoPico = new THREE.ConeGeometry(0.025, 0.09, 6);
+    geoPico.rotateX(Math.PI / 2);
+    const geoCola = new THREE.BufferGeometry();
+    geoCola.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, -0.11, 0, -0.2, 0.11, 0, -0.2], 3));
+    geoCola.computeVertexNormals();
+    const ala = (largo, raiz, punta) => {
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, raiz / 2, largo, 0, punta / 2, largo, 0, -punta / 2, 0, 0, raiz / 2, largo, 0, -punta / 2, 0, 0, -raiz / 2], 3));
+      g.computeVertexNormals();
+      return g;
+    };
+    const geoAlaIn = ala(0.36, 0.24, 0.2);
+    const geoAlaFu = ala(0.34, 0.2, 0.06);
+    [plumaGris, plumaClara, plumaPunta].forEach(m => { m.side = THREE.DoubleSide; });
+    for (let k = 0; k < 9; k++) {
       const b = new THREE.Group();
+      const cuerpo = new THREE.Mesh(geoCuerpo, plumaClara);
+      const cabeza = new THREE.Mesh(geoCabeza, plumaClara);
+      cabeza.position.set(0, 0.05, 0.26);
+      const p = new THREE.Mesh(geoPico, pico);
+      p.position.set(0, 0.04, 0.35);
+      const cola = new THREE.Mesh(geoCola, plumaGris);
+      cola.position.set(0, 0.01, -0.2);
+      b.add(cuerpo, cabeza, p, cola);
       const alas = [];
       for (const l of [-1, 1]) {
-        const a = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.03, 0.14), negro);
-        a.geometry.translate(l * 0.25, 0, 0);
-        b.add(a);
-        alas.push(a);
+        const hombro = new THREE.Group();
+        hombro.position.set(l * 0.06, 0.04, 0.03);
+        hombro.scale.x = l;
+        const dentro = new THREE.Mesh(geoAlaIn, plumaGris);
+        const codo = new THREE.Group();
+        codo.position.x = 0.36;
+        const fuera = new THREE.Mesh(geoAlaFu, plumaPunta);
+        codo.add(fuera);
+        hombro.add(dentro, codo);
+        b.add(hombro);
+        alas.push({ hombro, codo, l });
       }
-      b.userData = { alas, fase: k * 0.7, fila: k };
+      const escala = 0.85 + Math.random() * 0.3;
+      b.scale.setScalar(escala);
+      b.userData = { alas, fase: Math.random() * 6, ritmo: 7.5 + Math.random() * 2, fila: k };
+      b.visible = false;
+      b.traverse(o => o.layers.set(4));
       R.add(b);
       this.pajaros.push(b);
     }
+    this.bandada = { espera: 4, t: 0 };
   }
 
   colocarVehiculos(dt) {
@@ -736,16 +776,55 @@ export class Calle {
         d.perro.rotation.y = base;
       }
     }
-    const ang0 = this.t * 0.08;
+    this.moverPajaros(dt);
+  }
+
+  moverPajaros(dt) {
+    const B = this.bandada;
+    if (!B) return;
+    if (B.espera > 0) {
+      B.espera -= dt;
+      if (B.espera > 0) return;
+      const th = Math.random() * Math.PI * 2;
+      B.dir = new THREE.Vector3(Math.cos(th), 0, Math.sin(th));
+      const perp = new THREE.Vector3(-B.dir.z, 0, B.dir.x);
+      B.centro = new THREE.Vector3(0, 0, -4).addScaledVector(perp, (Math.random() * 2 - 1) * 7);
+      B.alto = 7.5 + Math.random() * 3;
+      B.vel = 5 + Math.random() * 2;
+      B.largo = 48;
+      B.s = -B.largo;
+      B.n = 5 + Math.floor(Math.random() * 5);
+      B.giro = (Math.random() * 2 - 1) * 0.012;
+      this.pajaros.forEach((b, i) => { b.visible = i < B.n; });
+    }
+    B.s += B.vel * dt;
+    B.t += dt;
+    B.dir.applyAxisAngle(new THREE.Vector3(0, 1, 0), B.giro * dt * 6);
+    const perp = new THREE.Vector3(-B.dir.z, 0, B.dir.x);
+    const rumbo = Math.atan2(B.dir.x, B.dir.z);
     for (const b of this.pajaros) {
-      if (!b.layers.isEnabled(4)) b.traverse(o => o.layers.set(4));
+      if (!b.visible) continue;
       const d = b.userData;
-      const fila = d.fila;
-      const ang = ang0 - (fila % 2 ? 1 : -1) * Math.ceil(fila / 2) * 0.02 - Math.ceil(fila / 2) * 0.015;
-      const rad = 26 + Math.ceil(fila / 2) * 0.9 * (fila % 2 ? 1 : -1);
-      b.position.set(Math.cos(ang) * rad, 9 + Math.sin(this.t * 0.5) * 1.5 - Math.ceil(fila / 2) * 0.3, Math.sin(ang) * rad - 10);
-      b.rotation.y = -ang;
-      d.alas.forEach((a, i) => { a.rotation.z = Math.sin(this.t * 9 + d.fase) * 0.6 * (i ? -1 : 1); });
+      const fila = Math.ceil(d.fila / 2);
+      const lado = d.fila % 2 ? 1 : -1;
+      const atras = fila * 1.1 + Math.sin(B.t * 0.7 + d.fase) * 0.15;
+      b.position.copy(B.centro).addScaledVector(B.dir, B.s - atras).addScaledVector(perp, lado * fila * 0.9 + Math.sin(B.t * 0.9 + d.fase) * 0.12);
+      b.position.y = B.alto - fila * 0.12 + Math.sin(B.t * 1.3 + d.fase) * 0.18;
+      b.rotation.set(0, rumbo, 0);
+      b.rotateZ(-B.giro * 25 + Math.sin(B.t * 0.8 + d.fase) * 0.08);
+      const ciclo = Math.sin(B.t * 0.45 + d.fase);
+      d.bate = THREE.MathUtils.lerp(d.bate ?? 1, ciclo > -0.35 ? 1 : 0, Math.min(1, dt * 3));
+      d.ph = (d.ph || 0) + dt * d.ritmo * (0.4 + 0.6 * d.bate);
+      const aleteo = Math.sin(d.ph);
+      const planeo = 0.12;
+      d.alas.forEach(a => {
+        a.hombro.rotation.z = a.l * (planeo + aleteo * 0.75 * d.bate);
+        a.codo.rotation.z = -0.1 + Math.sin(d.ph - 0.9) * 0.45 * d.bate;
+      });
+    }
+    if (B.s > B.largo) {
+      this.pajaros.forEach(b => { b.visible = false; });
+      B.espera = 12 + Math.random() * 25;
     }
   }
 }

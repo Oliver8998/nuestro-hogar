@@ -673,3 +673,8 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - Encuadre automático (`camaraIso.encajar`): calcula el zoom para que la habitación (con paredes y forjado) quepa justa de lado a lado y en el hueco libre entre el HUD de arriba y la barra de abajo (`ponerMargenes`, medido desde main cada 0,5 s y al redimensionar). El frustum se desplaza para centrar el piso en ese hueco. `zoomFit` sustituye a ZOOM_INICIAL; zoom mínimo 0,5×fit y máximo 3,2×fit.
 - Ampliado (`ampliada()`: zoom > 1,25×fit) un dedo arrastra la vista en vez de girar. Doble toque en hueco: si está normal acerca 2× a ese punto (`acercarA`); si está ampliado vuelve a la vista general.
 - Dron más pequeño (escala 1,1) y recolocado para que con el nuevo ángulo quepa dentro del marco de la ventana.
+
+## Cruces limpios, gaviotas y sin corazón (v102)
+- Cruces: las dos calzadas se solapaban en el cruce (parpadeo y líneas de una calle pintadas encima de la otra). Ahora cada cruce lleva un parche de asfalto sin líneas (`matCruce`, `asfalto(false)`) por encima.
+- Pájaros rehechos (`calle.moverPajaros`): gaviotas low-poly (cuerpo, cabeza, pico, cola, alas en dos tramos que se doblan), bandadas en V de 5-9 que cruzan la escena en una dirección al azar cada 12-37 s, alternan aleteo y planeo. Su pasada (capa 4) limpia la profundidad y enciende las luces en la capa 4, así se iluminan y se tapan bien entre ellas.
+- Quitado el botón 💗 de reacciones de arriba a la derecha (y su menú). Las reacciones que llegan de la pareja se siguen mostrando.

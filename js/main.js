@@ -1964,22 +1964,7 @@ renderer.domElement.addEventListener('pointerdown', e => {
   if (rayoToque.ray.intersectPlane(sueloToque, p) && Math.abs(p.x) < 3.2 && Math.abs(p.z) < 3.2) sync.emitir('toque', { x: +p.x.toFixed(2), z: +p.z.toFixed(2) });
 });
 
-function pintarBotonReaccion() {
-  document.getElementById('btn-reaccion').classList.toggle('oculto', !sync.activo);
-}
-document.getElementById('btn-reaccion').addEventListener('click', () => {
-  document.getElementById('reacciones').classList.toggle('oculto');
-});
-document.querySelectorAll('#reacciones button').forEach(b => b.addEventListener('click', () => {
-  document.getElementById('reacciones').classList.add('oculto');
-  if (b.classList.contains('dormir')) {
-    pareja2.buenasNoches();
-    return;
-  }
-  mostrarReaccion(b.textContent);
-  sync.emitir('reaccion', { emoji: b.textContent });
-  if (window.avisarPareja) window.avisarPareja('reaccion', `${b.textContent} Te está pensando`);
-}));
+function pintarBotonReaccion() {}
 window.avisarPareja = (tipo, texto) => {
   if (!sync || !sync.activo || !sync.codigo) return;
   const yo = sync.yo;
