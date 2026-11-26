@@ -486,7 +486,7 @@ export class UI {
           <span class="adopta-mia-datos"><b>${escapar(m.nombre)}</b><small>${m.edadDias() < 4 ? '🍼 Bebé' : ESPECIES[m.especie].nombre}</small>
           <span class="adopta-stats"><span>❤️${barra(m.felicidad, '#ef7f98')}</span><span>🍖${barra(m.hambre, '#f2a03c')}</span><span>⚡${barra(m.energia, '#6cc3a0')}</span></span></span>
         </button>`).join('')
-      : '<div class="vacio adopta-vacio">🏠 Todavía no tenéis mascota. ¡Mirad quién espera abajo!</div>';
+      : '<div class="vacio adopta-vacio">🏠 Todavía no tenéis mascota. Pilar tiene alguna esperando hogar en su mostrador de la tienda 🐾</div>';
     lista.querySelectorAll('.adopta-mia').forEach(b => b.addEventListener('click', () => {
       const m = propias[Number(b.dataset.k)];
       if (this.ev.alVerMascota) this.ev.alVerMascota(m);

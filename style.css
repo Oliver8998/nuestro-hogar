@@ -2935,7 +2935,7 @@ body.colgando #lateral, body.colgando #chips-vida, body.colgando #menu-objeto, b
 
 /* Refugio nuevo */
 #lista-mascotas { display: flex; gap: 10px; overflow-x: auto; padding: 4px 14px 10px; }
-.adopta-vacio { background: #fff7ec; border-radius: 16px; padding: 12px 14px !important; font-weight: 800; color: #8a6a52; }
+.adopta-vacio { flex: 1 1 100%; min-width: 0; white-space: normal; line-height: 1.35; background: #fff7ec; border-radius: 16px; padding: 12px 14px !important; font-weight: 800; color: #8a6a52; }
 .adopta-mia { flex: 0 0 auto; display: flex; gap: 10px; align-items: center; background: #fff; border: 0; border-radius: 20px; padding: 8px 14px 8px 8px; box-shadow: 0 3px 10px rgba(59, 47, 38, .08); text-align: left; }
 .adopta-mia-img { position: relative; width: 62px; height: 62px; border-radius: 18px; background: radial-gradient(circle at 50% 60%, #fff, #fbeff2 80%); display: flex; align-items: center; justify-content: center; }
 .adopta-mia-img img { width: 92%; height: 92%; object-fit: contain; }

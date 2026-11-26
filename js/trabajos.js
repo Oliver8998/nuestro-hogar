@@ -1120,7 +1120,7 @@ export class Trabajos {
   async trabajar(t) {
     const { ui, juegos, sonido } = this.ctx;
     ui.cerrarHojas();
-    const puntos = await juegos.custom(t.icono, t.nombre, j => t.jugar(j, { sonido }), { clave: `trab:${t.id}`, que: t.texto, extra: `🪙 Hasta ${t.pago} monedas según lo bien que lo hagáis` });
+    const puntos = await juegos.custom(t.icono, t.nombre, j => t.jugar(j, { sonido }), { clave: `trab:${t.id}`, que: t.texto, extra: `🪙 Hasta ${paga(t.pago)} monedas según lo bien que lo hagáis` });
     if (puntos === null || puntos === undefined) return;
     const d = this.datos();
     const factor = d.turnos < TURNOS ? 1 : 0.3;
@@ -1129,12 +1129,12 @@ export class Trabajos {
     const antes = d.mejor[t.id] || 0;
     if (puntos > antes) d.mejor[t.id] = Math.round(puntos * 100) / 100;
     const extra = puntos >= 0.99 ? Math.round(t.pago * 0.25) : 0;
-    const paga = Math.max(10, Math.round((t.pago * puntos + extra) * factor));
+    const cobro = Math.max(10, Math.round((t.pago * puntos + extra) * factor));
     this.ctx.registrar('trabajar');
     this.ctx.registrar(`trabajo-${t.id}`);
     if (puntos >= 0.99) this.ctx.registrar('trabajo-perfecto');
-    this.ctx.ganar(paga, null, t.icono);
-    if (extra && factor === 1) setTimeout(() => ui.aviso(`🌟 ¡Turno perfecto! Propina de ${extra}`), 1200);
+    this.ctx.ganar(cobro, null, t.icono);
+    if (extra && factor === 1) setTimeout(() => ui.aviso(`🌟 ¡Turno perfecto! Propina de ${paga(extra)}`), 1200);
     if (d.hechos.length === TRABAJOS.length && !d.todos) {
       d.todos = true;
       this.ctx.recordar && this.ctx.recordar('todos-trabajos', '💼', 'Probamos todos los trabajos del barrio');

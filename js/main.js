@@ -157,14 +157,15 @@ entregas.puntoEspera = k => {
   const pared = sala.paredes[0];
   if (!v || !pared) return new THREE.Vector3(0, 1.75, -sala.fondo() / 2 - 0.9);
   pared.updateMatrixWorld(true);
-  const centro = v.localToWorld(new THREE.Vector3(sala.ventanaRota() ? -0.3 : 0, 0, 0));
+  const rota = sala.ventanaRota();
+  const centro = v.getWorldPosition(new THREE.Vector3());
   const n = new THREE.Vector3(0, 0, 1).transformDirection(pared.matrixWorld);
   if (n.dot(centro) < 0) n.negate();
   n.y = 0;
   n.normalize();
   const lado = new THREE.Vector3(-n.z, 0, n.x);
   const desp = [0, 0.45, -0.45, 0.9, -0.9][k % 5];
-  return centro.addScaledVector(n, 0.45).addScaledVector(lado, desp).setY(centro.y - 0.05 + Math.floor(k / 5) * 0.5);
+  return centro.addScaledVector(n, rota ? 0.6 : 0.45).addScaledVector(lado, rota ? desp * 1.6 : desp).setY((rota ? 3.45 : centro.y - 0.05) + Math.floor(k / 5) * 0.5);
 };
 
 const suciedad = new Suciedad(escena, {
@@ -1368,6 +1369,8 @@ function subObras() {
   const n = nivelXp();
   const sig = OBRAS.find(o => !obraHecha(o));
   if (!sig) return 'Casa completa';
+  const prog = estado.reforma || sala.progreso();
+  if (nivelCasa() === 0 && prog.hechos < prog.total) return 'Primero terminad la reforma del piso';
   return n >= sig.nivel ? `Disponible: ${sig.nombre}` : `${sig.nombre} en el nivel ${sig.nivel}`;
 }
 
@@ -2214,7 +2217,7 @@ window.extrasMenu = () => {
   const h = estado.historia || 0;
   const tieneCocina = gestor.muebles.some(m => m.userData.def.id === 'cocina') || (estado.habs || []).some(x => (x.muebles || []).some(d => d.id === 'cocina'));
   return [
-    { id: 'juntos', icono: '🎮', texto: 'Jugar juntos', sub: sync && sync.activo ? 'Minijuegos a dúo, cada uno desde su móvil' : 'Conectad vuestras casas para jugar a dúo', bloqueo: bloqueoSi(sync && sync.activo, 'Conectad vuestras casas (Pareja)'), accion: () => duo.abrir(() => mas.abrir()) },
+    { id: 'juntos', icono: '🎮', texto: 'Jugar juntos', sub: sync && sync.activo ? 'Minijuegos a dúo, cada uno desde su móvil' : 'Conectad vuestras casas para jugar a dúo', bloqueo: bloqueoSi(sync && sync.activo, 'Entrad con vuestra cuenta desde el menú principal'), accion: () => duo.abrir(() => mas.abrir()) },
     { id: 'nosotros', icono: '💕', texto: 'Nosotros', sub: 'Notas, regalos, preguntas, viajes y recuerdos', insignia: pareja2.pendientePregunta() ? '!' : null, accion: abrirNosotros },
     { id: 'mascotas', icono: '🐾', texto: 'Vuestras mascotas', sub: mascotas.lista.length ? `${mascotas.lista.length} en casa · cómo están` : 'Adoptad una en el mostrador de Pilar', accion: () => ui.abrirRefugio() },
     { id: 'objetivos', icono: '🏆', texto: 'Objetivos', sub: 'Pase del mes, logros y colecciones', insignia: economia.pendientesPase() || null, accion: abrirObjetivos },
@@ -2758,7 +2761,7 @@ function abrirNosotros() {
     { id: 'quiz', icono: '🎯', texto: '¿Cuánto me conoces?', sub: 'Quiz de pareja', accion: () => pareja2.abrirQuiz() },
     { id: 'viajes', icono: '✈️', texto: 'Mapa de viajes', sub: `${(estado.viajes || []).length} sitios`, accion: () => pareja2.abrirViajes() },
     { id: 'cuenta', icono: '⏳', texto: 'Cuenta atrás', sub: pareja2.textoFalta() || 'Para la próxima vez que os veis', accion: () => pareja2.abrirCuentaAtras() },
-    { id: 'metas', icono: '📌', texto: 'Nuestras metas', sub: `${(estado.metas || []).filter(m => m.hecha).length}/${(estado.metas || []).length} cumplidas`, accion: () => pareja2.abrirMetas() },
+    { id: 'metas', icono: '📌', texto: 'Nuestras metas', sub: (estado.metas || []).length ? `${(estado.metas || []).filter(m => m.hecha).length}/${(estado.metas || []).length} cumplidas` : 'Apuntad lo que queréis conseguir', accion: () => pareja2.abrirMetas() },
     { id: 'recuerdos', icono: '🌳', texto: 'Recuerdos', sub: `${(estado.recuerdos || []).length} momentos`, accion: () => pareja.verRecuerdos() },
     { id: 'libro', icono: '📖', texto: 'Libro de recuerdos', sub: 'Vuestra historia, página a página', accion: () => sueno.libro(() => abrirNosotros()) },
     { id: 'capsula', icono: '💌', texto: 'Cápsula del tiempo', sub: `${(estado.capsulas || []).length} mensajes`, accion: () => pareja.verCapsulas() },
@@ -2825,6 +2828,10 @@ function medirMargenes() {
   const lat = document.getElementById('lateral');
   const r = lat ? lat.getBoundingClientRect() : null;
   if (r && r.height > 0 && r.width > r.height && r.top > h * 0.6) abajo = h - r.top + 6;
+  if (ui.inventarioAbierto) {
+    const rb = document.getElementById('barra').getBoundingClientRect();
+    if (rb.top > h * 0.4 && rb.top < h) abajo = Math.max(abajo, h - rb.top + 4);
+  }
   camaraIso.ponerMargenes(arriba, abajo, h);
 }
 
@@ -3056,7 +3063,7 @@ renderer.setAnimationLoop(() => {
     tMargenes = 0.5;
     medirMargenes();
   }
-  entregas.ponerCapa(sala.paredes[0].visible && !sala.esExterior() ? 2 : 0);
+  entregas.ponerCapa(sala.paredes[0].visible && !sala.esExterior() && !sala.ventanaRota() ? 2 : 0);
   entregas.actualizar(dt);
   suciedad.visibilidadParedes(sala.visibles());
   suciedad.actualizar(dt, hayTrampa());

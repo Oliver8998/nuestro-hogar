@@ -77,6 +77,10 @@ export function traducirTexto(texto) {
     if (m && m[2] && (m[1] || m[3])) {
       const dentro = sinFormato(m[2]);
       if (dentro !== null) r = `${m[1]}${dentro}${m[3]}`;
+      else if (m[1] && m[3].trim()) {
+        const conFinal = sinFormato(m[2] + m[3].trim());
+        if (conFinal !== null) r = `${m[1]}${conFinal}`;
+      }
     }
   }
   if (r === null && /\s[·|]\s/.test(t)) {

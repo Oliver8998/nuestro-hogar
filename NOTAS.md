@@ -9,7 +9,7 @@ Documento vivo: aquí se apunta todo lo decidido y lo pendiente para no perder n
 - Regla: a Oliver no se le pasa código. Lo meto yo directamente en el repo y en la carpeta, y hago push.
 
 ## Técnica
-- Three.js 0.170 por CDN (import map), cámara ortográfica isométrica a 32°, habitación centrada y zoom 1.
+- Three.js 0.170 por CDN (import map), cámara ortográfica isométrica a 44° con encuadre automático (`camaraIso.encajar`, ver v101).
 - Guardado en localStorage con la clave `hogar-estado`. El `sw.js` es network-first: hay que subir la versión de la caché en cada cambio.
 - Rejilla de casillas de 0,5 m en una habitación de 6×6 m. Apilado con `soporte` (altura de la superficie) y `apoyo()`.
 - Los modelos son listas de `piezas`: `[w,h,d,x,y,z,color,forma?,{rx,ry,rz,transparente,brillo,metal,rugosidad}]`. El orden de las piezas importa para:
@@ -24,7 +24,7 @@ Documento vivo: aquí se apunta todo lo decidido y lo pendiente para no perder n
   - modelos: `construirPiezas`.
 - Escena:
   - muebles: el gestor de colocar, arrastrar y apilar;
-  - sala: habitación, paredes, puerta y desperfectos;
+  - sala: habitación, paredes, ventana y desperfectos (la puerta se quitó en v100);
   - camara.
 - Interacción e interfaz:
   - controles: los toques;
@@ -34,7 +34,7 @@ Documento vivo: aquí se apunta todo lo decidido y lo pendiente para no perder n
 - Sistemas del juego:
   - mascotas;
   - personajes: Pilar y Robi;
-  - entregas: la furgoneta y el paquete flotando en la puerta;
+  - entregas: el dron que deja el paquete en la ventana;
   - suciedad: polvo, telarañas, bichos, barro, caca, robot friegasuelos y Robi;
   - misiones;
   - minijuegos: uno por tipo de suciedad;
@@ -47,7 +47,7 @@ Documento vivo: aquí se apunta todo lo decidido y lo pendiente para no perder n
 - Tienda e inventario:
   - Tienda 3D con la dependienta Pilar: lista de dos columnas con pestañas de texto y el objeto girando despacio en el mostrador.
   - Inventario en un panel inferior de 2 filas con barra de scroll. Para colocar algo se arrastra, viendo una vista previa.
-  - Los pedidos tardan: llegan en furgoneta y el paquete se queda flotando y girando en la puerta.
+  - Los pedidos tardan: los trae un dron que espera en la ventana con el paquete colgando.
 - Ruleta con exclusivos, monedas y tickets.
 - Mascotas: se adoptan pagando, se les pone nombre, se juega con ellas y tienen sus objetos.
 - Suciedad:
@@ -56,7 +56,7 @@ Documento vivo: aquí se apunta todo lo decidido y lo pendiente para no perder n
 - Misiones diarias, de historia y eventos largos (por ejemplo, la visita de la madre en 10 días).
 - Ajustes generales:
   - blancos y brillos rebajados;
-  - cámara a 32° y centrada (Oliver: "está bien así");
+  - cámara: ver v101 (44° y encuadre automático);
   - economía más lenta y precios más altos.
 
 ## Modelos mejorados con Blender (hecho en gran parte, 23-nov-2026)
@@ -678,3 +678,14 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - Cruces: las dos calzadas se solapaban en el cruce (parpadeo y líneas de una calle pintadas encima de la otra). Ahora cada cruce lleva un parche de asfalto sin líneas (`matCruce`, `asfalto(false)`) por encima.
 - Pájaros rehechos (`calle.moverPajaros`): gaviotas low-poly (cuerpo, cabeza, pico, cola, alas en dos tramos que se doblan), bandadas en V de 5-9 que cruzan la escena en una dirección al azar cada 12-37 s, alternan aleteo y planeo. Su pasada (capa 4) limpia la profundidad y enciende las luces en la capa 4, así se iluminan y se tapan bien entre ellas.
 - Quitado el botón 💗 de reacciones de arriba a la derecha (y su menú). Las reacciones que llegan de la pareja se siguen mostrando.
+
+## Repaso general (v103)
+- Dron: mientras la ventana está rota (cartón) el dron espera por encima de la pared y en la capa normal, para que se vea bien (en la guía casi no se veía tras el cartón). Con la ventana arreglada vuelve a verse a través del cristal.
+- Cámara: con el inventario abierto el panel cuenta como margen de abajo y el piso entero cabe encima.
+- Trabajo del día: la presentación decía "Hasta 120 monedas" (pago sin aplicar `paga()`) y la propina igual; ahora muestran lo que de verdad se cobra. La variable local `paga` se llama `cobro` para no tapar la función.
+- Obras durante la reforma: ya no habla de "nivel 4" (el nivel aún no se ve); dice "Primero terminad la reforma del piso".
+- Mascotas sin adoptar: el texto mandaba a mirar "abajo" (vacío); ahora manda al mostrador de Pilar y el texto ya no se corta.
+- "Nuestras metas 0/0 cumplidas" → "Apuntad lo que queréis conseguir" si no hay metas.
+- Ruleta: el botón ponía "Tirar" (en inglés salía "Throw away"); ahora "¡A girar!".
+- i18n: un texto con emoji delante y "?" al final ya encuentra su traducción.
+- Pruebas hechas: guía completa hasta coger el paquete, todas las pantallas de Más/Tienda/Trabajar/Misiones/Inventario, búsqueda de español sin traducir en inglés, 20 trabajos arrancados con toques al azar y 80 s de juego con mascotas, noche y pedidos: sin errores de JS.
