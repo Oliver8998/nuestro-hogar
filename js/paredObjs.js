@@ -9,7 +9,7 @@ export const TAM_VENTANA = {
 };
 export const PRECIO_VENTANA = 600;
 const ALTO = 2.6;
-const NOMBRE_PARED = { 0: 'del fondo', 1: 'de la puerta', 2: 'de la izquierda', 3: 'de la derecha' };
+const NOMBRE_PARED = { 0: 'del fondo', 1: 'de enfrente', 2: 'de la izquierda', 3: 'de la derecha' };
 
 function crearVentana(colorMarco, cieloTex) {
   const g = new THREE.Group();

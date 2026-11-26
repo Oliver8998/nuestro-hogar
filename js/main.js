@@ -152,28 +152,19 @@ const entregas = new Entregas(escena, {
     guardar();
   }
 });
-let paredDron = -1;
 entregas.puntoEspera = k => {
-  const d = camaraIso.direccionHorizontal();
-  const mx = sala.ancho() / 2 + 0.15;
-  const mz = sala.fondo() / 2 + 0.15;
-  const caras = [[0, -1, mz], [0, 1, mz], [-1, 0, mx], [1, 0, mx]];
-  let mejor = 0;
-  let valor = -Infinity;
-  caras.forEach(([nx, nz], i) => {
-    const v = nx * d.x + nz * d.z + (i === paredDron ? 0.2 : 0);
-    if (v > valor) {
-      valor = v;
-      mejor = i;
-    }
-  });
-  paredDron = mejor;
-  const [nx, nz, dist] = caras[mejor];
-  const largo = mejor < 2 ? sala.ancho() : sala.fondo();
-  const lado = [0, 0.95, -0.95, 1.9, -1.9][k % 5];
-  const off = THREE.MathUtils.clamp(lado, -largo / 2 + 0.4, largo / 2 - 0.4);
-  const ext = sala.esExterior();
-  return new THREE.Vector3(nx * (dist + 0.75) - nz * off, (ext ? 1.5 : 1.75) + Math.floor(k / 5) * 0.6, nz * (dist + 0.75) + nx * off);
+  const v = sala.ventana;
+  const pared = sala.paredes[0];
+  if (!v || !pared) return new THREE.Vector3(0, 1.75, -sala.fondo() / 2 - 0.9);
+  pared.updateMatrixWorld(true);
+  const centro = v.localToWorld(new THREE.Vector3(sala.ventanaRota() ? -0.3 : 0, 0, 0));
+  const n = new THREE.Vector3(0, 0, 1).transformDirection(pared.matrixWorld);
+  if (n.dot(centro) < 0) n.negate();
+  n.y = 0;
+  n.normalize();
+  const lado = new THREE.Vector3(-n.z, 0, n.x);
+  const desp = [0, 0.7, -0.7, 1.4, -1.4][k % 5];
+  return centro.addScaledVector(n, 0.45).addScaledVector(lado, desp).setY(centro.y + 0.22 + Math.floor(k / 5) * 0.5);
 };
 
 const suciedad = new Suciedad(escena, {
@@ -611,7 +602,7 @@ function ofrecerCompra(id, titulo) {
   ui.dialogo({
     imagen: miniaturas.item(id),
     titulo: titulo || `No tenéis ${info.nombre.toLowerCase()}`,
-    texto: '¿Lo pedimos? Os lo traen a la puerta en un momento.',
+    texto: '¿Lo pedimos? Un dron os lo trae a la ventana en un momento.',
     botones: [
       { texto: 'Ahora no', tipo: 'secundario' },
       { texto: `Comprar · 🪙 ${info.precio}`, tipo: 'primario', desactivado: estado.monedas < info.precio, accion: () => comprarDirecto(id) }
@@ -1227,7 +1218,7 @@ function tocarSuciedad(d) {
     titulo: info.nombre,
     texto: d.tipo === 'caca' ? info.descripcion + ' 💩' : info.descripcion,
     html: `<div class="necesita${tiene || pedido ? ' tienes-ya' : ''}"><div><b>${tiene ? '✅' : pedido ? '🛸' : '🧽'} A mano: ${prod.nombre}</b>
-      <small>${tiene ? 'Limpiad a mano con un minijuego, o arrastradlo encima.' : pedido ? 'Ya está pedido, llegará a la puerta.' : `Cuesta 🪙 ${prod.precio}.`}</small></div></div>
+      <small>${tiene ? 'Limpiad a mano con un minijuego, o arrastradlo encima.' : pedido ? 'Ya está pedido, llegará a la ventana.' : `Cuesta 🪙 ${prod.precio}.`}</small></div></div>
       <div class="solucion">💡 ${soluciones[d.tipo]}</div>`,
     botones,
     columna: true
@@ -2931,7 +2922,7 @@ setTimeout(function alEntrar() {
     ui.dialogo({
       imagen: miniaturas.personaje('lola'), personaje: true,
       titulo: '¡Bienvenidos a casa!',
-      texto: 'Soy Pilar, la de la tienda. Este piso está hecho un desastre… Tocad lo que esté roto y os diré qué hace falta. Lo que pidáis os llegará en un paquete a la puerta. ¡Os regalo un ticket para la ruleta!',
+      texto: 'Soy Pilar, la de la tienda. Este piso está hecho un desastre… Tocad lo que esté roto y os diré qué hace falta. Lo que pidáis os lo traerá un dron a la ventana. ¡Os regalo un ticket para la ruleta!',
       botones: [{ texto: '¡Vamos allá!', tipo: 'primario' }]
     });
     return;
@@ -3058,6 +3049,7 @@ renderer.setAnimationLoop(() => {
   gestor.actualizar(dt);
   interacciones.actualizar(dt);
   mascotas.actualizar(dt);
+  entregas.ponerCapa(sala.paredes[0].visible && !sala.esExterior() ? 2 : 0);
   entregas.actualizar(dt);
   suciedad.visibilidadParedes(sala.visibles());
   suciedad.actualizar(dt, hayTrampa());

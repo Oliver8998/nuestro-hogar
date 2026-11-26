@@ -689,7 +689,7 @@ export class UI {
     this.inventario = inventario;
     this.elInventario.innerHTML = '';
     if (!inventario.items.length) {
-      this.elInventario.innerHTML = '<div class="vacio">Vacío. Lo que pidáis llegará en un paquete a la puerta 📦</div>';
+      this.elInventario.innerHTML = '<div class="vacio">Vacío. Lo que pidáis os lo traerá un dron a la ventana 📦</div>';
     }
     const total = inventario.items.reduce((n, i) => n + i.cantidad, 0);
     const contador = this.$('btn-inventario').querySelector('.contador-inv');

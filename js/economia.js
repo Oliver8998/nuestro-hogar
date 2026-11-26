@@ -154,7 +154,7 @@ export class Economia {
       this.ctx.sonido.comprar();
       this.ctx.refrescarHud();
       this.ctx.guardar();
-      ui.aviso('🧵 ¡Encargado! Llega mañana a la puerta');
+      ui.aviso('🧵 ¡Encargado! Llega mañana a la ventana');
       this.ctx.recordar('medida', '🧵', `Nuestro primer mueble a medida: ${infoItem(id).nombre.toLowerCase()}`);
     });
     cuerpo.querySelectorAll('.reciclar').forEach(b => b.addEventListener('click', () => {

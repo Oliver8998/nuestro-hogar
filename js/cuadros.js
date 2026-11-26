@@ -15,7 +15,7 @@ export const MARCOS = {
   lienzo: { nombre: 'Lienzo', color: 0xf2efe9, borde: 0, lienzo: true }
 };
 
-const PARED_NOMBRE = { 0: 'la ventana', 1: 'la puerta', 2: 'la izquierda', 3: 'la derecha' };
+const PARED_NOMBRE = { 0: 'la ventana', 1: 'enfrente', 2: 'la izquierda', 3: 'la derecha' };
 
 export class Cuadros {
   constructor(mas) {

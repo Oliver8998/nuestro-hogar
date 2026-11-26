@@ -78,6 +78,7 @@ export class Entregas {
     this.drones = [];
     this.t = 0;
     this.puntoEspera = null;
+    this.capa = 0;
   }
 
   desplazarZ() {}
@@ -149,14 +150,24 @@ export class Entregas {
       dron.position.copy(d.desde);
     } else dron.position.copy(destino);
     this.raiz.add(dron);
+    dron.traverse(o => o.layers.set(this.capa));
     this.drones.push(d);
     return d;
+  }
+
+  ponerCapa(capa) {
+    if (capa === this.capa) return;
+    this.capa = capa;
+    for (const d of this.drones) d.dron.traverse(o => o.layers.set(capa));
   }
 
   intersectar(raycaster) {
     const paquetes = this.drones.filter(d => d.fase === 'esperar' && d.p.paquete).map(d => d.p.paquete);
     if (!paquetes.length) return null;
+    const mascara = raycaster.layers.mask;
+    raycaster.layers.enable(this.capa);
     const hits = raycaster.intersectObjects(paquetes, true);
+    raycaster.layers.mask = mascara;
     if (!hits.length) return null;
     let o = hits[0].object;
     while (o && !o.userData.pedido) o = o.parent;
@@ -169,6 +180,7 @@ export class Entregas {
     const paquete = p.paquete;
     if (paquete) {
       this.raiz.attach(paquete);
+      paquete.traverse(o => o.layers.set(0));
       paquete.userData.base = paquete.scale.x;
       paquete.userData.abriendo = 0;
       paquete.userData.pedido = null;

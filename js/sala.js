@@ -95,9 +95,6 @@ export function crearSala(escena) {
     { x: mitad + GROSOR / 2, z: 0, rot: -Math.PI / 2, n: new THREE.Vector3(1, 0, 0) }
   ];
 
-  const PUERTA_X = -1.0;
-  const PUERTA_ANCHO = 1.0;
-  const PUERTA_ALTO = 2.1;
 
   defs.forEach((d, i) => {
     const grupo = new THREE.Group();
@@ -129,47 +126,11 @@ export function crearSala(escena) {
       piezas.length = 0;
       const largo = (i < 2 ? anchoActual : fondoActual) + GROSOR * 2;
       const marcar = m => { m.userData.tramo = true; return m; };
-      if (i === 1) {
-        const a = PUERTA_X - PUERTA_ANCHO / 2;
-        const b = PUERTA_X + PUERTA_ANCHO / 2;
-        marcar(tramo(-largo / 2, a, -0.1, ALTO, grupo, piezas));
-        marcar(tramo(b, largo / 2, -0.1, ALTO, grupo, piezas));
-        marcar(tramo(a, b, PUERTA_ALTO, ALTO, grupo, piezas));
-        marcar(tramo(-largo / 2, a, -0.1, 0.14, bajo));
-        marcar(tramo(b, largo / 2, -0.1, 0.14, bajo));
-      } else {
-        marcar(tramo(-largo / 2, largo / 2, -0.1, ALTO, grupo, piezas));
-        marcar(tramo(-largo / 2, largo / 2, -0.1, 0.14, bajo));
-      }
+      marcar(tramo(-largo / 2, largo / 2, -0.1, ALTO, grupo, piezas));
+      marcar(tramo(-largo / 2, largo / 2, -0.1, 0.14, bajo));
       if (grupo.userData.piezas) grupo.userData.muro = piezas[0];
     };
     construirTramos();
-
-    if (i === 1) {
-      const a = PUERTA_X - PUERTA_ANCHO / 2;
-      const b = PUERTA_X + PUERTA_ANCHO / 2;
-
-      const marco = new THREE.MeshStandardMaterial({ color: 0xf7f1e8, roughness: 0.7 });
-      for (const [w, h, x, y] of [[0.08, PUERTA_ALTO, a + 0.04, PUERTA_ALTO / 2 - 0.05], [0.08, PUERTA_ALTO, b - 0.04, PUERTA_ALTO / 2 - 0.05], [PUERTA_ANCHO, 0.08, PUERTA_X, PUERTA_ALTO - 0.04]]) {
-        const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, GROSOR + 0.04), marco);
-        m.position.set(x, y, 0);
-        grupo.add(m);
-      }
-      const hoja = new THREE.Mesh(new THREE.BoxGeometry(PUERTA_ANCHO - 0.16, PUERTA_ALTO - 0.1, 0.05), new THREE.MeshStandardMaterial({ color: 0x9c6b45, roughness: 0.7 }));
-      hoja.position.set(PUERTA_X, (PUERTA_ALTO - 0.1) / 2 - 0.05, 0);
-      hoja.castShadow = true;
-      grupo.add(hoja);
-      for (const [w, h, y] of [[0.6, 0.7, 1.45], [0.6, 0.7, 0.55]]) {
-        const panel = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.07), new THREE.MeshStandardMaterial({ color: 0xb07a4f, roughness: 0.7 }));
-        panel.position.set(PUERTA_X, y, 0);
-        grupo.add(panel);
-      }
-      for (const z of [-0.05, 0.05]) {
-        const pomo = new THREE.Mesh(new THREE.SphereGeometry(0.04, 12, 10), new THREE.MeshStandardMaterial({ color: 0xe0c060, metalness: 0.6, roughness: 0.3 }));
-        pomo.position.set(PUERTA_X + 0.3, 1.0, z);
-        grupo.add(pomo);
-      }
-    }
 
     grupo.userData = { normal: d.n, muro: piezas[0], piezas, bajo, pintura: null, requisito: null, desperfectos: [], construirTramos };
     sala.add(grupo);
@@ -690,5 +651,5 @@ export function crearSala(escena) {
     });
   }
 
-  return { paredes, cara, redimensionar, largoPared, ancho: () => anchoActual, fondo: () => fondoActual, modoVisita, ponerPapel, decorSuelo, tablas, modoExterior, esExterior: () => exterior, pintarSuelo, mostrarDesperfectos, completarTodo, pintarParedes, conDesperfectos: () => conDesperfectos, ventana, matCristal, hemi, sol, visibles: () => paredes.map(p => p.visible), actualizarParedes, actualizar, buscar, tocar, puedeAplicar, aplicar, resaltar, estado, restaurar, progreso };
+  return { paredes, cara, redimensionar, largoPared, ancho: () => anchoActual, fondo: () => fondoActual, modoVisita, ponerPapel, decorSuelo, tablas, modoExterior, esExterior: () => exterior, pintarSuelo, mostrarDesperfectos, completarTodo, pintarParedes, conDesperfectos: () => conDesperfectos, ventana, ventanaRota: () => carton.parent === ventana, matCristal, hemi, sol, visibles: () => paredes.map(p => p.visible), actualizarParedes, actualizar, buscar, tocar, puedeAplicar, aplicar, resaltar, estado, restaurar, progreso };
 }
