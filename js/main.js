@@ -2625,7 +2625,7 @@ function actualizarFlecha(dt) {
   while (d > Math.PI) d -= Math.PI * 2;
   while (d < -Math.PI) d += Math.PI * 2;
   anguloFlecha += d * Math.min(1, dt * 8);
-  const radio = 40;
+  const radio = 48;
   flechaCamara.style.transform = `translate(${(Math.cos(anguloFlecha) * radio).toFixed(1)}px, ${(Math.sin(anguloFlecha) * radio).toFixed(1)}px)`;
   flechaCamara.firstChild.style.transform = `rotate(${anguloFlecha.toFixed(3)}rad)`;
   flechaCamara.title = destino === 'balcon' ? 'Ir al balcón' : 'Volver al piso';
