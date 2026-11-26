@@ -14,9 +14,9 @@ export class Lofi {
   constructor(sonido) {
     this.sonido = sonido;
     try {
-      this.activo = localStorage.getItem('hogar-lofi') === 'si';
+      this.activo = localStorage.getItem('hogar-lofi') !== 'no';
     } catch (e) {
-      this.activo = false;
+      this.activo = true;
     }
     this.volumen = 1;
     try {

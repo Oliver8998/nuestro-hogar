@@ -772,3 +772,10 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 
 ## La flecha gira alrededor de la cámara (v117)
 - La flecha del balcón ya no está fija a la izquierda: orbita alrededor del 🎥 a 40 px del centro, en la misma dirección hacia la que apunta (`actualizarFlecha` mueve el botón con translate y gira la flecha).
+
+## Tamaños, pájaros, música, engranaje (v119-v120)
+- **Tamaños de objetos pequeños:** medidos todos los muebles con su modelo real; los pequeños se veían diminutos en isométrica. `ESCALA_VISUAL` en catalogo.js → `def.escala` (jarrón 1,7; cactus 1,6; rosas y tarro 1,5; velas 1,45; lámparas de mesa/corazón, calendario y pelota 1,4; radio, trampa 1,35; libros, comedero, lámpara de lava 1,3; cojín 1,25; peluche 1,15; impresora 1,1; caballete 0,9). `GestorMuebles` escala los hijos del modelo, la altura de la luz y el `alto` de los que son soporte; apilar usa `od.alto`.
+- **Cámara:** quitado "Girar la casa" del menú.
+- **Pájaros:** volvían a pasar por debajo del piso porque `edificio.renderizar` pone toda la raíz en la capa 2 y la versión nueva ya no los devolvía a la 4. `moverPajaros` los vuelve a poner en la capa 4 si hace falta.
+- **Música:** quitado el ruido de ciudad (`sonido.ambiente` ya no se llama). La música lofi viene encendida por defecto (`hogar-lofi` ≠ 'no'); se apaga con el deslizador de Ajustes.
+- **⚙️ Ajustes** arriba a la izquierda (abre `mas.abrirAjustes`); las pastillas de la izquierda se apartan 50 px.

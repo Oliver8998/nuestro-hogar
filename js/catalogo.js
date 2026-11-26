@@ -788,6 +788,13 @@ for (const d of CATALOGO) {
   else if (d.encendible) d.uso = 'Tocadla para encenderla o apagarla';
 }
 
+const ESCALA_VISUAL = {
+  jarron: 1.7, cactus: 1.6, radio: 1.35, 'lampara-mesa': 1.4, libros: 1.3, pelota: 1.4, trampa: 1.35, comedero: 1.3,
+  'lampara-lava': 1.3, calendario: 1.4, 'tarro-preguntas': 1.5, velas: 1.45, 'lampara-corazon': 1.4, rosas: 1.5,
+  'cojin-corazon': 1.25, impresora: 1.1, peluche: 1.15, caballete: 0.9
+};
+for (const d of CATALOGO) if (ESCALA_VISUAL[d.id]) d.escala = ESCALA_VISUAL[d.id];
+
 encarecer(CATALOGO);
 encarecer(MATERIALES);
 for (const k of Object.keys(PRECIO_RAREZA)) PRECIO_RAREZA[k] = caro(PRECIO_RAREZA[k]);

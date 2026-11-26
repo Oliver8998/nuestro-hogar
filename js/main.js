@@ -577,7 +577,6 @@ function vecinosReaccionan(dt) {
     ui.aviso('🔨 ¡Pom, pom, pom! El vecino de abajo golpea el techo: ¡que son horas!');
   }
   const p = patioActual();
-  sonido.ambiente((camaraIso.zona === 'balcon' ? 1 : camaraIso.lejos ? 0.9 : 0.45) * (noche ? 0.5 : 1));
   sala.ponerClimaPatio && sala.ponerClimaPatio(ambiente.clima);
   if (p && !estado.notaBalcon && !dialogoAbierto() && !visitando) {
     const W = sala.ancho() / 2;
@@ -2588,6 +2587,7 @@ inmobiliaria = new Inmobiliaria({
 ui.puedeItem = d => puedeItem(d);
 document.getElementById('pill-nivel').addEventListener('click', () => { sonido.tocar(); experiencia.abrir(); });
 document.querySelector('#hud .pastilla.moneda').addEventListener('click', () => { sonido.tocar(); abrirMovimientos(); });
+document.getElementById('btn-ajustes').addEventListener('click', () => { sonido.tocar(); mas.abrirAjustes(); });
 const menuCamara = document.getElementById('menu-camara');
 const flechaCamara = document.getElementById('flecha-camara');
 document.getElementById('btn-camara').addEventListener('click', e => {

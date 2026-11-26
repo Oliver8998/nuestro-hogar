@@ -3882,3 +3882,7 @@ textarea.carta-texto { font-family: 'Georgia', serif; line-height: 1.5; }
 #flecha-camara { right: auto; left: 50%; top: 50%; width: 34px; height: 34px; margin: -17px 0 0 -17px; font-size: 26px; }
 #flecha-camara { text-shadow: 0 0 3px rgba(40, 30, 20, .75), 0 2px 4px rgba(40, 30, 20, .5); }
 #flecha-camara { width: 46px; height: 46px; margin: -23px 0 0 -23px; font-size: 40px; }
+
+#btn-ajustes { position: fixed; top: calc(env(safe-area-inset-top) + 8px); left: 10px; width: 46px; height: 46px; border: none; background: none; padding: 0; font-size: 32px; line-height: 1; filter: drop-shadow(0 2px 3px rgba(40, 30, 20, .35)); z-index: 4; pointer-events: auto; }
+#btn-ajustes:active { transform: scale(.9) rotate(30deg); }
+#hud .hud-izquierda { margin-left: 50px; }

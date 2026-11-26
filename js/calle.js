@@ -804,6 +804,7 @@ export class Calle {
     const rumbo = Math.atan2(B.dir.x, B.dir.z);
     for (const b of this.pajaros) {
       if (!b.visible) continue;
+      if (!b.layers.isEnabled(4) || b.layers.isEnabled(2)) b.traverse(o => o.layers.set(4));
       const d = b.userData;
       const fila = Math.ceil(d.fila / 2);
       const lado = d.fila % 2 ? 1 : -1;

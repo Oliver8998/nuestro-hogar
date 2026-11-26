@@ -8,6 +8,11 @@ const ALTURA_MAXIMA = 2.45;
 
 function crearMueble(def) {
   const { grupo, mallas, todas } = construirPiezas(def.piezas, { sombras: !def.suelo, id: def.id });
+  const esc = def.escala || 1;
+  if (esc !== 1) for (const h of grupo.children) {
+    h.position.multiplyScalar(esc);
+    h.scale.multiplyScalar(esc);
+  }
 
   const marcador = new THREE.Mesh(
     new THREE.PlaneGeometry(def.ancho * CELDA - 0.04, def.fondo * CELDA - 0.04),
@@ -22,11 +27,11 @@ function crearMueble(def) {
   let luz = null;
   if (def.encendible && def.encendible.luz) {
     luz = new THREE.PointLight(def.encendible.colorLuz ?? 0xffd9a0, 0, 4, 2);
-    luz.position.y = def.encendible.luz;
+    luz.position.y = def.encendible.luz * esc;
     grupo.add(luz);
   }
 
-  const alto = def.soporte ?? new THREE.Box3().setFromObject(grupo).max.y;
+  const alto = def.soporte !== undefined ? def.soporte * esc : new THREE.Box3().setFromObject(grupo).max.y;
   grupo.userData = {
     def, mallas, todas, marcador, luz, alto,
     uid: Math.random().toString(36).slice(2, 10),
@@ -145,7 +150,7 @@ export class GestorMuebles {
           const arriba = od.base + od.alto;
           if (arriba > tope) {
             tope = arriba;
-            superficie = od.def.soporte ? od.base + od.def.soporte : Infinity;
+            superficie = od.def.soporte ? od.base + (od.alto ?? od.def.soporte) : Infinity;
           }
         }
         maximo = Math.max(maximo, tope);
