@@ -384,6 +384,11 @@ export function crearSala(escena) {
       p.visible = ver.has(i);
       p.userData.bajo.visible = !p.visible;
     });
+    if (patio) {
+      patio.userData.cristalera.visible = ver.has(3);
+      paredes[3].visible = false;
+      paredes[3].userData.bajo.visible = false;
+    }
   }
 
   function objetivos() {
@@ -592,6 +597,133 @@ export function crearSala(escena) {
     }
   }
 
+
+  let patio = null;
+  let patioTipo = null;
+  let patioAncho = 0;
+  function texturaPatio(tipo) {
+    const c = document.createElement('canvas');
+    c.width = c.height = 128;
+    const g = c.getContext('2d');
+    if (tipo === 'terraza') {
+      for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) {
+        g.fillStyle = (i + j) % 2 ? '#c9b8a2' : '#bfae98';
+        g.fillRect(i * 32, j * 32, 32, 32);
+        g.fillStyle = 'rgba(0,0,0,.12)';
+        g.fillRect(i * 32, j * 32, 32, 1.5);
+        g.fillRect(i * 32, j * 32, 1.5, 32);
+      }
+    } else {
+      g.fillStyle = '#78b257';
+      g.fillRect(0, 0, 128, 128);
+      for (let k = 0; k < 500; k++) {
+        g.fillStyle = Math.random() < 0.5 ? 'rgba(40,90,30,.25)' : 'rgba(170,220,120,.25)';
+        g.fillRect(Math.random() * 128, Math.random() * 128, 2, 4);
+      }
+    }
+    const t = new THREE.CanvasTexture(c);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  }
+
+  function ponerPatio(tipo, ancho) {
+    if (patio) {
+      sala.remove(patio);
+      patio.traverse(o => { if (o.isMesh) { o.geometry.dispose(); if (o.material.map) o.material.map.dispose(); o.material.dispose(); } });
+      patio = null;
+    }
+    patioTipo = tipo;
+    patioAncho = tipo ? ancho : 0;
+    paredes[3].userData.patio = !!tipo;
+    if (!tipo) {
+      paredes[3].visible = true;
+      return;
+    }
+    const mx = anchoActual / 2;
+    const mz = fondoActual / 2;
+    const E = ancho;
+    patio = new THREE.Group();
+    patio.name = 'patio';
+    const borde = GROSOR + 0.1;
+    const losa = caja(E + borde, 0.4, fondoActual + borde * 2, 0xb9a48c);
+    losa.position.set(mx + (E + borde) / 2, -0.3, 0);
+    losa.castShadow = false;
+    patio.add(losa);
+    const tex = texturaPatio(tipo);
+    tex.repeat.set(E / (tipo === 'terraza' ? 1 : 2), fondoActual / (tipo === 'terraza' ? 1 : 2));
+    const suelo = new THREE.Mesh(new THREE.BoxGeometry(E, 0.1, fondoActual), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.95 }));
+    suelo.position.set(mx + E / 2, -0.05, 0);
+    suelo.receiveShadow = true;
+    patio.add(suelo);
+    const terraza = tipo === 'terraza';
+    const matValla = new THREE.MeshStandardMaterial({ color: terraza ? 0x6a6f75 : tipo === 'perro' ? 0xffffff : 0xb98a5e, roughness: terraza ? 0.4 : 0.85, metalness: terraza ? 0.5 : 0 });
+    const matCristalV = new THREE.MeshStandardMaterial({ color: 0xcfe8f2, transparent: true, opacity: 0.35, roughness: 0.1, depthWrite: false });
+    const tramoValla = (x0, z0, x1, z1) => {
+      const largo = Math.hypot(x1 - x0, z1 - z0);
+      const g = new THREE.Group();
+      g.position.set((x0 + x1) / 2, 0, (z0 + z1) / 2);
+      g.rotation.y = -Math.atan2(z1 - z0, x1 - x0);
+      if (terraza) {
+        const panel = new THREE.Mesh(new THREE.BoxGeometry(largo, 0.62, 0.02), matCristalV);
+        panel.position.y = 0.42;
+        const bar = new THREE.Mesh(new THREE.BoxGeometry(largo + 0.04, 0.05, 0.07), matValla);
+        bar.position.y = 0.76;
+        g.add(panel, bar);
+        for (let k = 0; k <= Math.round(largo / 1); k++) {
+          const poste = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.78, 0.05), matValla);
+          poste.position.set(-largo / 2 + k * largo / Math.max(1, Math.round(largo / 1)), 0.39, 0);
+          g.add(poste);
+        }
+      } else {
+        const n = Math.round(largo / 0.25);
+        for (let k = 0; k < n; k++) {
+          const tabla = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.55, 0.03), matValla);
+          tabla.position.set(-largo / 2 + 0.125 + k * 0.25, 0.27, 0);
+          g.add(tabla);
+        }
+        for (const y of [0.16, 0.42]) {
+          const trav = new THREE.Mesh(new THREE.BoxGeometry(largo, 0.05, 0.03), matValla);
+          trav.position.set(0, y, -0.025);
+          g.add(trav);
+        }
+      }
+      g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+      patio.add(g);
+    };
+    tramoValla(mx + 0.05, -mz - 0.02, mx + E, -mz - 0.02);
+    tramoValla(mx + E + 0.02, -mz, mx + E + 0.02, mz);
+    tramoValla(mx + E, mz + 0.02, mx + 0.05, mz + 0.02);
+    const cristalera = new THREE.Group();
+    cristalera.name = 'cristalera';
+    const matMarco = new THREE.MeshStandardMaterial({ color: 0xf3eee4, roughness: 0.6 });
+    const matVidrio = new THREE.MeshStandardMaterial({ color: 0xd8eef6, transparent: true, opacity: 0.22, roughness: 0.05, depthWrite: false });
+    const hueco = 0.75;
+    const xg = mx + 0.02;
+    for (const [z0, z1] of [[-mz, -hueco], [hueco, mz]]) {
+      const largo = z1 - z0;
+      const vidrio = new THREE.Mesh(new THREE.BoxGeometry(0.02, ALTO - 0.1, largo), matVidrio);
+      vidrio.position.set(xg, (ALTO - 0.1) / 2, (z0 + z1) / 2);
+      cristalera.add(vidrio);
+      for (const z of [z0, z1, (z0 + z1) / 2]) {
+        const poste = new THREE.Mesh(new THREE.BoxGeometry(0.06, ALTO, 0.06), matMarco);
+        poste.position.set(xg, ALTO / 2, z);
+        cristalera.add(poste);
+      }
+    }
+    const dintel = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, fondoActual), matMarco);
+    dintel.position.set(xg, ALTO - 0.04, 0);
+    const umbral = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.03, fondoActual), matMarco);
+    umbral.position.set(xg, 0.015, 0);
+    cristalera.add(dintel, umbral);
+    cristalera.traverse(o => { if (o.isMesh && o.material === matMarco) o.castShadow = true; });
+    patio.add(cristalera);
+    patio.userData.cristalera = cristalera;
+    sala.add(patio);
+    paredes[3].visible = false;
+    paredes[3].userData.bajo.visible = false;
+  }
+
   function redimensionar(ancho, fondo = TAM) {
     if (ancho === anchoActual && fondo === fondoActual) return;
     anchoActual = ancho;
@@ -653,5 +785,5 @@ export function crearSala(escena) {
     });
   }
 
-  return { paredes, cara, redimensionar, largoPared, ancho: () => anchoActual, fondo: () => fondoActual, modoVisita, ponerPapel, decorSuelo, tablas, modoExterior, esExterior: () => exterior, pintarSuelo, mostrarDesperfectos, completarTodo, pintarParedes, conDesperfectos: () => conDesperfectos, ventana, ventanaRota: () => carton.parent === ventana, matCristal, hemi, sol, visibles: () => paredes.map(p => p.visible), actualizarParedes, actualizar, buscar, tocar, puedeAplicar, aplicar, resaltar, estado, restaurar, progreso };
+  return { paredes, cara, redimensionar, ponerPatio, patio: () => (patioTipo ? { tipo: patioTipo, ancho: patioAncho } : null), largoPared, ancho: () => anchoActual, fondo: () => fondoActual, modoVisita, ponerPapel, decorSuelo, tablas, modoExterior, esExterior: () => exterior, pintarSuelo, mostrarDesperfectos, completarTodo, pintarParedes, conDesperfectos: () => conDesperfectos, ventana, ventanaRota: () => carton.parent === ventana, matCristal, hemi, sol, visibles: () => paredes.map(p => p.visible), actualizarParedes, actualizar, buscar, tocar, puedeAplicar, aplicar, resaltar, estado, restaurar, progreso };
 }

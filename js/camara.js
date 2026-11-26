@@ -26,6 +26,8 @@ export class CamaraIso {
     this.limZ = LIMITE_PAN;
     this.salaW = 6;
     this.salaD = 6;
+    this.extra = 0;
+    this.centroX = 0;
     this.margenArriba = 0;
     this.margenAbajo = 0;
     this.altoPx = window.innerHeight || 760;
@@ -36,11 +38,15 @@ export class CamaraIso {
     this.aplicar();
   }
 
-  ajustar(ancho, fondo) {
+  ajustar(ancho, fondo, extra = 0) {
+    const centroAntes = this.centroX;
     this.salaW = ancho;
     this.salaD = fondo;
-    this.tamano = 10 * Math.max(1, (ancho + fondo) / 12);
-    this.limX = LIMITE_PAN + Math.max(0, ancho - 6) / 2;
+    this.extra = extra;
+    this.centroX = extra / 2;
+    if (Math.abs(this.objetivoObj.x - centroAntes) < 0.05) this.objetivoObj.x = this.centroX;
+    this.tamano = 10 * Math.max(1, (ancho + extra + fondo) / 12);
+    this.limX = LIMITE_PAN + Math.max(0, ancho + extra - 6) / 2;
     this.limZ = LIMITE_PAN + Math.max(0, fondo - 6) / 2;
     if (this.aspecto) this.redimensionar(this.aspecto);
   }
@@ -75,7 +81,7 @@ export class CamaraIso {
     const a = ANGULO_INICIAL;
     let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
     for (const x of [-1, 1]) for (const z of [-1, 1]) for (const y of [-0.45, 2.75]) {
-      const px = x * (this.salaW / 2 + G);
+      const px = x * ((this.salaW + this.extra) / 2 + G);
       const pz = z * (this.salaD / 2 + G);
       const sx = px * Math.cos(a) - pz * Math.sin(a);
       const sy = (y - 1.0) * ca - (px * Math.sin(a) + pz * Math.cos(a)) * sa;
@@ -99,7 +105,7 @@ export class CamaraIso {
   acercarA(punto) {
     this.zoomObj = this.zoomFit * 2;
     this.objetivoObj.set(
-      THREE.MathUtils.clamp(punto.x, -this.limX, this.limX),
+      THREE.MathUtils.clamp(punto.x, this.centroX - this.limX, this.centroX + this.limX),
       1.0,
       THREE.MathUtils.clamp(punto.z, -this.limZ, this.limZ)
     );
@@ -130,7 +136,7 @@ export class CamaraIso {
     const fondo = new THREE.Vector3(-Math.sin(this.angulo), 0, -Math.cos(this.angulo));
     this.objetivoObj.addScaledVector(derecha, -dxPx * porPx);
     this.objetivoObj.addScaledVector(fondo, dyPx * porPx / Math.sin(this.altura));
-    this.objetivoObj.x = THREE.MathUtils.clamp(this.objetivoObj.x, -this.limX, this.limX);
+    this.objetivoObj.x = THREE.MathUtils.clamp(this.objetivoObj.x, this.centroX - this.limX, this.centroX + this.limX);
     this.objetivoObj.z = THREE.MathUtils.clamp(this.objetivoObj.z, -this.limZ, this.limZ + 1.2);
   }
 
@@ -138,7 +144,7 @@ export class CamaraIso {
     const vueltas = Math.round((this.anguloObj - ANGULO_INICIAL) / (Math.PI * 2));
     this.anguloObj = ANGULO_INICIAL + vueltas * Math.PI * 2;
     this.zoomObj = this.zoomFit;
-    this.objetivoObj.set(0, 1.0, 0);
+    this.objetivoObj.set(this.centroX, 1.0, 0);
     this.inercia = 0;
   }
 

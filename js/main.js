@@ -12,7 +12,7 @@ import { infoItem, precioVenta, RAREZAS } from './catalogo.js';
 import { elegirSegmento, resolverPremio, COSTE_TIRADA, PIEZAS_PREMIO } from './ruleta.js';
 import { sonido } from './sonido.js';
 import { Entregas } from './entregas.js';
-import { Suciedad, TIPOS as TIPOS_SUCIEDAD, construirJardin } from './suciedad.js';
+import { Suciedad, TIPOS as TIPOS_SUCIEDAD } from './suciedad.js';
 import { HISTORIA, EVENTOS, puntuacion, nuevasDiarias, infoDiaria, textoPremio } from './misiones.js';
 import { poolDe } from './ruleta.js';
 import { Minijuegos } from './minijuegos.js';
@@ -263,11 +263,14 @@ function habsCasa(e = estado) {
 
 function obraHecha(o, e = estado) {
   if (o.filas) return (e.salonFilas || 0) >= o.filas;
+  if (o.exterior && RANGO_PATIO[o.id] !== undefined && e.patio && RANGO_PATIO[e.patio] >= RANGO_PATIO[o.id]) return true;
   const habs = habsCasa(e);
   return habs.includes(o.nombre) || (o.alias || []).some(a => habs.includes(a));
 }
 
 function tieneExterior() {
+  const t = tipoPatio();
+  if (t && t !== 'perro') return true;
   return habsCasa().some(h => EXTERIORES[h]);
 }
 
@@ -284,17 +287,34 @@ function tamHab(i = estado.habActual || 0, e = estado) {
   return i === 0 ? TAM_SALON[Math.min(TAM_SALON.length - 1, e.salonFilas || 0)] : [6, 6];
 }
 
+const ANCHO_PATIO = { perro: 2, terraza: 3, jardin: 5 };
+const RANGO_PATIO = { perro: 0, terraza: 1, jardin: 2 };
+
+function tipoPatio(e = estado) {
+  if (e.patio) return e.patio;
+  return e.jardin ? 'perro' : null;
+}
+
+function patioActual() {
+  if (visitando || enPiso() || (estado.habActual || 0) !== 0) return null;
+  const t = tipoPatio();
+  return t ? { tipo: t, ancho: ANCHO_PATIO[t] } : null;
+}
+
 let anchoVisita = null;
 function aplicarTam() {
   const [ancho, fondo] = visitando && anchoVisita ? anchoVisita : tamHab();
+  const patio = patioActual();
+  const E = patio ? patio.ancho : 0;
   ponerMedidas(ancho, fondo);
   sala.redimensionar(ancho, fondo);
-  gestor.ajustarTam(ancho, fondo);
-  camaraIso.ajustar(ancho, fondo);
-  edificio.construir(ancho, fondo);
+  sala.ponerPatio(patio ? patio.tipo : null, E);
+  gestor.ajustarTam(ancho, fondo, E);
+  camaraIso.ajustar(ancho, fondo, E);
+  edificio.construir(ancho + E, fondo);
+  edificio.raiz.position.x = E / 2;
   entregas.desplazarZ(fondo / 2 - 3);
   if (casa2) casa2.tiras.forEach((t, i) => { t.scale.x = (sala.largoPared(i) + 0.2) / 6.2; });
-  if (jardinMalla) jardinMalla.position.x = ancho / 2 - 3;
 }
 
 function nivelXp() {
@@ -434,13 +454,9 @@ async function jugarMinijuego(d) {
   ui.aviso('✨ ¡Limpio!');
 }
 
-let jardinMalla = null;
 function ponerJardin() {
-  if (jardinMalla) return;
-  jardinMalla = construirJardin();
-  jardinMalla.position.x = sala.ancho() / 2 - 3;
-  escena.add(jardinMalla);
   suciedad.jardin = true;
+  if (!estado.patio) aplicarTam();
 }
 
 function hayTrampa() {
@@ -1486,14 +1502,19 @@ function hacerObra(id) {
   estado.monedas -= o.precio;
   pista('🏗️', `Obra: ${o.nombre}`);
   estado.habs = todasHabitaciones();
-  estado.obras = [...(estado.obras || []), o.id];
+  if (o.exterior && RANGO_PATIO[o.id] !== undefined) estado.patio = o.id;
+  else estado.obras = [...(estado.obras || []), o.id];
   if (o.filas) estado.salonFilas = o.filas;
   estado.habs = todasHabitaciones();
   ui.cerrarHojas();
   experiencia.retener(2500);
   registrar('obra');
   pareja.recordar(null, o.icono, `Hicimos obra: ${o.nombre}`);
-  const i = o.filas ? -1 : habsCasa().indexOf(o.nombre);
+  const i = o.filas || estado.patio === o.id ? -1 : habsCasa().indexOf(o.nombre);
+  if (estado.patio === o.id) {
+    if ((estado.habActual || 0) === 0) aplicarTam();
+    else cambiarHabitacion(0);
+  }
   if (o.filas) {
     if ((estado.habActual || 0) === 0) aplicarTam();
     else cambiarHabitacion(0);
@@ -1517,7 +1538,7 @@ function hacerObra(id) {
     ui.dialogo({
       imagen: miniaturas.personaje('lola'), personaje: true,
       titulo: o.filas ? `${o.icono} ¡Salón ampliado!` : `${o.icono} ¡${o.nombre} terminado!`,
-      texto: o.filas ? `Ya tenéis un salón de ${TAM_SALON[o.filas][1]}×${TAM_SALON[o.filas][0]}. Hay más sitio para muebles, mascotas y lo que queráis.` : o.exterior ? 'Los obreros ya han acabado, pero lo han dejado todo perdido. Limpiadlo y decoradlo a vuestro gusto.' : 'Los obreros ya han acabado, pero la han dejado sin pintar y llena de polvo. ¡A dejarla bonita! Cambiad de habitación con el botón de arriba.',
+      texto: estado.patio === o.id ? `El salón ya tiene salida a ${o.id === 'jardin' ? 'un jardín' : 'una terraza'} por la cristalera. Decoradlo con cosas de exterior.` : o.filas ? `Ya tenéis un salón de ${TAM_SALON[o.filas][0]}×${TAM_SALON[o.filas][1]}. Hay más sitio para muebles, mascotas y lo que queráis.` : o.exterior ? 'Los obreros ya han acabado, pero lo han dejado todo perdido. Limpiadlo y decoradlo a vuestro gusto.' : 'Los obreros ya han acabado, pero la han dejado sin pintar y llena de polvo. ¡A dejarla bonita! Cambiad de habitación con el botón de arriba.',
       confeti: true,
       botones: [{ texto: '¡A estrenarla!', tipo: 'primario' }]
     });

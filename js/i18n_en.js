@@ -1,4 +1,8 @@
 export default {
+"Una terraza pegada al salón, con cristalera":"A terrace attached to the living room, behind a glass wall",
+"La terraza crece y se convierte en un jardín con césped":"The terrace grows into a garden with grass",
+"El salón ya tiene salida a un jardín por la cristalera. Decoradlo con cosas de exterior.":"The living room now opens onto a garden through the glass wall. Decorate it with outdoor things.",
+"El salón ya tiene salida a una terraza por la cristalera. Decoradlo con cosas de exterior.":"The living room now opens onto a terrace through the glass wall. Decorate it with outdoor things.",
 "Tocadla para poner dibujos: las mascotas se sientan a verlos":"Tap it to put on cartoons: pets sit down to watch",
 "Dejad notitas pegadas para tu pareja":"Leave little notes stuck on it for your partner",
 "Para cocinar recetas con ingredientes de la despensa":"For cooking recipes with ingredients from the pantry",

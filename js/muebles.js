@@ -54,6 +54,7 @@ export class GestorMuebles {
     this.muebles = [];
     this.lx = LIMITE;
     this.lz = LIMITE;
+    this.ex = 0;
     this.rejilla = null;
     this.crearRejilla();
   }
@@ -66,10 +67,11 @@ export class GestorMuebles {
       this.rejilla.material.dispose();
     }
     const ax = this.lx * CELDA;
+    const bx = (this.lx + this.ex) * CELDA;
     const az = this.lz * CELDA;
     const v = [];
-    for (let i = -this.lx; i <= this.lx; i++) v.push(i * CELDA, 0, -az, i * CELDA, 0, az);
-    for (let j = -this.lz; j <= this.lz; j++) v.push(-ax, 0, j * CELDA, ax, 0, j * CELDA);
+    for (let i = -this.lx; i <= this.lx + this.ex; i++) v.push(i * CELDA, 0, -az, i * CELDA, 0, az);
+    for (let j = -this.lz; j <= this.lz; j++) v.push(-ax, 0, j * CELDA, bx, 0, j * CELDA);
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.Float32BufferAttribute(v, 3));
     const rejilla = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.35, depthWrite: false }));
@@ -80,12 +82,14 @@ export class GestorMuebles {
     this.rejilla = rejilla;
   }
 
-  ajustarTam(ancho, fondo) {
+  ajustarTam(ancho, fondo, extra = 0) {
     const lx = Math.round(ancho / CELDA / 2);
     const lz = Math.round(fondo / CELDA / 2);
-    if (lx === this.lx && lz === this.lz) return;
+    const ex = Math.round(extra / CELDA);
+    if (lx === this.lx && lz === this.lz && ex === this.ex) return;
     this.lx = lx;
     this.lz = lz;
+    this.ex = ex;
     this.crearRejilla();
   }
 
@@ -113,7 +117,8 @@ export class GestorMuebles {
     const datos = mueble.userData;
     const def = datos.def;
     const [w, d] = this.medidas(def, rot);
-    if (x0 < -this.lx || z0 < -this.lz || x0 + w > this.lx || z0 + d > this.lz) return { valido: false, base: 0 };
+    if (x0 < -this.lx || z0 < -this.lz || x0 + w > this.lx + this.ex || z0 + d > this.lz) return { valido: false, base: 0 };
+    if (this.ex && x0 < this.lx && x0 + w > this.lx) return { valido: false, base: 0 };
     if (def.suelo) return { valido: true, base: 0 };
 
     let altura = null;
@@ -268,7 +273,7 @@ export class GestorMuebles {
   arrastrar(mueble, x, z) {
     const datos = mueble.userData;
     const [w, d] = this.medidas(datos.def, datos.rot);
-    const x0 = THREE.MathUtils.clamp(Math.round(x / CELDA - w / 2), -this.lx, this.lx - w);
+    const x0 = THREE.MathUtils.clamp(Math.round(x / CELDA - w / 2), -this.lx, this.lx + this.ex - w);
     const z0 = THREE.MathUtils.clamp(Math.round(z / CELDA - d / 2), -this.lz, this.lz - d);
     const a = this.apoyo(mueble, x0, z0, datos.rot);
     const destino = new THREE.Vector3((x0 + w / 2) * CELDA, a.base + 0.08, (z0 + d / 2) * CELDA);
@@ -300,7 +305,7 @@ export class GestorMuebles {
     const nuevaRot = (datos.rot + 1) % 4;
     const [w, d] = this.medidas(datos.def, datos.rot);
     const [nw, nd] = this.medidas(datos.def, nuevaRot);
-    const x0 = THREE.MathUtils.clamp(Math.round(datos.x0 + w / 2 - nw / 2), -this.lx, this.lx - nw);
+    const x0 = THREE.MathUtils.clamp(Math.round(datos.x0 + w / 2 - nw / 2), -this.lx, this.lx + this.ex - nw);
     const z0 = THREE.MathUtils.clamp(Math.round(datos.z0 + d / 2 - nd / 2), -this.lz, this.lz - nd);
     const a = this.apoyo(mueble, x0, z0, nuevaRot);
     if (!a.valido) return 'sitio';

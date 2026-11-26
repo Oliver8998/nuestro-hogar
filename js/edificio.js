@@ -686,7 +686,7 @@ export class Edificio {
       let x1 = 0;
       let y1 = 0;
       for (const sx of [-1, 1]) for (const sz of [-1, 1]) for (const yy of [-0.5, ALTO_SALA]) {
-        v.set(sx * this.W / 2, yy, sz * this.D / 2).project(camara);
+        v.set(sx * this.W / 2 + this.raiz.position.x, yy, sz * this.D / 2).project(camara);
         const u = v.x * 0.5 + 0.5;
         const w2 = v.y * 0.5 + 0.5;
         x0 = Math.min(x0, u);
@@ -943,7 +943,7 @@ export class Edificio {
     const derZ = -Math.sin(ang);
     const sa = Math.sin(alt);
     const ca = Math.cos(alt);
-    const ox = cam.objetivo.x;
+    const ox = cam.objetivo.x - this.raiz.position.x;
     const oz = cam.objetivo.z;
     const salaAncho = this.W / 2 * Math.abs(derX) + this.D / 2 * Math.abs(derZ);
     const salaHacia = this.W / 2 * Math.abs(dirX) + this.D / 2 * Math.abs(dirZ);

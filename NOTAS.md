@@ -728,3 +728,11 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - Quitado lo de v103 que subía la cámara al abrir el inventario (Oliver no lo quiere).
 - En su lugar el inventario es una sola fila con scroll horizontal (`#inventario` 92 px, `grid-auto-flow: column`, `touch-action: pan-x`): el panel mide ~160 px y el piso 4×4 cabe entero encima sin mover nada.
 - `__h.inventario` añadido al modo debug.
+
+## Patio pegado al salón en vez de habitación aparte (v110)
+- Las obras Terraza (nivel 8) y Jardín (nivel 20) ya no crean una habitación nueva: ponen `estado.patio = 'terraza' | 'jardin'` y el salón (habitación 0) gana una extensión al aire libre por el lado +x, detrás de una cristalera con un hueco de paso de 1,5 m en el centro. El "Jardín para el perro" (servicio) es un patio pequeño de césped con valla blanca (`tipoPatio()` devuelve 'perro' si hay `estado.jardin` y no hay patio de obra); ya no se usa la malla flotante `construirJardin`.
+- Anchos: perro 2 m, terraza 3 m (baldosas, barandilla de cristal), jardín 5 m (césped, valla de madera); fondo = el del salón. `sala.ponerPatio(tipo, ancho)` construye losa, suelo, vallas en los 3 lados de fuera y la cristalera; la pared 3 se oculta siempre y la cristalera solo se ve cuando esa pared estaría al fondo.
+- Rejilla de muebles asimétrica: `gestor.ajustarTam(ancho, fondo, extra)` → `ex` celdas más por +x; no se puede poner un mueble a caballo de la cristalera. Mascotas: `usarRejilla` con `OX` (origen) y `NX = 2·lx + ex`; la cristalera bloquea las 2 columnas junto a ella salvo el hueco del centro.
+- Cámara: `ajustar(ancho, fondo, extra)` mueve el centro a `extra/2` (objetivo, reinicio, límites de arrastre y encuadre). Edificio: se construye con `ancho + extra` y `raiz.position.x = extra/2`; el foco de la maqueta y el hundimiento de vecinos restan ese desplazamiento.
+- `obraHecha` para terraza/jardín mira el rango del patio; `tieneExterior()` cuenta el patio (no el del perro). Partidas antiguas con "Terraza"/"Jardín" como habitación aparte se quedan como estaban.
+- Arreglado el diálogo de ampliar el salón, que decía las medidas al revés.
