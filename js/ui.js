@@ -13,7 +13,6 @@ const CATEGORIAS = [
   { id: 'mostrador', nombre: 'Mostrador', icono: '🏪' },
   { id: 'reparar', nombre: 'Reparar', icono: '🧰' },
   { id: 'basicos', nombre: 'Básicos', icono: '🧴' },
-  { id: 'pareja', nombre: 'Pareja', icono: '💕' },
   { id: 'temporada', nombre: 'Temporada', icono: '🎁' },
   { id: 'mercadillo', nombre: 'Mercadillo', icono: '🧺' }
 ];
@@ -253,10 +252,6 @@ export class UI {
         continue;
       }
       if (d.enTienda === false) continue;
-      if (this.categoria === 'pareja') {
-        if (d.pareja) entradas.push({ info: infoItem(d.id), precio: d.precio, oferta: false });
-        continue;
-      }
       if (this.categoria === 'reparar' && d.categoria !== 'reparar') continue;
       if (this.categoria === 'basicos' && !(MATERIALES.includes(d) && (d.categoria === 'limpieza' || d.categoria === 'mascotas'))) continue;
       entradas.push({ info: infoItem(d.id), precio: d.precio, oferta: false });

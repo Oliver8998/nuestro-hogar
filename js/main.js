@@ -902,7 +902,10 @@ function seleccionarMascota(m) {
 
 function refrescarMenu() {
   if (mascotaSel) ui.abrirMenu(opcionesMascota(mascotaSel), cabeceraMascota(mascotaSel));
-  else if (controles && controles.seleccionado) ui.abrirMenu(opcionesMueble(controles.seleccionado));
+  else if (controles && controles.seleccionado) {
+    const def = controles.seleccionado.userData.def;
+    ui.abrirMenu(opcionesMueble(controles.seleccionado), def.uso ? `<div class="menu-uso"><b>${escaparHtml(def.nombre)}</b><small>💡 ${escaparHtml(def.uso)}</small></div>` : '');
+  }
   else if (paredObjs && paredObjs.sel) ui.abrirMenu(paredObjs.opcionesMenu());
   else ui.cerrarMenu();
 }

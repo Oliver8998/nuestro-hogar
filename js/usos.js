@@ -335,7 +335,7 @@ export class Usos {
     const pj2 = this.ctx.pareja2;
     if ((def.id === 'ordenador' || def.id === 'impresora') && pj) {
       const falta = def.id === 'ordenador' ? 'impresora' : 'ordenador';
-      ops.push({ icono: '✉️', texto: 'Carta', accion: () => (hay(falta) ? pj.escribirCarta() : ui.aviso(falta === 'impresora' ? '🖨️ Para imprimir la carta os falta una impresora (Tienda → Pareja)' : '💻 Para escribir la carta os falta el ordenador (Tienda → Pareja)', true)) });
+      ops.push({ icono: '✉️', texto: 'Carta', accion: () => (hay(falta) ? pj.escribirCarta() : ui.aviso(falta === 'impresora' ? '🖨️ Para imprimir la carta os falta una impresora. A veces la tiene Pilar en el mostrador' : '💻 Para escribir la carta os falta un ordenador. A veces lo tiene Pilar en el mostrador', true)) });
     }
     if (def.id === 'caballete' && this.ctx.pintarCuadro) ops.push({ icono: '🎨', texto: 'Pintar', accion: () => this.ctx.pintarCuadro() });
     if (def.id === 'calendario' && pj && pj2) {
@@ -343,7 +343,7 @@ export class Usos {
       ops.push({ icono: '📅', texto: 'Planes', accion: () => pj.verPlanes() });
     }
     if (def.id === 'tarro-preguntas' && pj2) {
-      ops.push({ icono: '💬', texto: pj2.pendientePregunta() ? 'Pregunta ❗' : 'Pregunta', accion: () => pj2.abrirPregunta() });
+      ops.push({ icono: pj2.pendientePregunta() ? '❗' : '💬', texto: 'Pregunta', accion: () => pj2.abrirPregunta() });
       ops.push({ icono: '🎯', texto: 'Quiz', accion: () => pj2.abrirQuiz() });
     }
     if (def.id === 'corcho' && pj && pj2) {

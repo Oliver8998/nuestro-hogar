@@ -720,6 +720,39 @@ export function precioVenta(info) {
   return Math.floor(base / 12);
 }
 
+const USOS = {
+  tele: 'Tocadla para poner dibujos: las mascotas se sientan a verlos',
+  nevera: 'Dejad notitas pegadas para tu pareja',
+  cocina: 'Para cocinar recetas con ingredientes de la despensa',
+  lavadora: 'Lavad aquí la ropa sucia de casa',
+  chimenea: 'Encendedla en invierno y la casa será más acogedora',
+  sofa: 'Relax: las mascotas se suben a haceros compañía. Con el uso se desgasta y se puede tapizar',
+  'sillon-huevo': 'Relax: las mascotas se suben a haceros compañía',
+  puff: 'Relax con las mascotas. Con el uso se desgasta y se puede tapizar',
+  'puff-corazon': 'Relax: las mascotas se suben a haceros compañía',
+  cama: 'Con el uso se desgasta y se puede tapizar',
+  silla: 'Con el uso se desgasta y se puede tapizar',
+  radio: 'Pone música, y vuestra canción si la apuntáis en Ajustes',
+  piano: 'Tocadlo o dejad que os enseñe canciones',
+  acuario: 'Dadles de comer cada día: con 5 días seguidos tendrán crías',
+  huerto: 'Plantad, regad y cosechad: da monedas e ingredientes',
+  comedero: 'Para que coman vuestras mascotas',
+  'cama-mascota': 'Las mascotas duermen aquí',
+  rascador: 'Las mascotas juegan y se suben aquí',
+  pelota: 'Juguete para las mascotas',
+  caseta: 'Una casita para que descansen las mascotas',
+  robot: 'Va limpiando solo la suciedad del suelo',
+  arenero: 'Gatos, conejos y koalas hacen aquí sus cosas en vez de en el suelo',
+  trampa: 'Atrapa los bichos que aparezcan por casa'
+};
+const PLANTAS_USO = ['planta', 'cactus', 'jarron', 'cerezo', 'rosas', 'maceta-grande'];
+for (const d of CATALOGO) {
+  if (d.uso) continue;
+  if (USOS[d.id]) d.uso = USOS[d.id];
+  else if (PLANTAS_USO.includes(d.id)) d.uso = 'Regadla una vez al día para que esté bonita';
+  else if (d.encendible) d.uso = 'Tocadla para encenderla o apagarla';
+}
+
 encarecer(CATALOGO);
 encarecer(MATERIALES);
 for (const k of Object.keys(PRECIO_RAREZA)) PRECIO_RAREZA[k] = caro(PRECIO_RAREZA[k]);

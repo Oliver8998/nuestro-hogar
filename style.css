@@ -3855,3 +3855,6 @@ textarea.carta-texto { font-family: 'Georgia', serif; line-height: 1.5; }
 
 .esc-lienzo { -webkit-mask-image: linear-gradient(#000 72%, transparent 100%); mask-image: linear-gradient(#000 72%, transparent 100%); }
 .esc-lienzo::before { display: none; }
+.menu-uso { max-width: 260px; text-align: center; line-height: 1.25; }
+.menu-uso b { display: block; font-size: 13px; font-weight: 900; }
+.menu-uso small { display: block; font-size: 11.5px; font-weight: 700; color: var(--suave); margin-top: 2px; }

@@ -62,28 +62,7 @@ function escenaSvg() {
   }).join('') : '';
   const via = noche ? '<ellipse cx="160" cy="240" rx="260" ry="46" fill="url(#via)" transform="rotate(-28 160 240)" opacity=".5"/>' : '';
   const fugaz = noche ? '<g class="fugaz"><path d="M0 0 L-70 -26" stroke="url(#estela)" stroke-width="2.4" stroke-linecap="round"/><circle r="2.2" fill="#fff"/></g>' : '';
-  const COLOR_CIUDAD = { dia: [['#b9c6d6', '#a3b2c6'], ['#8f9fb6', '#7e8ea6'], '#dfe8f2', 0.1], tarde: [['#8c6f9a', '#7a5f8c'], ['#5d4a73', '#4f3f66'], '#ffd08a', 0.45], noche: [['#262b5c', '#20244f'], ['#171a3d', '#121433'], '#ffd58f', 0.75] }[p];
-  const capaCiudad = (k, y0, alto) => {
-    let x = -10;
-    let out = '';
-    while (x < 410) {
-      const w = 34 + r() * 46;
-      const h = alto * (0.45 + r() * 0.55);
-      const top = y0 - h;
-      out += `<rect x="${x.toFixed(1)}" y="${top.toFixed(1)}" width="${w.toFixed(1)}" height="${(820 - top).toFixed(1)}" fill="${COLOR_CIUDAD[k][r() < 0.5 ? 0 : 1]}"/>`;
-      if (r() < 0.3) out += `<rect x="${(x + w * 0.3).toFixed(1)}" y="${(top - 10).toFixed(1)}" width="${(w * 0.25).toFixed(1)}" height="10" fill="${COLOR_CIUDAD[k][1]}"/>`;
-      const cols = Math.max(2, Math.floor(w / 12));
-      for (let fy = top + 10; fy < 800; fy += 16) {
-        for (let c = 0; c < cols; c++) {
-          if (r() > COLOR_CIUDAD[3] * (k ? 1 : 0.8)) continue;
-          out += `<rect x="${(x + 5 + c * ((w - 10) / cols)).toFixed(1)}" y="${fy.toFixed(1)}" width="5" height="7" fill="${COLOR_CIUDAD[2]}" opacity="${(0.55 + r() * 0.45).toFixed(2)}"/>`;
-        }
-      }
-      x += w + (r() < 0.3 ? 6 : 0);
-    }
-    return `<g class="ciudad">${out}</g>`;
-  };
-  const nubesLejos = `${capaCiudad(0, 640, 230)}${capaCiudad(1, 720, 200)}`;
+  const nubesLejos = `<g class="banco" opacity="${noche ? 0.5 : 0.9}">${Array.from({ length: 9 }, (_, k) => `<circle cx="${k * 50 - 10}" cy="${700 + (k % 2) * 16}" r="${60 + (k % 3) * 14}" fill="url(#nubeCuerpo)"/>`).join('')}<rect x="0" y="720" width="400" height="80" fill="url(#nubeCuerpo)"/></g>`;
   const nubes = `${nubeSvg(r, 70, 250, 0.95, 90)}${nubeSvg(r, 250, 120, 0.7, 120, 'lejana')}${nubeSvg(r, 180, 420, 1.15, 70)}${nubeSvg(r, 40, 560, 0.8, 100, 'lejana')}`;
   const globo = p !== 'noche' ? `<g class="globo"><g transform="translate(0 0)">
       <path d="M0 -30 C20 -30 26 -12 20 4 C15 16 6 22 4 26 L-4 26 C-6 22 -15 16 -20 4 C-26 -12 -20 -30 0 -30Z" fill="url(#globo)"/>
