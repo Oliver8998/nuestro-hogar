@@ -1075,3 +1075,5 @@ export const JUEGOS_FAVOR3 = {
 };
 
 for (const t of TRABAJOS2) JUEGOS_FAVOR3[t.id] = { icono: t.icono, jugar: t.jugar };
+
+export { cronometro, bucle, chispas, marcador, limitar, barajar, alTerminar, arrastrable, dentroDe, limpiarFantasmas, rebotar, azar, elegir };

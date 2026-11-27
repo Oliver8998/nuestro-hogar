@@ -3,8 +3,9 @@ import { RECETAS, INGREDIENTES } from './casa2.js';
 import { JUEGOS_FAVOR as JF1 } from './favores.js';
 import { JUEGOS_FAVOR2 } from './favores2.js';
 import { JUEGOS_FAVOR3 } from './trabajos2.js';
+import { JUEGOS_FAVOR4 } from './juegos3.js';
 
-const JUEGOS_FAVOR = { ...JF1, ...JUEGOS_FAVOR2, ...JUEGOS_FAVOR3 };
+const JUEGOS_FAVOR = { ...JF1, ...JUEGOS_FAVOR2, ...JUEGOS_FAVOR3, ...JUEGOS_FAVOR4 };
 
 const HORA = 3600000;
 const MAX_ACTIVOS = 2;
@@ -53,7 +54,14 @@ const TIPOS = [
   { id: 'llaves', quien: 'mama', min: 25, favor: 'cerrajero', titulo: () => 'Abrirle la puerta', texto: () => '¡Me he dejado las llaves dentro y el cerrajero me pide un dineral! Vosotros que sois mañosos… ¿me abrís?', pago: () => 110 },
   { id: 'japones', quien: 'mama', min: 55, favor: 'sushi', titulo: () => 'Ayudar en el japonés', texto: () => 'Mi amiga Keiko tiene un restaurante de sushi y hoy le falta gente. Le he dicho que mis hijos le echan una mano. ¡No me dejéis mal!', pago: () => 130 },
   { id: 'correo', quien: 'pilar', min: 15, favor: 'cartero', titulo: () => 'Repartir el correo del bloque', texto: () => 'El cartero ha dejado todas las cartas del bloque en la tienda. ¿Las metéis cada una en su buzón? Y la publicidad, a la basura, ¿eh?', pago: () => 95 },
-  { id: 'helados', quien: 'pilar', min: 45, favor: 'heladeria', titulo: () => 'Puesto de helados en la feria', texto: () => 'Este finde monto un puesto de helados en la feria del barrio. ¿Me ayudáis a servir? ¡Y que no se caiga ninguna bola!', pago: () => 125 }
+  { id: 'helados', quien: 'pilar', min: 45, favor: 'heladeria', titulo: () => 'Puesto de helados en la feria', texto: () => 'Este finde monto un puesto de helados en la feria del barrio. ¿Me ayudáis a servir? ¡Y que no se caiga ninguna bola!', pago: () => 125 },
+  { id: 'compra-mama', quien: 'mama', min: 0, favor: 'lista', titulo: () => 'Hacerle la compra', texto: () => 'Me he dejado la lista de la compra en casa. Os la digo de memoria, ¿vale? Atentos, que no la repito.', pago: () => 85 },
+  { id: 'coche-mama', quien: 'mama', min: 35, favor: 'lavado', titulo: () => 'Lavarle el coche', texto: () => 'El coche está que da pena de barro y el domingo vamos a ver a la abuela. ¿Me lo dejáis como nuevo?', pago: () => 105 },
+  { id: 'topos', quien: 'ramon', min: 15, favor: 'topos', titulo: () => 'Espantar los topos del huerto', texto: () => '¡Los topos me están destrozando el huerto! Dadles un susto, pero ni se os ocurra tocar mis tulipanes. Ni al gato.', pago: () => 95 },
+  { id: 'concierto', quien: 'amigos', min: 35, favor: 'concierto', titulo: () => 'Tocar en el concierto', texto: () => 'Al grupo le falta gente para el concierto del sábado en la plaza. ¿Os subís al escenario? Solo hay que seguir el ritmo.', pago: () => 115 },
+  { id: 'pan-pilar', quien: 'pilar', min: 25, favor: 'hornear', titulo: () => 'Hornear el pan', texto: () => 'Mi panadero se ha puesto malo y mañana tengo el pan encargado de medio barrio. ¿Me echáis una mano con el horno?', pago: () => 110 },
+  { id: 'bici-sol', quien: 'sol', min: 20, favor: 'ruedas', titulo: () => 'Inflar las ruedas', texto: () => 'Mañana hacemos ruta en bici con el grupo y tengo todas las ruedas desinfladas. ¿Me las dejáis a punto sin reventarlas?', pago: () => 95 },
+  { id: 'hotel-sol', quien: 'sol', min: 60, favor: 'hotel', titulo: () => 'Cubrir la recepción', texto: () => 'Trabajo en la recepción de un hotel y me ha surgido un imprevisto. ¿Me cubrís una hora? Solo hay que dar llaves… y sonreír.', pago: () => 125 }
 ];
 
 const REACCION = {

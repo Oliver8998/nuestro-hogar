@@ -1,4 +1,57 @@
 export const INTROS = {
+ "trab:panadero": {
+  "que": "Sacad cada pan del horno cuando esté doradito: ni crudo ni quemado",
+  "como": "Toca cada pan cuando su barra llegue a la franja dorada. En el centro de la franja es ¡Perfecto!"
+ },
+ "trab:lavacoches": {
+  "que": "Enjabonad el barro con la esponja y luego aclarad la espuma con la manguera",
+  "como": "Frota el barro con 🧽 hasta que salga espuma y cambia a 🚿 para aclararla. ¡A por el siguiente coche!"
+ },
+ "trab:musico": {
+  "que": "Tocad cada nota justo cuando llegue a la línea",
+  "como": "Toca el carril cuando la nota pase por la línea blanca. Con racha se para más gente y caen más monedas 🪙"
+ },
+ "trab:mecanico": {
+  "que": "Inflad cada rueda hasta la zona verde. ¡Si os pasáis, revienta!",
+  "como": "Mantén «Inflar» y suelta dentro de la franja verde. Cuanto más rato pulsas, más rápido sube"
+ },
+ "trab:recepcion": {
+  "que": "Dad a cada huésped la llave de su habitación",
+  "como": "Toca la llave que pide el primer huésped. Si viene a devolverla, toca su gancho vacío"
+ },
+ "fav:hornear": {
+  "que": "Sacad cada pan del horno cuando esté doradito",
+  "como": "Toca cada pan cuando su barra llegue a la franja dorada. ¡Si te pasas, se quema!",
+  "video": "trab-panadero"
+ },
+ "fav:lavado": {
+  "que": "Dejad el coche de mamá como nuevo",
+  "como": "Frota el barro con 🧽 hasta que salga espuma y cambia a 🚿 para aclararla",
+  "video": "trab-lavacoches"
+ },
+ "fav:concierto": {
+  "que": "Seguid el ritmo en el concierto de la plaza",
+  "como": "Toca el carril cuando la nota pase por la línea blanca. ¡No rompas la racha!",
+  "video": "trab-musico"
+ },
+ "fav:ruedas": {
+  "que": "Inflad las ruedas sin reventarlas",
+  "como": "Mantén «Inflar» y suelta dentro de la franja verde",
+  "video": "trab-mecanico"
+ },
+ "fav:hotel": {
+  "que": "Cubrid la recepción del hotel",
+  "como": "Toca la llave que pide el primer huésped. Si viene a devolverla, toca su gancho vacío",
+  "video": "trab-recepcion"
+ },
+ "fav:lista": {
+  "que": "Acordaos de la lista de la compra de mamá",
+  "como": "Mamá dice la lista una vez: luego toca los productos en el mismo orden. ¡Cada vez es más larga!"
+ },
+ "fav:topos": {
+  "que": "Espantad los topos del huerto de Don Ramón",
+  "como": "Toca los topos 🐹 cuando asomen. El dorado vale triple. ¡Ni las flores 🌷 ni el gato 🐱!"
+ },
  "trab:pizza": {
   "que": "Llevad cada pizza al portal correcto antes de que se enfríe",
   "como": "Mira el número del pedido y toca ese portal. ¡Rápido, que se enfría!"

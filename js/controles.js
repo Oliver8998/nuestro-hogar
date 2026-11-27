@@ -141,6 +141,7 @@ export class Controles {
     if (!obj) return { ok: false, motivo: c.info.pista };
     const r = this.sala.puedeAplicar(c.info, obj);
     if (!r.ok) return { ok: false, motivo: r.motivo };
+    if (obj.tipo === 'desperfecto') return { ok: false, reparacion: obj };
     this.sala.aplicar(c.info, obj);
     return { ok: true, objetivo: obj };
   }

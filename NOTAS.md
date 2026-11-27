@@ -779,3 +779,21 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
 - **Pájaros:** volvían a pasar por debajo del piso porque `edificio.renderizar` pone toda la raíz en la capa 2 y la versión nueva ya no los devolvía a la 4. `moverPajaros` los vuelve a poner en la capa 4 si hace falta.
 - **Música:** quitado el ruido de ciudad (`sonido.ambiente` ya no se llama). La música lofi viene encendida por defecto (`hogar-lofi` ≠ 'no'); se apaga con el deslizador de Ajustes.
 - **⚙️ Ajustes** arriba a la izquierda (abre `mas.abrirAjustes`); las pastillas de la izquierda se apartan 50 px.
+
+## Más trabajos, encargos y minijuegos de arreglar (v121)
+- **js/juegos3.js** (nuevo): 5 trabajos (`TRABAJOS3`, se añaden a `TRABAJOS`) y 7 juegos de favor (`JUEGOS_FAVOR4`, se mezclan en encargos.js). Usan los ayudantes de trabajos2.js, que ahora se exportan (`cronometro`, `bucle`, `chispas`, `marcador`, `limitar`…).
+  - 🥖 Panadero de madrugada: 6 huecos de horno, cada pan se dora con una barra; tocar en la franja dorada (centro = ¡Perfecto!), si se pasa se quema. Racha.
+  - 🚿 Túnel de lavado (canvas): esponja convierte el barro en espuma, manguera aclara la espuma (con barro no sirve). Coches seguidos, cada vez más manchas.
+  - 🎸 Músico callejero: 3 carriles, notas que caen, tocar en la línea (perfecto/bien), racha → público y monedas al sombrero 🎩.
+  - 🔧 Taller de neumáticos: mantener «Inflar» (acelera cuanto más rato), soltar en la zona verde y aguantar 0,45 s; si pasa de arriba revienta. Coche, bici, moto…, zona cada vez más estrecha.
+  - 🛎️ Recepcionista: cola de huéspedes con paciencia; dar la llave pedida o colgar la que devuelven en su gancho vacío. Propina según paciencia.
+  - Solo favor: 🛒 lista de la compra de mamá (memoria tipo Simón, 7 listas, 2 vidas, el estante se baraja desde la 3.ª) y 🔨 topos del huerto de Don Ramón (topo dorado ×3, no dar a tulipanes ni al gato).
+- **Encargos nuevos:** mamá (compra, lavar el coche), Don Ramón (topos), amigos (concierto), Pilar (hornear pan), Sol (ruedas de la bici, cubrir la recepción del hotel). Textos de intro en intros.js.
+- **Todos los juegos (juegos.js):**
+  - Cuenta atrás «3, 2, 1, ¡Ya!» antes de los trabajos y favores (y tender, copos, carrera, paseo, entrenar), solo si se abren con intro; `customYa(…, { clave, cuenta })`.
+  - Tic-tac cuando queda menos del 20 % de tiempo (más rápido al final).
+  - Pantalla final con 1-3 estrellas animadas (≥0,15/0,45/0,75), récord por juego en `hogar-records` («¡Nuevo récord!» + confeti; confeti también con 3 estrellas) y «Vuestro mejor».
+- **Arreglar la casa con minijuego:** soltar un material sobre un desperfecto ya no lo arregla al instante. `controles.soltarColocacion` devuelve `{ reparacion: obj }` y `jugarReparacion` (main.js) lanza el minijuego; si se gana se aplica, se gasta el material y avisa. Pintar paredes sigue siendo directo.
+  - cucarachas → `cucas` (huyen del dedo, ¡Doble!/¡Triple!), mancha → `mancha` (tocar para echar limpiador y frotar sobre la espuma), tabla → `clavos` (4 clavos, golpe preciso clava más, una mano 🤚 sujeta un clavo: si le das, ¡Ay!), ventana → `cristal` (arrancar 4 cintas, cae el cartón, arrastrar el cristal al marco, frotar huellas), grietas → `masilla` (repasar 3 grietas), humedad → `antihumedad` (mantener para rociar; si no, vuelven a crecer y salen 2 más).
+- **Limpieza y arreglos:** al acabar salen estrellas por tiempo (`RAPIDO` por tipo), el tiempo y el récord (`hogar-records-limpieza`); sonido al frotar; textos flotantes en el canvas (`flotar`).
+- Vídeos de intro grabados para los 13 juegos nuevos.

@@ -1,6 +1,7 @@
 import { paga } from './balance.js';
 import { TIEMPO, VELOCIDAD } from './favores2.js';
 import { TRABAJOS2 } from './trabajos2.js';
+import { TRABAJOS3 } from './juegos3.js';
 const DIA = 86400000;
 const TURNOS = 3;
 
@@ -1055,7 +1056,7 @@ export const TRABAJOS = [
   }
 ];
 
-TRABAJOS.push(...TRABAJOS2);
+TRABAJOS.push(...TRABAJOS2, ...TRABAJOS3);
 
 export class Trabajos {
   constructor(ctx) {

@@ -72,6 +72,11 @@ export class Juegos {
     if (k !== null) {
       el.querySelector('i').style.width = `${Math.max(0, k) * 100}%`;
       el.classList.toggle('poco', k < 0.25);
+      const ahora = performance.now();
+      if (k > 0 && k < 0.2 && ahora - (this.ultimoTic || 0) > (k < 0.08 ? 260 : 520)) {
+        this.ultimoTic = ahora;
+        this.sonido.tic();
+      }
     }
   }
 
@@ -84,6 +89,7 @@ export class Juegos {
     return new Promise(resolve => {
       this.resolver = resolve;
       const j = JUEGOS.find(x => x.id === id) || EXTRA[id];
+      this.claveRecord = `jue:${id}`;
       this.capa.querySelector('.jg-titulo').textContent = `${j.icono} ${j.nombre}`;
       this.capa.classList.remove('oculto');
       requestAnimationFrame(() => this.capa.classList.add('abierto'));
@@ -105,19 +111,45 @@ export class Juegos {
       const clave = nombre === 'Tender la ropa' ? 'tender' : nombre === 'Atrapa los copos' ? 'copos' : nombre.startsWith('Entrenar:') ? 'entrenar' : nombre === 'Carrera de mascotas' ? 'carrera' : nombre.startsWith('Paseo con') ? 'paseo' : null;
       if (clave) intro = { clave };
     }
-    return conIntro(intro ? { icono, nombre, sonido: this.sonido, ...intro } : null, () => this.customYa(icono, nombre, montar));
+    const clave = intro && intro.clave;
+    const cuenta = !!clave && /^(trab:|fav:|tender$|copos$|carrera$|paseo$|entrenar$)/.test(clave);
+    return conIntro(intro ? { icono, nombre, sonido: this.sonido, ...intro } : null, () => this.customYa(icono, nombre, montar, { clave: clave || nombre, cuenta }));
   }
 
-  customYa(icono, nombre, montar) {
+  customYa(icono, nombre, montar, op = {}) {
     return new Promise(resolve => {
       this.resolver = resolve;
+      this.claveRecord = op.clave || nombre;
       this.capa.querySelector('.jg-titulo').textContent = `${icono} ${nombre}`;
       this.info('');
       this.capa.classList.remove('oculto');
       requestAnimationFrame(() => this.capa.classList.add('abierto'));
       this.tiempo(null);
       this.cuerpo.innerHTML = '';
-      montar(this);
+      if (!op.cuenta) {
+        montar(this);
+        return;
+      }
+      const yo = resolve;
+      const capa = document.createElement('div');
+      capa.className = 'jg-cuenta';
+      this.capa.appendChild(capa);
+      const pasos = ['3', '2', '1', '¡Ya!'];
+      let i = 0;
+      const siguiente = () => {
+        if (this.resolver !== yo) { capa.remove(); return; }
+        if (i >= pasos.length) {
+          capa.remove();
+          montar(this);
+          return;
+        }
+        const ya = i === pasos.length - 1;
+        capa.innerHTML = `<b class="${ya ? 'ya' : ''}">${pasos[i]}</b>`;
+        this.sonido.tono(ya ? 880 : 520, 0, ya ? 0.25 : 0.12, { tipo: 'triangle', volumen: 0.1 });
+        i++;
+        setTimeout(siguiente, ya ? 380 : 560);
+      };
+      siguiente();
     });
   }
 
@@ -138,9 +170,50 @@ export class Juegos {
     clearInterval(this.reloj);
     this.reloj = null;
     this.tiempo(null);
-    this.sonido.premio();
-    this.cuerpo.innerHTML = `<div class="jg-final"><span>${puntos >= 0.66 ? '🏆' : puntos >= 0.33 ? '⭐' : '🙂'}</span><b>${texto}</b><button class="primario">Recoger premio</button></div>`;
+    const p = Math.max(0, Math.min(1, Number(puntos) || 0));
+    const estrellas = p >= 0.75 ? 3 : p >= 0.45 ? 2 : p >= 0.15 ? 1 : 0;
+    let records = {};
+    try { records = JSON.parse(localStorage.getItem('hogar-records')) || {}; } catch (e) {}
+    const clave = this.claveRecord || 'juego';
+    const previo = records[clave];
+    const record = previo !== undefined && p > previo + 0.005;
+    if (previo === undefined || p > previo) {
+      records[clave] = Math.round(p * 1000) / 1000;
+      try { localStorage.setItem('hogar-records', JSON.stringify(records)); } catch (e) {}
+    }
+    const mejor = Math.max(p, previo || 0);
+    const estMejor = mejor >= 0.75 ? 3 : mejor >= 0.45 ? 2 : mejor >= 0.15 ? 1 : 0;
+    this.cuerpo.innerHTML = `<div class="jg-final"><div class="jg-estrellas">${[0, 1, 2].map(() => '<i>⭐</i>').join('')}</div>
+      ${record ? '<div class="jg-record">🏆 ¡Nuevo récord!</div>' : ''}<b>${texto}</b>
+      ${previo !== undefined && !record ? `<div class="jg-mejor">Vuestro mejor: ${'⭐'.repeat(estMejor) || '—'}</div>` : ''}
+      <button class="primario">Recoger premio</button></div>`;
+    const ii = this.cuerpo.querySelectorAll('.jg-estrellas i');
+    for (let k = 0; k < estrellas; k++) {
+      setTimeout(() => {
+        if (!ii[k].isConnected) return;
+        ii[k].classList.add('on');
+        this.sonido.tono(660 * Math.pow(1.26, k), 0, 0.22, { tipo: 'triangle', volumen: 0.12 });
+      }, 250 + k * 320);
+    }
+    setTimeout(() => this.sonido.premio(), 250 + estrellas * 320);
+    if (record || estrellas === 3) this.confeti();
     this.cuerpo.querySelector('button').addEventListener('click', () => this.terminar(puntos));
+  }
+
+  confeti() {
+    const piezas = ['🎉', '🎊', '✨', '⭐', '💛', '💚'];
+    for (let i = 0; i < 28; i++) {
+      const c = document.createElement('i');
+      c.className = 'jg-confeti';
+      c.textContent = piezas[i % piezas.length];
+      c.style.left = `${Math.random() * 100}vw`;
+      c.style.setProperty('--dx', `${(Math.random() - 0.5) * 160}px`);
+      c.style.setProperty('--r', `${(Math.random() - 0.5) * 720}deg`);
+      c.style.animationDuration = `${1.6 + Math.random() * 1.4}s`;
+      c.style.animationDelay = `${Math.random() * 0.5}s`;
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 3600);
+    }
   }
 
   gotera() {

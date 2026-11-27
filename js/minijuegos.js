@@ -3,8 +3,18 @@ const INFO = {
   barro: { titulo: 'Friega las manchas', instruccion: 'Frota cada mancha hasta que desaparezca', emoji: '🧽' },
   telarana: { titulo: 'Fuera telarañas', instruccion: 'Desliza el dedo para romper los hilos', emoji: '🪶' },
   bichos: { titulo: '¡Hormigas!', instruccion: 'Toca para rociar insecticida. Que no se escapen', emoji: '🧴' },
-  caca: { titulo: 'Recoge la caca', instruccion: 'Pon la bolsa encima y mantén', emoji: '🛍️' }
+  caca: { titulo: 'Recoge la caca', instruccion: 'Pon la bolsa encima y mantén', emoji: '🛍️' },
+  cucas: { titulo: '¡Cucarachas!', instruccion: 'Toca para rociarlas. ¡Huyen del dedo, acorrálalas!', emoji: '🧴', arreglo: true },
+  mancha: { titulo: 'La mancha reseca', instruccion: 'Toca para echar limpiador y frota encima de la espuma', emoji: '🧽', arreglo: true },
+  clavos: { titulo: 'Clava la tabla', instruccion: 'Martillea cada clavo hasta el fondo. ¡Cuidado con la mano!', emoji: '🔨', arreglo: true },
+  cristal: { titulo: 'Cristal nuevo', instruccion: 'Arranca la cinta, coloca el cristal y sácale brillo', emoji: '🪟', arreglo: true },
+  masilla: { titulo: 'Tapa las grietas', instruccion: 'Repasa cada grieta con la espátula de masilla', emoji: '🖌️', arreglo: true },
+  antihumedad: { titulo: 'Fuera humedad', instruccion: 'Mantén pulsado para rociar. ¡Si las dejas, vuelven a crecer!', emoji: '🧴', arreglo: true }
 };
+
+const RAPIDO = { polvo: 9, barro: 8, telarana: 7, bichos: 13, caca: 10, cucas: 12, mancha: 11, clavos: 9, cristal: 15, masilla: 12, antihumedad: 11 };
+const LARGO = 56;
+const FROTAR = { polvo: 1, barro: 1, mancha: 1, cristal: 1 };
 
 function suelo(ctx, w, h) {
   const tonos = ['#8a6a4a', '#7d5f42', '#93724f', '#75583c'];
@@ -83,6 +93,7 @@ export class Minijuegos {
       this.capa.querySelector('.mj-titulo').textContent = info.titulo;
       this.capa.querySelector('.mj-instruccion').textContent = info.instruccion;
       this.capa.querySelector('.mj-exito').classList.add('oculto');
+      this.emojiPuntero = null;
       this.capa.classList.remove('oculto');
       requestAnimationFrame(() => this.capa.classList.add('abierto'));
       const r = window.devicePixelRatio || 1;
@@ -124,9 +135,26 @@ export class Minijuegos {
   ganar() {
     this.acabado = true;
     this.sonido.arreglo();
-    this.capa.querySelector('.mj-exito').classList.remove('oculto');
-    for (let i = 0; i < 30; i++) this.chispa(this.w / 2, this.h / 2, '✨');
-    setTimeout(() => this.terminar(true), 1100);
+    const seg = Math.max(1, Math.round(this.t));
+    const rapido = RAPIDO[this.tipo] || 10;
+    const estrellas = this.t <= rapido ? 3 : this.t <= rapido * 1.8 ? 2 : 1;
+    let mejores = {};
+    try { mejores = JSON.parse(localStorage.getItem('hogar-records-limpieza')) || {}; } catch (e) {}
+    const previo = mejores[this.tipo];
+    const record = previo !== undefined && seg < previo;
+    if (previo === undefined || seg < previo) {
+      mejores[this.tipo] = seg;
+      try { localStorage.setItem('hogar-records-limpieza', JSON.stringify(mejores)); } catch (e) {}
+    }
+    const exito = this.capa.querySelector('.mj-exito');
+    exito.innerHTML = `✨ ${INFO[this.tipo].arreglo ? '¡Arreglado!' : '¡Limpio!'} ✨<small>${'⭐'.repeat(estrellas)}${'☆'.repeat(3 - estrellas)} · ${seg} s${record ? ' · 🏆 ¡récord!' : previo !== undefined ? ` · mejor ${previo} s` : ''}</small>`;
+    exito.classList.remove('oculto');
+    for (let i = 0; i < 30; i++) this.chispa(this.w / 2, this.h / 2, i % 3 ? '✨' : '⭐');
+    setTimeout(() => this.terminar(true), 1500);
+  }
+
+  flotar(x, y, texto, color = '#3a8f5a') {
+    this.particulas.push({ x, y, vx: 0, vy: -70, vida: 1, texto, color, sinGravedad: true });
   }
 
   terminar(ok) {
@@ -149,6 +177,14 @@ export class Minijuegos {
     }
     if (tipo === 'arriba') this.pulsado = false;
     this.puntero = p;
+    if (tipo === 'mover' && this.pulsado && FROTAR[this.tipo] && this.anterior) {
+      const d = Math.hypot(p.x - this.anterior.x, p.y - this.anterior.y);
+      this.frotado = (this.frotado || 0) + d;
+      if (this.frotado > 90) {
+        this.frotado = 0;
+        this.sonido.ruido(0.05, { volumen: 0.025, freq: 1600 + Math.random() * 900, q: 0.7 });
+      }
+    }
     const f = this[`${tipo}_${this.tipo}`];
     if (f) f.call(this, p);
     if (tipo !== 'arriba') this.anterior = p;
@@ -168,9 +204,16 @@ export class Minijuegos {
       p.vida -= dt * 1.4;
       p.x += p.vx * dt;
       p.y += p.vy * dt;
-      p.vy += 300 * dt;
+      if (!p.sinGravedad) p.vy += 300 * dt;
       ctx.globalAlpha = Math.max(0, p.vida);
-      if (p.emoji) {
+      if (p.texto) {
+        ctx.font = '900 24px system-ui, sans-serif';
+        ctx.lineWidth = 5;
+        ctx.strokeStyle = '#fff';
+        ctx.strokeText(p.texto, p.x, p.y);
+        ctx.fillStyle = p.color;
+        ctx.fillText(p.texto, p.x, p.y);
+      } else if (p.emoji) {
         ctx.fillStyle = '#000';
         ctx.font = '22px serif';
         ctx.fillText(p.emoji, p.x, p.y);
@@ -563,5 +606,585 @@ export class Minijuegos {
       for (let k = 0; k < 10; k++) this.chispa(this.basura.x, this.basura.y - 40, '✨', 160);
     }
     this.progreso = this.fase === 0 ? this.mantener / 3 : this.fase === 1 ? 0.33 + b.nudos * 0.16 : this.fase === 2 ? 0.7 : 1;
+  }
+
+  // ——— arreglos ———
+
+  iniciar_cucas() {
+    this.meta = 9;
+    this.muertas = 0;
+    this.nubes = [];
+    this.emojiPuntero = '🧴';
+    this.cucas = Array.from({ length: this.meta }, () => ({
+      x: this.w * (0.15 + Math.random() * 0.7), y: this.h * (0.25 + Math.random() * 0.6),
+      a: Math.random() * Math.PI * 2, viva: true, t: 0, pausa: Math.random() * 2
+    }));
+  }
+
+  abajo_cucas(p) {
+    this.nubes.push({ x: p.x, y: p.y, t: 0 });
+    this.sonido.ruido(0.18, { volumen: 0.06, freq: 3000, q: 0.5 });
+    let n = 0;
+    for (const c of this.cucas) {
+      if (!c.viva || Math.hypot(c.x - p.x, c.y - p.y) > 62) continue;
+      c.viva = false;
+      c.t = 0;
+      n++;
+      this.muertas++;
+    }
+    if (n) {
+      this.sonido.pop();
+      if (n > 1) this.flotar(p.x, p.y - 40, n > 2 ? '¡Triple!' : '¡Doble!', '#d69a00');
+    }
+  }
+
+  paso_cucas(dt) {
+    const ctx = this.ctx;
+    suelo(ctx, this.w, this.h);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (const c of this.cucas) {
+      if (c.viva) {
+        let v = 150;
+        if (this.puntero) {
+          const dx = c.x - this.puntero.x, dy = c.y - this.puntero.y;
+          const d = Math.hypot(dx, dy);
+          if (d < 150) {
+            const huir = Math.atan2(dy, dx);
+            let diff = huir - c.a;
+            while (diff > Math.PI) diff -= Math.PI * 2;
+            while (diff < -Math.PI) diff += Math.PI * 2;
+            c.a += diff * Math.min(1, dt * 6);
+            v = 260;
+          }
+        }
+        c.pausa -= dt;
+        if (c.pausa < 0) {
+          if (c.pausa < -1.6) c.pausa = 0.4 + Math.random() * 1.8;
+          v = v === 260 ? 260 : 0;
+        }
+        c.a += (Math.random() - 0.5) * 7 * dt;
+        c.x += Math.cos(c.a) * v * dt;
+        c.y += Math.sin(c.a) * v * dt;
+        const m = 30;
+        if (c.x < m) { c.x = m; c.a = Math.PI - c.a; }
+        if (c.x > this.w - m) { c.x = this.w - m; c.a = Math.PI - c.a; }
+        if (c.y < this.h * 0.16) { c.y = this.h * 0.16; c.a = -c.a; }
+        if (c.y > this.h - m) { c.y = this.h - m; c.a = -c.a; }
+        ctx.save();
+        ctx.translate(c.x, c.y);
+        ctx.rotate(c.a + Math.PI / 2);
+        ctx.font = '42px serif';
+        ctx.fillStyle = '#000';
+        ctx.fillText('🪳', 0, 0);
+        ctx.restore();
+      } else {
+        c.t += dt;
+        ctx.globalAlpha = Math.max(0, 1 - c.t);
+        ctx.save();
+        ctx.translate(c.x, c.y);
+        ctx.rotate(Math.PI);
+        ctx.font = '34px serif';
+        ctx.fillText('🪳', 0, 0);
+        ctx.restore();
+        ctx.globalAlpha = 1;
+      }
+    }
+    for (const n of this.nubes) {
+      n.t += dt;
+      ctx.globalAlpha = Math.max(0, 0.5 - n.t * 0.6);
+      ctx.fillStyle = '#d8f2ea';
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, 30 + n.t * 90, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    this.nubes = this.nubes.filter(n => n.t < 0.9);
+    this.progreso = this.muertas >= this.meta ? 1 : Math.min(0.99, this.muertas / this.meta);
+  }
+
+  iniciar_mancha() {
+    this.celdas = [];
+    const cx = this.w / 2, cy = this.h * 0.55;
+    const R = Math.min(this.w, this.h) * 0.3;
+    const lobulos = Array.from({ length: 6 }, () => [Math.random() * Math.PI * 2, 0.55 + Math.random() * 0.45]);
+    for (let x = cx - R * 1.3; x < cx + R * 1.3; x += 20) {
+      for (let y = cy - R * 1.3; y < cy + R * 1.3; y += 20) {
+        const a = Math.atan2(y - cy, x - cx);
+        let lim = R * 0.42;
+        for (const [la, k] of lobulos) lim += Math.pow(Math.max(0, Math.cos(a - la)), 3) * R * 0.75 * k;
+        if (Math.hypot(x - cx, y - cy) < lim) this.celdas.push({ x: x + (Math.random() - 0.5) * 8, y: y + (Math.random() - 0.5) * 8, v: 1 });
+      }
+    }
+    this.espumas = [];
+    this.avisoEspuma = 0;
+  }
+
+  abajo_mancha(p) {
+    this.espumas.push({ x: p.x, y: p.y, r: 46, vida: 1, t: 0 });
+    this.sonido.ruido(0.15, { volumen: 0.05, freq: 2600, q: 0.6 });
+  }
+
+  mover_mancha(p) {
+    if (!this.pulsado) return;
+    const d = Math.hypot(p.x - this.anterior.x, p.y - this.anterior.y);
+    const espuma = this.espumas.find(e => e.vida > 0 && Math.hypot(e.x - p.x, e.y - p.y) < e.r + 10);
+    if (espuma) espuma.vida = Math.max(0, espuma.vida - d / 1400);
+    const fuerza = espuma ? d / 160 : d / 1300;
+    let toca = false;
+    for (const c of this.celdas) {
+      if (c.v <= 0 || Math.hypot(c.x - p.x, c.y - p.y) > 36) continue;
+      c.v = Math.max(0, c.v - fuerza);
+      toca = true;
+    }
+    if (toca && !espuma && this.t - this.avisoEspuma > 2.5) {
+      this.avisoEspuma = this.t;
+      this.flotar(p.x, p.y - 50, '¡Echa limpiador! 🧴', '#d9534f');
+    }
+    if (toca && espuma && Math.random() < 0.5) this.particulas.push({ x: p.x + (Math.random() - 0.5) * 40, y: p.y + (Math.random() - 0.5) * 40, vx: (Math.random() - 0.5) * 40, vy: -60, vida: 1, r: 4 + Math.random() * 7, color: 'rgba(220,240,255,.75)' });
+  }
+
+  paso_mancha(dt) {
+    const ctx = this.ctx;
+    suelo(ctx, this.w, this.h);
+    ctx.fillStyle = '#3f2b19';
+    for (const c of this.celdas) {
+      if (c.v <= 0) continue;
+      ctx.globalAlpha = c.v * 0.85;
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, 17, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    for (const e of this.espumas) {
+      e.t += dt;
+      if (e.vida <= 0) continue;
+      ctx.globalAlpha = Math.min(1, e.t * 5) * Math.min(1, e.vida * 1.5) * 0.9;
+      ctx.fillStyle = '#fff';
+      for (let k = 0; k < 11; k++) {
+        const a = k * 2.4 + e.x;
+        const d = (k % 3) * 0.3 + 0.1;
+        ctx.beginPath();
+        ctx.arc(e.x + Math.cos(a) * e.r * d, e.y + Math.sin(a) * e.r * d, e.r * (0.18 + (k % 4) * 0.07), 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.globalAlpha = 1;
+    this.espumas = this.espumas.filter(e => e.vida > 0);
+    const total = this.celdas.length;
+    const resto = this.celdas.reduce((s, c) => s + c.v, 0) / total;
+    this.progreso = resto < 0.03 ? 1 : Math.min(0.99, 1 - resto);
+  }
+
+  iniciar_clavos() {
+    this.emojiPuntero = '🔨';
+    const y = this.h * 0.55;
+    this.tabla = { x0: this.w * 0.08, x1: this.w * 0.92, y };
+    const n = 4;
+    this.clavos = Array.from({ length: n }, (_, i) => ({ x: this.tabla.x0 + (this.tabla.x1 - this.tabla.x0) * (i + 0.5) / n, alto: 1, doblado: 0 }));
+    this.mano = { i: 1, t: 0 };
+    this.golpe = 0;
+    this.ays = 0;
+  }
+
+  abajo_clavos(p) {
+    this.golpe = 0.15;
+    const ang = 0.14 * (1 - this.progreso);
+    const mano = this.clavos[this.mano.i];
+    if (mano && mano.alto > 0 && Math.hypot(p.x - (mano.x + 40), p.y - this.alturaTabla(mano.x, ang) - 4) < 34) {
+      this.ays++;
+      this.sonido.error();
+      this.flotar(p.x, p.y - 50, '¡Ay, mi dedo! 🤕', '#d9534f');
+      this.capa.classList.remove('j3-tiembla');
+      void this.capa.offsetWidth;
+      this.capa.classList.add('j3-tiembla');
+      this.mano.t = 0;
+      return;
+    }
+    let mejor = null, dist = 58;
+    for (const c of this.clavos) {
+      if (c.alto <= 0) continue;
+      const cy = this.alturaTabla(c.x, ang) - c.alto * LARGO;
+      const d = Math.hypot(p.x - c.x, p.y - cy);
+      if (d < dist) { dist = d; mejor = c; }
+    }
+    if (!mejor) {
+      this.sonido.tono(160, 0, 0.08, { tipo: 'square', volumen: 0.04 });
+      return;
+    }
+    const preciso = dist < 22;
+    mejor.alto = Math.max(0, mejor.alto - (preciso ? 0.5 : 0.25));
+    this.sonido.tono(preciso ? 420 : 300, 0, 0.09, { tipo: 'square', volumen: 0.08, hasta: 120 });
+    for (let k = 0; k < (preciso ? 6 : 3); k++) this.chispa(mejor.x, this.alturaTabla(mejor.x, ang) - 10, preciso ? '✨' : '💥', 140);
+    if (mejor.alto === 0) {
+      this.flotar(mejor.x, this.alturaTabla(mejor.x, ang) - 60, preciso ? '¡Clavado!' : '¡Hecho!', '#3a8f5a');
+      const quedan = this.clavos.map((c, i) => [c, i]).filter(([c]) => c.alto > 0);
+      if (quedan.length) this.mano.i = quedan[Math.floor(Math.random() * quedan.length)][1];
+    }
+  }
+
+  alturaTabla(x, ang) {
+    return this.tabla.y - (x - this.tabla.x0) * Math.tan(ang);
+  }
+
+  paso_clavos(dt) {
+    const ctx = this.ctx;
+    suelo(ctx, this.w, this.h);
+    const ang = 0.14 * (1 - this.progreso);
+    const { x0, x1 } = this.tabla;
+    ctx.save();
+    ctx.translate(x0, this.tabla.y);
+    ctx.rotate(-ang);
+    ctx.fillStyle = 'rgba(0,0,0,.35)';
+    ctx.fillRect(0, 26, x1 - x0, 22);
+    ctx.fillStyle = '#a77b52';
+    ctx.fillRect(0, -30, x1 - x0, 60);
+    ctx.fillStyle = 'rgba(0,0,0,.12)';
+    for (let k = 0; k < 5; k++) ctx.fillRect(0, -20 + k * 11, x1 - x0, 2);
+    ctx.restore();
+    this.mano.t += dt;
+    for (let i = 0; i < this.clavos.length; i++) {
+      const c = this.clavos[i];
+      const by = this.alturaTabla(c.x, ang);
+      ctx.fillStyle = '#9aa0a6';
+      ctx.fillRect(c.x - 4, by - c.alto * LARGO, 8, c.alto * LARGO);
+      ctx.fillStyle = '#6d737a';
+      ctx.beginPath();
+      ctx.ellipse(c.x, by - c.alto * LARGO, 17, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+      if (c.alto > 0) {
+        ctx.globalAlpha = 0.35 + Math.sin(this.t * 6 + i) * 0.2;
+        ctx.strokeStyle = '#ffd54f';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(c.x, by - c.alto * LARGO, 26, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+      if (i === this.mano.i && c.alto > 0) {
+        ctx.font = '58px serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#000';
+        ctx.fillText('🤚', c.x + 40, by - 4 + Math.sin(this.mano.t * 3) * 2);
+      }
+    }
+    if (this.golpe > 0) this.golpe -= dt;
+    const hecho = this.clavos.reduce((s, c) => s + (1 - c.alto), 0) / this.clavos.length;
+    this.progreso = this.clavos.every(c => c.alto <= 0) ? 1 : Math.min(0.99, hecho);
+  }
+
+  iniciar_cristal() {
+    this.fase = 0;
+    const fw = Math.min(this.w * 0.7, 340), fh = Math.min(this.h * 0.38, 300);
+    this.marco = { x: this.w / 2 - fw / 2, y: this.h * 0.2, w: fw, h: fh };
+    const m = this.marco;
+    this.cintas = [[m.x + 10, m.y + 10], [m.x + m.w - 10, m.y + 10], [m.x + 10, m.y + m.h - 10], [m.x + m.w - 10, m.y + m.h - 10]].map(([x, y]) => ({ x, y, quitada: false, t: 0 }));
+    this.carton = { caida: 0 };
+    this.vidrio = { x: this.w / 2, y: this.h * 0.82, cogido: false, puesto: false };
+    this.huellas = [];
+  }
+
+  abajo_cristal(p) {
+    if (this.fase === 0) {
+      for (const c of this.cintas) {
+        if (c.quitada || Math.hypot(p.x - c.x, p.y - c.y) > 50) continue;
+        c.quitada = true;
+        this.sonido.ruido(0.2, { volumen: 0.08, freq: 1200, q: 0.4 });
+        this.chispa(c.x, c.y, '📦', 200);
+        if (this.cintas.every(x => x.quitada)) { this.fase = 1; this.carton.caida = 0.001; this.sonido.colocar(); }
+        return;
+      }
+    } else if (this.fase === 2) {
+      const v = this.vidrio;
+      if (Math.abs(p.x - v.x) < this.marco.w / 2 && Math.abs(p.y - v.y) < this.marco.h / 2 + 20) {
+        v.cogido = true;
+        v.dx = v.x - p.x;
+        v.dy = v.y - p.y;
+      }
+    }
+  }
+
+  mover_cristal(p) {
+    const v = this.vidrio;
+    if (this.fase === 2 && v.cogido) {
+      v.x = p.x + v.dx;
+      v.y = p.y + v.dy;
+    } else if (this.fase === 3 && this.pulsado) {
+      const d = Math.hypot(p.x - this.anterior.x, p.y - this.anterior.y);
+      for (const h of this.huellas) {
+        if (h.v <= 0 || Math.hypot(p.x - h.x, p.y - h.y) > h.r + 16) continue;
+        h.v = Math.max(0, h.v - d / 420);
+        if (h.v === 0) { this.sonido.pop(); this.chispa(h.x, h.y, '✨', 120); }
+      }
+    }
+  }
+
+  arriba_cristal() {
+    const v = this.vidrio;
+    if (this.fase !== 2 || !v.cogido) return;
+    v.cogido = false;
+    const cx = this.marco.x + this.marco.w / 2, cy = this.marco.y + this.marco.h / 2;
+    if (Math.hypot(v.x - cx, v.y - cy) < 42) {
+      v.x = cx;
+      v.y = cy;
+      v.puesto = true;
+      this.fase = 3;
+      this.sonido.arreglo();
+      this.flotar(cx, cy - this.marco.h / 2 - 20, '¡Encaja!', '#3a8f5a');
+      this.instruccion('Ahora frota las huellas para que brille');
+      const m = this.marco;
+      this.huellas = Array.from({ length: 5 }, () => ({ x: m.x + 30 + Math.random() * (m.w - 60), y: m.y + 30 + Math.random() * (m.h - 60), r: 22 + Math.random() * 12, v: 1 }));
+    } else {
+      this.sonido.error();
+      this.flotar(v.x, v.y - 60, 'Más centrado…', '#d9534f');
+    }
+  }
+
+  paso_cristal(dt) {
+    const ctx = this.ctx;
+    pared(ctx, this.w, this.h);
+    const m = this.marco;
+    const cielo = ctx.createLinearGradient(0, m.y, 0, m.y + m.h);
+    cielo.addColorStop(0, '#8fd0f5');
+    cielo.addColorStop(1, '#d4effc');
+    ctx.fillStyle = cielo;
+    ctx.fillRect(m.x, m.y, m.w, m.h);
+    ctx.font = '40px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#000';
+    ctx.fillText('☁️', m.x + m.w * 0.3 + Math.sin(this.t * 0.4) * 10, m.y + m.h * 0.3);
+    if (this.fase === 1) {
+      this.carton.caida += dt;
+      if (this.carton.caida > 0.7) {
+        this.fase = 2;
+        this.instruccion('Arrastra el cristal nuevo hasta el marco');
+      }
+    }
+    if (this.fase <= 1) {
+      const k = this.carton.caida;
+      ctx.save();
+      ctx.translate(m.x + m.w / 2, m.y + m.h / 2 + k * k * 900);
+      ctx.rotate(k * 0.8);
+      ctx.fillStyle = '#b88a5a';
+      ctx.fillRect(-m.w / 2 + 4, -m.h / 2 + 4, m.w - 8, m.h - 8);
+      ctx.strokeStyle = 'rgba(0,0,0,.15)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-m.w / 2 + 20, -10);
+      ctx.lineTo(m.w / 2 - 30, 20);
+      ctx.stroke();
+      ctx.restore();
+      for (const c of this.cintas) {
+        if (c.quitada) continue;
+        ctx.save();
+        ctx.translate(c.x, c.y);
+        ctx.rotate(Math.PI / 4);
+        ctx.fillStyle = 'rgba(230,220,180,.95)';
+        ctx.fillRect(-34, -11, 68, 22);
+        ctx.restore();
+        ctx.globalAlpha = 0.4 + Math.sin(this.t * 6) * 0.25;
+        ctx.strokeStyle = '#ffd54f';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, 34, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+    }
+    ctx.strokeStyle = '#f5f5f5';
+    ctx.lineWidth = 14;
+    ctx.strokeRect(m.x, m.y, m.w, m.h);
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(m.x + m.w / 2, m.y);
+    ctx.lineTo(m.x + m.w / 2, m.y + m.h);
+    ctx.stroke();
+    if (this.fase >= 2) {
+      const v = this.vidrio;
+      if (!v.puesto) {
+        ctx.setLineDash([10, 8]);
+        ctx.strokeStyle = 'rgba(76,175,80,.8)';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(m.x + 6, m.y + 6, m.w - 12, m.h - 12);
+        ctx.setLineDash([]);
+      }
+      ctx.fillStyle = 'rgba(200,235,255,.45)';
+      ctx.fillRect(v.x - m.w / 2 + 6, v.y - m.h / 2 + 6, m.w - 12, m.h - 12);
+      ctx.strokeStyle = 'rgba(255,255,255,.9)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(v.x - m.w / 2 + 30, v.y - m.h / 2 + 50);
+      ctx.lineTo(v.x - m.w / 2 + 70, v.y - m.h / 2 + 15);
+      ctx.stroke();
+      for (const h of this.huellas) {
+        if (h.v <= 0) continue;
+        ctx.globalAlpha = h.v * 0.55;
+        ctx.fillStyle = '#8c8c8c';
+        for (let k = 0; k < 4; k++) {
+          ctx.beginPath();
+          ctx.ellipse(h.x + (k - 1.5) * h.r * 0.45, h.y - Math.abs(k - 1.5) * 6, h.r * 0.22, h.r * 0.34, (k - 1.5) * 0.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.beginPath();
+        ctx.ellipse(h.x, h.y + h.r * 0.5, h.r * 0.55, h.r * 0.4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    }
+    this.emojiPuntero = this.fase === 3 ? '🧽' : this.fase === 2 ? '✋' : '👆';
+    const brillo = this.huellas.length ? 1 - this.huellas.reduce((s, h) => s + h.v, 0) / this.huellas.length : 0;
+    const p = this.fase === 0 ? this.cintas.filter(c => c.quitada).length / 4 * 0.3 : this.fase <= 2 ? 0.35 : 0.5 + brillo * 0.5;
+    this.progreso = this.fase === 3 && this.huellas.every(h => h.v <= 0) ? 1 : Math.min(0.99, p);
+  }
+
+  iniciar_masilla() {
+    this.emojiPuntero = '🖌️';
+    this.puntos = [];
+    this.grietas = [];
+    for (let g = 0; g < 3; g++) {
+      let x = this.w * (0.2 + g * 0.3) + (Math.random() - 0.5) * 40;
+      let y = this.h * (0.25 + Math.random() * 0.1);
+      let a = Math.PI / 2 + (Math.random() - 0.5) * 0.8;
+      const linea = [{ x, y }];
+      for (let k = 0; k < 9; k++) {
+        a += (Math.random() - 0.5) * 1.1;
+        a = Math.max(0.5, Math.min(Math.PI - 0.5, a));
+        x += Math.cos(a) * this.h * 0.05;
+        y += Math.sin(a) * this.h * 0.05;
+        x = Math.max(30, Math.min(this.w - 30, x));
+        linea.push({ x, y });
+      }
+      this.grietas.push(linea);
+      for (let k = 0; k < linea.length - 1; k++) {
+        const A = linea[k], B = linea[k + 1];
+        const n = Math.ceil(Math.hypot(B.x - A.x, B.y - A.y) / 7);
+        for (let i = 0; i < n; i++) this.puntos.push({ x: A.x + (B.x - A.x) * i / n, y: A.y + (B.y - A.y) * i / n, ok: false, g });
+      }
+    }
+    this.completas = new Set();
+  }
+
+  mover_masilla(p) {
+    if (!this.pulsado) return;
+    const a = this.anterior;
+    const pasos = Math.max(1, Math.ceil(Math.hypot(p.x - a.x, p.y - a.y) / 8));
+    let nuevos = 0;
+    for (let s = 0; s <= pasos; s++) {
+      const x = a.x + (p.x - a.x) * s / pasos, y = a.y + (p.y - a.y) * s / pasos;
+      for (const q of this.puntos) {
+        if (!q.ok && Math.hypot(q.x - x, q.y - y) < 24) { q.ok = true; nuevos++; }
+      }
+    }
+    if (nuevos && Math.random() < 0.4) this.particulas.push({ x: p.x, y: p.y, vx: (Math.random() - 0.5) * 50, vy: -30, vida: 0.7, r: 3 + Math.random() * 3, color: 'rgba(240,236,228,.9)' });
+    for (let g = 0; g < this.grietas.length; g++) {
+      if (this.completas.has(g)) continue;
+      const suyos = this.puntos.filter(q => q.g === g);
+      if (suyos.filter(q => q.ok).length / suyos.length > 0.94) {
+        this.completas.add(g);
+        suyos.forEach(q => { q.ok = true; });
+        this.sonido.pop();
+        const fin = this.grietas[g][this.grietas[g].length - 1];
+        this.flotar(fin.x, fin.y - 30, '¡Tapada!', '#3a8f5a');
+      }
+    }
+  }
+
+  paso_masilla() {
+    const ctx = this.ctx;
+    pared(ctx, this.w, this.h);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    for (const linea of this.grietas) {
+      ctx.strokeStyle = '#3d3326';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      linea.forEach((q, i) => (i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)));
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(61,51,38,.5)';
+      ctx.lineWidth = 1.5;
+      for (let i = 1; i < linea.length - 1; i += 2) {
+        ctx.beginPath();
+        ctx.moveTo(linea[i].x, linea[i].y);
+        ctx.lineTo(linea[i].x + (i % 4 ? 14 : -14), linea[i].y + 10);
+        ctx.stroke();
+      }
+    }
+    ctx.fillStyle = '#eeeae1';
+    for (const q of this.puntos) {
+      if (!q.ok) continue;
+      ctx.beginPath();
+      ctx.arc(q.x, q.y, 10, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    const hechos = this.puntos.filter(q => q.ok).length / this.puntos.length;
+    this.progreso = this.completas.size >= this.grietas.length ? 1 : Math.min(0.99, hechos);
+  }
+
+  iniciar_antihumedad() {
+    this.manchasH = [];
+    this.pendientes = [2.5, 5.5];
+    this.totalH = 5 + this.pendientes.length;
+    this.quitadas = 0;
+    this.niebla = [];
+    for (let i = 0; i < 5; i++) this.nuevaHumedad();
+  }
+
+  nuevaHumedad() {
+    const r = 40 + Math.random() * 25;
+    this.manchasH.push({ x: this.w * (0.15 + Math.random() * 0.7), y: this.h * (0.25 + Math.random() * 0.6), r, r0: r, max: r * 1.3, forma: Array.from({ length: 6 }, () => [Math.random() - 0.5, Math.random() - 0.5, 0.4 + Math.random() * 0.5]) });
+  }
+
+  paso_antihumedad(dt) {
+    const ctx = this.ctx;
+    pared(ctx, this.w, this.h);
+    if (this.pendientes.length && this.t > this.pendientes[0]) {
+      this.pendientes.shift();
+      this.nuevaHumedad();
+      const m = this.manchasH[this.manchasH.length - 1];
+      this.flotar(m.x, m.y - m.r - 20, '¡Ha salido otra!', '#d9534f');
+      this.sonido.tono(300, 0, 0.2, { tipo: 'sine', volumen: 0.06, hasta: 200 });
+    }
+    const p = this.puntero;
+    if (this.pulsado && p) {
+      for (let k = 0; k < 3; k++) this.niebla.push({ x: p.x + (Math.random() - 0.5) * 30, y: p.y + (Math.random() - 0.5) * 30, r: 10 + Math.random() * 16, t: 0 });
+      if (Math.random() < 0.25) this.sonido.ruido(0.08, { volumen: 0.025, freq: 3200, q: 0.5 });
+    }
+    for (const m of this.manchasH) {
+      const rociada = this.pulsado && p && Math.hypot(p.x - m.x, p.y - m.y) < m.r + 40;
+      if (rociada) m.r -= 55 * dt;
+      else m.r = Math.min(m.max, m.r + 6 * dt);
+      if (m.r < 10) {
+        m.fuera = true;
+        this.quitadas++;
+        this.sonido.pop();
+        for (let k = 0; k < 8; k++) this.chispa(m.x, m.y, '✨', 150);
+        continue;
+      }
+      ctx.fillStyle = 'rgba(96,110,70,.55)';
+      for (const [dx, dy, k] of m.forma) {
+        ctx.beginPath();
+        ctx.arc(m.x + dx * m.r, m.y + dy * m.r, m.r * k, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = 'rgba(60,70,40,.4)';
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, m.r * 0.35, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    this.manchasH = this.manchasH.filter(m => !m.fuera);
+    for (const n of this.niebla) {
+      n.t += dt;
+      ctx.globalAlpha = Math.max(0, 0.35 - n.t * 0.5);
+      ctx.fillStyle = '#e6f7ff';
+      ctx.beginPath();
+      ctx.arc(n.x, n.y - n.t * 20, n.r + n.t * 30, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    this.niebla = this.niebla.filter(n => n.t < 0.7);
+    const parcial = this.manchasH.reduce((s, m) => s + Math.max(0, 1 - m.r / m.r0) * 0.5, 0);
+    const acabado = !this.manchasH.length && !this.pendientes.length;
+    this.progreso = acabado ? 1 : Math.min(0.99, (this.quitadas + parcial) / this.totalH);
   }
 }

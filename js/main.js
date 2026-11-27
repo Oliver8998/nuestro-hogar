@@ -457,6 +457,29 @@ async function jugarMinijuego(d) {
   ui.aviso('✨ ¡Limpio!');
 }
 
+const JUEGO_ARREGLO = { cucarachas: 'cucas', mancha: 'mancha', tabla: 'clavos', ventana: 'cristal', grietas: 'masilla', humedad: 'antihumedad' };
+
+async function jugarReparacion(a, obj) {
+  const tipo = JUEGO_ARREGLO[obj.d.id];
+  ui.cerrarInventario();
+  if (tipo) {
+    const ok = await minijuegos.jugar(tipo);
+    if (!ok) {
+      ui.aviso('Lo dejáis para luego');
+      return;
+    }
+  }
+  if (obj.d.hecho || !inventario.cantidad(a.item.id)) return;
+  sala.aplicar(a.info, obj);
+  inventario.usar(a.item.id, a.item.color, a.info.usos || 1);
+  sonido.arreglo();
+  ui.aviso(`✨ ${obj.d.mensaje}`);
+  if (guia) guia.evento('arreglar');
+  guardar();
+  ui.pintarInventario(inventario);
+  refrescarHud();
+}
+
 function ponerJardin() {
   suciedad.jardin = true;
 }
@@ -1189,6 +1212,11 @@ const ui = new UI(miniaturas, {
     if (r.minijuego) {
       ui.pintarInventario(inventario);
       jugarMinijuego(r.minijuego);
+      return;
+    }
+    if (r.reparacion) {
+      ui.pintarInventario(inventario);
+      jugarReparacion(a, r.reparacion);
       return;
     }
     if (r.ok) {
