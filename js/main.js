@@ -594,7 +594,7 @@ function vecinosReaccionan(dt) {
   const noche = h >= 23 || h < 8;
   if (usos.musica && noche && !visitando) tMusica += 5;
   else tMusica = Math.max(0, tMusica - 5);
-  if (tMusica >= 60 && !golpesNoche && !dialogoAbierto()) {
+  if (tMusica >= 60 && !golpesNoche && !dialogoAbierto() && !UI.ocupado()) {
     golpesNoche = true;
     for (let k = 0; k < 3; k++) sonido.tono(70, k * 0.28, 0.18, { tipo: 'sine', hasta: 40, volumen: 0.3 });
     ui.aviso('🔨 ¡Pom, pom, pom! El vecino de abajo golpea el techo: ¡que son horas!');
@@ -1927,7 +1927,7 @@ function evitarChoques(dt) {
 }
 
 function dialogoAbierto() {
-  return enMenu() || document.body.classList.contains('modo-foto') || document.getElementById('dialogo').classList.contains('abierto') || !document.getElementById('juego').classList.contains('oculto') || !!document.getElementById('foto-editor') || visitando;
+  return enMenu() || UI.ocupado() || !!(ui.dialogosPendientes && ui.dialogosPendientes.some(d => !d.cancelado)) || document.body.classList.contains('modo-foto') || document.getElementById('dialogo').classList.contains('abierto') || !document.getElementById('juego').classList.contains('oculto') || !!document.getElementById('foto-editor') || visitando;
 }
 
 function comprobarEvento() {

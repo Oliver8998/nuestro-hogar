@@ -949,8 +949,37 @@ export class UI {
     this.elMenu.style.top = `${abajo}px`;
   }
 
+  static ocupado() {
+    return !!document.querySelector('#juego.abierto, #minijuego.abierto, #intro-juego');
+  }
+
+  esperarLibre() {
+    if (this.tLibre) return;
+    this.tLibre = setInterval(() => {
+      if (UI.ocupado()) return;
+      if (this.dialogosPendientes && this.dialogosPendientes.length) {
+        if (this.elDialogo.classList.contains('abierto')) return;
+        const d = this.dialogosPendientes.shift();
+        if (!d.cancelado) d.mostrar();
+        return;
+      }
+      clearInterval(this.tLibre);
+      this.tLibre = null;
+      const avisos = this.avisosPendientes || [];
+      this.avisosPendientes = [];
+      avisos.forEach(([t, e], i) => setTimeout(() => this.aviso(t, e), 400 + i * 1400));
+    }, 600);
+  }
+
   aviso(texto, error = false) {
     if (!texto) return;
+    if (UI.ocupado()) {
+      if (!this.avisosPendientes) this.avisosPendientes = [];
+      if (!this.avisosPendientes.some(([t]) => t === texto)) this.avisosPendientes.push([texto, error]);
+      if (this.avisosPendientes.length > 3) this.avisosPendientes.shift();
+      this.esperarLibre();
+      return;
+    }
     const ahora = Date.now();
     if (texto === this.avisoTexto && ahora - this.avisoDesde < 2300) return;
     if (!error && this.avisoDesde && ahora - this.avisoDesde < 1300 && this.elAviso.classList.contains('visible')) {
@@ -1034,7 +1063,12 @@ export class UI {
   }
 
   dialogo({ imagen = '', titulo = '', etiqueta = null, texto = '', html = '', botones = [{ texto: 'Vale', tipo: 'primario' }], confeti = false, personaje = false, columna = false }) {
-    const caja = this.elDialogo.querySelector('.dialogo-caja');
+    const diferido = UI.ocupado() || !!(this.dialogosPendientes && this.dialogosPendientes.length);
+    let caja = this.elDialogo.querySelector('.dialogo-caja');
+    if (diferido) {
+      caja = document.createElement('div');
+      caja.className = 'dialogo-caja';
+    }
     caja.innerHTML = `
       ${imagen ? `<div class="dialogo-imagen${personaje ? ' personaje' : ''}">${this.img(imagen)}</div>` : ''}
       ${etiqueta ? `<span class="etiqueta" style="background:${etiqueta.color}">${etiqueta.texto}</span>` : ''}
@@ -1044,7 +1078,13 @@ export class UI {
       <div class="dialogo-botones"></div>`;
     const fila = caja.querySelector('.dialogo-botones');
     fila.classList.toggle('columna', columna);
+    const pendiente = { cancelado: false };
     const cerrar = () => {
+      if (diferido && !pendiente.mostrado) {
+        pendiente.cancelado = true;
+        return;
+      }
+      if (this.elDialogo.querySelector('.dialogo-caja') !== caja) return;
       this.elDialogo.classList.remove('abierto');
       setTimeout(() => {
         if (!this.elDialogo.classList.contains('abierto')) this.elDialogo.classList.add('oculto');
@@ -1062,10 +1102,21 @@ export class UI {
       });
       fila.appendChild(el);
     }
-    this.elDialogo.classList.remove('oculto');
-    void this.elDialogo.offsetWidth;
-    this.elDialogo.classList.add('abierto');
-    if (confeti) this.confeti();
+    const mostrar = () => {
+      pendiente.mostrado = true;
+      const actual = this.elDialogo.querySelector('.dialogo-caja');
+      if (actual !== caja) actual.replaceWith(caja);
+      this.elDialogo.classList.remove('oculto');
+      void this.elDialogo.offsetWidth;
+      this.elDialogo.classList.add('abierto');
+      if (confeti) this.confeti();
+    };
+    if (diferido) {
+      pendiente.mostrar = mostrar;
+      if (!this.dialogosPendientes) this.dialogosPendientes = [];
+      this.dialogosPendientes.push(pendiente);
+      this.esperarLibre();
+    } else mostrar();
     return { cerrar, caja };
   }
 

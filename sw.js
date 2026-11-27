@@ -1,4 +1,4 @@
-const CACHE = 'hogar-v121';
+const CACHE = 'hogar-v122';
 const ARCHIVOS = [
   './',
   './index.html',
@@ -124,13 +124,17 @@ self.addEventListener('push', e => {
   } catch (err) {
     d = { texto: e.data ? e.data.text() : '' };
   }
-  e.waitUntil(self.registration.showNotification(d.titulo || 'Our Place', {
+  const ios = /iPhone|iPad|iPod|Macintosh/.test(self.navigator.userAgent) && !/Chrome|Android/.test(self.navigator.userAgent);
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(lista => {
+    if (!ios && lista.some(c => c.visibilityState === 'visible' && c.focused)) return;
+    return self.registration.showNotification(d.titulo || 'Our Place', {
     body: d.texto || '',
     icon: './icons/icon-192.png',
     badge: './icons/icon-192.png',
     tag: d.tipo || 'aviso',
     renotify: true,
     data: { url: './' }
+    });
   }));
 });
 

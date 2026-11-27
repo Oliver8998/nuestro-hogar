@@ -797,3 +797,9 @@ Lo de "más mundo" (jardín, terraza, exterior) va SOLO en las casas siguientes 
   - cucarachas → `cucas` (huyen del dedo, ¡Doble!/¡Triple!), mancha → `mancha` (tocar para echar limpiador y frotar sobre la espuma), tabla → `clavos` (4 clavos, golpe preciso clava más, una mano 🤚 sujeta un clavo: si le das, ¡Ay!), ventana → `cristal` (arrancar 4 cintas, cae el cartón, arrastrar el cristal al marco, frotar huellas), grietas → `masilla` (repasar 3 grietas), humedad → `antihumedad` (mantener para rociar; si no, vuelven a crecer y salen 2 más).
 - **Limpieza y arreglos:** al acabar salen estrellas por tiempo (`RAPIDO` por tipo), el tiempo y el récord (`hogar-records-limpieza`); sonido al frotar; textos flotantes en el canvas (`flotar`).
 - Vídeos de intro grabados para los 13 juegos nuevos.
+
+## Sin interrupciones mientras se juega (v122)
+- `UI.ocupado()` = hay un juego/trabajo (`#juego.abierto`), un minijuego de limpiar/arreglar (`#minijuego.abierto`) o la intro de un juego (`#intro-juego`).
+- Mientras está ocupado, `ui.dialogo` no se abre: monta la caja aparte y la mete en `ui.dialogosPendientes`; `ui.aviso` guarda hasta 3 avisos en `avisosPendientes`. `esperarLibre` comprueba cada 0,6 s y al acabar el juego enseña los diálogos de uno en uno y luego los avisos. `cerrar()` de un diálogo aún no mostrado lo cancela.
+- `dialogoAbierto()` (main.js) también cuenta si hay juego o diálogos en cola, para que los eventos no se amontonen. Los golpes del vecino no suenan durante un juego.
+- Push (sw.js): si la app está abierta y en primer plano no se enseña la notificación (salvo en iPhone/Safari, que obliga a enseñarlas siempre).
